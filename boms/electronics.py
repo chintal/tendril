@@ -181,7 +181,8 @@ class EntityBom(EntityBase):
             tgroup.insert(item)
 
     def create_output_bom(self, configname):
-        outbom = OutputBom(self.pcbname, self.projfolder, configname)
+        outbomdescriptor = OutputBomDescriptor(self.pcbname, self.projfolder, configname)
+        outbom = OutputBom(outbomdescriptor)
         outgroups = self.configurations.get_configuration(configname)
         for group in outgroups:
             grpobj = self.find_group(group)
@@ -191,15 +192,26 @@ class EntityBom(EntityBase):
         return outbom
 
 
+class OutputBomDescriptor(object):
+    def __init__(self, pcbname, cardfolder, configname, multiplier=1):
+        self.pcbname = pcbname
+        self.cardfolder = cardfolder
+        self.configname = configname
+        self.multiplier = multiplier
+
+
 class OutputBomLine(object):
 
-    def __init__(self, comp):
+    def __init__(self, comp, parent):
         """
 
+
+        :type parent: OutputBom
         :type comp: EntityElnComp
         """
         self.ident = comp.ident
         self.refdeslist = []
+        self.parent = parent
 
     def add(self, comp):
         """
@@ -213,19 +225,21 @@ class OutputBomLine(object):
 
     @property
     def quantity(self):
-        return len(self.refdeslist)
+        return len(self.refdeslist) * self.parent.descriptor.multiplier
 
 
 class OutputBom(object):
 
-    def __init__(self, pcbname, cardfolder, configname):
-        self.pcbname = pcbname
-        self.cardfolder = cardfolder
-        self.configname = configname
+    def __init__(self, descriptor):
+        """
+
+        :type descriptor: OutputBomDescriptor
+        """
         self.lines = []
+        self.descriptor = descriptor
 
     def sort_by_ident(self):
-        self.lines.sort(key=lambda x: x.ident, reverse=True)
+        self.lines.sort(key=lambda x: x.ident, reverse=False)
 
     def find_by_ident(self, ident):
         for line in self.lines:
@@ -241,9 +255,82 @@ class OutputBom(object):
         """
         line = self.find_by_ident(item.ident)
         if line is None:
-            line = OutputBomLine(item)
+            line = OutputBomLine(item, self)
             self.lines.append(line)
         line.add(item)
+
+    def multiply(self, factor, composite=False):
+        if composite is True:
+            self.descriptor.multiplier = self.descriptor.multiplier * factor
+        else:
+            self.descriptor.multiplier = factor
+
+
+class CompositeOutputBomLine(object):
+
+    def __init__(self, line, colcount):
+        self.ident = line.ident
+        self.columns = [0] * colcount
+
+    def add(self, line, column):
+        """
+
+        :type line: OutputBomLine
+        """
+        if line.ident == self.ident:
+            self.columns[column] = line.quantity
+        else:
+            logging.error("Ident Mismatch")
+
+    @property
+    def quantity(self):
+        return sum(self.columns)
+
+
+class CompositeOutputBom():
+    def __init__(self, bom_list):
+        self.descriptors = []
+        self.lines = []
+        self.colcount = len(bom_list)
+        i = 0
+        for bom in bom_list:
+            self.insert_bom(bom, i)
+            i += 1
+        self.sort_by_ident()
+
+    def insert_bom(self, bom, i):
+        """
+
+        :type bom: OutputBom
+        """
+        self.descriptors.append(bom.descriptor)
+        for line in bom.lines:
+            self.insert_line(line, i)
+
+    def insert_line(self, line, i):
+        """
+
+        :type line: OutputBomLine
+        """
+        cline = self.find_by_ident(line)
+        if cline is None:
+            cline = CompositeOutputBomLine(line, self.colcount)
+            self.lines.append(cline)
+        cline.add(line, i)
+
+    def find_by_ident(self, line):
+        """
+
+        :type line: OutputBomLine
+        """
+        for cline in self.lines:
+            assert isinstance(cline, CompositeOutputBomLine)
+            if cline.ident == line.ident:
+                return cline
+        return None
+
+    def sort_by_ident(self):
+        self.lines.sort(key=lambda x: x.ident, reverse=False)
 
 
 def import_pcb(cardfolder):
