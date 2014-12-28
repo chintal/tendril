@@ -65,21 +65,6 @@ class EntityGroup(EntityBase):
 
 
 class EntityBomConf(EntityBase):
-    """All allowed configurations for a PCB
-
-    Attributes:
-        grouplist
-        configsections(L)
-            configsection
-            grouplist
-            configurations(L)
-                configname
-                groups
-        configurations(L)
-            configname
-            config
-
-    """
     def __init__(self, confdata):
         super(EntityBomConf, self).__init__()
         self.grouplist = confdata["grouplist"]
@@ -120,16 +105,6 @@ class EntityBomConf(EntityBase):
 
 
 class EntityBom(EntityBase):
-    """Single Bill of Materials Container
-
-    An EntityBom is a collection of EntityGroups,
-
-    Attributes:
-        configurations
-        grouplist
-
-    """
-
     def __init__(self, confdata, cardfolder):
         super(EntityBom, self).__init__()
         self.pcbname = confdata["pcbname"]
@@ -334,14 +309,33 @@ class CompositeOutputBom():
 
 
 def import_pcb(cardfolder):
-    """
+    """Imports PCB and returns a populated EntityBom
 
+    Accepts cardfolder as an argument and returns a populated EntityBOM.
+    The cardfolder should be the path to a PCB folder, containing the
+    following file structure:
 
+        - ``schematic``
+            - ``configs.yaml`` (containing link to [gedaprojfile.proj])
+            - ``attribs``
+            - ``gedaprojfile.proj`` (containing list of schematics)
+            - [schematics.sch]
 
-    :rtype : EntityBom
+        - ``pcb``
+        - ``gerber``
+
+    .. seealso:: ``gedaif.projfile.GedaProjectFile``
+
+    :param cardfolder: PCB folder (containing schematic, pcb, gerber)
     :type cardfolder: str
-    :param cardfolder:
-    :return:
+    :return: Populated EntityBom
+    :rtype: EntityBom
+
+    :Example:
+
+    >>> import boms.electronics
+    >>> bom = boms.electronics.import_pcb('path/to/cardfolder')
+
     """
     pcbbom = None
     with open(os.path.normpath(cardfolder+"/schematic/configs.yaml")) as configfile:
