@@ -334,6 +334,15 @@ class CompositeOutputBom():
 
 
 def import_pcb(cardfolder):
+    """
+
+
+
+    :rtype : EntityBom
+    :type cardfolder: str
+    :param cardfolder:
+    :return:
+    """
     pcbbom = None
     with open(os.path.normpath(cardfolder+"/schematic/configs.yaml")) as configfile:
         configdata = yaml.load(configfile)
