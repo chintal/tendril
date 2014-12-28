@@ -8,10 +8,9 @@ import os
 
 class GedaProjectFile(object):
 
-    schfiles = []
-    pcbfile = None
-
     def __init__(self, projectfolder, projfile):
+        self.schfiles = []
+        self.pcbfile = None
         projfilepath = os.path.normpath(projectfolder+"/schematic/"+projfile)
         with open(projfilepath, 'r') as f:
             for line in f:
