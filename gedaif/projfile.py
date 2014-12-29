@@ -29,5 +29,8 @@ class GedaProjectFile(object):
         return line.strip()
 
 
+def import_pcb(projpath):
+    pass
+
 if __name__=="__main__":
     pass

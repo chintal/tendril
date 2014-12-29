@@ -1,6 +1,25 @@
 """
-This file is part of koala
-See the COPYING, README, and INSTALL files for more information
+Electronic Boms Module documentation (:mod:`boms.electronics`)
+==============================================================
+
+This module contains various classes for handling structured data present in
+elctronics BOMs. The module is built for use with gEDA with specific additions
+and/or constraints to the standard gEDA project structure. Use with other EDA
+tools should be possible by replacing ``gedaif`` with an EDA tool specific
+package.
+
+Module Summary:
+---------------
+
+.. autosummary::
+    EntityBase
+    EntityElnComp
+    EntityGroup
+    import_pcb
+
+Module Members:
+---------------
+
 """
 import gedaif.bomparser
 
@@ -10,20 +29,29 @@ import yaml
 
 
 class EntityBase(object):
+    """ Placeholder class for potentially track-able objects.
 
+        Placeholder class for potentially track-able objects. Depending on the
+        implementation used, this class should inherit from an external class
+        built for this purpose instead of from ``object``.
+
+    """
     def __init__(self):
         pass
 
 
 class EntityElnComp(EntityBase):
-    """ Container for a single Electronic component
+    """Object containing a single electronic component.
 
-    Attributes:
-        refdes
-        device
-        value
-        footprint
-        inventory_link
+        Accept a gedaif.bomparser.BomLine generated through gnetlist's
+        ``bom`` backend. For a The ``attribs`` file should atleast contain:
+        |  device
+        |  value
+        |  footprint
+        |  fillstatus
+
+        :param item: BomLine containing details of component to be created
+        :type item: gedaif.bomparser.BomLine
 
     """
     def __init__(self, item):
@@ -31,27 +59,82 @@ class EntityElnComp(EntityBase):
         self.refdes = item.data['refdes']
         self.device = item.data['device']
         self.value = item.data['value']
-        if item.data['footprint'][0:3] == "MY-":
-            self.footprint = item.data['footprint'][3:]
-        else:
-            self.footprint = item.data['footprint']
+        self.footprint = item.data['footprint']
         self.fillstatus = item.data['fillstatus']
-        self.ident = self.generate_ident()
 
-    def generate_ident(self):
+    @property
+    def refdes(self):
+        """ Refdes string. """
+        return self.refdes
+
+    @refdes.setter
+    def refdes(self, value):
+        self.refdes = value
+
+    @property
+    def fillstatus(self):
+        """ Fillstatus string. """
+        return self.fillstatus
+
+    @fillstatus.setter
+    def fillstatus(self, value):
+        if value == 'DNP':
+            self.fillstatus = 'DNP'
+        elif value == 'unknown':
+            self.fillstatus = ''
+        else:
+            logging.warning("Unsupported fillstatus: " + value)
+
+    @property
+    def ident(self):
+        """
+        Auto-generated ident string from the component ``device``, ``value``
+        and ``footprint`` attributes. This is a read-only property.
+        """
         ident = self.device + " " + self.value + " " + self.footprint
         return ident
 
+    @property
+    def device(self):
+        """ Component device string. """
+        return self.device
+
+    @device.setter
+    def device(self, value):
+        self.device = value
+
+    @property
+    def value(self):
+        """ Component value string. """
+        return self.value
+
+    @value.setter
+    def value(self, value):
+        self.value = value
+
+    @property
+    def footprint(self):
+        """
+        Component footprint string. ``MY-`` at the beginning of the footprint
+        string is stripped away automatically.
+        """
+        return self.footprint
+
+    @footprint.setter
+    def footprint(self, value):
+        if value[0:3] == "MY-":
+            self.footprint = value[3:]
+        else:
+            self.footprint = value
+
 
 class EntityGroup(EntityBase):
-    """ Container for a group of entities
+    """ Container for a group of EntityElnComp objects.
 
-    Attributes:
-        groupname
-        eln_comp_list
+        :ivar groupname: Name of the group
+        :ivar eln_comp_list: List of EntityElnComp objects
 
     """
-
     def __init__(self, groupname):
         super(EntityGroup, self).__init__()
         self.groupname = groupname
@@ -59,12 +142,21 @@ class EntityGroup(EntityBase):
         pass
 
     def insert(self, item):
+        """ Insert an electronic component into the EntityGroup.
+
+        Accept a BomLine and generate an EntityElnComp to represent the
+        component if it's fillstatus is not ``DNP``. Insert the created
+        EntityElnComp object into the group.
+
+        :type item: gedaif.bomparser.BomLine
+
+        """
         if item.data['fillstatus'] != 'DNP':
             x = EntityElnComp(item)
             self.complist.append(x)
 
 
-class EntityBomConf(EntityBase):
+class EntityBomConf(object):
     def __init__(self, confdata):
         super(EntityBomConf, self).__init__()
         self.grouplist = confdata["grouplist"]
@@ -121,7 +213,8 @@ class EntityBom(EntityBase):
     def create_groups(self):
         x = EntityGroup('default')
         self.grouplist.append(x)
-        for group in self.configurations.grouplist:
+        groupnamelist = [x['name'] for x in self.configurations.grouplist]
+        for group in groupnamelist:
             x = EntityGroup(group)
             self.grouplist.append(x)
 
@@ -156,7 +249,7 @@ class EntityBom(EntityBase):
             tgroup.insert(item)
 
     def create_output_bom(self, configname):
-        outbomdescriptor = OutputBomDescriptor(self.pcbname, self.projfolder, configname)
+        outbomdescriptor = OutputBomDescriptor(self.pcbname, self.projfolder, configname, self.configurations)
         outbom = OutputBom(outbomdescriptor)
         outgroups = self.configurations.get_configuration(configname)
         for group in outgroups:
@@ -168,11 +261,12 @@ class EntityBom(EntityBase):
 
 
 class OutputBomDescriptor(object):
-    def __init__(self, pcbname, cardfolder, configname, multiplier=1):
+    def __init__(self, pcbname, cardfolder, configname, configurations, multiplier=1):
         self.pcbname = pcbname
         self.cardfolder = cardfolder
         self.configname = configname
         self.multiplier = multiplier
+        self.configurations = configurations
 
 
 class OutputBomLine(object):
@@ -309,22 +403,14 @@ class CompositeOutputBom():
 
 
 def import_pcb(cardfolder):
-    """Imports PCB and returns a populated EntityBom
+    """Import PCB and return a populated EntityBom
 
-    Accepts cardfolder as an argument and returns a populated EntityBOM.
+    Accept cardfolder as an argument and return a populated EntityBOM.
     The cardfolder should be the path to a PCB folder, containing the
-    following file structure:
-
-        - ``schematic``
-            - ``configs.yaml`` (containing link to [gedaprojfile.proj])
-            - ``attribs``
-            - ``gedaprojfile.proj`` (containing list of schematics)
-            - [schematics.sch]
-
-        - ``pcb``
-        - ``gerber``
+    file structure described in ``somewhere``.
 
     .. seealso:: ``gedaif.projfile.GedaProjectFile``
+    .. seealso:: ``gEDA Project Folder Structure``
 
     :param cardfolder: PCB folder (containing schematic, pcb, gerber)
     :type cardfolder: str
