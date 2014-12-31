@@ -13,6 +13,7 @@
 \pdfmapfile{=tfrupee.map}
 \usepackage{lastpage}
 
+\renewcommand{\ttdefault}{pcr}
 \newcommand{\pcbname}{%{{stage.configname%}}}
 
 \newcommand{\sno}{%{{stage.sno%}}}
@@ -74,14 +75,12 @@
 \keepXColumns
 \renewcommand{\arraystretch}{1.3}
 \small
-\begin{tabularx}{1.0\textwidth}{|>{\centering\arraybackslash}p{0.3\textwidth}|>{\centering\arraybackslash}p{0.3\textwidth}|>{\centering\arraybackslash}p{0.3\textwidth}|}
-  \hline
-  \rowcolor[gray]{0.9}\textbf{PCB, S.No.} & \textbf{Root Production Order} & \textbf{Assembly Date} \\
-  {\tt\pcbname, S.\sno} & {\tt } & {\tt } \\[3ex]
-  \hline
-  \rowcolor[gray]{0.9}\bfseries{BOM SVN Revision} & \bfseries{Report Exceptions To} & \bfseries{Assembly By} \\
-  {\tt } & {\tt } & {\tt }\\[3ex] 
-  \hline
+\begin{tabularx}{1.0\textwidth}{>{\raggedleft\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedleft\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}}
+\small{Card Name:} & {\ttfamily\bfseries\normalsize \pcbname} & Production Order:&  \\
+\small{S.No.:} & {\ttfamily\bfseries\normalsize \sno} & Assembly Date:& \\
+\small{Base PCB:} & {\ttfamily  %{{stage.pcbname%}}} &  & \\
+& & & \\
+\small{Description:} & \multicolumn{3}{l}{\ttfamily \parbox{0.7\textwidth}{%{{stage.desc%}}}} \\
 \end{tabularx}
 \renewcommand{\arraystretch}{1.1}
 \begin{tabularx}{1.0\textwidth}{>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|}

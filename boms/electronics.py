@@ -107,7 +107,12 @@ class EntityElnComp(EntityBase):
         Auto-generated ident string from the component ``device``, ``value``
         and ``footprint`` attributes. This is a read-only property.
         """
-        ident = self.device + " " + self.value + " " + self.footprint
+        if 'CONN' in self.device:
+            ident = self.device + " " + self.value
+        elif 'MODULE' in self.device:
+            ident = self.device + " " + self.value
+        else:
+            ident = self.device + " " + self.value + " " + self.footprint
         return ident.strip()
 
     @property
@@ -345,6 +350,8 @@ class OutputBom(object):
 
     def sort_by_ident(self):
         self.lines.sort(key=lambda x: x.ident, reverse=False)
+        for line in self.lines:
+            line.refdeslist.sort()
 
     def find_by_ident(self, ident):
         for line in self.lines:

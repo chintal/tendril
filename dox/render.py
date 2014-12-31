@@ -38,7 +38,7 @@ def render_pdf(stage, template, outpath):
     auxpath = os.path.splitext(outpath)[0] + ".aux"
     logpath = os.path.splitext(outpath)[0] + ".log"
 
-    pdflatex_cmd = ("pdflatex --output-directory=" + os.path.split(outpath)[0]).split(' ')
+    pdflatex_cmd = ("pdflatex -interaction=batchmode -output-directory=" + os.path.split(outpath)[0]).split(' ')
     pdflatex_cmd.append(texpath)
 
     for i in range(3):

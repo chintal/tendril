@@ -25,8 +25,13 @@ def gen_assemmanifest(projfolder, configname, outpath=None, sno=None):
     obom = bom.create_output_bom(configname)
 
     stage = {'configname': obom.descriptor.configname,
+             'pcbname': obom.descriptor.pcbname,
              'sno': sno,
              'lines': obom.lines}
+
+    for config in obom.descriptor.configurations.configurations:
+        if config['configname'] == configname:
+            stage['desc'] = config['desc']
 
     template = 'pcb-assem-manifest.tex'
 
