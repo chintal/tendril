@@ -22,10 +22,9 @@ Module Members:
 
 """
 import gedaif.bomparser
+import gedaif.conffile
 
-import os
 import logging
-import yaml
 
 
 class EntityBase(object):
@@ -54,34 +53,51 @@ class EntityElnComp(EntityBase):
         :type item: gedaif.bomparser.BomLine
 
     """
-    def __init__(self, item):
+    def __init__(self, item=None):
         super(EntityElnComp, self).__init__()
-        self.refdes = item.data['refdes']
-        self.device = item.data['device']
-        self.value = item.data['value']
-        self.footprint = item.data['footprint']
-        self.fillstatus = item.data['fillstatus']
+        self._refdes = ""
+        self._device = ""
+        self._value = ""
+        self._footprint = ""
+        self._fillstatus = ""
+        self._defined = False
+        if item is not None:
+            self.define(item.data['refdes'], item.data['device'],
+                        item.data['value'], item.data['footprint'],
+                        item.data['fillstatus'])
+
+    def define(self, refdes, device, value, footprint="", fillstatus=""):
+        self.refdes = refdes
+        self.device = device
+        self.value = value
+        self.footprint = footprint
+        self.fillstatus = fillstatus
+        self._defined = True
+
+    @property
+    def defined(self):
+        return self._defined
 
     @property
     def refdes(self):
         """ Refdes string. """
-        return self.refdes
+        return self._refdes
 
     @refdes.setter
     def refdes(self, value):
-        self.refdes = value
+        self._refdes = value
 
     @property
     def fillstatus(self):
         """ Fillstatus string. """
-        return self.fillstatus
+        return self._fillstatus
 
     @fillstatus.setter
     def fillstatus(self, value):
         if value == 'DNP':
-            self.fillstatus = 'DNP'
-        elif value == 'unknown':
-            self.fillstatus = ''
+            self._fillstatus = 'DNP'
+        elif value in ['unknown', '']:
+            self._fillstatus = ''
         else:
             logging.warning("Unsupported fillstatus: " + value)
 
@@ -92,25 +108,25 @@ class EntityElnComp(EntityBase):
         and ``footprint`` attributes. This is a read-only property.
         """
         ident = self.device + " " + self.value + " " + self.footprint
-        return ident
+        return ident.strip()
 
     @property
     def device(self):
         """ Component device string. """
-        return self.device
+        return self._device
 
     @device.setter
     def device(self, value):
-        self.device = value
+        self._device = value
 
     @property
     def value(self):
         """ Component value string. """
-        return self.value
+        return self._value
 
     @value.setter
     def value(self, value):
-        self.value = value
+        self._value = value
 
     @property
     def footprint(self):
@@ -118,14 +134,14 @@ class EntityElnComp(EntityBase):
         Component footprint string. ``MY-`` at the beginning of the footprint
         string is stripped away automatically.
         """
-        return self.footprint
+        return self._footprint
 
     @footprint.setter
     def footprint(self, value):
         if value[0:3] == "MY-":
-            self.footprint = value[3:]
+            self._footprint = value[3:]
         else:
-            self.footprint = value
+            self._footprint = value
 
 
 class EntityGroup(EntityBase):
@@ -153,15 +169,25 @@ class EntityGroup(EntityBase):
         """
         if item.data['fillstatus'] != 'DNP':
             x = EntityElnComp(item)
-            self.complist.append(x)
+            if x.defined:
+                self.complist.append(x)
+
+    def insert_comp(self, comp):
+        """
+
+        :type comp: EntityElnComp
+        """
+        if comp.defined:
+            self.complist.append(comp)
 
 
 class EntityBomConf(object):
-    def __init__(self, confdata):
+    def __init__(self, configdata):
         super(EntityBomConf, self).__init__()
-        self.grouplist = confdata["grouplist"]
-        self.configsections = confdata["configsections"]
-        self.configurations = confdata["configurations"]
+        self.pcbname = configdata["pcbname"]
+        self.grouplist = configdata["grouplist"]
+        self.configsections = configdata["configsections"]
+        self.configurations = configdata["configurations"]
 
     def get_configurations(self):
         rval = []
@@ -197,13 +223,18 @@ class EntityBomConf(object):
 
 
 class EntityBom(EntityBase):
-    def __init__(self, confdata, cardfolder):
-        super(EntityBom, self).__init__()
-        self.pcbname = confdata["pcbname"]
-        self.projfile = confdata["projfile"]
-        self.projfolder = cardfolder
+    def __init__(self, configfile):
 
-        self.configurations = EntityBomConf(confdata)
+        """
+
+        :type configfile: gedaif.conffile.ConfigsFile
+        """
+        super(EntityBom, self).__init__()
+        self.pcbname = configfile.configdata["pcbname"]
+        self.projfile = configfile.configdata["projfile"]
+        self.projfolder = configfile.projectfolder
+
+        self.configurations = EntityBomConf(configfile.configdata)
 
         self.grouplist = []
         self.create_groups()
@@ -215,6 +246,7 @@ class EntityBom(EntityBase):
         self.grouplist.append(x)
         groupnamelist = [x['name'] for x in self.configurations.grouplist]
         for group in groupnamelist:
+            logging.debug("Creating Group: " + str(group))
             x = EntityGroup(group)
             self.grouplist.append(x)
 
@@ -226,9 +258,9 @@ class EntityBom(EntityBase):
         groupname = item.data['group']
         if groupname == 'unknown':
             groupname = 'default'
-        if groupname not in self.configurations.grouplist:
-            groupname = 'default'
+        if groupname not in [x['name'] for x in self.configurations.grouplist]:
             logging.warning("Could not find group in config file : " + groupname)
+            groupname = 'default'
         for group in self.grouplist:
             if group.groupname == groupname:
                 return group
@@ -243,7 +275,11 @@ class EntityBom(EntityBase):
                 return group
 
     def populate_bom(self):
-        parser = gedaif.bomparser.GedaBomParser(self.projfolder, self.projfile, "bom")
+        tgroup = self.find_group('default')
+        comp = EntityElnComp()
+        comp.define('PCB', 'PCB', self.configurations.pcbname)
+        tgroup.insert_comp(comp)
+        parser = gedaif.bomparser.GedaBomParser(self.projfolder, "bom")
         for item in parser.line_gen:
             tgroup = self.find_tgroup(item)
             tgroup.insert(item)
@@ -424,13 +460,9 @@ def import_pcb(cardfolder):
 
     """
     pcbbom = None
-    with open(os.path.normpath(cardfolder+"/schematic/configs.yaml")) as configfile:
-        configdata = yaml.load(configfile)
-    if configdata["schema"]["name"] == "pcbconfigs" and \
-       configdata["schema"]["version"] == 1.0:
-        pcbbom = EntityBom(configdata, cardfolder)
-    else:
-        logging.ERROR("Config file schema is not supported")
+    configfile = gedaif.conffile.ConfigsFile(cardfolder)
+    if configfile.configdata is not None:
+        pcbbom = EntityBom(configfile)
     return pcbbom
 
 if __name__ == "__main__":

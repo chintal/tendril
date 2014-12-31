@@ -1,0 +1,117 @@
+\documentclass[fontsize = 9pt, BCOR=1.5cm, DIV=14, twoside, titlepage = false]{scrartcl}
+%\usepackage[top=1.5in, bottom=1in, right=1in, left=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{}
+%\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\usepackage{array}
+\usepackage{multicol}
+\usepackage{colortbl}
+\usepackage{tfrupee}
+\pdfmapfile{=tfrupee.map}
+\usepackage{lastpage}
+
+\newcommand{\pcbname}{%{{stage.configname%}}}
+
+\newcommand{\sno}{%{{stage.sno%}}}
+
+\usepackage[%
+  automark,
+  headsepline,                %% Separation line below the header
+  footsepline,               %% Separation line above the footer
+  markuppercase
+]{scrpage2}
+
+\lohead{\tt PCB Assembly Manifest  \pcbname\ S.\sno}    %% Top left on even pages
+\lehead{\includegraphics[width=0.12in]{%{{stage.logo%}}}\hspace{0.01in} \tt %{{stage.company%}}}    %% Top left on odd pages
+\rohead{\tt %{{stage.company%}}\hspace{0.1in}\includegraphics[width=0.12in]{%{{stage.logo%}}}}    %% Top right on even pages
+\rehead{\tt PCB Assembly Manifest  \pcbname\ S.\sno}    %% Top right on odd pages
+\chead{}                       %% Top center
+
+\rofoot{\tt Page \thepage\ of \pageref{LastPage}}
+\lefoot{\tt Page \thepage\ of \pageref{LastPage}}
+\cfoot{}
+
+
+\title{PCB Assembly Manifest}
+\subtitle{}
+\author{}
+\date{}
+
+\makeatletter
+\renewcommand{\@maketitle}{\null\vskip 0em
+\begin{center}
+  \ifx\@subject\@empty \else
+    {\subject@font \@subject \par}
+  \fi
+  \titlefont\huge \@title\par
+\end{center}
+}
+\makeatother
+
+
+\makeatletter
+  \def\cleardoublepage{\clearpage%
+    \if@twoside
+      \ifodd\c@page\else
+	\section*{Notes}
+	\newpage
+	\if@twocolumn\hbox{}\newpage\fi
+      \fi
+    \fi
+  }
+\makeatother
+
+%opening
+\begin{document}
+\pagestyle{scrheadings}
+\maketitle
+\thispagestyle{scrheadings}
+\begin{center}
+ 
+\keepXColumns
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabularx}{1.0\textwidth}{|>{\centering\arraybackslash}p{0.3\textwidth}|>{\centering\arraybackslash}p{0.3\textwidth}|>{\centering\arraybackslash}p{0.3\textwidth}|}
+  \hline
+  \rowcolor[gray]{0.9}\textbf{PCB, S.No.} & \textbf{Root Production Order} & \textbf{Assembly Date} \\
+  {\tt\pcbname, S.\sno} & {\tt } & {\tt } \\[3ex]
+  \hline
+  \rowcolor[gray]{0.9}\bfseries{BOM SVN Revision} & \bfseries{Report Exceptions To} & \bfseries{Assembly By} \\
+  {\tt } & {\tt } & {\tt }\\[3ex] 
+  \hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabularx}{1.0\textwidth}{>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|}
+  \hline
+  \multicolumn{10}{|c|}{\cellcolor[gray]{0.8}\normalsize\textbf{BOM}}\tabularnewline\hline
+  %{ for line in stage.lines %}
+  %{ if line.refdeslist|count > 3 %}
+  \rowcolor[gray]{0.9}\multicolumn{1}{|c|}{%{{loop.index%}}.} & \multicolumn{6}{l}{%{{line.ident%}}} & \multicolumn{3}{r|}{%{{line.quantity%}}} \\*\hline
+  %{ for refdes in line.refdeslist %} & %{{refdes%}} %{ if loop.last %} %{set llen = loop.index%9 %} %{ if llen == 0 %} %{set llen = 9 %} %{endif%}  \\*\cline{2-%{{1+llen%}}} %{for i in range(llen)%} & %{endfor%} \\\hline %{ elif loop.index is divisibleby 9 %} \\*\cline{2-10} & & & & & & & & & \\*\cline{2-10}  %{ endif %} %{ endfor %} 
+  %{ else %}
+  \multicolumn{1}{|c|}{\cellcolor[gray]{0.9} %{{loop.index%}}.} & \multicolumn{5}{l|}{\cellcolor[gray]{0.9}\parbox{0.35\textwidth}{%{{line.ident%}}}} & %{ for refdes in line.refdeslist %} %{{refdes%}} & %{ endfor %} \multicolumn{%{{4-line.refdeslist|count%}}}{r|}{\cellcolor[gray]{0.9} %{{line.quantity%}}} \\*\hline    
+  \multicolumn{6}{|c|}{\cellcolor[gray]{0.98}} & %{ for refdes in line.refdeslist %} & %{ endfor %} \multicolumn{%{{4-line.refdeslist|count%}}}{r|}{\cellcolor[gray]{0.99}} \\\hline    
+  %{ endif %} 
+  %{ endfor %} 
+\end{tabularx}
+
+\end{center}
+
+\begin{tabularx}{1.0\textwidth}{|>{\centering\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.44\textwidth}|}
+\hline
+  \small Assembly Complete  & \small PCB Inspected & \small Blocking Issues \\
+  & & \\
+  & & \\
+  \hline
+  \small Date & \small Date & \\
+  & & \\
+  & & \\
+\hline
+\end{tabularx}
+\cleardoublepage
+\end{document}
+
+
