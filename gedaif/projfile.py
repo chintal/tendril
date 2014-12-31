@@ -3,15 +3,18 @@ This file is part of koala
 See the COPYING, README, and INSTALL files for more information
 """
 
+import gedaif.conffile
 import os
 
 
 class GedaProjectFile(object):
 
-    def __init__(self, projectfolder, projfile):
+    def __init__(self, projectfolder):
         self.schfiles = []
         self.pcbfile = None
-        projfilepath = os.path.normpath(projectfolder+"/schematic/"+projfile)
+        configsfile = gedaif.conffile.ConfigsFile(projectfolder)
+        projfilepath = os.path.normpath(projectfolder + '/schematic/' +
+                                        configsfile.configdata['projfile'])
         with open(projfilepath, 'r') as f:
             for line in f:
                 line = self.strip_line(line)
@@ -28,9 +31,5 @@ class GedaProjectFile(object):
         line = line.split("#")[0]
         return line.strip()
 
-
-def import_pcb(projpath):
-    pass
-
-if __name__=="__main__":
+if __name__ == "__main__":
     pass

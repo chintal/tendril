@@ -4,6 +4,7 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import gedaif.projfile
+import gedaif.conffile
 
 import subprocess
 import os
@@ -20,19 +21,16 @@ class BomLine(object):
 
 class GedaBomParser(object):
 
-    def __init__(self, projectfolder, projfile, backend):
+    def __init__(self, projectfolder, backend):
         self.gpf = None
         self.temp_bom = None
         self.columns = []
         self.line_gen = None
-
+        conffile = gedaif.conffile.ConfigsFile(projectfolder)
         self.projectfolder = projectfolder
-        self.load_project_file(projfile)
+        self.gpf = gedaif.projfile.GedaProjectFile(self.projectfolder)
         self.generate_temp_bom(backend)
         self.prep_temp_bom()
-
-    def load_project_file(self, projfile):
-        self.gpf = gedaif.projfile.GedaProjectFile(self.projectfolder, projfile)
 
     def generate_temp_bom(self, backend):
         os.chdir(os.path.normpath(self.projectfolder + "/schematic"))
