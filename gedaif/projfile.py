@@ -1,6 +1,6 @@
 """
-This file is part of koala
-See the COPYING, README, and INSTALL files for more information
+gEDA Project File module documentation (:mod:`gedaif.projfile`)
+===============================================================
 """
 
 import gedaif.conffile

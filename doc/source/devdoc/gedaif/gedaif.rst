@@ -1,10 +1,12 @@
 
 
-gEDA Interface Module documentation
+gEDA Interface Module Documentation
 -----------------------------------
 
 .. toctree::
-   :maxdepth: 2
 
+   conffile
    projfile
    bomparser
+   gschem
+   gsymlib

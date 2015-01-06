@@ -23,6 +23,7 @@ Module Members:
 """
 import gedaif.bomparser
 import gedaif.conffile
+import entityhub.conventions.electronics
 
 import logging
 
@@ -30,9 +31,8 @@ import logging
 class EntityBase(object):
     """ Placeholder class for potentially track-able objects.
 
-        Placeholder class for potentially track-able objects. Depending on the
-        implementation used, this class should inherit from an external class
-        built for this purpose instead of from ``object``.
+        Depending on the implementation used, this class should inherit from
+        an external class built for this purpose instead of from ``object``.
 
     """
     def __init__(self):
@@ -42,12 +42,12 @@ class EntityBase(object):
 class EntityElnComp(EntityBase):
     """Object containing a single electronic component.
 
-        Accept a gedaif.bomparser.BomLine generated through gnetlist's
-        ``bom`` backend. For a The ``attribs`` file should atleast contain:
-        |  device
-        |  value
-        |  footprint
-        |  fillstatus
+        Accept a ``gedaif.bomparser.BomLine`` generated through gnetlist's
+        ``bom`` backend. The ``attribs`` file should atleast contain:
+         * device
+         * value
+         * footprint
+         * fillstatus
 
         :param item: BomLine containing details of component to be created
         :type item: gedaif.bomparser.BomLine
@@ -67,6 +67,19 @@ class EntityElnComp(EntityBase):
                         item.data['fillstatus'])
 
     def define(self, refdes, device, value, footprint="", fillstatus=""):
+        """
+        Define the component.
+
+        Can be used directly for special cases when there is no
+        `gedaif.bomparser.BomLine` to pass to the class `__init__`
+        function.
+
+        :param refdes: Refdes string.
+        :param device: Device string.
+        :param value: Value string.
+        :param footprint: Footprint string. Optional.
+        :param fillstatus: Fillstatus string. Optional.
+        """
         self.refdes = refdes
         self.device = device
         self.value = value
@@ -76,6 +89,11 @@ class EntityElnComp(EntityBase):
 
     @property
     def defined(self):
+        """ State of the component. The component should be used only when
+        it is fully defined.
+
+        This is a read-only property.
+        """
         return self._defined
 
     @property
@@ -89,7 +107,10 @@ class EntityElnComp(EntityBase):
 
     @property
     def fillstatus(self):
-        """ Fillstatus string. """
+        """ Fillstatus string.
+        When ``fillstatus`` is ``DNP``, the component is not included in BOMs
+        irrespective of other configuration states.
+        """
         return self._fillstatus
 
     @fillstatus.setter
@@ -103,17 +124,9 @@ class EntityElnComp(EntityBase):
 
     @property
     def ident(self):
-        """
-        Auto-generated ident string from the component ``device``, ``value``
-        and ``footprint`` attributes. This is a read-only property.
-        """
-        if 'CONN' in self.device:
-            ident = self.device + " " + self.value
-        elif 'MODULE' in self.device:
-            ident = self.device + " " + self.value
-        else:
-            ident = self.device + " " + self.value + " " + self.footprint
-        return ident.strip()
+        return entityhub.conventions.electronics.ident_transform(self.device,
+                                                                 self.value,
+                                                                 self.footprint)
 
     @property
     def device(self):
@@ -166,9 +179,10 @@ class EntityGroup(EntityBase):
         """ Insert an electronic component into the EntityGroup.
 
         Accept a BomLine and generate an EntityElnComp to represent the
-        component if it's fillstatus is not ``DNP``. Insert the created
+        component if it's ``fillstatus`` is not ``DNP``. Insert the created
         EntityElnComp object into the group.
 
+        :param item: ``BomLine`` representing the item to insert.
         :type item: gedaif.bomparser.BomLine
 
         """
@@ -178,8 +192,12 @@ class EntityGroup(EntityBase):
                 self.complist.append(x)
 
     def insert_comp(self, comp):
-        """
+        """ Insert a manually created component into the EntityGroup.
 
+        This should be used for components not originating directly from
+        gEDA's gnetlist output.
+
+        :param comp: Existing component to insert
         :type comp: EntityElnComp
         """
         if comp.defined:
@@ -452,8 +470,9 @@ def import_pcb(cardfolder):
     The cardfolder should be the path to a PCB folder, containing the
     file structure described in ``somewhere``.
 
-    .. seealso:: ``gedaif.projfile.GedaProjectFile``
-    .. seealso:: ``gEDA Project Folder Structure``
+    .. seealso::
+        - ``gedaif.projfile.GedaProjectFile``
+        - ``gEDA Project Folder Structure``
 
     :param cardfolder: PCB folder (containing schematic, pcb, gerber)
     :type cardfolder: str

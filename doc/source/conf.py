@@ -18,7 +18,9 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.normpath('/home/chintal/code/koala'))
+sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, '/home/chintal/code/virtualenvs/koala/lib/python2.7/site-packages')
+autodoc_default_flags = ['members', 'undoc-members','private-members', 'show-inheritance']
 autodoc_member_order = 'bysource'
 autoclass_content = 'init'
 # -- General configuration ------------------------------------------------
@@ -217,7 +219,7 @@ latex_documents = [
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
-#latex_use_parts = False
+latex_use_parts = True
 
 # If true, show page references after internal links.
 latex_show_pagerefs = False

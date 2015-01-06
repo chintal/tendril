@@ -9,17 +9,11 @@ Koala documentation
 
 .. toctree::
 
-   gedaif/gedaif
-   boms/boms
-   inventory/inventory
-   sourcing/sourcing
+   userdoc/userdoc
+   devdoc/devdoc
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   `genindex`
+   `modindex`
+   `search`
 

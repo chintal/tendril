@@ -1,9 +1,10 @@
 """
-This file is part of koala
-See the COPYING, README, and INSTALL files for more information
+gEDA gschem module documentation (:mod:`gedaif.gschem`)
+=======================================================
 """
 
-from __init__ import GEDA_SCHEME_DIR
+
+from utils.config import GEDA_SCHEME_DIR
 import utils.pdfutils
 
 import os

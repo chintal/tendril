@@ -1,6 +1,6 @@
 """
-This file is part of koala
-See the COPYING, README, and INSTALL files for more information
+Production Dox module documentation (:mod:`dox.production`)
+============================================================
 """
 
 
@@ -9,7 +9,7 @@ import render
 import os
 
 
-def gen_assemmanifest(projfolder, configname, outpath=None, sno=None):
+def gen_pcb_am(projfolder, configname, outpath=None, sno=None):
     if sno is None:
         # TODO Generate real S.No. here
         sno = 1

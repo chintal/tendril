@@ -1,6 +1,6 @@
 """
-This file is part of koala
-See the COPYING, README, and INSTALL files for more information
+gEDA BOM Parser module documentation (:mod:`gedaif.bomparser`)
+==============================================================
 """
 
 import gedaif.projfile
@@ -26,7 +26,6 @@ class GedaBomParser(object):
         self.temp_bom = None
         self.columns = []
         self.line_gen = None
-        conffile = gedaif.conffile.ConfigsFile(projectfolder)
         self.projectfolder = projectfolder
         self.gpf = gedaif.projfile.GedaProjectFile(self.projectfolder)
         self.generate_temp_bom(backend)

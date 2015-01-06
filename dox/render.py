@@ -1,19 +1,21 @@
 """
-This file is part of koala
-See the COPYING, README, and INSTALL files for more information
+Dox Render module documentation (:mod:`dox.render`)
+===================================================
 """
+
 
 import jinja2
 
-import inspect
 import os
 import subprocess
 
-template_folder = os.path.normpath(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + '/../dox/templates')
+from utils.config import DOX_TEMPLATE_FOLDER
+from utils.config import COMPANY_LOGO_PATH
+from utils.config import COMPANY_NAME
 
 
 def jinja2_pdfinit():
-    loader = jinja2.FileSystemLoader(template_folder)
+    loader = jinja2.FileSystemLoader(DOX_TEMPLATE_FOLDER)
     renderer = jinja2.Environment(block_start_string='%{',
                                   block_end_string='%}',
                                   variable_start_string='%{{',
@@ -28,8 +30,8 @@ def render_pdf(stage, template, outpath):
 
     template = renderer_pdf.get_template(template)
 
-    stage['logo'] = os.path.normpath(template_folder + "/graphics/logo.png")
-    stage['company'] = 'Quazar Technologies Pvt Ltd'
+    stage['logo'] = COMPANY_LOGO_PATH
+    stage['company'] = COMPANY_NAME
     texpath = os.path.splitext(outpath)[0] + ".tex"
     with open(texpath, "wb") as f:
         f.write(template.render(stage=stage))
