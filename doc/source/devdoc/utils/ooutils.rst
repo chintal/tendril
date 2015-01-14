@@ -1,4 +1,0 @@
-
-
-.. automodule:: utils.ooutils
-    :members:

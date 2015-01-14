@@ -21,22 +21,13 @@ Module Members:
 ---------------
 
 """
-import gedaif.bomparser
-import gedaif.conffile
-import entityhub.conventions.electronics
-
 import logging
 
-
-class EntityBase(object):
-    """ Placeholder class for potentially track-able objects.
-
-        Depending on the implementation used, this class should inherit from
-        an external class built for this purpose instead of from ``object``.
-
-    """
-    def __init__(self):
-        pass
+from entitybase import EntityBase
+from entitybase import EntityGroupBase
+from entitybase import EntityBomBase
+import gedaif.bomparser
+import gedaif.conffile
 
 
 class EntityElnComp(EntityBase):
@@ -124,7 +115,7 @@ class EntityElnComp(EntityBase):
 
     @property
     def ident(self):
-        return entityhub.conventions.electronics.ident_transform(self.device,
+        return electronics.ident_transform(self.device,
                                                                  self.value,
                                                                  self.footprint)
 
@@ -162,7 +153,7 @@ class EntityElnComp(EntityBase):
             self._footprint = value
 
 
-class EntityGroup(EntityBase):
+class EntityElnGroup(EntityGroupBase):
     """ Container for a group of EntityElnComp objects.
 
         :ivar groupname: Name of the group
@@ -170,7 +161,7 @@ class EntityGroup(EntityBase):
 
     """
     def __init__(self, groupname):
-        super(EntityGroup, self).__init__()
+        super(EntityElnGroup, self).__init__()
         self.groupname = groupname
         self.complist = []
         pass
@@ -204,9 +195,9 @@ class EntityGroup(EntityBase):
             self.complist.append(comp)
 
 
-class EntityBomConf(object):
+class EntityElnBomConf(object):
     def __init__(self, configdata):
-        super(EntityBomConf, self).__init__()
+        super(EntityElnBomConf, self).__init__()
         self.pcbname = configdata["pcbname"]
         self.grouplist = configdata["grouplist"]
         self.configsections = configdata["configsections"]
@@ -245,19 +236,19 @@ class EntityBomConf(object):
         return rval
 
 
-class EntityBom(EntityBase):
+class EntityElnBom(EntityBomBase):
     def __init__(self, configfile):
 
         """
 
         :type configfile: gedaif.conffile.ConfigsFile
         """
-        super(EntityBom, self).__init__()
+        super(EntityElnBom, self).__init__()
         self.pcbname = configfile.configdata["pcbname"]
         self.projfile = configfile.configdata["projfile"]
         self.projfolder = configfile.projectfolder
 
-        self.configurations = EntityBomConf(configfile.configdata)
+        self.configurations = EntityElnBomConf(configfile.configdata)
 
         self.grouplist = []
         self.create_groups()
@@ -265,18 +256,18 @@ class EntityBom(EntityBase):
         self.populate_bom()
 
     def create_groups(self):
-        x = EntityGroup('default')
+        x = EntityElnGroup('default')
         self.grouplist.append(x)
         groupnamelist = [x['name'] for x in self.configurations.grouplist]
         for group in groupnamelist:
             logging.debug("Creating Group: " + str(group))
-            x = EntityGroup(group)
+            x = EntityElnGroup(group)
             self.grouplist.append(x)
 
     def find_tgroup(self, item):
         """
 
-        :rtype : EntityGroup
+        :rtype : EntityElnGroup
         """
         groupname = item.data['group']
         if groupname == 'unknown':
@@ -291,7 +282,7 @@ class EntityBom(EntityBase):
     def find_group(self, groupname):
         """
 
-        :rtype : EntityGroup
+        :rtype : EntityElnGroup
         """
         for group in self.grouplist:
             if group.groupname == groupname:
@@ -488,7 +479,7 @@ def import_pcb(cardfolder):
     pcbbom = None
     configfile = gedaif.conffile.ConfigsFile(cardfolder)
     if configfile.configdata is not None:
-        pcbbom = EntityBom(configfile)
+        pcbbom = EntityElnBom(configfile)
     return pcbbom
 
 if __name__ == "__main__":

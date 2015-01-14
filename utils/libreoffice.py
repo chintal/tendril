@@ -3,7 +3,7 @@ LibreOffice Utils Module Documentation (:mod:`utils.ooutils`)
 =============================================================
 """
 
-from utils.fsutils import TEMPDIR
+from utils.fs import TEMPDIR
 
 import shutil
 import os

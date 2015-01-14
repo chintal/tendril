@@ -1,0 +1,14 @@
+---
+schema:
+  base: "http://www.quazartech.com/dox/public/schema/"
+  name: gsymgenerator
+  version: 1.0
+
+type: simple
+
+values:
+  - {{ stage.value }}
+  -
+
+symbolfile: {{ stage.symbolfile }}
+desc: {{ stage.description }}

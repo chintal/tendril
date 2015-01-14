@@ -1,12 +1,15 @@
 """
-Vendors module documentation (:mod:`utils.currency`)
-======================================================
+Currency module documentation (:mod:`utils.currency`)
+=====================================================
 """
 
 from utils.config import BASE_CURRENCY
 from utils.config import BASE_CURRENCY_SYMBOL
 
-import requests
+import utils.www
+import urllib
+import urllib2
+import json
 
 
 class CurrencyDefinition(object):
@@ -31,10 +34,13 @@ class CurrencyDefinition(object):
 
     @staticmethod
     def _get_exchval(code):
-        response = requests.get('http://jsonrates.com/get/?from=' + code +
-                                '&to=' + BASE_CURRENCY)
-        json = response.json()
-        rate = float(json['rate'])
+        apiurl = 'http://jsonrates.com/get/?'
+        params = {'from': code,
+                  'to': BASE_CURRENCY}
+        request = urllib2.Request(apiurl + urllib.urlencode(params))
+        response = utils.www.urlopen(request)
+        data = json.load(response)
+        rate = float(data['rate'])
         return rate
 
 native_currency_defn = CurrencyDefinition(BASE_CURRENCY, BASE_CURRENCY_SYMBOL)

@@ -6,8 +6,9 @@ Utils Module documentation
 .. toctree::
 
    config
-   fsutils
-   ooutils
-   pdfutils
-   wwwutils
+   currency
+   fs
+   libreoffice
+   pdf
+   www
 

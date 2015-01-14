@@ -8,7 +8,15 @@ import inspect
 
 CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 KOALA_ROOT = os.path.normpath(os.path.join(CONFIG_PATH, os.pardir, os.pardir))
+AUDIT_PATH = os.path.join(KOALA_ROOT, 'manual-audit')
+# Network Details
 
+NETWORK_PROXY_TYPE = 'http'
+NETWORK_PROXY_IP = 'localhost'
+NETWORK_PROXY_PORT = '8080'
+NETWORK_PROXY_USER = None
+NETWORK_PROXY_PASS = None
+ENABLE_REDIRECT_CACHING = True
 
 # Currency Details
 BASE_CURRENCY = 'INR'
@@ -64,6 +72,7 @@ ELECTRONICS_INVENTORY_DATA = [
 # Vendor Details
 
 _vendor_map_folder = os.path.join(KOALA_ROOT, 'sourcing/maps')
+vendor_map_audit_folder = os.path.join(KOALA_ROOT, 'manual-audit', 'vendor-maps')
 
 VENDORS_DATA = [
     {

@@ -8,6 +8,7 @@ Sourcing Module documentation
    electronics
    vendors
    digikey
+   csil
 
 
 

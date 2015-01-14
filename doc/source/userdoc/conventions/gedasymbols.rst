@@ -68,7 +68,6 @@ The following are the allowed values for the Device Attributes. More should be a
     :TRANSISTOR THRU: : THRU Transistors including MOSFETs.
     :TRANSISTOR SMD: : SMD Transistors including MOSFETs.
     :IC THRU: : THRU Hole ICs.
-    :IC DIP: : For Legacy Symbols Only. Replaced by IC THRU.
     :IC SMD: : SMD ICs.
     :IC PLCC: : PLCC ICs, separated because of their need for a socket.
     :IC POWER: : Off-PCB power ICs for direct mounting onto heatsinks.
@@ -140,7 +139,9 @@ Capacitors
 - Order specifiers to be used are p, n, u. The ``F`` symbol is included. (``pF, nF, uF``)
 - The numerical part of the value should be greater than 1 (100nF instead of 0.1uF)
 - For special cases, the full manufacturer part number can be used in place of the capacitance value.
-- Voltage can optionally (preferably) be specified within value, separated from the capacitance value with a ``/``.
+- Voltage can optionally (preferably) be specified within value, separated from the capacitance value with a ``/``. This voltage is interpreted as the minimum voltage necessary.
+- If the ``Voltage`` is not specified, the voltage is assumed to be the ``stdvoltage`` parameter in the generator file, if any.
+- For now, the ``Voltage`` should be specified to what is to be purchased (and not the minimum required).
 - Tolerance, Temperature, etc. can also be added similarly to Voltage if needed. If so, the conventions should be amended to reflect the correct order as well as code modifications to any relevent `Script Dependencies`_.
 - No spaces should be used.
 
@@ -150,6 +151,12 @@ Examples for Capacitor Values :
     * 2.2uF/10V
     * 100nF
     * 4700uF/63V
+
+Standard Voltages :
+
+     :CAP CER SMD 0805: : 100V
+     :CAP TANT SMD TANT B: : 25V
+     :CAP TANT SMD TANT D: : 25V
 
 Diodes
 ~~~~~~
@@ -251,12 +258,12 @@ listed in this document. The actual requirements are listed here for
 information and to assist in a gradual migration plan.
 
 :mod:`entityhub.conventions.electronics`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Most of the strings listed here are defined in this module, along with string
 dependent functions.
 
-:func:`entityhub.conventions.electronics.eln_ident_transform`:
+:func:`entityhub.conventions.electronics.eln_ident_transform` :
 
     If the device string starts with any of the following, it's ident constructor leaves
     out the footprint.
@@ -265,8 +272,24 @@ dependent functions.
         - ``CRYSTAL 4PIN``
 
 :mod:`sourcing.electronics`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   :IC: If the device string begins with ``IC``, the ``value`` is assumed to be a
          reasonably complete Manufacturer Part Number.
 
+:mod:`sourcing.digikey`
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Description
+
+:func:`sourcing.digikey._search_preprocess` :
+
+    Description
+
+:func:`sourcing.digikey._get_device_catstrings` :
+
+    Description
+
+:func:`sourcing.digikey._tf_resistance_to_canonical` :
+
+    Description

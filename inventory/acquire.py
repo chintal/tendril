@@ -3,8 +3,8 @@ Inventory Acquire Module documentation (:mod:`inventory.acquire`)
 =================================================================
 """
 
-import utils.ooutils
-import utils.fsutils
+import utils.libreoffice
+import utils.fs
 import utils.config
 
 import entityhub.transforms
@@ -24,7 +24,7 @@ class StockXlsReader(object):
         """
         self.location = location
         self.sheetname = sname
-        assert isinstance(xlf, utils.ooutils.XLFile)
+        assert isinstance(xlf, utils.libreoffice.XLFile)
         self._xlf = xlf
         self.filepath = xlf.fpath
         self.qtydate = None
@@ -85,7 +85,7 @@ class StockXlsReader(object):
 
 
 def get_stockxlsreader(xlpath, sname, location, tfpath):
-    xlf = utils.ooutils.get_xlf(xlpath)
+    xlf = utils.libreoffice.get_xlf(xlpath)
     reader = StockXlsReader(xlf, sname, location, tfpath)
     return reader
 
@@ -118,7 +118,7 @@ def gen_canonical_transform(elec_inven_data_idx):
         rdr = get_stockxlsreader(fpath, sname, location, tfpath)
 
         outp = tfpath
-        outf = utils.fsutils.VersionedOutputFile(outp)
+        outf = utils.fs.VersionedOutputFile(outp)
         outw = csv.writer(outf)
         outw.writerow(('Current', 'gEDA Current', 'Ideal'))
         for line in rdr.row_gen:

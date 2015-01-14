@@ -1,4 +1,0 @@
-
-
-.. automodule:: utils.pdfutils
-    :members:
