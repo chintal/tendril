@@ -1,0 +1,4 @@
+
+
+.. automodule:: sourcing.digikey
+    :members:
