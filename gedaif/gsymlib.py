@@ -14,6 +14,8 @@ from utils.config import GEDA_SYMLIB_ROOT
 from utils.config import AUDIT_PATH
 from utils.config import KOALA_ROOT
 
+import conventions.electronics
+
 
 class GedaSymbol(object):
     def __init__(self, fpath):
@@ -50,14 +52,14 @@ class GedaSymbol(object):
 
     @property
     def ident(self):
-        return electronics.ident_transform(self.device,
+        return conventions.electronics.ident_transform(self.device,
                                                                  self.value,
                                                                  self.footprint)
 
     @property
     def sym_ok(self):
         rval = False
-        if self.device in electronics.DEVICE_CLASSES:
+        if self.device in conventions.electronics.DEVICE_CLASSES:
             rval = True
         return rval
 
@@ -104,13 +106,13 @@ class GSymGeneratorFile(object):
             if gendata['type'] == 'resistor':
                 for wattage in gendata['wattages']:
                     for resistance in gendata['resistances']:
-                        values.append(electronics.construct_resistor(resistance, wattage))
+                        values.append(conventions.electronics.construct_resistor(resistance, wattage))
                 return values
 
             if gendata['type'] == 'capacitor':
                 for voltage in gendata['voltages']:
                     for capacitance in gendata['capacitances']:
-                        values.append(electronics.construct_capacitor(capacitance, voltage))
+                        values.append(conventions.electronics.construct_capacitor(capacitance, voltage))
                 return values
         else:
             logging.ERROR("Config file schema is not supported")

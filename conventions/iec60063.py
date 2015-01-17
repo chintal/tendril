@@ -12,6 +12,9 @@ E6 = [elem for idx, elem in enumerate(E12) if idx % 2 == 0]
 E3 = [elem for idx, elem in enumerate(E6) if idx % 2 == 0]
 
 cap_ostrs = ['fF', 'pF', 'nF', 'uF', 'mF']
+res_ostrs = ['m', 'E', 'K', 'M', 'G']
+zen_ostrs = ['V']
+ind_ostrs = ['nH', 'uH', 'mH']
 
 
 def gen_vals(series, ostrs, start=None, end=None):
@@ -31,7 +34,3 @@ def gen_vals(series, ostrs, start=None, end=None):
                     yield valstr
                     if valstr == end:
                         return
-
-
-
-

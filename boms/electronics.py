@@ -29,6 +29,8 @@ from entitybase import EntityBomBase
 import gedaif.bomparser
 import gedaif.conffile
 
+import conventions.electronics
+
 
 class EntityElnComp(EntityBase):
     """Object containing a single electronic component.
@@ -115,9 +117,9 @@ class EntityElnComp(EntityBase):
 
     @property
     def ident(self):
-        return electronics.ident_transform(self.device,
-                                                                 self.value,
-                                                                 self.footprint)
+        return conventions.electronics.ident_transform(self.device,
+                                                       self.value,
+                                                       self.footprint)
 
     @property
     def device(self):
