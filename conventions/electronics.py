@@ -1,6 +1,6 @@
 """
-Electronics Conventions Module documentation (:mod:`boms.electronics`)
-======================================================================
+Electronics Conventions Module documentation (:mod:`conventions.electronics`)
+=============================================================================
 """
 
 import logging
