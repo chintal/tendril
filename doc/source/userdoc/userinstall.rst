@@ -180,25 +180,25 @@ Installing the Dependencies
         on as needed. If another solution is to be used instead, appropriate changes should be made
         to :func:`utils.libreoffice.XLFile._make_csv_files` and :func:`utils.libreoffice.XLFile._parse_sscout`.
 
-        i. Install dependencies:
+        a. Install dependencies:
 
             .. code-block:: bash
 
                 sudo apt-get install python-uno
 
-        ii. Determine ``libreoffice`` ``python`` version:
+        b. Determine ``libreoffice`` ``python`` version:
 
-            TBD. Until then, refer to ``https://code.google.com/p/slidespeech/wiki/FindingLibreOfficePython``_
+            TBD. Until then, refer to `<https://code.google.com/p/slidespeech/wiki/FindingLibreOfficePython>`_
 
-        iii. Checkout the ``officehelpers`` code:
+        c. Checkout the ``officehelpers`` code:
 
             .. code-block:: bash
 
                 svn co svn://svnserver.qznet/scripts/libreoffice
 
-        iv. Navigate to the trunk folder of the obtained repository in a terminal.
+        d. Navigate to the trunk folder of the obtained repository in a terminal.
 
-        v. Install to system using:
+        e. Install to system using:
 
             .. code-block:: bash
 
