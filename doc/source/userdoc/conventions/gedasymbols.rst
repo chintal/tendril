@@ -257,13 +257,13 @@ additions of features to the scripts, the strings should follow the guidelines
 listed in this document. The actual requirements are listed here for
 information and to assist in a gradual migration plan.
 
-:mod:`entityhub.conventions.electronics`
+:mod:`conventions.electronics`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Most of the strings listed here are defined in this module, along with string
 dependent functions.
 
-:func:`entityhub.conventions.electronics.eln_ident_transform` :
+:func:`conventions.electronics.eln_ident_transform` :
 
     If the device string starts with any of the following, it's ident constructor leaves
     out the footprint.

@@ -1,6 +1,6 @@
 """
-This file is part of koala
-See the COPYING, README, and INSTALL files for more information
+Preferred Values IEC60063 Module documentation (:mod:`conventions.iec60063`)
+============================================================================
 """
 
 from decimal import Decimal
@@ -17,7 +17,23 @@ zen_ostrs = ['V']
 ind_ostrs = ['nH', 'uH', 'mH']
 
 
+def get_series(seriesst):
+    if seriesst == 'E24':
+        series = E24
+    elif seriesst == 'E12':
+        series = E12
+    elif seriesst == 'E6':
+        series = E6
+    elif seriesst == 'E3':
+        series = E3
+    else:
+        raise ValueError
+    return series
+
+
 def gen_vals(series, ostrs, start=None, end=None):
+    if isinstance(series, str):
+        series = get_series(series)
     if start is None:
         in_range = True
     else:

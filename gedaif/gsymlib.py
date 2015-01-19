@@ -15,6 +15,7 @@ from utils.config import AUDIT_PATH
 from utils.config import KOALA_ROOT
 
 import conventions.electronics
+import conventions.iec60063
 
 
 class GedaSymbol(object):
@@ -104,15 +105,37 @@ class GSymGeneratorFile(object):
             values = []
 
             if gendata['type'] == 'resistor':
-                for wattage in gendata['wattages']:
-                    for resistance in gendata['resistances']:
-                        values.append(conventions.electronics.construct_resistor(resistance, wattage))
+                for resistance in gendata['resistances']:
+                    values.append(resistance)
+                if 'generators' in gendata.keys():
+                    for generator in gendata['generators']:
+                        if generator['std'] == 'iec60063':
+                            rvalues = conventions.iec60063.gen_vals(generator['series'],
+                                                                    conventions.iec60063.res_ostrs,
+                                                                    start=generator['start'],
+                                                                    end=generator['end'])
+                            for rvalue in rvalues:
+                                values.append(conventions.electronics.construct_resistor(rvalue, generator['wattage']))
+                        else:
+                            raise ValueError
+
                 return values
 
             if gendata['type'] == 'capacitor':
-                for voltage in gendata['voltages']:
-                    for capacitance in gendata['capacitances']:
-                        values.append(conventions.electronics.construct_capacitor(capacitance, voltage))
+                for capacitance in gendata['capacitances']:
+                        values.append(capacitance)
+                if 'generators' in gendata.keys():
+                    for generator in gendata['generators']:
+                        if generator['std'] == 'iec60063':
+                            cvalues = conventions.iec60063.gen_vals(generator['series'],
+                                                                    conventions.iec60063.cap_ostrs,
+                                                                    start=generator['start'],
+                                                                    end=generator['end'])
+                            for cvalue in cvalues:
+                                values.append(conventions.electronics.construct_capacitor(cvalue, generator['voltage']))
+                        else:
+                            raise ValueError
+
                 return values
         else:
             logging.ERROR("Config file schema is not supported")

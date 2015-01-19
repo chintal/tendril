@@ -1,0 +1,13 @@
+Jinja2==2.7.3
+MarkupSafe==0.23
+PyPDF2==1.23
+PyYAML==3.11
+argparse==1.2.1
+beautifulsoup4==4.3.2
+lxml==3.4.1
+py==1.4.22
+pycallgraph==1.0.1
+pytest==2.6.0
+selenium==2.44.0
+splinter==0.7.0
+wsgiref==0.1.2
