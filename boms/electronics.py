@@ -29,6 +29,7 @@ import conventions.electronics
 
 from outputbase import OutputElnBomDescriptor
 from outputbase import OutputBom
+
 from entitybase import EntityBase
 from entitybase import EntityGroupBase
 from entitybase import EntityBomBase

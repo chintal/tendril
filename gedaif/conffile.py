@@ -14,6 +14,7 @@ class ConfigsFile(object):
         self._projectfolder = os.path.normpath(projectfolder)
         self.configdata = self.get_configs_file()
         self.projectfile = self.configdata['projfile']
+        self.elprojfile = self.configdata['elprojfile']
 
     def get_configs_file(self):
         with open(os.path.join(self.projectfolder, "schematic", "configs.yaml")) as configfile:

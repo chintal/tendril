@@ -18,8 +18,8 @@ exparams = {
     'dX': '98.2',
     'dY': '46.7',
     'qty': range(100),
-    'time': 15,     # 5, 7, 10, 12, 15, 18, 21, 25, 30
-    'finish': 'Au', # HAL, Ag, Au, PBFREE, NP, I, OC
+    'time': 15,      # 5, 7, 10, 12, 15, 18, 21, 25, 30
+    'finish': 'Au',  # HAL, Ag, Au, PBFREE, NP, I, OC
 }
 
 
