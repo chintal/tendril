@@ -21,15 +21,21 @@ Module Members:
 ---------------
 
 """
-import logging
+
+
+import gedaif.bomparser
+import gedaif.conffile
+import conventions.electronics
+
+from outputbase import OutputElnBomDescriptor
+from outputbase import OutputBom
 
 from entitybase import EntityBase
 from entitybase import EntityGroupBase
 from entitybase import EntityBomBase
-import gedaif.bomparser
-import gedaif.conffile
 
-import conventions.electronics
+import os
+import logging
 
 
 class EntityElnComp(EntityBase):
@@ -48,12 +54,11 @@ class EntityElnComp(EntityBase):
     """
     def __init__(self, item=None):
         super(EntityElnComp, self).__init__()
-        self._refdes = ""
         self._device = ""
         self._value = ""
         self._footprint = ""
         self._fillstatus = ""
-        self._defined = False
+
         if item is not None:
             self.define(item.data['refdes'], item.data['device'],
                         item.data['value'], item.data['footprint'],
@@ -79,24 +84,6 @@ class EntityElnComp(EntityBase):
         self.footprint = footprint
         self.fillstatus = fillstatus
         self._defined = True
-
-    @property
-    def defined(self):
-        """ State of the component. The component should be used only when
-        it is fully defined.
-
-        This is a read-only property.
-        """
-        return self._defined
-
-    @property
-    def refdes(self):
-        """ Refdes string. """
-        return self._refdes
-
-    @refdes.setter
-    def refdes(self, value):
-        self._refdes = value
 
     @property
     def fillstatus(self):
@@ -162,10 +149,8 @@ class EntityElnGroup(EntityGroupBase):
         :ivar eln_comp_list: List of EntityElnComp objects
 
     """
-    def __init__(self, groupname):
-        super(EntityElnGroup, self).__init__()
-        self.groupname = groupname
-        self.complist = []
+    def __init__(self, groupname, contextname):
+        super(EntityElnGroup, self).__init__(groupname, contextname)
         pass
 
     def insert(self, item):
@@ -184,7 +169,7 @@ class EntityElnGroup(EntityGroupBase):
             if x.defined:
                 self.complist.append(x)
 
-    def insert_comp(self, comp):
+    def insert_eln_comp(self, comp):
         """ Insert a manually created component into the EntityGroup.
 
         This should be used for components not originating directly from
@@ -252,18 +237,17 @@ class EntityElnBom(EntityBomBase):
 
         self.configurations = EntityElnBomConf(configfile.configdata)
 
-        self.grouplist = []
         self.create_groups()
-
         self.populate_bom()
 
     def create_groups(self):
-        x = EntityElnGroup('default')
-        self.grouplist.append(x)
         groupnamelist = [x['name'] for x in self.configurations.grouplist]
+        if 'default' not in groupnamelist:
+            x = EntityElnGroup('default', self.pcbname)
+            self.grouplist.append(x)
         for group in groupnamelist:
             logging.debug("Creating Group: " + str(group))
-            x = EntityElnGroup(group)
+            x = EntityElnGroup(group, self.pcbname)
             self.grouplist.append(x)
 
     def find_tgroup(self, item):
@@ -294,14 +278,14 @@ class EntityElnBom(EntityBomBase):
         tgroup = self.find_group('default')
         comp = EntityElnComp()
         comp.define('PCB', 'PCB', self.configurations.pcbname)
-        tgroup.insert_comp(comp)
+        tgroup.insert_eln_comp(comp)
         parser = gedaif.bomparser.GedaBomParser(self.projfolder, "bom")
         for item in parser.line_gen:
             tgroup = self.find_tgroup(item)
             tgroup.insert(item)
 
     def create_output_bom(self, configname):
-        outbomdescriptor = OutputBomDescriptor(self.pcbname, self.projfolder, configname, self.configurations)
+        outbomdescriptor = OutputElnBomDescriptor(self.pcbname, self.projfolder, configname, self.configurations)
         outbom = OutputBom(outbomdescriptor)
         outgroups = self.configurations.get_configuration(configname)
         for group in outgroups:
@@ -310,150 +294,6 @@ class EntityElnBom(EntityBomBase):
                 outbom.insert_component(comp)
         outbom.sort_by_ident()
         return outbom
-
-
-class OutputBomDescriptor(object):
-    def __init__(self, pcbname, cardfolder, configname, configurations, multiplier=1):
-        self.pcbname = pcbname
-        self.cardfolder = cardfolder
-        self.configname = configname
-        self.multiplier = multiplier
-        self.configurations = configurations
-
-
-class OutputBomLine(object):
-
-    def __init__(self, comp, parent):
-        """
-
-
-        :type parent: OutputBom
-        :type comp: EntityElnComp
-        """
-        self.ident = comp.ident
-        self.refdeslist = []
-        self.parent = parent
-
-    def add(self, comp):
-        """
-
-        :type comp: EntityElnComp
-        """
-        if comp.ident == self.ident:
-            self.refdeslist.append(comp.refdes)
-        else:
-            logging.error("Ident Mismatch")
-
-    @property
-    def quantity(self):
-        return len(self.refdeslist) * self.parent.descriptor.multiplier
-
-
-class OutputBom(object):
-
-    def __init__(self, descriptor):
-        """
-
-        :type descriptor: OutputBomDescriptor
-        """
-        self.lines = []
-        self.descriptor = descriptor
-
-    def sort_by_ident(self):
-        self.lines.sort(key=lambda x: x.ident, reverse=False)
-        for line in self.lines:
-            line.refdeslist.sort()
-
-    def find_by_ident(self, ident):
-        for line in self.lines:
-            assert isinstance(line, OutputBomLine)
-            if line.ident == ident:
-                return line
-        return None
-
-    def insert_component(self, item):
-        """
-
-        :type item: EntityElnComp
-        """
-        line = self.find_by_ident(item.ident)
-        if line is None:
-            line = OutputBomLine(item, self)
-            self.lines.append(line)
-        line.add(item)
-
-    def multiply(self, factor, composite=False):
-        if composite is True:
-            self.descriptor.multiplier = self.descriptor.multiplier * factor
-        else:
-            self.descriptor.multiplier = factor
-
-
-class CompositeOutputBomLine(object):
-
-    def __init__(self, line, colcount):
-        self.ident = line.ident
-        self.columns = [0] * colcount
-
-    def add(self, line, column):
-        """
-
-        :type line: OutputBomLine
-        """
-        if line.ident == self.ident:
-            self.columns[column] = line.quantity
-        else:
-            logging.error("Ident Mismatch")
-
-    @property
-    def quantity(self):
-        return sum(self.columns)
-
-
-class CompositeOutputBom():
-    def __init__(self, bom_list):
-        self.descriptors = []
-        self.lines = []
-        self.colcount = len(bom_list)
-        i = 0
-        for bom in bom_list:
-            self.insert_bom(bom, i)
-            i += 1
-        self.sort_by_ident()
-
-    def insert_bom(self, bom, i):
-        """
-
-        :type bom: OutputBom
-        """
-        self.descriptors.append(bom.descriptor)
-        for line in bom.lines:
-            self.insert_line(line, i)
-
-    def insert_line(self, line, i):
-        """
-
-        :type line: OutputBomLine
-        """
-        cline = self.find_by_ident(line)
-        if cline is None:
-            cline = CompositeOutputBomLine(line, self.colcount)
-            self.lines.append(cline)
-        cline.add(line, i)
-
-    def find_by_ident(self, line):
-        """
-
-        :type line: OutputBomLine
-        """
-        for cline in self.lines:
-            assert isinstance(cline, CompositeOutputBomLine)
-            if cline.ident == line.ident:
-                return cline
-        return None
-
-    def sort_by_ident(self):
-        self.lines.sort(key=lambda x: x.ident, reverse=False)
 
 
 def import_pcb(cardfolder):
@@ -478,6 +318,7 @@ def import_pcb(cardfolder):
     >>> bom = boms.electronics.import_pcb('path/to/cardfolder')
 
     """
+    cardfolder = os.path.abspath(cardfolder)
     pcbbom = None
     configfile = gedaif.conffile.ConfigsFile(cardfolder)
     if configfile.configdata is not None:

@@ -9,12 +9,19 @@ import os
 
 class GedaProjectFile(object):
 
-    def __init__(self, projectfolder):
+    def __init__(self, projectfolder, electrical=False):
         self.schfiles = []
         self.pcbfile = None
+
         configsfile = gedaif.conffile.ConfigsFile(projectfolder)
-        projfilepath = os.path.normpath(projectfolder + '/schematic/' +
+        if electrical is False:
+            self.schfolder = os.path.join(os.path.abspath(projectfolder), 'schematic')
+            projfilepath = os.path.join(self.schfolder,
                                         configsfile.configdata['projfile'])
+        else:
+            self.schfolder = os.path.join(os.path.abspath(projectfolder), 'electrical')
+            projfilepath = os.path.join(self.schfolder,
+                                        configsfile.configdata['elprojfile'])
         with open(projfilepath, 'r') as f:
             for line in f:
                 line = self.strip_line(line)
@@ -30,6 +37,10 @@ class GedaProjectFile(object):
     def strip_line(line):
         line = line.split("#")[0]
         return line.strip()
+
+    @property
+    def schpaths(self):
+        return [os.path.join(self.schfolder, schfile) for schfile in self.schfiles]
 
 if __name__ == "__main__":
     pass

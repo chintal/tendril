@@ -6,3 +6,4 @@ Conventions
 .. toctree::
 
    gedasymbols
+   gedaprojects
