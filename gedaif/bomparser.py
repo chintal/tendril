@@ -26,25 +26,26 @@ class GedaBomParser(object):
         self.temp_bom = None
         self.columns = []
         self.line_gen = None
-        self.projectfolder = projectfolder
+        self.projectfolder = os.path.normpath(projectfolder)
         self.gpf = gedaif.projfile.GedaProjectFile(self.projectfolder)
+        self._temp_bom_path = os.path.join(self.projectfolder, "schematic", "tempbom.net")
         self.generate_temp_bom(backend)
         self.prep_temp_bom()
 
     def generate_temp_bom(self, backend):
-        os.chdir(os.path.normpath(self.projectfolder + "/schematic"))
-        cmd = "gnetlist -o tempbom.net -g"
-        subprocess.call(cmd.split() + [backend] + self.gpf.schfiles)
+        cmd = "gnetlist"
+        subprocess.call(cmd.split() +
+                        ['-o', self._temp_bom_path] +
+                        ['-g', backend] +
+                        self.gpf.schpaths)
 
     def prep_temp_bom(self):
-        fname = os.path.normpath(self.projectfolder + "/schematic/tempbom.net")
-        self.temp_bom = open(fname, 'r')
+        self.temp_bom = open(self._temp_bom_path, 'r')
         self.columns = self.temp_bom.readline().split('\t')[:-1]
         self.line_gen = self.get_lines()
 
     def delete_temp_bom(self):
-        fpath = os.path.normpath(self.projectfolder + "/schematic/tempbom.net")
-        os.remove(fpath)
+        os.remove(self._temp_bom_path)
 
     def get_lines(self):
         for line in self.temp_bom:

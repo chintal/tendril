@@ -190,7 +190,7 @@ Installing the Dependencies
 
             TBD. Until then, refer to `<https://code.google.com/p/slidespeech/wiki/FindingLibreOfficePython>`_
 
-        c. Checkout the ``officehelpers`` code:
+        c. Checkout the ``sofficehelpers`` code:
 
             .. code-block:: bash
 
