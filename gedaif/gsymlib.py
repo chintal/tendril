@@ -54,8 +54,8 @@ class GedaSymbol(object):
     @property
     def ident(self):
         return conventions.electronics.ident_transform(self.device,
-                                                                 self.value,
-                                                                 self.footprint)
+                                                       self.value,
+                                                       self.footprint)
 
     @property
     def sym_ok(self):
@@ -83,6 +83,9 @@ class GedaSymbol(object):
                 self.status = 'Virtual'
         else:
             raise AttributeError
+
+    def __repr__(self):
+        return '{0:40}'.format(self.ident)
 
 
 class GSymGeneratorFile(object):
@@ -185,30 +188,14 @@ def _jinja_init():
     return template
 
 
-def seed_generators():
-    symlib = gen_symlib()
-    template = _jinja_init()
-    for symbol in symlib:
-        if symbol.is_generator:
-            genpath = os.path.splitext(symbol.fpath)[0] + '.gen.yaml'
-            stage = {'symbolfile': os.path.split(symbol.fpath)[1],
-                     'value': symbol.value.strip(),
-                     'description': symbol.description}
-            with open(genpath, 'w') as f:
-                f.write(template.render(stage=stage))
+gsymlib = gen_symlib()
 
 
-def export_symlib():
-    symbols = gen_symlib()
-
-    with open(os.path.join(AUDIT_PATH, 'gsymlib-audit.csv'), 'w') as f:
-        fw = csv.writer(f)
-        fw.writerow(('filename', 'status', 'ident',
-                     'device', 'value', 'footprint',
-                     'description', 'path', 'package'))
-        symbols.sort(key=lambda x: x.fpath)
-        for symbol in symbols:
-            fw.writerow((symbol.fname, symbol.status, symbol.ident,
-                         symbol.device, symbol.value, symbol.footprint,
-                         symbol.description, symbol.fpath, symbol.package))
-        f.close()
+def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
+    for symbol in gsymlib:
+        if symbol.device == device and symbol.footprint == footprint:
+            cap, volt = conventions.electronics.parse_capacitor(symbol.value)
+            sym_capacitance = conventions.electronics.parse_capacitance(cap)
+            if capacitance == sym_capacitance:
+                return symbol
+    raise ValueError

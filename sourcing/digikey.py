@@ -422,22 +422,14 @@ class VendorDigiKey(vendors.VendorBase):
                 filters[header] = (fname, options)
         except Exception, e:
             logging.error(traceback.format_exc())
-            logging.error('idx :'+ str(idx))
+            logging.error('idx :' + str(idx))
             return False, None
         return True, filters
 
     @staticmethod
     def _get_default_urlparams():
-        params = []
-        params.append(('stock', '0'))
-        params.append(('mnonly', '0'))
-        params.append(('newproducts', '0'))
-        params.append(('ColumnSort', '0'))
-        params.append(('page', '1'))
-        params.append(('quantity', '0'))
-        params.append(('ptm', '0'))
-        params.append(('fid', '0'))
-        params.append(('pagesize', '500'))
+        params = [('stock', '0'), ('mnonly', '0'), ('newproducts', '0'), ('ColumnSort', '0'), ('page', '1'),
+                  ('quantity', '0'), ('ptm', '0'), ('fid', '0'), ('pagesize', '500')]
         return params
 
     @staticmethod
@@ -519,11 +511,11 @@ class VendorDigiKey(vendors.VendorBase):
         if devtype == 'resistor':
             loptions = (('resistance', "Resistance (Ohms)", 'equals'),
                         ('wattage', "Power (Watts)", 'contains'))
-            lvalues = electronics.parse_resistor(value)
+            lvalues = conventions.electronics.parse_resistor(value)
         elif devtype == 'capacitor':
             loptions = (('capacitance', "Capacitance", 'equals'),
                         ('voltage', "Voltage - Rated", 'equals'))
-            lvalues = electronics.parse_capacitor(value)
+            lvalues = conventions.electronics.parse_capacitor(value)
         else:
             raise ValueError
 

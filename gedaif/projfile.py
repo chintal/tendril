@@ -9,19 +9,15 @@ import os
 
 class GedaProjectFile(object):
 
-    def __init__(self, projectfolder, electrical=False):
+    def __init__(self, projectfolder):
         self.schfiles = []
         self.pcbfile = None
 
-        configsfile = gedaif.conffile.ConfigsFile(projectfolder)
-        if electrical is False:
-            self.schfolder = os.path.join(os.path.abspath(projectfolder), 'schematic')
-            projfilepath = os.path.join(self.schfolder,
-                                        configsfile.configdata['projfile'])
-        else:
-            self.schfolder = os.path.join(os.path.abspath(projectfolder), 'electrical')
-            projfilepath = os.path.join(self.schfolder,
-                                        configsfile.configdata['elprojfile'])
+        self.configsfile = gedaif.conffile.ConfigsFile(projectfolder)
+
+        self.schfolder = os.path.join(os.path.abspath(projectfolder), 'schematic')
+        projfilepath = os.path.join(self.schfolder,
+                                    self.configsfile.configdata['projfile'])
         with open(projfilepath, 'r') as f:
             for line in f:
                 line = self.strip_line(line)

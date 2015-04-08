@@ -3,6 +3,7 @@ Electronics Conventions Module documentation (:mod:`conventions.electronics`)
 =============================================================================
 """
 
+from decimal import Decimal
 import logging
 import re
 
@@ -142,8 +143,11 @@ def parse_ident(ident):
     return device, value, footprint
 
 
-def construct_resistor(resistance, wattage):
-    value = '/'.join([resistance, wattage])
+def construct_resistor(resistance, wattage=None):
+    if wattage is not None:
+        value = '/'.join([resistance, wattage])
+    else:
+        value = resistance
     try:
         cresistance, cwattage = parse_resistor(value)
         if cresistance != resistance:
@@ -156,7 +160,10 @@ def construct_resistor(resistance, wattage):
 
 
 def construct_capacitor(capacitance, voltage):
-    value = '/'.join([capacitance, voltage])
+    if voltage is not None:
+        value = '/'.join([capacitance, voltage])
+    else:
+        value = capacitance
     try:
         ccapacitance, cvoltage = parse_capacitor(value)
         if ccapacitance != capacitance:
@@ -225,3 +232,28 @@ def parse_crystal(value):
     except AttributeError:
         return None
 
+
+def parse_resistance(value):
+    num_val = Decimal(value[:-1])
+    ostr = value[-1:]
+    if ostr == 'm':
+        return num_val / 1000
+    elif ostr == 'E':
+        return num_val
+    elif ostr == 'K':
+        return num_val * 1000
+    elif ostr == 'M':
+        return num_val * 1000 * 1000
+
+
+def parse_capacitance(value):
+    num_val = Decimal(value[:-2])
+    ostr = value[-2:]
+    if ostr == 'pF':
+        return num_val / 1000
+    elif ostr == 'nF':
+        return num_val
+    elif ostr == 'uF':
+        return num_val * 1000
+    elif ostr == 'mF':
+        return num_val * 1000 * 1000

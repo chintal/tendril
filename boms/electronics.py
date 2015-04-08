@@ -222,6 +222,12 @@ class EntityElnBomConf(object):
                     rval = rval + self.get_sec_groups(configsection, sec_confname)
         return rval
 
+    def get_configuration_motifs(self, configname):
+        for configuration in self.configurations:
+            if configuration["configname"] == configname:
+                return configuration["motiflist"]
+        raise ValueError
+
 
 class EntityElnBom(EntityBomBase):
     def __init__(self, configfile):
@@ -236,7 +242,7 @@ class EntityElnBom(EntityBomBase):
         self.projfolder = configfile.projectfolder
 
         self.configurations = EntityElnBomConf(configfile.configdata)
-
+        self._motifs = []
         self.create_groups()
         self.populate_bom()
 
@@ -279,12 +285,22 @@ class EntityElnBom(EntityBomBase):
         comp = EntityElnComp()
         comp.define('PCB', 'PCB', self.configurations.pcbname)
         tgroup.insert_eln_comp(comp)
-        parser = gedaif.bomparser.GedaBomParser(self.projfolder, "bom")
+        parser = gedaif.bomparser.MotifAwareBomParser(self.projfolder, "bom")
         for item in parser.line_gen:
             tgroup = self.find_tgroup(item)
             tgroup.insert(item)
+        for item in parser.motif_gen:
+            self._motifs.append(item)
+
+    def get_motif_by_refdes(self, refdes):
+        for motif in self._motifs:
+            if refdes == motif.refdes:
+                return motif
+        raise ValueError
 
     def create_output_bom(self, configname):
+        if configname not in self.configurations.get_configurations():
+            raise ValueError
         outbomdescriptor = OutputElnBomDescriptor(self.pcbname, self.projfolder, configname, self.configurations)
         outbom = OutputBom(outbomdescriptor)
         outgroups = self.configurations.get_configuration(configname)
@@ -292,6 +308,15 @@ class EntityElnBom(EntityBomBase):
             grpobj = self.find_group(group)
             for comp in grpobj.complist:
                 outbom.insert_component(comp)
+        motifconfs = self.configurations.get_configuration_motifs(configname)
+        print outgroups
+        for key, motifconf in motifconfs.iteritems():
+            motif = self.get_motif_by_refdes(key)
+            motif.configure(motifconf)
+            for item in motif.get_line_gen():
+                if item.data['group'] in outgroups and item.data['fillstatus'] != 'DNP':
+                    outbom.insert_component(EntityElnComp(item))
+
         outbom.sort_by_ident()
         return outbom
 
