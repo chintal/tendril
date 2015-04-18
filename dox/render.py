@@ -3,11 +3,10 @@ Dox Render module documentation (:mod:`dox.render`)
 ===================================================
 """
 
-
-import jinja2
-
 import os
 import subprocess
+
+import jinja2
 
 from utils.config import DOX_TEMPLATE_FOLDER
 from utils.config import COMPANY_LOGO_PATH

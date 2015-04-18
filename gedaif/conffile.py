@@ -9,10 +9,17 @@ import os
 import yaml
 
 
+class NoGedaProjectException(Exception):
+    pass
+
+
 class ConfigsFile(object):
     def __init__(self, projectfolder):
         self._projectfolder = os.path.normpath(projectfolder)
-        self.configdata = self.get_configs_file()
+        try:
+            self.configdata = self.get_configs_file()
+        except IOError:
+            raise NoGedaProjectException
         self.projectfile = self.configdata['projfile']
         if 'elprojfile' in self.configdata.keys():
             self.elprojfile = self.configdata['elprojfile']

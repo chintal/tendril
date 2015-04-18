@@ -9,15 +9,16 @@ import inspect
 CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 KOALA_ROOT = os.path.normpath(os.path.join(CONFIG_PATH, os.pardir, os.pardir))
 AUDIT_PATH = os.path.join(KOALA_ROOT, 'manual-audit')
+PROJECTS_ROOT = os.path.normpath('/home/chintal/quazar/workspace/qda/clone')
 # Network Details
 
 NETWORK_PROXY_TYPE = 'http'
-NETWORK_PROXY_IP = '192.168.1.254'
-NETWORK_PROXY_PORT = '3128'
-# NETWORK_PROXY_IP = 'localhost'
-# NETWORK_PROXY_PORT = '8080'
-NETWORK_PROXY_USER = 'chintal'
-NETWORK_PROXY_PASS = 'chintal'
+# NETWORK_PROXY_IP = '192.168.1.254'
+# NETWORK_PROXY_PORT = '3128'
+NETWORK_PROXY_IP = 'localhost'
+NETWORK_PROXY_PORT = '8080'
+NETWORK_PROXY_USER = None
+NETWORK_PROXY_PASS = None
 ENABLE_REDIRECT_CACHING = True
 
 # Currency Details

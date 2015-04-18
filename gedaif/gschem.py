@@ -11,10 +11,11 @@ import os
 import subprocess
 
 
-def conv_gsch2pdf(schpath):
+def conv_gsch2pdf(schpath, docfolder):
     schpath = os.path.normpath(schpath)
-    pspath = os.path.normpath(os.path.splitext(schpath)[0]+'.ps')
-    pdfpath = os.path.normpath(os.path.splitext(schpath)[0]+'.pdf')
+    schfname = os.path.splitext(os.path.split(schpath)[1])[0]
+    pspath = os.path.join(docfolder, schfname+'.ps')
+    pdfpath = os.path.join(docfolder, schfname+'.pdf')
     gschem_pscmd = "gschem -o" + pspath + " -s" + GEDA_SCHEME_DIR + '/print.scm ' + schpath
     subprocess.call(gschem_pscmd.split(' '))
     utils.pdf.conv_ps2pdf(pspath, pdfpath)

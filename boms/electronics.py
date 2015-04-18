@@ -43,10 +43,10 @@ class EntityElnComp(EntityBase):
 
         Accept a ``gedaif.bomparser.BomLine`` generated through gnetlist's
         ``bom`` backend. The ``attribs`` file should atleast contain:
-         * device
-         * value
-         * footprint
-         * fillstatus
+        * device
+        * value
+        * footprint
+        * fillstatus
 
         :param item: BomLine containing details of component to be created
         :type item: gedaif.bomparser.BomLine
@@ -309,7 +309,6 @@ class EntityElnBom(EntityBomBase):
             for comp in grpobj.complist:
                 outbom.insert_component(comp)
         motifconfs = self.configurations.get_configuration_motifs(configname)
-        print outgroups
         for key, motifconf in motifconfs.iteritems():
             motif = self.get_motif_by_refdes(key)
             motif.configure(motifconf)

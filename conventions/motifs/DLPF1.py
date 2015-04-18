@@ -12,6 +12,9 @@ from conventions import electronics
 from conventions import iec60063
 from gedaif import gsymlib
 
+from utils import log
+logger = log.get_logger(__name__, None)
+
 
 class MotifDLPF1(MotifBase):
     def __init__(self, identifier):
@@ -104,6 +107,7 @@ class MotifDLPF1(MotifBase):
         return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])
 
     def validate(self):
+        logger.info("Validating Motif : " + self.refdes)
         assert self.R1 == self.R2
         assert self.C3 == self.C2
         assert self.C1 >= 10 * self.C2

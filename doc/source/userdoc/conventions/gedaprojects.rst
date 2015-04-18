@@ -125,14 +125,6 @@ Project Folder Structure
             |   |-- readme.txt                  (project-template-manual)
             |   `-- configs.yaml                (project-template-manual)
             |
-            |-- electrical
-            |   |-- [elschname-1].sch
-            |   ..
-            |   |-- [elschname-2].sch
-            |   |-- attribs                     (project-template)
-            |   |-- [projname]-electrical.proj  (project-template-manual)
-            |   `-- readme.txt                  (project-template-manual)
-            |
             `-- doc                             (all-generated-koala)
                 |-- [projname]-masterdoc.pdf
                 |-- [projname]-configs.pdf

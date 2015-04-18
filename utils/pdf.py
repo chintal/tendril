@@ -27,10 +27,12 @@ def merge_pdf(pdflist, outfilepath):
     """
     merger = PyPDF2.PdfFileMerger()
     for f in pdflist:
+        if f is None:
+            continue
         f = os.path.normpath(f)
         merger.append(PyPDF2.PdfFileReader(file(f, 'rb')))
-        merger.write(outfilepath)
-        return outfilepath
+    merger.write(outfilepath)
+    return outfilepath
 
 
 def conv_ps2pdf(pspath, pdfpath):
