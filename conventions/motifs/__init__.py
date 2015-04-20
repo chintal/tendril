@@ -8,7 +8,10 @@ def create_motif_object(motifst):
     modname = motifst.split('.')[0]
     modstr = 'conventions.motifs.' + modname
     clsname = 'Motif' + modname
-    mod = __import__(modstr, fromlist=[clsname])
-    cls = getattr(mod, clsname)
-    instance = cls(motifst)
-    return instance
+    try:
+        mod = __import__(modstr, fromlist=[clsname])
+        cls = getattr(mod, clsname)
+        instance = cls(motifst)
+        return instance
+    except ImportError:
+        raise ValueError("Motif Unrecognized :" + motifst)

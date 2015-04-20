@@ -4,6 +4,7 @@ Electronics Conventions Module documentation (:mod:`conventions.electronics`)
 """
 
 from decimal import Decimal
+from decimal import InvalidOperation
 import logging
 import re
 
@@ -257,3 +258,53 @@ def parse_capacitance(value):
         return num_val * 1000
     elif ostr == 'mF':
         return num_val * 1000 * 1000
+
+
+def parse_voltage(value):
+    value = value.strip()
+    try:
+        num_val = Decimal(value[:-1])
+        ostr = value[-1:]
+    except InvalidOperation:
+        num_val = Decimal(value[:-2])
+        ostr = value[-2:]
+
+    if ostr == 'V':
+        return num_val
+    elif ostr == 'mV':
+        return num_val / 1000
+    elif ostr == 'uV':
+        return num_val / 10000000
+
+
+def parse_current(value):
+    value = value.strip()
+    try:
+        num_val = Decimal(value[:-1])
+        ostr = value[-1:]
+    except InvalidOperation:
+        num_val = Decimal(value[:-2])
+        ostr = value[-2:]
+
+    if ostr == 'A':
+        return num_val * 1000
+    elif ostr == 'mA':
+        return num_val
+    elif ostr == 'uA':
+        return num_val / 1000
+    elif ostr == 'nA':
+        return num_val / 1000000
+
+res_ostrs = ['m', 'E', 'K', 'M', 'G']
+
+
+def normalize_resistance(res):
+    res = Decimal(res)
+    ostr_idx = 1
+    while res < 1:
+        res *= 1000
+        ostr_idx -= 1
+    while res >= 1000:
+        res /= 1000
+        ostr_idx += 1
+    return str(res) + res_ostrs[ostr_idx]

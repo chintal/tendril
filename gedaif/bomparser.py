@@ -6,8 +6,8 @@ gEDA BOM Parser module documentation (:mod:`gedaif.bomparser`)
 import subprocess
 import os
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
+from utils import log
+logger = log.get_logger(__name__, level=log.INFO)
 
 
 from conventions.motifs import create_motif_object
@@ -77,18 +77,25 @@ class MotifAwareBomParser(GedaBomParser):
         for motif in self._motifs:
             if motif.refdes == motifst:
                 return motif
-        logging.debug("Creating new motif : " + motifst)
-        motif = create_motif_object(motifst)
-        self._motifs.append(motif)
+        logger.info("Creating new motif : " + motifst)
+        try:
+            motif = create_motif_object(motifst)
+            self._motifs.append(motif)
+        except ValueError:
+            logger.error("Failed to create motif : " + motifst)
+            motif = None
         return motif
 
     def get_lines(self):
         for line in self.temp_bom:
             bomline = BomLine(line, self.columns)
             if bomline.data['motif'] != 'unknown':
-                logging.debug("Found motif element : " + bomline.data['motif'])
+                logger.debug("Found motif element : " + bomline.data['motif'])
                 motif = self.get_motif(bomline.data['motif'])
-                motif.add_element(bomline)
+                if motif is not None:
+                    motif.add_element(bomline)
+                else:
+                    logger.warning("Element not inserted : " + bomline.data["refdes"])
             else:
                 yield bomline
         self.motif_gen = self.get_motifs()

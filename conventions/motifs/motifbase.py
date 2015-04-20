@@ -23,12 +23,12 @@ class MotifBase(object):
         value = value.split(':')[0]
         self._type, self._ident = value.split('.')
 
-    def add_element(self, bomline):
-        raise NotImplementedError
-
     def _line_generator(self):
         for elem in self._elements:
             yield elem
+
+    def get_configdict_stub(self):
+        raise NotImplementedError
 
     def configure(self, configdict):
         raise NotImplementedError
@@ -41,3 +41,9 @@ class MotifBase(object):
             if elem.data['motif'].split(':')[1] == idx:
                 return elem
         raise KeyError
+
+    def add_element(self, bomline):
+        self._elements.append(bomline)
+
+    def validate(self):
+        raise NotImplementedError

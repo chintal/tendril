@@ -199,3 +199,19 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
             if capacitance == sym_capacitance:
                 return symbol
     raise ValueError
+
+
+def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
+    if device == 'RES THRU':
+        if resistance in [conventions.electronics.parse_resistance(x) for x in conventions.iec60063.gen_vals(conventions.iec60063.get_series('E24'), conventions.iec60063.res_ostrs)]:
+            return conventions.electronics.construct_resistor(conventions.electronics.normalize_resistance(resistance), '0.25W')
+        else:
+            raise ValueError(resistance, device)
+    for symbol in gsymlib:
+        if symbol.device == device and symbol.footprint == footprint:
+            res, watt = conventions.electronics.parse_resistor(symbol.value)
+            sym_resistance = conventions.electronics.parse_resistance(res)
+            if resistance == sym_resistance:
+                return symbol.value
+    raise ValueError(resistance)
+

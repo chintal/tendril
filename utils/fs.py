@@ -8,12 +8,32 @@ import atexit
 import os
 import glob
 import string
+from datetime import datetime
 
 
 if tempfile.tempdir is None:
     tempfile.tempdir = tempfile.mkdtemp()
 
 TEMPDIR = tempfile.gettempdir()
+
+
+def get_folder_mtime(folder):
+    filelist = [os.path.join(folder, f) for f in os.listdir(folder)]
+    last_change = None
+    for f in filelist:
+        fct = get_file_mtime(f)
+        if last_change is None:
+            last_change = fct
+        elif fct is not None and last_change < fct:
+            last_change = fct
+    return last_change
+
+
+def get_file_mtime(f):
+    try:
+        return datetime.fromtimestamp(os.path.getmtime(f))
+    except OSError:
+        return None
 
 
 class VersionedOutputFile:

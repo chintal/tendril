@@ -11,7 +11,6 @@ from conventions.motifs.motifbase import MotifBase
 from conventions import electronics
 from conventions import iec60063
 from gedaif import gsymlib
-
 from utils import log
 logger = log.get_logger(__name__, None)
 
@@ -28,10 +27,31 @@ class MotifDLPF1(MotifBase):
         # Set Frequency
         self._configdict = configdict
         self.Fdiff = float(configdict['Fdiff'][:-2])
+        self._set_biases()
         self.validate()
 
-    def add_element(self, bomline):
-        self._elements.append(bomline)
+    def _set_biases(self):
+        if 'pbias' not in self._configdict.keys():
+            log.WARNING('Positive terminal bias not defined : ' + self.refdes)
+        else:
+            if self._configdict['pbias'] != '-1':
+                self.get_elem_by_idx('R3').data['value'] = electronics.construct_resistor(self._configdict['pbias'], '0.125W')
+            else:
+                try:
+                    self.get_elem_by_idx('R3').data['fillstatus'] = 'DNP'
+                except KeyError:
+                    pass
+
+        if 'pbias' not in self._configdict.keys():
+            log.WARNING('Positive terminal bias not defined : ' + self.refdes)
+        else:
+            if self._configdict['nbias'] != '-1':
+                self.get_elem_by_idx('R4').data['value'] = electronics.construct_resistor(self._configdict['nbias'], '0.125W')
+            else:
+                try:
+                    self.get_elem_by_idx('R4').data['fillstatus'] = 'DNP'
+                except KeyError:
+                    pass
 
     @property
     def Fdiff(self):
@@ -112,7 +132,11 @@ class MotifDLPF1(MotifBase):
         assert self.C3 == self.C2
         assert self.C1 >= 10 * self.C2
 
-    @property
-    def config_stub(self):
-        return 'Fdiff=0Hz;R1=0E'
+    def get_configdict_stub(self):
+        stub = {'desc': "Differential Low Pass RFI and AAF filter",
+                'Fdiff': "15000Hz",
+                'R1': "50E",
+                'Cseries': "E6", 'Cmin': "1pF", 'Cmax': "1uF",
+                'pbias': '-1', 'nbias': '-1'}
+        return stub
 

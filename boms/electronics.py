@@ -22,6 +22,7 @@ Module Members:
 
 """
 
+import os
 
 import gedaif.bomparser
 import gedaif.conffile
@@ -34,8 +35,8 @@ from entitybase import EntityBase
 from entitybase import EntityGroupBase
 from entitybase import EntityBomBase
 
-import os
-import logging
+from utils import log
+logger = log.get_logger(__name__, None)
 
 
 class EntityElnComp(EntityBase):
@@ -100,7 +101,7 @@ class EntityElnComp(EntityBase):
         elif value in ['unknown', '']:
             self._fillstatus = ''
         else:
-            logging.warning("Unsupported fillstatus: " + value)
+            logger.warning("Unsupported fillstatus: " + value)
 
     @property
     def ident(self):
@@ -187,8 +188,15 @@ class EntityElnBomConf(object):
         super(EntityElnBomConf, self).__init__()
         self.pcbname = configdata["pcbname"]
         self.grouplist = configdata["grouplist"]
-        self.configsections = configdata["configsections"]
+        if "configsections" in configdata.keys():
+            self.configsections = configdata["configsections"]
+        else:
+            self.configsections = None
         self.configurations = configdata["configurations"]
+        if "motiflist" in configdata.keys():
+            self.motiflist = configdata["motiflist"]
+        else:
+            self.motiflist = None
 
     def get_configurations(self):
         rval = []
@@ -198,6 +206,8 @@ class EntityElnBomConf(object):
         pass
 
     def get_configsections(self):
+        if self.configsections is None:
+            raise AttributeError
         rval = []
         for configsection in self.configsections:
             rval.append(configsection["sectionname"])
@@ -217,15 +227,27 @@ class EntityElnBomConf(object):
         rval = ["default"]
         for configuration in self.configurations:
             if configuration["configname"] == configname:
-                for configsection in self.get_configsections():
-                    sec_confname = configuration["config"][configsection]
-                    rval = rval + self.get_sec_groups(configsection, sec_confname)
+                try:
+                    for configsection in self.get_configsections():
+                        sec_confname = configuration["config"][configsection]
+                        rval = rval + self.get_sec_groups(configsection, sec_confname)
+                except AttributeError:
+                    rval = ["default"]
+                    try:
+                        for group in configuration["grouplist"]:
+                            rval = rval + [group]
+                    except:
+                        raise AttributeError
         return rval
 
     def get_configuration_motifs(self, configname):
         for configuration in self.configurations:
             if configuration["configname"] == configname:
-                return configuration["motiflist"]
+                try:
+                    return configuration["motiflist"]
+                except KeyError:
+                    logger.error("Configuration missing motiflist : " + configname)
+                    return None
         raise ValueError
 
 
@@ -252,7 +274,7 @@ class EntityElnBom(EntityBomBase):
             x = EntityElnGroup('default', self.pcbname)
             self.grouplist.append(x)
         for group in groupnamelist:
-            logging.debug("Creating Group: " + str(group))
+            logger.debug("Creating Group: " + str(group))
             x = EntityElnGroup(group, self.pcbname)
             self.grouplist.append(x)
 
@@ -265,7 +287,7 @@ class EntityElnBom(EntityBomBase):
         if groupname == 'unknown':
             groupname = 'default'
         if groupname not in [x['name'] for x in self.configurations.grouplist]:
-            logging.warning("Could not find group in config file : " + groupname)
+            logger.warning("Could not find group in config file : " + groupname)
             groupname = 'default'
         for group in self.grouplist:
             if group.groupname == groupname:
@@ -296,7 +318,7 @@ class EntityElnBom(EntityBomBase):
         for motif in self._motifs:
             if refdes == motif.refdes:
                 return motif
-        raise ValueError
+        return None
 
     def create_output_bom(self, configname):
         if configname not in self.configurations.get_configurations():
@@ -306,12 +328,31 @@ class EntityElnBom(EntityBomBase):
         outgroups = self.configurations.get_configuration(configname)
         for group in outgroups:
             grpobj = self.find_group(group)
+            if grpobj is None:
+                logger.critical("outgroups : " + str(outgroups))
+                logger.critical("grpobj not found : " + group + ":for " + configname)
             for comp in grpobj.complist:
                 outbom.insert_component(comp)
+
         motifconfs = self.configurations.get_configuration_motifs(configname)
+        if motifconfs is None:
+            outbom.sort_by_ident()
+            return outbom
+
         for key, motifconf in motifconfs.iteritems():
             motif = self.get_motif_by_refdes(key)
-            motif.configure(motifconf)
+            if motif is None:
+                logger.error("Motif not defined : " + key)
+                continue
+            motifconf_act = motif.get_configdict_stub()
+            if self.configurations.motiflist is not None:
+                basemotifconfs = self.configurations.motiflist
+                for bkey, baseconf in basemotifconfs.iteritems():
+                    if bkey == key:
+                        logger.info("Found Base Configuration for : " + key)
+                        motifconf_act.update(baseconf)
+            motifconf_act.update(motifconf)
+            motif.configure(motifconf_act)
             for item in motif.get_line_gen():
                 if item.data['group'] in outgroups and item.data['fillstatus'] != 'DNP':
                     outbom.insert_component(EntityElnComp(item))
@@ -350,5 +391,4 @@ def import_pcb(cardfolder):
     return pcbbom
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    data = import_pcb("/home/chintal/code/koala/scratch")
+    pass

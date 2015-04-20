@@ -104,10 +104,10 @@ Project Folder Structure
         |   ..
         `-- trunk
             |-- ChangeLog
-            |-- gerber                          (all-generated-pcb-manual)
+            |-- gerber                          (all-generated-koala)
             |   |-- [projname].[layer].gbr or cnc
             |   ..
-            |-- gerber.zip
+            |-- [projname]-gerber.zip           (generated-koala)
             |
             |-- pcb
             |   |-- [projname].cmd              (generated-gsch2pcb)
