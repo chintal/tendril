@@ -30,12 +30,16 @@ class VendorDigiKey(vendors.VendorBase):
                          'TRANSISTOR THRU',
                          'TRANSISTOR SMD',
                          'CONN DF13',
+                         'CONN DF13 HOUS',
+                         'CONN DF13 WIRE',
+                         'CONN DF13 CRIMP',
                          'CONN MODULAR',
                          'DIODE SMD',
                          'DIODE THRU',
                          'VARISTOR',
                          'BRIDGE RECTIFIER',
                          'RES SMD',
+                         'RES THRU',
                          'CAP CER SMD',
                          'CAP TANT SMD',
                          'TRANSFORMER SMD',
@@ -57,11 +61,14 @@ class VendorDigiKey(vendors.VendorBase):
             return None, 'NODEVICE'
         try:
             if device.startswith('RES') or device.startswith('POT') or device.startswith('CAP'):
+                if device.startswith('RES'):
+                    if conventions.electronics.parse_resistor(value) is None:
+                        return self._get_search_vpnos(device, value, footprint)
                 try:
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
                     logging.warning(ident + ' :: DK Search for ' + device + ' Not Implemented')
-                    return None, ''
+                    return None, 'NOT_IMPL'
             if device in self._devices:
                 return self._get_search_vpnos(device, value, footprint)
             else:
@@ -677,15 +684,3 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
             return desc_cell.text.strip().encode('ascii', 'replace')
         except:
             return ''
-
-    def get_price(self, qty):
-        rprice = None
-        rnextprice = None
-        # TODO : Sort by moq first?
-        for price in self._prices:
-            if price.moq < qty:
-                rprice = price
-            if price.moq > qty:
-                rnextprice = price
-            break
-        return rprice, rnextprice

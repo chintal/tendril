@@ -16,7 +16,8 @@ import gedaif.pcb
 import utils.pdf
 import utils.zip
 import utils.fs
-import projects
+
+from entityhub import projects
 import boms.electronics
 import boms.outputbase
 
@@ -173,7 +174,7 @@ def gen_pcb_pdf(projfolder):
         return pdffile
 
     logger.info('Regenerating ' + pdffile + os.linesep +
-                'Last modified : ' + str(pcb_mtime) + '; Last Created : ' + str(outf_mtime) + ' ' + str(outf_mtime > pcb_mtime))
+                'Last modified : ' + str(pcb_mtime) + '; Last Created : ' + str(outf_mtime))
 
     pdffile = gedaif.pcb.conv_pcb2pdf(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
                                       docfolder, configfile.configdata['pcbname'])
@@ -185,7 +186,11 @@ def gen_pcb_gbr(projfolder):
     gpf = gedaif.projfile.GedaProjectFile(configfile.projectfolder)
     pcb_mtime = utils.fs.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
     gbrfolder = os.path.join(configfile.projectfolder, 'gerber')
-    outf_mtime = utils.fs.get_folder_mtime(gbrfolder)
+    outf_mtime = None
+    if not os.path.exists(gbrfolder):
+        os.makedirs(gbrfolder)
+    else:
+        outf_mtime = utils.fs.get_folder_mtime(gbrfolder)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.info('Skipping up-to-date ' + gbrfolder)

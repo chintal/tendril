@@ -36,7 +36,8 @@ class CurrencyDefinition(object):
     def _get_exchval(code):
         apiurl = 'http://jsonrates.com/get/?'
         params = {'from': code,
-                  'to': BASE_CURRENCY}
+                  'to': BASE_CURRENCY,
+                  'apiKey': 'jr-b612b56a860a1e7e6de8863d3379404f'}
         request = urllib2.Request(apiurl + urllib.urlencode(params))
         response = utils.www.urlopen(request)
         data = json.load(response)

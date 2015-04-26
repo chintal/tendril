@@ -8,6 +8,7 @@ import inspect
 
 CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 KOALA_ROOT = os.path.normpath(os.path.join(CONFIG_PATH, os.pardir, os.pardir))
+INSTANCE_ROOT = KOALA_ROOT
 AUDIT_PATH = os.path.join(KOALA_ROOT, 'manual-audit')
 PROJECTS_ROOT = os.path.normpath('/home/chintal/quazar/workspace/qda/clone')
 # Network Details
@@ -43,7 +44,7 @@ GEDA_SYMLIB_ROOT = os.path.join(GAF_ROOT, 'symbols')
 # Inventory Details
 
 _svn_stock_folder = '/home/chintal/quazar/svn/Stock/QUAZAR/ESTORE/'
-_svn_current_estore_xls_file = 'estore2014-2015.xls'
+_svn_current_estore_xls_file = os.path.join('FY2015-2016', 'Estore2015-2016.xls')
 
 ELECTRONICS_INVENTORY_DATA = [
     {
@@ -74,7 +75,7 @@ ELECTRONICS_INVENTORY_DATA = [
 
 # Vendor Details
 
-_vendor_map_folder = os.path.join(KOALA_ROOT, 'sourcing/maps')
+_vendor_map_folder = os.path.join(KOALA_ROOT, 'sourcing', 'maps')
 vendor_map_audit_folder = os.path.join(KOALA_ROOT, 'manual-audit', 'vendor-maps')
 
 VENDORS_DATA = [
@@ -83,5 +84,13 @@ VENDORS_DATA = [
         'dname': 'Digi-Key Corporation',
         'mapfile-base': os.path.join(_vendor_map_folder, 'digikey'),
         'pclass': ['electronics']
+    },
+    {
+        'name': 'csil',
+        'dname': 'CSIL',
+        'mapfile-base': os.path.join(_vendor_map_folder, 'csil'),
+        'pclass': ['electronics_pcb'],
+        'user': 'quazartech',
+        'pw': 'qt55655154'
     }
 ]

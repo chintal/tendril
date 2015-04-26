@@ -3,38 +3,59 @@ CSIL Sourcing Module documentation (:mod:`sourcing.csil`)
 =========================================================
 """
 
-import vendors
-
-import splinter
 import time
 import locale
 from collections import OrderedDict
 
+import splinter
+
+import vendors
+from utils.config import NETWORK_PROXY_IP
+from utils.config import NETWORK_PROXY_PORT
+
+from utils.config import VENDORS_DATA
+
+user = None
+pw = None
+
+
+def get_credentials():
+    global user
+    global pw
+    for vendor in VENDORS_DATA:
+        if vendor['name'] == 'csil':
+            user = vendor['user']
+            pw = vendor['pw']
+
+get_credentials()
+
+
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 exparams = {
-    'pcbname': 'Test',
+    'pcbname': 'QASC-',
     'layers': 2,
-    'dX': '98.2',
-    'dY': '46.7',
-    'qty': range(100),
-    'time': 15,      # 5, 7, 10, 12, 15, 18, 21, 25, 30
+    'dX': '109',
+    'dY': '151',
+    'qty': range(70),
+    'time': 10,      # 5, 7, 10, 12, 15, 18, 21, 25, 30
     'finish': 'Au',  # HAL, Ag, Au, PBFREE, NP, I, OC
 }
 
 
 def get_csil_prices(params=exparams):
     delivery_codes = {
+        3: '3#333',
         5: '5#334',
         7: '7#529',
         10: '10#1452',
         12: '12#7271',
         15: '15#1453',
         18: '18#7272',
-        21: '21#7273',
-        25: '25#1455',
-        30: '30#1642'
+        21: '21#7273'
     }
+
+    delivery_times = sorted(delivery_codes.keys())
 
     layers_codes = {
         1: '2180',
@@ -43,12 +64,27 @@ def get_csil_prices(params=exparams):
         6: '2184',
     }
 
-    browser = splinter.Browser()
+    proxyIP = NETWORK_PROXY_IP
+    proxyPort = int(NETWORK_PROXY_PORT)
+
+    # proxy_settings = {'network.proxy.type': 1,
+    #                   'network.proxy.http': proxyIP,
+    #                   'network.proxy.http_port': proxyPort,
+    #                   'network.proxy.ssl': proxyIP,
+    #                   'network.proxy.ssl_port': proxyPort,
+    #                   'network.proxy.socks': proxyIP,
+    #                   'network.proxy.socks_port':proxyPort,
+    #                   'network.proxy.ftp': proxyIP,
+    #                   'network.proxy.ftp_port':proxyPort
+    #                   }
+
+    # browser = splinter.Browser('firefox', profile_preferences=proxy_settings)
+    browser = splinter.Browser('firefox')
     url = 'http://www.pcbpower.com:8080'
     browser.visit(url)
     values = {
-        'ctl00$ContentPlaceHolder1$txtUserName':'quazartech',
-        'ctl00$ContentPlaceHolder1$txtPassword':'qt55655154'
+        'ctl00$ContentPlaceHolder1$txtUserName': user,
+        'ctl00$ContentPlaceHolder1$txtPassword': pw
     }
     browser.fill_form(values)
     button = browser.find_by_name('ctl00$ContentPlaceHolder1$btnlogin')
@@ -67,7 +103,7 @@ def get_csil_prices(params=exparams):
     except KeyError:
         raise ValueError
 
-    if not browser.is_element_present_by_id('shortNotiText', wait_time=10):
+    if not browser.is_element_present_by_id('shortNotiText', wait_time=100):
         raise Exception
     ready = False
     timeout = 10
@@ -101,53 +137,90 @@ def get_csil_prices(params=exparams):
         newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text
     except AttributeError:
         newt = ''
+    try:
+        newtt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblTotalPrice').text
+    except AttributeError:
+        newtt = ''
     while oldt == newt:
         try:
             newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text
         except AttributeError:
             newt = ''
+        try:
+            newtt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblTotalPrice').text
+        except AttributeError:
+            newtt = ''
         time.sleep(0.5)
-    unitprice = locale.atof(newt)
-    rval = {int(qty): unitprice}
+    rval = {}
     oldt = newt
+    oldtt = newtt
 
     for qty in params['qty'][2:]:
-        time.sleep(5)
-
-        for char in oldv:
+        # time.sleep(2)
+        lined = {}
+        dt_s = params['time']
+        # for char in oldv:
+        while browser.find_by_name('ctl00$ContentPlaceHolder1$txtQuantity')[0].value != '':
             browser.type('ctl00$ContentPlaceHolder1$txtQuantity', '\b')
             time.sleep(0.1)
         browser.type('ctl00$ContentPlaceHolder1$txtQuantity', str(qty))
         time.sleep(0.1)
         browser.type('ctl00$ContentPlaceHolder1$txtQuantity', '\t')
-        time.sleep(0.1)
-        print 'Waiting for ... ' + str(qty)
-        oldv = str(qty)
-        time.sleep(2)
-        try:
-            newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text
-        except AttributeError:
-            newt = ''
-        while oldt == newt and newt is not '':
-            time.sleep(0.5)
+        if qty > 10:
+            loi = [10]
+        else:
+            loi = [3, 10]
+        for dt_s in loi:
+            dt_idx = delivery_times.index(dt_s)
+            dts = delivery_times[dt_idx:dt_idx+3]
+            browser.select('ctl00$ContentPlaceHolder1$ddlDelTerms', delivery_codes[dt_s])
+            time.sleep(0.1)
+
+            print 'Waiting for ... ' + str(qty) + ' ... ' + str(dt_s)
+
+            time.sleep(2)
             try:
                 newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text
+                newt1 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc1').text
+                newt2 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc2').text
             except AttributeError:
                 newt = ''
+                newt1 = ''
+                newt2 = ''
 
-        unitprice = locale.atof(newt)
-        rval[qty] = unitprice
-        oldt = newt
-
+            timeout = 25
+            while oldt == newt and oldtt == newtt and newt is not '' and timeout > 0:
+                timeout -= 1
+                time.sleep(0.5)
+                try:
+                    newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text
+                    newt1 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc1').text
+                    newt2 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc2').text
+                except AttributeError:
+                    newt = ''
+                try:
+                    newtt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblTotalPrice').text
+                except AttributeError:
+                    newtt = ''
+            lined[dts[0]] = locale.atof(newt)
+            lined[dts[1]] = locale.atof(newt1)
+            lined[dts[2]] = locale.atof(newt2)
+            oldt = newt
+            oldtt = newtt
+        print lined
+        rval[qty] = lined
     browser.quit()
     return rval
 
 
 class VendorCSIL(vendors.VendorBase):
-    def __init__(self, name, dname, pclass):
-
+    def __init__(self, name, dname, pclass, mappath=None,
+                 currency_code=None, currency_symbol=None,
+                 username=None, password=None):
+        self._username = username
+        self._password = password
         self._devices = ['PCB']
-        super(VendorCSIL, self).__init__(name, dname, pclass)
+        super(VendorCSIL, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
 
     def search_vpnos(self, ident):
         pass

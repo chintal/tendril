@@ -14,6 +14,7 @@ from utils.config import GEDA_SYMLIB_ROOT
 from utils.config import AUDIT_PATH
 from utils.config import KOALA_ROOT
 
+import utils.fs
 import conventions.electronics
 import conventions.iec60063
 
@@ -121,7 +122,9 @@ class GSymGeneratorFile(object):
                                 values.append(conventions.electronics.construct_resistor(rvalue, generator['wattage']))
                         else:
                             raise ValueError
-
+                if 'values' in gendata.keys():
+                    if gendata['values'][0].strip() != '':
+                        values += gendata['values']
                 return values
 
             if gendata['type'] == 'capacitor':
@@ -138,7 +141,9 @@ class GSymGeneratorFile(object):
                                 values.append(conventions.electronics.construct_capacitor(cvalue, generator['voltage']))
                         else:
                             raise ValueError
-
+                if 'values' in gendata.keys():
+                    if gendata['values'][0].strip() != '':
+                        values += gendata['values']
                 return values
         else:
             logging.ERROR("Config file schema is not supported")
@@ -189,6 +194,13 @@ def _jinja_init():
 
 
 gsymlib = gen_symlib()
+gsymlib_idents = [x.ident for x in gsymlib]
+
+
+def is_recognized(ident):
+    if ident in gsymlib_idents:
+        return True
+    return False
 
 
 def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
@@ -215,3 +227,14 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
                 return symbol.value
     raise ValueError(resistance)
 
+
+def export_gsymlib_audit():
+    auditfname = os.path.join(AUDIT_PATH, 'gsymlib-audit.csv')
+    outf = utils.fs.VersionedOutputFile(auditfname)
+    outw = csv.writer(outf)
+    outw.writerow(['filename', 'status', 'ident', 'device', 'value',
+                   'footprint', 'description', 'path', 'package'])
+    for symbol in gsymlib:
+        outw.writerow([symbol.fname, symbol.status, symbol.ident, symbol.device, symbol.value,
+                       symbol.footprint, symbol.description, symbol.fpath, symbol.package])
+    outf.close()

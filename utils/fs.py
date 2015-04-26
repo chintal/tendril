@@ -43,7 +43,7 @@ class VersionedOutputFile:
     http://code.activestate.com/recipes/52277-saving-backups-when-writing-files/
     """
 
-    def __init__(self, pathname, numsavedversions=3):
+    def __init__(self, pathname, numsavedversions=15):
         """Create a new output file.
 
         `pathname' is the name of the file to [over]write.

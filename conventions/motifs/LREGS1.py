@@ -11,7 +11,7 @@ from conventions import iec60063
 from gedaif import gsymlib
 
 from utils import log
-logger = log.get_logger(__name__, log.INFO)
+logger = log.get_logger(__name__, None)
 
 
 class MotifLREGS1(MotifBase):

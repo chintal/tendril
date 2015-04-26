@@ -4,9 +4,9 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import logging
-from logging import INFO, WARNING, DEBUG, CRITICAL, ERROR
+from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-DEFAULT = logging.INFO
+DEFAULT = logging.WARNING
 
 
 def init():

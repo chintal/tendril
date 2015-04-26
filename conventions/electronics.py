@@ -66,12 +66,17 @@ DEVICE_CLASSES = [
     'CONN SIP',
     'CONN STEREO',
     'CONN DF13',
+    'CONN DF13 HOUS',
+    'CONN DF13 WIRE',
+    'CONN DF13 CRIMP',
     'CONN MODULAR',
+    'CONN USB',
     'SWITCH TACT',
     'SWITCH PUSHBUTTON',
     'TESTPOINT',
     'SOLDER DOT',
-    'BATTERY'
+    'BATTERY',
+    'HEAT SINK'
 ]
 
 nofp_strs = [

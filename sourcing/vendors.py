@@ -46,6 +46,9 @@ class VendorBase(object):
             if self._pclass == 'electronics':
                 import electronics
                 electronics.gen_vendor_mapfile(self)
+            if self._pclass == 'electronics_pcb':
+                import electronics
+                electronics.gen_pcb_vendor_mapfile(self)
             else:
                 raise AttributeError
         self._map = entityhub.maps.MapFile(mappath)
@@ -65,7 +68,13 @@ class VendorBase(object):
     def search_vpnos(self, ident):
         raise NotImplementedError
 
+    def get_vpnos(self, ident):
+        raise NotImplementedError
+
     def get_vpart(self, vpartno, ident=None):
+        raise NotImplementedError
+
+    def get_optimal_pricing(self, ident, rqty):
         raise NotImplementedError
 
 
@@ -79,8 +88,14 @@ class VendorPrice(object):
         return self._moq
 
     @property
-    def native_value(self):
-        return self._price.native_value
+    def unit_price(self):
+        return self._price
+
+    def extended_price(self, qty):
+        if qty < self.moq:
+            raise ValueError
+        return utils.currency.CurrencyValue(self.unit_price._val * qty,
+                                            self.unit_price._currency_def)
 
 
 class VendorPartBase(object):
@@ -143,11 +158,31 @@ class VendorPartBase(object):
 
     @property
     def abs_moq(self):
+        if len(self._prices) == 0:
+            return 0
         rval = self._prices[0].moq
         for price in self._prices:
             if price.moq < rval:
                 rval = price.moq
         return rval
+
+    def get_price(self, qty):
+        rprice = None
+        rnextprice = None
+        for price in self._prices:
+            if price.moq <= qty:
+                if rprice is not None:
+                    if price.moq > rprice.moq:
+                        rprice = price
+                else:
+                    rprice = price
+            if price.moq > qty:
+                if rnextprice is not None:
+                    if price.moq < rnextprice.moq:
+                        rnextprice = price
+                else:
+                    rnextprice = price
+        return rprice, rnextprice
 
 
 class VendorElnPartBase(VendorPartBase):

@@ -2,7 +2,10 @@
 This file is part of koala
 See the COPYING, README, and INSTALL files for more information
 """
-import logging
+from utils import log
+logger = log.get_logger(__name__, log.DEBUG)
+
+import csv
 from entitybase import EntityBase
 
 
@@ -28,7 +31,7 @@ class OutputBomLine(object):
         if comp.ident == self.ident:
             self.refdeslist.append(comp.refdes)
         else:
-            logging.error("Ident Mismatch")
+            logger.error("Ident Mismatch")
 
     @property
     def quantity(self):
@@ -86,7 +89,7 @@ class CompositeOutputBomLine(object):
         if line.ident == self.ident:
             self.columns[column] = line.quantity
         else:
-            logging.error("Ident Mismatch")
+            logger.error("Ident Mismatch")
 
     @property
     def quantity(self):
@@ -137,3 +140,9 @@ class CompositeOutputBom():
 
     def sort_by_ident(self):
         self.lines.sort(key=lambda x: x.ident, reverse=False)
+
+    def dump(self, stream):
+        writer = csv.writer(stream)
+        writer.writerow(['device'] + [x.configname + ' x' + str(x.multiplier) for x in self.descriptors] + ['Total'])
+        for line in self.lines:
+            writer.writerow([line.ident] + line.columns + [line.quantity])

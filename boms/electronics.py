@@ -36,7 +36,7 @@ from entitybase import EntityGroupBase
 from entitybase import EntityBomBase
 
 from utils import log
-logger = log.get_logger(__name__, None)
+logger = log.get_logger(__name__, log.INFO)
 
 
 class EntityElnComp(EntityBase):
@@ -137,6 +137,8 @@ class EntityElnComp(EntityBase):
 
     @footprint.setter
     def footprint(self, value):
+        if value is None:
+            return
         if value[0:3] == "MY-":
             self._footprint = value[3:]
         else:
@@ -235,7 +237,8 @@ class EntityElnBomConf(object):
                     rval = ["default"]
                     try:
                         for group in configuration["grouplist"]:
-                            rval = rval + [group]
+                            if group != "default":
+                                rval = rval + [group]
                     except:
                         raise AttributeError
         return rval
@@ -246,7 +249,17 @@ class EntityElnBomConf(object):
                 try:
                     return configuration["motiflist"]
                 except KeyError:
-                    logger.error("Configuration missing motiflist : " + configname)
+                    logger.debug("Configuration missing motiflist : " + configname)
+                    return None
+        raise ValueError
+
+    def get_configuration_gens(self, configname):
+        for configuration in self.configurations:
+            if configuration["configname"] == configname:
+                try:
+                    return configuration["genlist"]
+                except KeyError:
+                    logger.debug("Configuration missing genlist : " + configname)
                     return None
         raise ValueError
 
@@ -326,12 +339,22 @@ class EntityElnBom(EntityBomBase):
         outbomdescriptor = OutputElnBomDescriptor(self.pcbname, self.projfolder, configname, self.configurations)
         outbom = OutputBom(outbomdescriptor)
         outgroups = self.configurations.get_configuration(configname)
+
+        genlist = self.configurations.get_configuration_gens(configname)
+
+        gen_refdeslist = None
+
+        if genlist is not None:
+            gen_refdeslist = genlist.keys()
+
         for group in outgroups:
             grpobj = self.find_group(group)
             if grpobj is None:
                 logger.critical("outgroups : " + str(outgroups))
                 logger.critical("grpobj not found : " + group + ":for " + configname)
             for comp in grpobj.complist:
+                if gen_refdeslist is not None and comp.refdes in gen_refdeslist:
+                    comp.value = genlist[comp.refdes]
                 outbom.insert_component(comp)
 
         motifconfs = self.configurations.get_configuration_motifs(configname)
@@ -349,7 +372,7 @@ class EntityElnBom(EntityBomBase):
                 basemotifconfs = self.configurations.motiflist
                 for bkey, baseconf in basemotifconfs.iteritems():
                     if bkey == key:
-                        logger.info("Found Base Configuration for : " + key)
+                        logger.debug("Found Base Configuration for : " + key)
                         motifconf_act.update(baseconf)
             motifconf_act.update(motifconf)
             motif.configure(motifconf_act)

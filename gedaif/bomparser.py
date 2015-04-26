@@ -7,7 +7,7 @@ import subprocess
 import os
 
 from utils import log
-logger = log.get_logger(__name__, level=log.INFO)
+logger = log.get_logger(__name__, level=log.WARNING)
 
 
 from conventions.motifs import create_motif_object
@@ -15,6 +15,8 @@ from conventions.motifs import create_motif_object
 
 import gedaif.projfile
 import gedaif.conffile
+
+FNULL = open(os.devnull, 'w')
 
 
 class BomLine(object):
@@ -48,7 +50,9 @@ class GedaBomParser(object):
                         ['-o', self._temp_bom_path] +
                         ['-g', backend] +
                         ['-Oattrib_file='+os.path.join(self.projectfolder, self._basefolder, 'attribs')] +
-                        self._gpf.schpaths)
+                        self._gpf.schpaths,
+                        stdout=FNULL,
+                        stderr=subprocess.STDOUT)
 
     def prep_temp_bom(self):
         self.temp_bom = open(self._temp_bom_path, 'r')

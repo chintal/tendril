@@ -3,17 +3,20 @@ Inventory Acquire Module documentation (:mod:`inventory.acquire`)
 =================================================================
 """
 
-import utils.libreoffice
-import utils.fs
-import utils.config
-
-import entityhub.transforms
+from utils import log
+logger = log.get_logger(__name__, log.DEBUG)
 
 import os
 import csv
 import re
 import datetime
-import logging
+
+import utils.libreoffice
+import utils.fs
+import utils.config
+
+import gedaif.gsymlib
+import entityhub.transforms
 
 
 class StockXlsReader(object):
@@ -40,7 +43,7 @@ class StockXlsReader(object):
         if os.path.isfile(tfpath):
             self.tf = entityhub.transforms.TransformFile(self._tfpath)
         else:
-            logging.warning("Transform File missing : " + self._tfpath)
+            logger.warning("Transform File missing : " + self._tfpath)
 
         self._skip_to_header()
         self.row_gen = self._row_gen()
@@ -73,8 +76,12 @@ class StockXlsReader(object):
                 continue
             if row[0].strip() == 'END':
                 continue
+            try:
+                qty = int(row[self._colqty])
+            except ValueError:
+                qty = float(row[self._colqty])
             yield (row[self._colident],
-                   row[self._colqty])
+                   qty)
         self._csvfile.close()
 
     def _tf_row_gen(self):
@@ -103,11 +110,11 @@ def get_reader(elec_inven_data_idx):
     if reader is not None:
         return reader
     else:
-        logging.error("Could not find reader for: ELECTRONICS_INVENTORY_DATA."
+        logger.error("Could not find reader for: ELECTRONICS_INVENTORY_DATA."
                       + str(elec_inven_data_idx))
 
 
-def gen_canonical_transform(elec_inven_data_idx):
+def gen_canonical_transform(elec_inven_data_idx, regen=True):
     sdict = utils.config.ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx]
     if sdict['type'] == 'QuazarStockXLS':
         fpath = sdict['fpath']
@@ -120,9 +127,24 @@ def gen_canonical_transform(elec_inven_data_idx):
         outp = tfpath
         outf = utils.fs.VersionedOutputFile(outp)
         outw = csv.writer(outf)
-        outw.writerow(('Current', 'gEDA Current', 'Ideal'))
+        outw.writerow(('Current', 'gEDA Current', 'Ideal', 'Status', 'In Symlib'))
         for line in rdr.row_gen:
-            outw.writerow((line[0], line[0], line[0]))
+            if regen and rdr.tf.has_contextual_repr(line[0]):
+                if gedaif.gsymlib.is_recognized(rdr.tf.get_canonical_repr(line[0])):
+                    in_symlib = 'YES'
+                else:
+                    in_symlib = ''
+                outw.writerow((line[0],
+                               rdr.tf.get_canonical_repr(line[0]),
+                               rdr.tf.get_ideal_repr(line[0]),
+                               rdr.tf.get_status(line[0]),
+                               in_symlib))
+            else:
+                if gedaif.gsymlib.is_recognized(line[0]):
+                    in_symlib = True
+                else:
+                    in_symlib = False
+                outw.writerow((line[0], line[0], line[0], 'NEW', in_symlib))
         outf.close()
 
 
@@ -138,7 +160,7 @@ def helper_transform(ident):
         elif ident.endswith(('F', 'E', 'K', 'M')):
             cident = ident + ' 0805'
         else:
-            logging.warning("Possibly Malformed ident : " + ident)
+            logger.warning("Possibly Malformed ident : " + ident)
             cident = ident
     if ident.startswith(('CRYSTAL 2PIN')):
         if ident.endswith('HC49'):
@@ -146,7 +168,7 @@ def helper_transform(ident):
         elif ident.endswith(('Hz')):
             cident = ident + ' HC49'
         else:
-            logging.warning("Possibly Malformed ident : " + ident)
+            logger.warning("Possibly Malformed ident : " + ident)
             cident = ident
     return cident
 

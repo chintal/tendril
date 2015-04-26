@@ -3,6 +3,8 @@ WWW Utils Module Documentation (:mod:`utils.wwwutils`)
 ======================================================
 """
 
+from utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 from config import NETWORK_PROXY_TYPE
 from config import NETWORK_PROXY_IP
@@ -16,7 +18,6 @@ from config import ENABLE_REDIRECT_CACHING
 from bs4 import BeautifulSoup
 import urllib2
 
-import logging
 import time
 import pickle
 import atexit
@@ -35,16 +36,18 @@ def strencode(string):
 REDIR_CACHE_FILE = os.path.join(KOALA_ROOT, 'utils', 'redirects.p')
 
 try:
-    redirect_cache = pickle.load(open(REDIR_CACHE_FILE, "rb"))
-    logging.info('Loaded Redirect Cache from file')
+    with open(REDIR_CACHE_FILE, "rb") as rdcf:
+        redirect_cache = pickle.load(rdcf)
+    logger.info('Loaded Redirect Cache from file')
 except IOError:
     redirect_cache = {}
-    logging.info('Created new Redirect Cache')
+    logger.info('Created new Redirect Cache')
 
 
 def dump_redirect_cache():
-    pickle.dump(redirect_cache, open(REDIR_CACHE_FILE, 'wb'))
-    logging.info('Dumping Redirect Cache to file')
+    with open(REDIR_CACHE_FILE, 'wb') as f:
+        pickle.dump(redirect_cache, f)
+    logger.info('Dumping Redirect Cache to file')
 
 if ENABLE_REDIRECT_CACHING is True:
     atexit.register(dump_redirect_cache)
@@ -117,21 +120,21 @@ def urlopen(url):
             page = opener.open(url)
             try:
                 if ENABLE_REDIRECT_CACHING is True and page.status == 301:
-                    logging.debug('Detected New Permanent Redirect:\n' +
+                    logger.debug('Detected New Permanent Redirect:\n' +
                                   url + '\n' + page.url)
                     redirect_cache[url] = page.url
             except AttributeError:
                 pass
             return page
         except urllib2.HTTPError, e:
-            logging.error("HTTP Error : " + str(e.code) + " " + str(e.url))
+            logger.error("HTTP Error : " + str(e.code) + str(url))
             if e.code == 500:
                 time.sleep(0.5)
                 retries -= 1
             else:
                 retries = 0
         except urllib2.URLError, e:
-            logging.error("URL Error : " + str(e.errno) + " " + str(e.reason))
+            logger.error("URL Error : " + str(e.errno) + " " + str(e.reason))
             retries = 0
     return None
 

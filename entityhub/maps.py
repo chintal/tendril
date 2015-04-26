@@ -41,6 +41,8 @@ class MapFile(object):
         return self._umap[canonical] + self._map[canonical]
 
     def get_partnos(self, canonical):
+        if canonical not in self.get_idents():
+            return []
         if len(self._umap[canonical]) > 0:
             return self._umap[canonical]
         elif len(self._map[canonical]) > 0:
@@ -49,6 +51,8 @@ class MapFile(object):
             return []
 
     def get_strategy(self, canonical):
+        if canonical not in self.get_idents():
+            return 'NOTRECOG'
         return self._strategy[canonical]
 
     def get_canonical(self, partno):
