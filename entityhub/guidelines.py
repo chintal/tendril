@@ -9,6 +9,8 @@ logger = log.get_logger(__name__, log.INFO)
 import yaml
 from decimal import Decimal
 
+import conventions.electronics
+
 
 class QtyGuidelines(object):
     def __init__(self, guidelinefile):
@@ -24,6 +26,7 @@ class QtyGuidelines(object):
             self._idents = data['idents']
             self._generators = data['generators']
             self._devices = data['devices']
+            self._default = data['default']
 
     @staticmethod
     def _get_full_guideline(gldict):
@@ -54,15 +57,25 @@ class QtyGuidelines(object):
                           except_on_overrun=True,
                           handle_baseline=False,
                           ):
-        gldict = None
+        oqty = qty
+        device, value, footprint = conventions.electronics.parse_ident(ident)
         if ident in self._idents.keys():
             gldict = self._idents[ident]
-        oqty = qty
+        elif device in self._devices.keys():
+            gldict = self._devices[device]
+        else:
+            gldict = self._default
         if gldict is not None:
+            if 'filter_std_vals_only' in gldict.keys() and gldict['filter_std_vals_only'] is True:
+                is_std_val = conventions.electronics.check_for_std_val(ident)
+                if not is_std_val:
+                    gldict = self._default
+
             oqty_min, oqty_multiple, baseline_qty, excess_min_pc, excess_max_qty = self._get_full_guideline(gldict)
             tqty = qty
             if handle_excess is True:
                 tqty *= 1 + Decimal(excess_min_pc) / 100
+
             if tqty <= oqty_min:
                 oqty = oqty_min
             else:

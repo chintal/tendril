@@ -17,11 +17,13 @@ import inventory.electronics
 import conventions.electronics
 import sourcing.electronics
 
+
 from entityhub import projects
 from gedaif import gsymlib
 import inventory.guidelines
 
 from utils.config import KOALA_ROOT
+
 
 bomlist = []
 
@@ -34,12 +36,15 @@ with open(orderfile, 'r') as f:
 LOAD_PRESHORT = False
 LOAD_EXTERNAL_REQ = False
 external_req_file = None
+USE_STOCK = True
 
 if 'preshort' in data.keys():
     LOAD_PRESHORT = data['preshort']
 if 'external' in data.keys():
     external_req_file = os.path.join(orderfolder, data['external'])
     LOAD_EXTERNAL_REQ = True
+if 'use_stock' in data.keys():
+    USE_STOCK = data['use_stock']
 
 
 # Define base transforms for external data
@@ -140,31 +145,60 @@ dkv = sourcing.electronics.vendor_list[0]
 dkvmap = dkv.map
 
 with open(os.path.join(orderfolder, 'shortage.csv'), 'w') as f:
-    logger.info('Exporting Shortage to File : ' + os.path.join(orderfolder, 'shortage.csv'))
+    logger.info('Constructing Shortage File')
     w = csv.writer(f)
+    logger.info('Opening Digikey Order File')
+    dkof = open(os.path.join(orderfolder, 'digikey-importable.csv'), 'w')
+    wdk = csv.writer(dkof)
+    w.writerow(["Component Details", '', '', '',
+                "Requirement", '', '',
+                "Guideline Compliant", '',
+                "Order Details", '', '', '', '', '', '',
+                "Vendor Pricing", '', '', '', '', '', '',
+                "Order Pricing", '', '', '', ''
+                ]
+               )
     w.writerow(["Ident", "In gsymlib", "From DK", "Strategy",
                 "Required", "Reserved", "Shortage",
-                "Buy Qty", "Excess Qty"])
+                "Buy Qty", "Excess Qty",
+                "Vendor", "Vendor Part No", "Manufacturer", "Manufacturer Part No", "Description", "Order Qty", "Excess Qty",
+                "Vendor Currency", "Next Break Qty", "NB Unit Price", "NB Extended Price",
+                "Used Break Qty", "Unit Price", "Extended Price",
+                "Lower Break Unit Price", "Unit Price", "Effective Unit Price", "Order Qty", "Effective Extended Price",
+                "Effective Excess Price", "Excess Rationale"
+                ]
+               )
+    w.writerow(['', '', '', '',
+                "Qty", "Qty", "Qty",
+                "Qty", "Qty",
+                "", "", "", "", "", "Qty", "Qty",
+                "", "Qty", "(VC)", "(VC)",
+                "Qty", "(VC)", "(VC)",
+                "INR", "INR", "INR", "Qty", "INR", "INR"
+                ]
+               )
     for line in cobom.lines:
         shortage = 0
-        for idx, descriptor in enumerate(cobom.descriptors):
-            earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
-            avail = inventory.electronics.get_total_availability(line.ident)
-            if line.columns[idx] == 0:
-                continue
-            if avail > line.columns[idx]:
-                inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
-            elif avail > 0:
-                inventory.electronics.reserve_items(line.ident, avail, earmark)
-                pshort = line.columns[idx] - avail
-                shortage += pshort
-                logger.debug('Adding Partial Qty of ' + line.ident +
-                             ' for ' + earmark + ' to shortage : ' + str(pshort))
-            else:
-                shortage += line.columns[idx]
-                logger.debug('Adding Full Qty of ' + line.ident +
-                             ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
-
+        if USE_STOCK is True:
+            for idx, descriptor in enumerate(cobom.descriptors):
+                earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
+                avail = inventory.electronics.get_total_availability(line.ident)
+                if line.columns[idx] == 0:
+                    continue
+                if avail > line.columns[idx]:
+                    inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
+                elif avail > 0:
+                    inventory.electronics.reserve_items(line.ident, avail, earmark)
+                    pshort = line.columns[idx] - avail
+                    shortage += pshort
+                    logger.debug('Adding Partial Qty of ' + line.ident +
+                                 ' for ' + earmark + ' to shortage : ' + str(pshort))
+                else:
+                    shortage += line.columns[idx]
+                    logger.debug('Adding Full Qty of ' + line.ident +
+                                 ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
+        else:
+            shortage = line.quantity
         if shortage > 0:
             if gsymlib.is_recognized(line.ident):
                 in_gsymlib = "YES"
@@ -177,13 +211,69 @@ with open(os.path.join(orderfolder, 'shortage.csv'), 'w') as f:
                 avail_from_dk = 'YES'
             else:
                 avail_from_dk = ''
-            w.writerow([line.ident, in_gsymlib, avail_from_dk, strategy,    # About Component
-                        line.quantity, line.quantity-shortage, shortage,    # About Requirement
-                        buy_qty, (buy_qty-shortage)                         # Inventory Guideline
-                                                                            # Order Constraints
-                                                                            # Final Pricing (Vendor Currency)
-                                                                            # Final Pricing (Native Currency)
-                        ]
-                       )
 
+            row = [line.ident, in_gsymlib, avail_from_dk, strategy,
+                   line.quantity, line.quantity-shortage, shortage,
+                   buy_qty, (buy_qty-shortage)]
+            logger.info("Attempting to source " + line.ident)
+            try:
+                vobj, vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice = sourcing.electronics.get_sourcing_information(line.ident,
+                                                                                                                         buy_qty)
+
+                vcurr = vobj.currency.symbol
+                if nbprice is not None:
+                    nbqty = nbprice.moq
+                    nbunitp_vst = nbprice.unit_price.source_value
+                    nbextp_vst = nbprice.extended_price(nbqty).source_value
+                else:
+                    nbqty = None
+                    nbunitp_vst = None
+                    nbextp_vst = None
+
+                if olduprice is not None:
+                    unitp_lb_nst = olduprice.unit_price.native_value
+                else:
+                    unitp_lb_nst = None
+
+                ubqty = ubprice.moq
+                ubunitp_vst = ubprice.unit_price.source_value
+                ubextp_vst = ubprice.extended_price(oqty).source_value
+
+                unitp_nst = ubprice.unit_price.native_value
+
+                eff_unitp_nst = effprice.unit_price.native_value
+                eff_extp_nst = effprice.extended_price(oqty).native_value
+                eff_excess_price = (oqty-shortage) * effprice.unit_price.native_value
+
+                logger.info("Sourced " + line.ident + ":" + str((vpno, oqty)))
+
+                try:
+                    vpobj = vobj.get_vpart(vpno, line.ident)
+                    manufacturer = vpobj.manufacturer
+                    mpartno = vpobj.mpartno
+                    description = vpobj.vpartdesc
+                except:
+                    vpobj = None
+                    manufacturer = None
+                    description = None
+                    mpartno = None
+
+                row += [vobj.name, vpno, manufacturer, mpartno, description,
+                        oqty, (oqty-shortage),             # Order Details
+                        vcurr, nbqty, nbunitp_vst, nbextp_vst,              # Final Pricing (Vendor Currency)
+                        ubqty, ubunitp_vst, ubextp_vst,
+                        unitp_lb_nst, unitp_nst, eff_unitp_nst, oqty, eff_extp_nst,       # Final Pricing (Native Currency)
+                        eff_excess_price, urationale
+                        ]
+
+                if vobj.name == 'Digi-Key Corporation':
+                    logger.info("Adding to DK Order : " + line.ident + " : " + str(oqty))
+                    wdk.writerow([oqty, vpno, line.ident])
+
+            except sourcing.electronics.SourcingException:
+                logger.warning("Could Not Source Component : " + line.ident + " : " + str(line.quantity))
+            w.writerow(row)
+    logger.info('Exported Digikey Order to File : ' + os.path.join(orderfolder, 'digikey-importable.csv'))
+    dkof.close()
+logger.info('Exported Shortage and Sourcing List to File : ' + os.path.join(orderfolder, 'shortage.csv'))
 inventory.electronics.export_reservations(orderfolder)

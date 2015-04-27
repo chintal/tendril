@@ -49,6 +49,10 @@ class VendorDigiKey(vendors.VendorBase):
         self._searchpages_filters = {}
         super(VendorDigiKey, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
 
+    def get_effective_price(self, price):
+        effective_unitp = price.unit_price.source_value * 112.68 / 100
+        return vendors.VendorPrice(price.moq, effective_unitp, self.currency)
+
     def get_vpart(self, vpartno, ident=None):
         if issubclass(DigiKeyElnPart, vendors.VendorElnPartBase):
             return DigiKeyElnPart(vpartno, ident, self)

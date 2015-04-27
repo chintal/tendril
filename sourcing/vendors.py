@@ -25,7 +25,7 @@ class VendorBase(object):
 
     @property
     def name(self):
-        return self._name
+        return self._dname
 
     @property
     def pclass(self):
@@ -65,17 +65,66 @@ class VendorBase(object):
         """
         self._currency = currency_def
 
-    def search_vpnos(self, ident):
-        raise NotImplementedError
-
     def get_vpnos(self, ident):
+        return self._map.get_partnos(ident)
+
+    def search_vpnos(self, ident):
         raise NotImplementedError
 
     def get_vpart(self, vpartno, ident=None):
         raise NotImplementedError
 
     def get_optimal_pricing(self, ident, rqty):
-        raise NotImplementedError
+        candidate_names = self.get_vpnos(ident)
+        candidates = [self.get_vpart(x) for x in candidate_names]
+        candidates = [x for x in candidates if x.abs_moq <= rqty]
+        candidates = [x for x in candidates if x.vqtyavail is None or x.vqtyavail > rqty]
+        oqty = rqty
+        # vobj, vpno, oqty, nbprice, ubprice, effprice
+        if len(candidates) == 0:
+            return self, None, None, None, None, None
+
+        selcandidate = candidates[0]
+        tcost = self.get_effective_price(selcandidate.get_price(rqty)[0]).extended_price(rqty).native_value
+
+        for candidate in candidates:
+            ubprice, nbprice = candidate.get_price(oqty)
+            effprice = self.get_effective_price(ubprice)
+            ntcost = effprice.extended_price(oqty).native_value
+            if ntcost < tcost:
+                tcost = ntcost
+                selcandidate = candidate
+
+        ubprice, nbprice = selcandidate.get_price(oqty)
+        effprice = self.get_effective_price(ubprice)
+        urationale = None
+        olduprice = None
+        if nbprice is not None:
+            nubprice, nnbprice = selcandidate.get_price(nbprice.moq)
+            neffprice = self.get_effective_price(nubprice)
+            ntcost = neffprice.extended_price(nbprice.moq).native_value
+
+            bump_excess_qty = nubprice.moq - rqty
+
+            if ntcost < tcost * 1.4:
+                urationale = "TC Increase < 40%"
+                oqty = nbprice.moq
+                olduprice = ubprice
+                ubprice = nubprice
+                nbprice = nnbprice
+                effprice = neffprice
+            elif nubprice.unit_price.native_value < ubprice.unit_price.native_value * 0.5:
+                urationale = "UP Decrease > 40%"
+                olduprice = ubprice
+                oqty = nbprice.moq
+                ubprice = nubprice
+                nbprice = nnbprice
+                effprice = neffprice
+
+        return self, selcandidate.vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice
+
+    def get_effective_price(self, price):
+        return price
 
 
 class VendorPrice(object):
@@ -183,6 +232,9 @@ class VendorPartBase(object):
                 else:
                     rnextprice = price
         return rprice, rnextprice
+
+    def __repr__(self):
+        return self.vpno + ' ' + self._vpartdesc + ' ' + str(self.abs_moq) + '\n'
 
 
 class VendorElnPartBase(VendorPartBase):

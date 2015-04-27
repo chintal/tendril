@@ -313,3 +313,14 @@ def normalize_resistance(res):
         res /= 1000
         ostr_idx += 1
     return str(res) + res_ostrs[ostr_idx]
+
+
+def check_for_std_val(ident):
+    device, value, footprint = parse_ident(ident)
+    vals = None
+    if device.startswith('RES'):
+        vals = parse_resistor(value)
+    if device.startswith('CAP'):
+        vals = parse_capacitor(value)
+    if vals is not None:
+        return True

@@ -174,5 +174,31 @@ def export_vendor_map_audit(vendor_obj):
 
     outf.close()
 
-
 init_vendors()
+
+
+class SourcingException(Exception):
+    pass
+
+
+def get_eff_acq_price(vsinfo):
+    return vsinfo[2] * vsinfo[5].unit_price.native_value
+
+
+def get_sourcing_information(ident, qty):
+    # vobj, vpno, oqty, nbprice, ubprice, effprice
+    sources = []
+
+    for vendor in vendor_list:
+        vsinfo = vendor.get_optimal_pricing(ident, qty)
+        if vsinfo[1] is not None:
+            sources.append(vsinfo)
+
+    if len(sources) == 0:
+        raise SourcingException
+
+    selsource = sources[0]
+    for vsinfo in sources:
+        if get_eff_acq_price(vsinfo) < get_eff_acq_price(selsource):
+            selsource = vsinfo
+    return selsource
