@@ -7,6 +7,7 @@ logger = utils.log.get_logger(__name__, utils.log.INFO)
 
 import os
 import csv
+import yaml
 
 import gedaif.gschem
 import gedaif.conffile
@@ -223,15 +224,58 @@ def gen_pcb_dxf(projfolder):
     return dxffile
 
 
+def gen_pcbpricing(projfolder, namebase):
+    gpf = gedaif.projfile.GedaProjectFile(projfolder)
+    pcbpricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
+    pcbpricing_mtime = utils.fs.get_file_mtime(pcbpricingfp)
+
+    if not os.path.exists(pcbpricingfp):
+        return None
+
+    docfolder = projects.get_project_doc_folder(projfolder)
+    plotfile = os.path.join(docfolder, namebase + '-pricing.pdf')
+    outf_mtime = utils.fs.get_file_mtime(plotfile)
+
+    if outf_mtime is not None and outf_mtime > pcbpricing_mtime:
+        logger.info('Skipping up-to-date ' + pcbpricingfp)
+        return pcbpricingfp
+
+    logger.info('Regnerating ' + plotfile + os.linesep +
+                'Last modified : ' + str(pcbpricing_mtime) + '; Last Created : ' + str(outf_mtime))
+
+    with open(pcbpricingfp, 'r') as f:
+        data = yaml.load(f)
+
+    plot1file = os.path.join(docfolder, namebase + '-1pricing.pdf')
+    plot2file = os.path.join(docfolder, namebase + '-2pricing.pdf')
+
+    pltnote = "This pricing refers to the bare PCB only. See the corresponding Config Docs for Card Pricing"
+
+    plt1data = {key: data['pricing'][key] for key in data['pricing'].keys() if key <= 11}
+    plt1title = gpf.configsfile.configdata['pcbname'] + " PCB Unit Price vs Order Quantity (Low Quantity)"
+    plot1file = render.render_lineplot(plot1file, plt1data, plt1title, pltnote)
+
+    plt2data = {key: data['pricing'][key] for key in data['pricing'].keys() if key > 10}
+    plt2title = gpf.configsfile.configdata['pcbname'] + " PCB Unit Price vs Order Quantity (Production Quantity)"
+    plot2file = render.render_lineplot(plot2file, plt2data, plt2title, pltnote)
+
+    utils.pdf.merge_pdf([plot1file, plot2file], plotfile)
+    os.remove(plot1file)
+    os.remove(plot2file)
+    return pcbpricingfp
+
+
 def generate_docs(projfolder):
     configfile = gedaif.conffile.ConfigsFile(projfolder)
     namebase = configfile.configdata['pcbname']
     gen_masterdoc(projfolder, namebase)
 
     gen_cobom_csv(projfolder, namebase)
+
     gen_pcb_pdf(projfolder)
     gen_pcb_gbr(projfolder)
     gen_pcb_dxf(projfolder)
+    gen_pcbpricing(projfolder, namebase)
 
 
 if __name__ == "__main__":

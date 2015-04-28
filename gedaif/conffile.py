@@ -21,10 +21,6 @@ class ConfigsFile(object):
         except IOError:
             raise NoGedaProjectException
         self.projectfile = self.configdata['projfile']
-        if 'elprojfile' in self.configdata.keys():
-            self.elprojfile = self.configdata['elprojfile']
-        else:
-            self.elprojfile = None
 
     def get_configs_file(self):
         with open(os.path.join(self.projectfolder, "schematic", "configs.yaml")) as configfile:

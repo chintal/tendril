@@ -3,17 +3,26 @@ CSIL Sourcing Module documentation (:mod:`sourcing.csil`)
 =========================================================
 """
 
+from utils import log
+logger = log.get_logger(__name__, log.INFO)
+
 import time
 import locale
+import os
+import yaml
 from collections import OrderedDict
 
 import splinter
 
+import utils.fs
 import vendors
 from utils.config import NETWORK_PROXY_IP
 from utils.config import NETWORK_PROXY_PORT
 
 from utils.config import VENDORS_DATA
+
+import gedaif.projfile
+
 
 user = None
 pw = None
@@ -91,17 +100,21 @@ def get_csil_prices(params=exparams):
     button.click()
     link = browser.find_by_id('ctl00_aPlaceOrder')
     link.click()
-    try:
-        values = OrderedDict()
-        values['ctl00$ContentPlaceHolder1$txtPCBName'] = params['pcbname']
-        values['ctl00$ContentPlaceHolder1$ddlLayers'] = layers_codes[params['layers']]
-        values['ctl00$ContentPlaceHolder1$txtDimX'] = params['dX']
-        values['ctl00$ContentPlaceHolder1$txtDimY'] = params['dY']
+
+    values = OrderedDict()
+    values['ctl00$ContentPlaceHolder1$txtPCBName'] = params['pcbname']
+    values['ctl00$ContentPlaceHolder1$ddlLayers'] = layers_codes[params['layers']]
+    values['ctl00$ContentPlaceHolder1$txtDimX'] = params['dX']
+    values['ctl00$ContentPlaceHolder1$txtDimY'] = params['dY']
+    if 'qty' in params.keys():
         values['ctl00$ContentPlaceHolder1$txtQuantity'] = str(params['qty'][1])
-        values['ctl00$ContentPlaceHolder1$DDLsurfacefinish'] = params['finish']
+    else:
+        values['ctl00$ContentPlaceHolder1$txtQuantity'] = '1'
+    values['ctl00$ContentPlaceHolder1$DDLsurfacefinish'] = params['finish']
+    if 'time' in params.keys():
         values['ctl00$ContentPlaceHolder1$ddlDelTerms'] = delivery_codes[params['time']]
-    except KeyError:
-        raise ValueError
+    else:
+        values['ctl00$ContentPlaceHolder1$ddlDelTerms'] = delivery_codes[5]
 
     if not browser.is_element_present_by_id('shortNotiText', wait_time=100):
         raise Exception
@@ -158,7 +171,6 @@ def get_csil_prices(params=exparams):
     for qty in params['qty'][2:]:
         # time.sleep(2)
         lined = {}
-        dt_s = params['time']
         # for char in oldv:
         while browser.find_by_name('ctl00$ContentPlaceHolder1$txtQuantity')[0].value != '':
             browser.type('ctl00$ContentPlaceHolder1$txtQuantity', '\b')
@@ -227,3 +239,31 @@ class VendorCSIL(vendors.VendorBase):
 
     def get_vpart(self, vpartno, ident=None):
         pass
+
+
+def generate_pcb_pricing(projfolder, noregen=True):
+    gpf = gedaif.projfile.GedaProjectFile(projfolder)
+
+    try:
+        pcbparams = gpf.configsfile.configdata['pcbdetails']['params']
+    except KeyError:
+        logger.warning('Geda project does not seem have pcb details. Not generating PCB pricing information : ' + projfolder)
+        return None
+
+    pricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
+
+    if noregen is True:
+        pcb_mtime = utils.fs.get_file_mtime(os.path.join(gpf.configsfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
+        outf_mtime = utils.fs.get_file_mtime(pricingfp)
+        if outf_mtime is not None and outf_mtime > pcb_mtime:
+            logger.info('Skipping up-to-date ' + pricingfp)
+            return pricingfp
+
+    pcbparams['qty'] = range(99)
+    sourcingdata = get_csil_prices(pcbparams)
+    dumpdata = {'params': pcbparams,
+                'pricing': sourcingdata}
+    with open(pricingfp, 'w') as pricingf:
+        pricingf.write(yaml.dump(dumpdata))
+
+    return pricingfp

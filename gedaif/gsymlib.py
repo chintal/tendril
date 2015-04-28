@@ -203,6 +203,13 @@ def is_recognized(ident):
     return False
 
 
+def get_symbol(ident):
+    for symbol in gsymlib:
+        if symbol.ident == ident:
+            return symbol
+    raise ValueError(ident)
+
+
 def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
