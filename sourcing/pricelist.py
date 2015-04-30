@@ -8,6 +8,7 @@ logger = utils.log.get_logger(__name__, utils.log.DEFAULT)
 
 import os
 import yaml
+import re
 
 import vendors
 import utils.currency
@@ -27,8 +28,16 @@ class VendorPricelist(vendors.VendorBase):
         if currency_symbol is None:
             currency_symbol = self._pricelist["currency"]["symbol"].strip()
         self._currency = utils.currency.CurrencyDefinition(currency_code, currency_symbol)
+        try:
+            self._efffactor = self._pricelist["vendorinfo"]["effectivefactor"]
+        except KeyError:
+            self._efffactor = 1
         super(VendorPricelist, self).__init__(name, dname, pclass, mappath,
                                               currency_code, currency_symbol)
+        try:
+            self.add_order_baseprice_component("Shipping Cost", self._pricelist["vendorinfo"]["orderbaseprice"])
+        except KeyError:
+            pass
 
     def search_vpnos(self, ident):
         vplist = []
@@ -73,6 +82,10 @@ class VendorPricelist(vendors.VendorBase):
         effprice = self.get_effective_price(price)
         return self, selcandidate.vpno, oqty, None, price, effprice, "Vendor MOQ/GL", None
 
+    def get_effective_price(self, price):
+        effective_unitp = price.unit_price.source_value * self._efffactor
+        return vendors.VendorPrice(price.moq, effective_unitp, self.currency, price.oqmultiple)
+
 
 class PricelistPart(vendors.VendorPartBase):
     def __init__(self, vp_dict, ident, vendor):
@@ -82,9 +95,23 @@ class PricelistPart(vendors.VendorPartBase):
         if 'pkgqty' in vp_dict.keys():
             self.pkgqty = vp_dict['pkgqty']
         self._vqtyavail = None
-        price = vendors.VendorPrice(vp_dict['moq'], vp_dict['unitp'], self._vendor.currency,
-                                    vp_dict['oqmultiple'])
-        self._prices.append(price)
+        self._get_prices(vp_dict)
+
+    def _get_prices(self, vp_dict):
+        rex = re.compile(ur'^unitp@(?P<moq>\d+)$')
+        for k, v in vp_dict.iteritems():
+            try:
+                moq = rex.match(k).group(1)
+                price = vendors.VendorPrice(int(moq), float(v),
+                                            self._vendor.currency,
+                                            vp_dict['oqmultiple'])
+                self._prices.append(price)
+            except AttributeError:
+                pass
+        if len(self._prices) == 0:
+            price = vendors.VendorPrice(vp_dict['moq'], vp_dict['unitp'], self._vendor.currency,
+                                        vp_dict['oqmultiple'])
+            self._prices.append(price)
 
     def get_price_qty(self, qty):
         lcost = None

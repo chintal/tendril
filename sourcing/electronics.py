@@ -202,20 +202,92 @@ def get_eff_acq_price(vsinfo):
     return vsinfo[2] * vsinfo[5].unit_price.native_value
 
 
-def get_sourcing_information(ident, qty):
+analysis = None
+
+
+def begin_analysis_record():
+    global analysis
+    analysis = []
+
+
+def dump_analysis_file(orderfolder):
+    global analysis
+    of = os.path.join(orderfolder, 'sourcing-analysis.csv')
+    with open(of, 'w') as f:
+        w = csv.writer(f)
+        for data in analysis:
+            vobj, vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice = data[2]
+            ident = data[0]
+            qty = data[1]
+
+            vcurr = vobj.currency.symbol
+            if nbprice is not None:
+                nbqty = nbprice.moq
+                nbunitp_vst = nbprice.unit_price.source_value
+                nbextp_vst = nbprice.extended_price(nbqty).source_value
+            else:
+                nbqty = None
+                nbunitp_vst = None
+                nbextp_vst = None
+
+            if olduprice is not None:
+                unitp_lb_nst = olduprice.unit_price.native_value
+            else:
+                unitp_lb_nst = None
+
+            ubqty = ubprice.moq
+            ubunitp_vst = ubprice.unit_price.source_value
+            ubextp_vst = ubprice.extended_price(oqty).source_value
+
+            unitp_nst = ubprice.unit_price.native_value
+
+            eff_unitp_nst = effprice.unit_price.native_value
+            eff_extp_nst = effprice.extended_price(oqty).native_value
+            eff_excess_price = (oqty-qty) * effprice.unit_price.native_value
+
+            try:
+                vpobj = vobj.get_vpart(vpno, ident)
+                manufacturer = vpobj.manufacturer
+                mpartno = vpobj.mpartno
+                description = vpobj.vpartdesc
+            except:
+                vpobj = None
+                manufacturer = None
+                description = None
+                mpartno = None
+
+            row = [ident, qty]
+            row += [vobj.name, vpno, manufacturer, mpartno, description,
+                    oqty, (oqty-qty),             # Order Details
+                    vcurr, nbqty, nbunitp_vst, nbextp_vst,              # Final Pricing (Vendor Currency)
+                    ubqty, ubunitp_vst, ubextp_vst,
+                    unitp_lb_nst, unitp_nst, eff_unitp_nst, oqty, eff_extp_nst,       # Final Pricing (Native Currency)
+                    eff_excess_price, urationale
+                    ]
+
+            w.writerow(row)
+    analysis = None
+
+
+def get_sourcing_information(ident, qty, allvendors=False):
     # vobj, vpno, oqty, nbprice, ubprice, effprice
+    global analysis
     sources = []
     ident = ident.strip()
     for vendor in vendor_list:
         vsinfo = vendor.get_optimal_pricing(ident, qty)
         if vsinfo[1] is not None:
+            analysis.append((ident, qty, vsinfo))
             sources.append(vsinfo)
 
     if len(sources) == 0:
         raise SourcingException
 
-    selsource = sources[0]
-    for vsinfo in sources:
-        if get_eff_acq_price(vsinfo) < get_eff_acq_price(selsource):
-            selsource = vsinfo
-    return selsource
+    if allvendors is False:
+        selsource = sources[0]
+        for vsinfo in sources:
+            if get_eff_acq_price(vsinfo) < get_eff_acq_price(selsource):
+                selsource = vsinfo
+        return selsource
+    else:
+        return sources

@@ -14,6 +14,23 @@ import utils.currency
 import utils.config
 
 
+class VendorOrder(object):
+    def __init__(self, vendor):
+        self._vendor = vendor
+        self._lines = []
+        self._basecost = self._vendor.order_baseprice
+
+    def add(self, line):
+        self._lines.append(line)
+
+    def __len__(self):
+        return len(self._lines)
+
+    @property
+    def lines(self):
+        return self._lines
+
+
 class VendorBase(object):
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=utils.config.BASE_CURRENCY,
@@ -24,7 +41,8 @@ class VendorBase(object):
         self._dname = dname
         self._currency = utils.currency.CurrencyDefinition(currency_code, currency_symbol)
         self._pclass = pclass
-        self._order = []
+        self._order = None
+        self._orderbasecosts = []
         if mappath is not None:
             self.map = mappath
 
@@ -131,15 +149,30 @@ class VendorBase(object):
     def get_effective_price(self, price):
         return price
 
+    @property
+    def order_baseprice(self):
+        t = 0
+        for price in self._orderbasecosts:
+            t += price[1].native_value
+        return utils.currency.CurrencyValue(t, utils.currency.native_currency_defn)
+
+    def add_order_baseprice_component(self, desc, value):
+        if isinstance(value, utils.currency.CurrencyValue):
+            self._orderbasecosts.append((desc, value))
+        else:
+            self._orderbasecosts.append((desc, utils.currency.CurrencyValue(value, self.currency)))
+
     def add_to_order(self, line):
+        if self._order is None:
+            self._order = VendorOrder(self)
         logger.info("Adding to " + self._name + " order : " + line[2] + " : " + str(line[0]))
-        self._order.append(line)
+        self._order.add(line)
 
     def _dump_open_order(self, path):
         orderfile = os.path.join(path, self._name + '-order.csv')
         with open(orderfile, 'w') as orderf:
             w = csv.writer(orderf)
-            for line in self._order:
+            for line in self._order.lines:
                 w.writerow(line)
 
     def finalize_order(self, path):
@@ -148,7 +181,7 @@ class VendorBase(object):
             return
         logger.info("Writing " + self._dname + " order to Folder : " + path)
         self._dump_open_order(path)
-        self._order = []
+        self._order = None
 
 
 class VendorPrice(object):

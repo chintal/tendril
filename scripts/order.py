@@ -158,6 +158,7 @@ with open(os.path.join(orderfolder, 'shortage.csv'), 'w') as f:
     orders_path = os.path.join(orderfolder, 'purchase-orders')
     if not os.path.exists(orders_path):
         os.makedirs(orders_path)
+    sourcing.electronics.begin_analysis_record()
     w.writerow(["Component Details", '', '', '',
                 "Requirement", '', '',
                 "Guideline Compliant", '',
@@ -282,6 +283,7 @@ with open(os.path.join(orderfolder, 'shortage.csv'), 'w') as f:
     for vendor in sourcing.electronics.vendor_list:
         vendor.finalize_order(orders_path)
 logger.info('Exported Shortage and Sourcing List to File : ' + os.linesep + os.path.join(orderfolder, 'shortage.csv'))
+sourcing.electronics.dump_analysis_file(orderfolder)
 if not os.path.exists(os.path.join(orderfolder, 'reservations')):
     os.makedirs(os.path.join(orderfolder, 'reservations'))
 inventory.electronics.export_reservations(os.path.join(orderfolder, 'reservations'))

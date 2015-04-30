@@ -119,4 +119,11 @@ VENDORS_DATA = [
         'mapfile-base': os.path.join(_vendor_map_folder, 'omega'),
         'pclass': ['electronics']
     },
+    {
+        'name': 'analogdevices',
+        'type': 'pricelist',
+        'dname': 'Analog Devices Inc',
+        'mapfile-base': os.path.join(_vendor_map_folder, 'analogdevices'),
+        'pclass': ['electronics']
+    },
 ]
