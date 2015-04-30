@@ -6,7 +6,7 @@ See the COPYING, README, and INSTALL files for more information
 import logging
 from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-DEFAULT = logging.WARNING
+DEFAULT = logging.INFO
 
 
 def init():

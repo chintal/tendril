@@ -32,5 +32,13 @@ class ConfigsFile(object):
             logging.ERROR("Config file schema is not supported")
 
     @property
+    def doc_folder(self):
+        return os.path.join(self.projectfolder, "doc")
+
+    @property
+    def indicative_pricing_folder(self):
+        return os.path.join(self.doc_folder, "pricing")
+
+    @property
     def projectfolder(self):
         return self._projectfolder

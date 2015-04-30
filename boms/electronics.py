@@ -316,14 +316,30 @@ class EntityElnBom(EntityBomBase):
                 return group
 
     def populate_bom(self):
-        tgroup = self.find_group('default')
-        comp = EntityElnComp()
-        comp.define('PCB', 'PCB', self.configurations.pcbname)
-        tgroup.insert_eln_comp(comp)
+        if self.configurations.pcbname is not None:
+            tgroup = self.find_group('default')
+            comp = EntityElnComp()
+            comp.define('PCB', 'PCB', self.configurations.pcbname)
+            tgroup.insert_eln_comp(comp)
         parser = gedaif.bomparser.MotifAwareBomParser(self.projfolder, "bom")
         for item in parser.line_gen:
+            if item.data['device'] == 'TESTPOINT':
+                continue
             tgroup = self.find_tgroup(item)
             tgroup.insert(item)
+            if item.data['footprint'] == 'MY-TO220':
+                comp = EntityElnComp()
+                comp.define('HS' + item.data['refdes'][1:], 'HEAT SINK', 'TO220')
+                tgroup.insert_eln_comp(comp)
+            if item.data['device'] == 'MODULE LCD' and \
+                    item.data['value'] == "CHARACTER PARALLEL 16x2" and \
+                    item.data['footprint'] == "MY-MTA100-16":
+                comp = EntityElnComp()
+                comp.define(item.data['refdes'], 'CONN SIP', "16PIN PM ST", "MY-MTA100-16")
+                tgroup.insert_eln_comp(comp)
+                comp = EntityElnComp()
+                comp.define(item.data['refdes'], 'CABLE SIP SSC', "16PIN", "12INCH")
+                tgroup.insert_eln_comp(comp)
         for item in parser.motif_gen:
             self._motifs.append(item)
 

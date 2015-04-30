@@ -46,11 +46,15 @@ class QtyGuidelines(object):
             excess_min_pc = Decimal(gldict['excess_min_pc'])
         else:
             excess_min_pc = 0
+        if 'excess_min_qty' in gldict.keys():
+            excess_min_qty = Decimal(gldict['excess_min_qty'])
+        else:
+            excess_min_qty = 0
         if 'excess_max_qty' in gldict.keys():
             excess_max_qty = int(gldict['excess_max_qty'])
         else:
             excess_max_qty = -1
-        return oqty_min, oqty_multiple, baseline_qty, excess_min_pc, excess_max_qty
+        return oqty_min, oqty_multiple, baseline_qty, excess_min_pc, excess_min_qty, excess_max_qty
 
     def get_compliant_qty(self, ident, qty,
                           handle_excess=True,
@@ -71,10 +75,13 @@ class QtyGuidelines(object):
                 if not is_std_val:
                     gldict = self._default
 
-            oqty_min, oqty_multiple, baseline_qty, excess_min_pc, excess_max_qty = self._get_full_guideline(gldict)
+            (oqty_min, oqty_multiple, baseline_qty,
+             excess_min_pc, excess_min_qty, excess_max_qty) = self._get_full_guideline(gldict)
             tqty = qty
             if handle_excess is True:
-                tqty *= 1 + Decimal(excess_min_pc) / 100
+                tqty1 = tqty * (1 + Decimal(excess_min_pc) / 100)
+                tqty2 = tqty + Decimal(excess_min_qty)
+                tqty = max([tqty1, tqty2])
 
             if tqty <= oqty_min:
                 oqty = oqty_min

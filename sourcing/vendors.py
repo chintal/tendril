@@ -3,11 +3,15 @@ Vendors module documentation (:mod:`sourcing.vendors`)
 ======================================================
 """
 
+import utils.log
+logger = utils.log.get_logger(__name__, utils.log.INFO)
+
+import os
+import csv
+
 import entityhub.maps
 import utils.currency
 import utils.config
-
-import os
 
 
 class VendorBase(object):
@@ -20,6 +24,7 @@ class VendorBase(object):
         self._dname = dname
         self._currency = utils.currency.CurrencyDefinition(currency_code, currency_symbol)
         self._pclass = pclass
+        self._order = []
         if mappath is not None:
             self.map = mappath
 
@@ -43,12 +48,9 @@ class VendorBase(object):
     def map(self, mappath):
         self._mappath = mappath
         if os.path.isfile(mappath) is False:
-            if self._pclass == 'electronics':
+            if 'electronics' in self._pclass:
                 import electronics
                 electronics.gen_vendor_mapfile(self)
-            if self._pclass == 'electronics_pcb':
-                import electronics
-                electronics.gen_pcb_vendor_mapfile(self)
             else:
                 raise AttributeError
         self._map = entityhub.maps.MapFile(mappath)
@@ -76,10 +78,14 @@ class VendorBase(object):
 
     def get_optimal_pricing(self, ident, rqty):
         candidate_names = self.get_vpnos(ident)
+
         candidates = [self.get_vpart(x) for x in candidate_names]
+
         candidates = [x for x in candidates if x.abs_moq <= rqty]
         candidates = [x for x in candidates if x.vqtyavail is None or x.vqtyavail > rqty]
+
         oqty = rqty
+
         # vobj, vpno, oqty, nbprice, ubprice, effprice
         if len(candidates) == 0:
             return self, None, None, None, None, None
@@ -120,21 +126,44 @@ class VendorBase(object):
                 ubprice = nubprice
                 nbprice = nnbprice
                 effprice = neffprice
-
         return self, selcandidate.vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice
 
     def get_effective_price(self, price):
         return price
 
+    def add_to_order(self, line):
+        logger.info("Adding to " + self._name + " order : " + line[2] + " : " + str(line[0]))
+        self._order.append(line)
+
+    def _dump_open_order(self, path):
+        orderfile = os.path.join(path, self._name + '-order.csv')
+        with open(orderfile, 'w') as orderf:
+            w = csv.writer(orderf)
+            for line in self._order:
+                w.writerow(line)
+
+    def finalize_order(self, path):
+        if len(self._order) == 0:
+            logger.debug("Nothing in the order, not generating order file : " + self._name)
+            return
+        logger.info("Writing " + self._dname + " order to Folder : " + path)
+        self._dump_open_order(path)
+        self._order = []
+
 
 class VendorPrice(object):
-    def __init__(self, moq, price, currency_def):
+    def __init__(self, moq, price, currency_def, oqmultiple=1):
         self._moq = moq
         self._price = utils.currency.CurrencyValue(price, currency_def)
+        self._oqmulitple = oqmultiple
 
     @property
     def moq(self):
         return self._moq
+
+    @property
+    def oqmultiple(self):
+        return self._oqmulitple
 
     @property
     def unit_price(self):
@@ -143,6 +172,8 @@ class VendorPrice(object):
     def extended_price(self, qty):
         if qty < self.moq:
             raise ValueError
+        if qty % self.oqmultiple != 0:
+            pass
         return utils.currency.CurrencyValue(self.unit_price._val * qty,
                                             self.unit_price._currency_def)
 
@@ -157,6 +188,7 @@ class VendorPartBase(object):
         self._canonical_repr = ident
         self._prices = []
         self._vendor = vendor
+        self._pkgqty = 1
 
     def add_price(self, price):
         self._prices.append(price)
@@ -206,6 +238,14 @@ class VendorPartBase(object):
         return self._canonical_repr
 
     @property
+    def pkgqty(self):
+        return self._pkgqty
+
+    @pkgqty.setter
+    def pkgqty(self, value):
+        self._pkgqty = value
+
+    @property
     def abs_moq(self):
         if len(self._prices) == 0:
             return 0
@@ -234,7 +274,7 @@ class VendorPartBase(object):
         return rprice, rnextprice
 
     def __repr__(self):
-        return self.vpno + ' ' + self._vpartdesc + ' ' + str(self.abs_moq) + '\n'
+        return self.vpno + ' ' + str(self._vpartdesc) + ' ' + str(self.abs_moq) + '\n'
 
 
 class VendorElnPartBase(VendorPartBase):

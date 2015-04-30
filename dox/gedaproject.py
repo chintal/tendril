@@ -34,7 +34,7 @@ def gen_confbom(projfolder, configname):
     outf_mtime = utils.fs.get_file_mtime(outpath)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
-        logger.info('Skipping up-to-date ' + outpath)
+        logger.debug('Skipping up-to-date ' + outpath)
         return outpath
 
     logger.info('Regenerating ' + outpath + os.linesep +
@@ -70,7 +70,7 @@ def gen_schpdf(projfolder, namebase):
     outf_mtime = utils.fs.get_file_mtime(schpdfpath)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
-        logger.info('Skipping up-to-date ' + schpdfpath)
+        logger.debug('Skipping up-to-date ' + schpdfpath)
         return schpdfpath
 
     logger.info('Regenerating ' + schpdfpath + os.linesep +
@@ -97,7 +97,7 @@ def gen_masterdoc(projfolder, namebase):
     outf_mtime = utils.fs.get_file_mtime(masterdocfile)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
-        logger.info('Skipping up-to-date ' + masterdocfile)
+        logger.debug('Skipping up-to-date ' + masterdocfile)
         return masterdocfile
 
     logger.info('Regnerating ' + masterdocfile + os.linesep +
@@ -119,7 +119,7 @@ def gen_confpdf(projfolder, configname, namebase):
     outf_mtime = utils.fs.get_file_mtime(confdocfile)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
-        logger.info('Skipping up-to-date ' + confdocfile)
+        logger.debug('Skipping up-to-date ' + confdocfile)
         return confdocfile
 
     logger.info('Regenerating ' + confdocfile + os.linesep +
@@ -141,7 +141,7 @@ def gen_cobom_csv(projfolder, namebase):
     outf_mtime = utils.fs.get_file_mtime(cobom_csv_path)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
-        logger.info('Skipping up-to-date ' + cobom_csv_path)
+        logger.debug('Skipping up-to-date ' + cobom_csv_path)
         return cobom_csv_path
 
     logger.info('Regenerating ' + cobom_csv_path + os.linesep +
@@ -171,7 +171,7 @@ def gen_pcb_pdf(projfolder):
     outf_mtime = utils.fs.get_file_mtime(pdffile)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
-        logger.info('Skipping up-to-date ' + pdffile)
+        logger.debug('Skipping up-to-date ' + pdffile)
         return pdffile
 
     logger.info('Regenerating ' + pdffile + os.linesep +
@@ -194,7 +194,7 @@ def gen_pcb_gbr(projfolder):
         outf_mtime = utils.fs.get_folder_mtime(gbrfolder)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
-        logger.info('Skipping up-to-date ' + gbrfolder)
+        logger.debug('Skipping up-to-date ' + gbrfolder)
         return gbrfolder
 
     logger.info('Regenerating ' + gbrfolder + os.linesep +
@@ -214,7 +214,7 @@ def gen_pcb_dxf(projfolder):
     outf_mtime = utils.fs.get_file_mtime(dxffile)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
-        logger.info('Skipping up-to-date ' + dxffile)
+        logger.debug('Skipping up-to-date ' + dxffile)
         return dxffile
 
     logger.info('Regenerating ' + dxffile + os.linesep +
@@ -237,7 +237,7 @@ def gen_pcbpricing(projfolder, namebase):
     outf_mtime = utils.fs.get_file_mtime(plotfile)
 
     if outf_mtime is not None and outf_mtime > pcbpricing_mtime:
-        logger.info('Skipping up-to-date ' + pcbpricingfp)
+        logger.debug('Skipping up-to-date ' + pcbpricingfp)
         return pcbpricingfp
 
     logger.info('Regnerating ' + plotfile + os.linesep +
@@ -268,14 +268,20 @@ def gen_pcbpricing(projfolder, namebase):
 def generate_docs(projfolder):
     configfile = gedaif.conffile.ConfigsFile(projfolder)
     namebase = configfile.configdata['pcbname']
+    if namebase is None:
+        try:
+            namebase = configfile.configdata['cblname']
+        except KeyError:
+            logger.error("Project does not have a known identifier. Skipping : " + projfolder)
+            return
     gen_masterdoc(projfolder, namebase)
-
     gen_cobom_csv(projfolder, namebase)
 
-    gen_pcb_pdf(projfolder)
-    gen_pcb_gbr(projfolder)
-    gen_pcb_dxf(projfolder)
-    gen_pcbpricing(projfolder, namebase)
+    if configfile.configdata['pcbname'] is not None:
+        gen_pcb_pdf(projfolder)
+        gen_pcb_gbr(projfolder)
+        gen_pcb_dxf(projfolder)
+        gen_pcbpricing(projfolder, namebase)
 
 
 if __name__ == "__main__":

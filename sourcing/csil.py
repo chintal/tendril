@@ -16,12 +16,15 @@ import splinter
 
 import utils.fs
 import vendors
+import utils.currency
+
 from utils.config import NETWORK_PROXY_IP
 from utils.config import NETWORK_PROXY_PORT
 
 from utils.config import VENDORS_DATA
 
 import gedaif.projfile
+import entityhub.projects
 
 
 user = None
@@ -238,7 +241,86 @@ class VendorCSIL(vendors.VendorBase):
         pass
 
     def get_vpart(self, vpartno, ident=None):
-        pass
+        return CSILPart(vpartno, ident, self)
+
+    def get_optimal_pricing(self, ident, rqty):
+        # return super(VendorCSIL, self).get_optimal_pricing(ident, rqty)
+        candidate_names = self.get_vpnos(ident)
+        candidates = [self.get_vpart(x) for x in candidate_names]
+
+        if len(candidates) == 0:
+            return self, None, None, None, None, None
+
+        candidate = candidates[0]
+        if len(candidate._prices) == 0:
+            return self, None, None, None, None, None
+        ubprice, nbprice, urationale, olduprice = candidate.get_price(rqty)
+        oqty = ubprice.moq
+        effprice = self.get_effective_price(ubprice)
+        return self, candidate.vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice
+
+    def get_effective_price(self, price):
+        effective_unitp = price.unit_price.source_value * 112.68 / 100
+        return vendors.VendorPrice(price.moq, effective_unitp, self.currency)
+
+
+class CSILPart(vendors.VendorPartBase):
+    def __init__(self, vpartno, ident, vendor):
+        if vendor is None:
+            vendor = VendorCSIL('csil', 'transient', 'electronics_pcb')
+            vendor.currency = utils.currency.CurrencyDefinition('INR', 'INR')
+        self._vendor = vendor
+        if ident is None:
+            ident = self._vendor.map.get_canonical(vpartno)
+        super(CSILPart, self).__init__(ident, vendor)
+        if vpartno is not None:
+            self.vpno = vpartno
+        else:
+            logger.error("Not enough information to create a CSIL Part")
+        self._pcbname = vpartno
+        if self._pcbname not in entityhub.projects.pcbs.keys():
+            raise ValueError("Unrecognized PCB")
+        self._projectfolder = entityhub.projects.pcbs[self._pcbname]
+        self._load_prices()
+
+        self._manufacturer = self._vendor.name
+        self._vqtyavail = None
+
+    def _load_prices(self):
+        gpf = gedaif.projfile.GedaProjectFile(self._projectfolder)
+        pricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
+        if not os.path.exists(pricingfp):
+            logger.debug("PCB does not have sourcing file. Not loading prices : " + self._pcbname)
+            return None
+        with open(pricingfp, 'r') as f:
+            data = yaml.load(f)
+        for qty, prices in data['pricing'].iteritems():
+            if 10 not in prices.keys():
+                logger.warning("Default Delivery Time not in prices. Quantity pricing not imported : " +
+                               str([qty, self._pcbname]))
+            else:
+                price = vendors.VendorPrice(qty, prices[10], self._vendor.currency)
+                self._prices.append(price)
+
+    def get_price(self, qty):
+        possible_prices = []
+        base_price, next_base_price = super(CSILPart, self).get_price(qty)
+        for price in self._prices:
+            if price.moq > qty and \
+                    price.extended_price(price.moq).native_value < base_price.extended_price(qty).native_value:
+                possible_prices.append(price)
+        if len(possible_prices) == 0:
+            return base_price, next_base_price, "GUIDELINE", None
+        else:
+            mintot = base_price.extended_price(qty).native_value
+            selprice = base_price
+            rationale = "GUIDELINE"
+            for price in possible_prices:
+                if price.extended_price(price.moq).native_value < mintot:
+                    selprice = price
+                    mintot = price.extended_price(price.moq).native_value
+                    rationale = "TC Reduction"
+            return selprice, super(CSILPart, self).get_price(selprice.moq+1)[0], rationale, base_price
 
 
 def generate_pcb_pricing(projfolder, noregen=True):
@@ -259,7 +341,7 @@ def generate_pcb_pricing(projfolder, noregen=True):
             logger.info('Skipping up-to-date ' + pricingfp)
             return pricingfp
 
-    pcbparams['qty'] = range(99)
+    pcbparams['qty'] = range(320)
     sourcingdata = get_csil_prices(pcbparams)
     dumpdata = {'params': pcbparams,
                 'pricing': sourcingdata}

@@ -76,16 +76,22 @@ DEVICE_CLASSES = [
     'TESTPOINT',
     'SOLDER DOT',
     'BATTERY',
-    'HEAT SINK'
+    'HEAT SINK',
+    'CABLE SIP SSC',
+    'WIRE DF13 SSC'
 ]
 
 nofp_strs = [
     "CONN",
     "MODULE",
-    "CRYSTAL OSC"
+    "CRYSTAL OSC",
+    "HEAT SINK"
 ]
 
-
+fpislen_strs = [
+    "CABLE SIP SSC",
+    "WIRE DF13 SSC"
+]
 def ident_transform(device, value, footprint, tf=None):
     """
     Auto-generated ident string from the component ``device``, ``value``
@@ -322,5 +328,8 @@ def check_for_std_val(ident):
         vals = parse_resistor(value)
     if device.startswith('CAP'):
         vals = parse_capacitor(value)
+    if device.startswith('CRYSTAL'):
+        vals = parse_crystal(value)
     if vals is not None:
         return True
+    return False

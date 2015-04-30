@@ -9,7 +9,8 @@ import inspect
 CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 KOALA_ROOT = os.path.normpath(os.path.join(CONFIG_PATH, os.pardir, os.pardir))
 INSTANCE_ROOT = KOALA_ROOT
-AUDIT_PATH = os.path.join(KOALA_ROOT, 'manual-audit')
+
+AUDIT_PATH = os.path.join(INSTANCE_ROOT, 'manual-audit')
 PROJECTS_ROOT = os.path.normpath('/home/chintal/quazar/workspace/qda/clone')
 # Network Details
 
@@ -28,7 +29,7 @@ BASE_CURRENCY_SYMBOL = 'INR '
 
 # Company Details
 
-COMPANY_LOGO_PATH = os.path.join(KOALA_ROOT, 'dox/templates/graphics/logo.png')
+COMPANY_LOGO_PATH = os.path.join(INSTANCE_ROOT, 'dox/templates/graphics/logo.png')
 COMPANY_NAME = "Quazar Technologies Pvt Ltd"
 
 DOX_TEMPLATE_FOLDER = os.path.join(KOALA_ROOT, 'dox/templates')
@@ -52,7 +53,7 @@ ELECTRONICS_INVENTORY_DATA = [
         'sname': 'ElectronicsLive',
         'location': 'Main Electronics Production Stock',
         'type': 'QuazarStockXLS',
-        'tfpath': os.path.join(KOALA_ROOT, 'inventory/transforms', 'ElectronicsLive-tf.csv')
+        'tfpath': os.path.join(INSTANCE_ROOT, 'inventory/transforms', 'ElectronicsLive-tf.csv')
     },
 
     {
@@ -60,7 +61,7 @@ ELECTRONICS_INVENTORY_DATA = [
         'sname': 'ElectricalLive',
         'location': 'Main Electrical Production Stock',
         'type': 'QuazarStockXLS',
-        'tfpath': os.path.join(KOALA_ROOT, 'inventory/transforms', 'ElectricalLive-tf.csv')
+        'tfpath': os.path.join(INSTANCE_ROOT, 'inventory/transforms', 'ElectricalLive-tf.csv')
     },
 
     {
@@ -68,29 +69,54 @@ ELECTRONICS_INVENTORY_DATA = [
         'sname': 'Sheet1',
         'location': 'QDA Electronics Stock',
         'type': 'QuazarStockXLS',
-        'tfpath': os.path.join(KOALA_ROOT, 'inventory/transforms', 'QDA_Stock-tf.csv')
+        'tfpath': os.path.join(INSTANCE_ROOT, 'inventory/transforms', 'QDA_Stock-tf.csv')
     },
 ]
 
 
 # Vendor Details
 
-_vendor_map_folder = os.path.join(KOALA_ROOT, 'sourcing', 'maps')
-vendor_map_audit_folder = os.path.join(KOALA_ROOT, 'manual-audit', 'vendor-maps')
+_vendor_map_folder = os.path.join(INSTANCE_ROOT, 'sourcing', 'maps')
+vendor_map_audit_folder = os.path.join(AUDIT_PATH, 'vendor-maps')
+
+PRICELISTVENDORS_FOLDER = os.path.join(INSTANCE_ROOT, 'sourcing', 'pricelists')
 
 VENDORS_DATA = [
     {
         'name': 'digikey',
         'dname': 'Digi-Key Corporation',
+        'type': 'digikey',
         'mapfile-base': os.path.join(_vendor_map_folder, 'digikey'),
         'pclass': ['electronics']
     },
     {
         'name': 'csil',
-        'dname': 'CSIL',
+        'dname': 'Circuit Systems India Ltd',
+        'type': 'csil',
         'mapfile-base': os.path.join(_vendor_map_folder, 'csil'),
         'pclass': ['electronics_pcb'],
         'user': 'quazartech',
         'pw': 'qt55655154'
-    }
+    },
+    {
+        'name': 'mehta',
+        'type': 'pricelist',
+        'dname': 'Mehta Enterprises',
+        'mapfile-base': os.path.join(_vendor_map_folder, 'mehta'),
+        'pclass': ['electronics']
+    },
+    {
+        'name': 'unknown',
+        'type': 'pricelist',
+        'dname': 'Unknown Vendor',
+        'mapfile-base': os.path.join(_vendor_map_folder, 'unknown'),
+        'pclass': ['electronics']
+    },
+    {
+        'name': 'omega',
+        'type': 'pricelist',
+        'dname': 'Omega Engineering Inc',
+        'mapfile-base': os.path.join(_vendor_map_folder, 'omega'),
+        'pclass': ['electronics']
+    },
 ]

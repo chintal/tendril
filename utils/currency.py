@@ -41,7 +41,10 @@ class CurrencyDefinition(object):
         request = urllib2.Request(apiurl + urllib.urlencode(params))
         response = utils.www.urlopen(request)
         data = json.load(response)
-        rate = float(data['rate'])
+        try:
+            rate = float(data['rate'])
+        except KeyError:
+            raise KeyError(code)
         return rate
 
 native_currency_defn = CurrencyDefinition(BASE_CURRENCY, BASE_CURRENCY_SYMBOL)

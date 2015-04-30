@@ -56,12 +56,14 @@ class MapFile(object):
         return self._strategy[canonical]
 
     def get_canonical(self, partno):
-        for (k, v) in self._umap:
-            if partno in v:
-                return k
-        for (k, v) in self._map:
-            if partno in v:
-                return k
+        if len(self._umap) > 0:
+            for (k, v) in self._umap.iteritems():
+                if partno in v:
+                    return k
+        if len(self._map) > 0:
+            for (k, v) in self._map.iteritems():
+                if partno in v:
+                    return k
         return None
 
     def get_user_map(self):

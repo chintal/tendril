@@ -3,6 +3,9 @@ Filesystem Utils Module Documentation (:mod:`utils.fsutils`)
 ============================================================
 """
 
+from utils import log
+logger = log.get_logger(__name__, log.INFO)
+
 import tempfile
 import atexit
 import os

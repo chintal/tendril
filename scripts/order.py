@@ -20,6 +20,8 @@ import sourcing.electronics
 
 from entityhub import projects
 from gedaif import gsymlib
+from gedaif import projfile
+
 import inventory.guidelines
 
 from utils.config import KOALA_ROOT
@@ -37,6 +39,9 @@ LOAD_PRESHORT = False
 LOAD_EXTERNAL_REQ = False
 external_req_file = None
 USE_STOCK = True
+IS_INDICATIVE = False
+indication_context = None
+
 
 if 'preshort' in data.keys():
     LOAD_PRESHORT = data['preshort']
@@ -45,6 +50,9 @@ if 'external' in data.keys():
     LOAD_EXTERNAL_REQ = True
 if 'use_stock' in data.keys():
     USE_STOCK = data['use_stock']
+if 'is_indicative' in data.keys():
+    IS_INDICATIVE = data['is_indicative']
+    indication_context = data['context']
 
 
 # Define base transforms for external data
@@ -137,7 +145,7 @@ for k, v in data['cards'].iteritems():
 cobom = boms.outputbase.CompositeOutputBom(bomlist)
 
 with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
-    logger.info('Exporting Composite Output BOM to File : ' + os.path.join(orderfolder, 'cobom.csv'))
+    logger.info('Exporting Composite Output BOM to File : ' + os.linesep + os.path.join(orderfolder, 'cobom.csv'))
     cobom.dump(f)
 
 
@@ -147,9 +155,9 @@ dkvmap = dkv.map
 with open(os.path.join(orderfolder, 'shortage.csv'), 'w') as f:
     logger.info('Constructing Shortage File')
     w = csv.writer(f)
-    logger.info('Opening Digikey Order File')
-    dkof = open(os.path.join(orderfolder, 'digikey-importable.csv'), 'w')
-    wdk = csv.writer(dkof)
+    orders_path = os.path.join(orderfolder, 'purchase-orders')
+    if not os.path.exists(orders_path):
+        os.makedirs(orders_path)
     w.writerow(["Component Details", '', '', '',
                 "Requirement", '', '',
                 "Guideline Compliant", '',
@@ -215,7 +223,7 @@ with open(os.path.join(orderfolder, 'shortage.csv'), 'w') as f:
             row = [line.ident, in_gsymlib, avail_from_dk, strategy,
                    line.quantity, line.quantity-shortage, shortage,
                    buy_qty, (buy_qty-shortage)]
-            logger.info("Attempting to source " + line.ident)
+            logger.debug("Attempting to source " + line.ident)
             try:
                 vobj, vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice = sourcing.electronics.get_sourcing_information(line.ident,
                                                                                                                          buy_qty)
@@ -245,7 +253,7 @@ with open(os.path.join(orderfolder, 'shortage.csv'), 'w') as f:
                 eff_extp_nst = effprice.extended_price(oqty).native_value
                 eff_excess_price = (oqty-shortage) * effprice.unit_price.native_value
 
-                logger.info("Sourced " + line.ident + ":" + str((vpno, oqty)))
+                logger.debug("Sourced " + line.ident + ":" + str((vobj.name, vpno, oqty)))
 
                 try:
                     vpobj = vobj.get_vpart(vpno, line.ident)
@@ -266,14 +274,91 @@ with open(os.path.join(orderfolder, 'shortage.csv'), 'w') as f:
                         eff_excess_price, urationale
                         ]
 
-                if vobj.name == 'Digi-Key Corporation':
-                    logger.info("Adding to DK Order : " + line.ident + " : " + str(oqty))
-                    wdk.writerow([oqty, vpno, line.ident])
+                vobj.add_to_order([oqty, vpno, line.ident])
 
             except sourcing.electronics.SourcingException:
                 logger.warning("Could Not Source Component : " + line.ident + " : " + str(line.quantity))
             w.writerow(row)
-    logger.info('Exported Digikey Order to File : ' + os.path.join(orderfolder, 'digikey-importable.csv'))
-    dkof.close()
-logger.info('Exported Shortage and Sourcing List to File : ' + os.path.join(orderfolder, 'shortage.csv'))
-inventory.electronics.export_reservations(orderfolder)
+    for vendor in sourcing.electronics.vendor_list:
+        vendor.finalize_order(orders_path)
+logger.info('Exported Shortage and Sourcing List to File : ' + os.linesep + os.path.join(orderfolder, 'shortage.csv'))
+if not os.path.exists(os.path.join(orderfolder, 'reservations')):
+    os.makedirs(os.path.join(orderfolder, 'reservations'))
+inventory.electronics.export_reservations(os.path.join(orderfolder, 'reservations'))
+
+
+if IS_INDICATIVE:
+    logger.info('Generating Indicative Pricing Files')
+    logger.debug('Loading Ident Pricing Information')
+    pricing = {}
+    if USE_STOCK:
+        logger.warning("Possibly Incorrect Analysis : Using Stock for Indicative Pricing Calculation")
+    with open(os.path.join(orderfolder, 'shortage.csv'), 'r') as f:
+        reader = csv.reader(f)
+        headers = None
+        for row in reader:
+            if row[0] == 'Ident':
+                headers = row
+                break
+        for row in reader:
+            if row[0] is not '':
+                try:
+                    pricing[row[0]] = (row[headers.index('Vendor')],
+                                       row[headers.index('Vendor Part No')],
+                                       row[headers.index('Manufacturer')],
+                                       row[headers.index('Manufacturer Part No')],
+                                       row[headers.index('Description')],
+                                       row[headers.index('Used Break Qty')],
+                                       row[headers.index('Effective Unit Price')]
+                                       )
+                except IndexError:
+                    pricing[row[0]] = None
+    summaryf = open(os.path.join(orderfolder, 'costing-summary.csv'), 'w')
+    summaryw = csv.writer(summaryf)
+    summaryw.writerow(["Card", "Total BOM Lines", "Uncosted BOM Lines", "Quantity",
+                       "Indicative Unit Cost", "Indicative Line Cost"
+                       ])
+    all_uncosted_idents = []
+    for k, v in sorted(data['cards'].iteritems()):
+        logger.info('Creating Indicative Pricing for Card : ' + k)
+        bom = boms.electronics.import_pcb(projects.cards[k])
+        obom = bom.create_output_bom(k)
+        gpf = projfile.GedaProjectFile(obom.descriptor.cardfolder)
+        ipfolder = gpf.configsfile.indicative_pricing_folder
+        if not os.path.exists(ipfolder):
+            os.makedirs(ipfolder)
+        ipfile = os.path.join(ipfolder, obom.descriptor.configname + '~' + indication_context + '.csv')
+        totalcost = 0
+        uncosted_idents = []
+        total_lines = 0
+        with open(ipfile, 'w') as f:
+            writer = csv.writer(f)
+            headers = ['Ident',
+                       'Vendor', 'Vendor Part No',
+                       'Manufacturer', 'Manufacturer Part No', 'Description',
+                       'Used Break Qty', 'Effective Unit Price',
+                       'Quantity', 'Line Price']
+            writer.writerow(headers)
+            for line in obom.lines:
+                total_lines += 1
+                if pricing[line.ident] is not None:
+                    writer.writerow([line.ident] + list(pricing[line.ident]) +
+                                    [line.quantity, line.quantity * float(pricing[line.ident][-1])])
+                    totalcost += line.quantity * float(pricing[line.ident][-1])
+                else:
+                    writer.writerow([line.ident] + [None]*(len(headers)-3) + [line.quantity] + [None])
+                    uncosted_idents.append([line.ident])
+
+            summaryw.writerow([k, total_lines, len(uncosted_idents), v, totalcost, totalcost*v])
+            logger.info('Indicative Pricing for Card ' + k + ' Written to File : ' + os.linesep + ipfile)
+            for ident in uncosted_idents:
+                if ident not in all_uncosted_idents:
+                    all_uncosted_idents.append(ident)
+    summaryw.writerow([])
+    summaryw.writerow([])
+    summaryw.writerow(["Uncosted Idents : "])
+    for ident in sorted(all_uncosted_idents):
+        summaryw.writerow(ident)
+    summaryf.close()
+    logger.info('Indicative Pricing Summary Written to File : ' + os.linesep + os.path.join(orderfolder, 'costing-summary.csv'))
+

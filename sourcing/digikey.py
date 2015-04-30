@@ -9,6 +9,7 @@ import re
 import urllib
 from decimal import Decimal
 import traceback
+import os
 
 from bs4 import BeautifulSoup
 
@@ -43,7 +44,8 @@ class VendorDigiKey(vendors.VendorBase):
                          'CAP CER SMD',
                          'CAP TANT SMD',
                          'TRANSFORMER SMD',
-                         'INDUCTOR SMD'
+                         'INDUCTOR SMD',
+                         'CRYSTAL AT'
                          ]
         self._ndevices = ['CONN INTERBOARD']
         self._searchpages_filters = {}
@@ -64,10 +66,10 @@ class VendorDigiKey(vendors.VendorBase):
         if device not in self._devices:
             return None, 'NODEVICE'
         try:
-            if device.startswith('RES') or device.startswith('POT') or device.startswith('CAP'):
-                if device.startswith('RES'):
-                    if conventions.electronics.parse_resistor(value) is None:
-                        return self._get_search_vpnos(device, value, footprint)
+            if device.startswith('RES') or device.startswith('POT') or \
+                    device.startswith('CAP') or device.startswith('CRYSTAL'):
+                if conventions.electronics.check_for_std_val(ident) is False:
+                    return self._get_search_vpnos(device, value, footprint)
                 try:
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
@@ -93,6 +95,10 @@ class VendorDigiKey(vendors.VendorBase):
 
     @staticmethod
     def _process_product_page(soup):
+        beablock = soup.find('td', 'beablock-notice')
+        if beablock is not None:
+            if beablock.text == u'\nObsolete item; call Digi-Key for more information.\n':
+                return False, None, 'OBSOLETE_NOTAVAIL'
         pdtable = soup.find('table', attrs={'class': 'product-details'})
         if pdtable is not None:
             pno_cell = pdtable.find('td', id='reportpartnumber')
@@ -100,7 +106,7 @@ class VendorDigiKey(vendors.VendorBase):
             pno = pmeta.attrs['content'].split(':')[1].encode('ascii', 'replace')
             return True, [pno], 'EXACT_MATCH'
         else:
-            return False, None, None
+            return False, None, ''
 
     @staticmethod
     def _get_device_catstrings(device):
@@ -114,7 +120,11 @@ class VendorDigiKey(vendors.VendorBase):
         elif device.startswith('TRANSISTOR'):
             catstrings = ['Discrete Semiconductor Products']
             subcatstrings = ['FETs - Single',
-                             'FETs - Arrays']
+                             'FETs - Arrays',
+                             'Transistors (BJT) - Single']
+        elif device.startswith('BRIDGE RECTIFIER'):
+            catstrings = ['Discrete Semiconductor Products']
+            subcatstrings = ['Bridge Rectifiers']
         else:
             return False, None, None
         return True, catstrings, subcatstrings
@@ -334,8 +344,12 @@ class VendorDigiKey(vendors.VendorBase):
     @staticmethod
     def _tf_resistance_to_canonical(rstr):
         rstr = rstr.encode('ascii', 'replace')
-        rex = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[kKMG])*$')
-        rparts = rex.search(rstr).groupdict()
+        rex = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[kKMGT])*$')
+        try:
+            rparts = rex.search(rstr).groupdict()
+        except AttributeError:
+            print rstr
+            raise AttributeError
 
         rval = Decimal(rparts['num'])
         if rparts['order'] is None:
@@ -360,10 +374,17 @@ class VendorDigiKey(vendors.VendorBase):
                 ostr = 'M'
             elif rparts['order'] == 'G':
                 ostr = 'G'
+            elif rparts['order'] == 'T':
+                ostr = 'T'
             else:
                 raise ValueError(str(rparts))
         vfmt = lambda d: str(d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize())
         return vfmt(rval) + ostr
+
+    @staticmethod
+    def _tf_tolerance_to_canonical(tstr):
+        tstr = utils.www.strencode(tstr)
+        return tstr
 
     @staticmethod
     def _tf_capacitance_to_canonical(cstr):
@@ -371,9 +392,13 @@ class VendorDigiKey(vendors.VendorBase):
         cstr = utils.www.strencode(cstr)
         if cstr == '-':
             return
-        rex = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[pu]F)$')
+        rex = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[pum]F)$')
 
-        cparts = rex.search(cstr).groupdict()
+        try:
+            cparts = rex.search(cstr).groupdict()
+        except AttributeError:
+            print cstr
+            raise AttributeError
 
         cval = Decimal(cparts['num'])
 
@@ -413,6 +438,12 @@ class VendorDigiKey(vendors.VendorBase):
             footprint = 'D'
         return footprint
 
+    @staticmethod
+    def _tf_package_crystal_at(footprint):
+        if footprint == 'HC49':
+            footprint = ['HC-49S', 'HC49/U', 'HC49/US']
+        return footprint
+
     def _get_searchpage_filters(self, soup):
         filters = {}
         try:
@@ -430,6 +461,8 @@ class VendorDigiKey(vendors.VendorBase):
                     options = [(self._tf_resistance_to_canonical(option[0]), option[1]) for option in options]
                 elif header == 'Capacitance':
                     options = [(self._tf_capacitance_to_canonical(option[0]), option[1]) for option in options]
+                elif header == 'Tolerance':
+                    options = [(self._tf_tolerance_to_canonical(option[0]), option[1]) for option in options]
                 filters[header] = (fname, options)
         except Exception, e:
             logging.error(traceback.format_exc())
@@ -448,12 +481,20 @@ class VendorDigiKey(vendors.VendorBase):
         return 'http://www.digikey.com/product-search/en/resistors/chip-resistor-surface-mount/'
 
     @staticmethod
+    def _get_searchurl_res_thru():
+        return 'http://www.digikey.com/product-search/en/resistors/through-hole-resistors/'
+
+    @staticmethod
     def _get_searchurl_cap_cer_smd():
         return 'http://www.digikey.com/product-search/en/capacitors/ceramic-capacitors/'
 
     @staticmethod
     def _get_searchurl_cap_tant_smd():
         return 'http://www.digikey.com/product-search/en/capacitors/tantalum-capacitors/'
+
+    @staticmethod
+    def _get_searchurl_crystal():
+        return 'http://www.digikey.com/product-search/en/crystals-and-oscillators/crystals/'
 
     def _get_searchurl_filters(self, searchurl):
         if searchurl in self._searchpages_filters.keys():
@@ -471,13 +512,17 @@ class VendorDigiKey(vendors.VendorBase):
         packagetf = None
         package_header = 'Package / Case'
         package_filter_type = 'contains'
+        extraparams = None
         if device == "RES SMD":
             filters = self._get_searchurl_filters(self._get_searchurl_res_smd())
             searchurlbase = self._get_searchurl_res_smd()
             devtype = 'resistor'
         elif device == "RES THRU":
+            filters = self._get_searchurl_filters(self._get_searchurl_res_thru())
+            searchurlbase = self._get_searchurl_res_thru()
+            extraparams = (('Tolerance', '+/-1%'),)
+            package_filter_type = None
             devtype = 'resistor'
-            raise NotImplementedError
         elif device == "RES POWER":
             devtype = 'resistor'
             raise NotImplementedError
@@ -516,6 +561,14 @@ class VendorDigiKey(vendors.VendorBase):
         elif device == "CAP PAPER THRU":
             devtype = 'capacitor'
             raise NotImplementedError
+        elif device == "CRYSTAL AT":
+            filters = self._get_searchurl_filters(self._get_searchurl_crystal())
+            packagetf = self._tf_package_crystal_at
+            package_filter_type = 'inlist'
+            searchurlbase = self._get_searchurl_crystal()
+            extraparams = (('Mounting Type', 'Through Hole'),
+                           ('Operating Mode', 'Fundamental'))
+            devtype = 'crystal'
         else:
             raise ValueError
 
@@ -527,6 +580,9 @@ class VendorDigiKey(vendors.VendorBase):
             loptions = (('capacitance', "Capacitance", 'equals'),
                         ('voltage', "Voltage - Rated", 'equals'))
             lvalues = conventions.electronics.parse_capacitor(value)
+        elif devtype == 'crystal':
+            loptions = (('frequency', "Frequency", 'equals'),)
+            lvalues = [conventions.electronics.parse_crystal(value)]
         else:
             raise ValueError
 
@@ -536,6 +592,7 @@ class VendorDigiKey(vendors.VendorBase):
             if lvalues[lidx] is None:
                 continue
             dkopcode = None
+
             for option in filters[loption[1]][1]:
                 if loption[2] == 'equals':
                     if option[0] == lvalues[lidx]:
@@ -550,17 +607,40 @@ class VendorDigiKey(vendors.VendorBase):
 
         if packagetf is not None:
             footprint = packagetf(footprint)
-        pkgopcode = None
-        for option in filters[package_header][1]:
-            if package_filter_type == 'contains':
-                if footprint in option[0]:
-                    pkgopcode = option[1]
-            elif package_filter_type == 'equals':
-                if footprint == option[0]:
-                    pkgopcode = option[1]
-        if pkgopcode is None:
-            raise ValueError(footprint)
-        params.append((filters[package_header][0], pkgopcode))
+        if package_filter_type is not None:
+            pkgopcode = None
+            for option in filters[package_header][1]:
+                if package_filter_type == 'contains':
+                    if footprint in option[0]:
+                        pkgopcode = option[1]
+                elif package_filter_type == 'equals':
+                    if footprint == option[0]:
+                        pkgopcode = option[1]
+                elif package_filter_type == 'inlist':
+                    if option[0] in footprint:
+                        try:
+                            pkgopcode.append(option[1])
+                        except AttributeError:
+                            pkgopcode = [option[1]]
+            if pkgopcode is None:
+                raise ValueError(footprint)
+            if isinstance(pkgopcode, list):
+                for opt in pkgopcode:
+                    params.append((filters[package_header][0], opt))
+            else:
+                params.append((filters[package_header][0], pkgopcode))
+
+        if extraparams is not None:
+            for param in extraparams:
+                opcode = None
+                for option in filters[param[0]][1]:
+                    if option[0] == param[1]:
+                        opcode = option[1]
+                if opcode is None:
+                    for option in filters[param[0]][1]:
+                        print option[0].decode('unicode-escape')
+                    raise ValueError("Param not valid: " + str(param))
+                params.append((filters[param[0]][0], opcode))
 
         searchurl = searchurlbase + '?' + urllib.urlencode(params)
 
@@ -575,6 +655,8 @@ class VendorDigiKey(vendors.VendorBase):
             result, pnos, strategy = self._process_product_page(soup)
             if result is True:
                 return pnos, strategy
+            else:
+                return None, strategy
 
         result, pnos, strategy = self._process_results_page(soup, None, None)
         if result is False:
@@ -609,33 +691,40 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
 
         for price in self._get_prices(soup):
             self.add_price(price)
-        self.mpartno = self._get_mpartno(soup)
-        self.manufacturer = self._get_manufacturer(soup)
-        self.package = self._get_package(soup)
-        self.datasheet = self._get_datasheet_link(soup)
-        self.vqtyavail = self._get_avail_qty(soup)
-        self.vpartdesc = self._get_description(soup)
+        try:
+            self.mpartno = self._get_mpartno(soup)
+            self.manufacturer = self._get_manufacturer(soup)
+            self.package = self._get_package(soup)
+            self.datasheet = self._get_datasheet_link(soup)
+            self.vqtyavail = self._get_avail_qty(soup)
+            self.vpartdesc = self._get_description(soup)
+        except AttributeError:
+            logging.error("Failed to acquire part information : " + self.vpno + url)
+            # TODO raise AttributeError
 
     def _get_prices(self, soup):
         pricingtable = soup.find('table', id='pricing')
         prices = []
-        for row in pricingtable.findAll('tr'):
-            cells = row.findAll('td')
-            if len(cells) == 3:
-                cells = [cell.text.strip() for cell in cells]
-                try:
-                    moq = locale.atoi(cells[0])
-                except ValueError:
-                    moq = 0
-                    logging.error(cells[0] + " found while acquiring moq for " + self.vpno)
-                try:
-                    price = locale.atof(cells[1])
-                except ValueError:
-                    price = 0
-                    logging.error(cells[1] + " found while acquiring price for " + self.vpno)
-                prices.append(vendors.VendorPrice(moq,
-                                                  price,
-                                                  self._vendor.currency))
+        try:
+            for row in pricingtable.findAll('tr'):
+                cells = row.findAll('td')
+                if len(cells) == 3:
+                    cells = [cell.text.strip() for cell in cells]
+                    try:
+                        moq = locale.atoi(cells[0])
+                    except ValueError:
+                        moq = 0
+                        logging.error(cells[0] + " found while acquiring moq for " + self.vpno)
+                    try:
+                        price = locale.atof(cells[1])
+                    except ValueError:
+                        price = 0
+                        logging.error(cells[1] + " found while acquiring price for " + self.vpno)
+                    prices.append(vendors.VendorPrice(moq,
+                                                      price,
+                                                      self._vendor.currency))
+        except AttributeError:
+            logging.error("Pricing table not found or other error for " + self.vpno)
         return prices
 
     @staticmethod

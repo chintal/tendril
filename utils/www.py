@@ -29,6 +29,8 @@ def strencode(string):
     for char in string:
         if char == u'\u00b5':
             char = 'u'
+        if char == u'\u00B1':
+            char = '+/-'
         nstring += char
     return nstring.encode('ascii', 'replace')
 
