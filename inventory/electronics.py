@@ -182,7 +182,7 @@ def export_reservations(folderpath):
                 row[header.index('Total')] = total
                 row[header.index('Remaining')] = get_total_availability(ident)
                 w.writerow(row)
-        logger.info("Exported Reservations to File : " + dump_path)
+        logger.info("Exported " + location._dname + " Reservations to File : " + dump_path)
 
 
 init_inventory_locations()

@@ -4,6 +4,7 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 from utils import log
+
 logger = log.get_logger(__name__, log.INFO)
 
 import yaml
@@ -17,11 +18,10 @@ import inventory.electronics
 import conventions.electronics
 import sourcing.electronics
 
-
 from entityhub import projects
-from gedaif import gsymlib
 from gedaif import projfile
 
+from utils.progressbar.progressbar import ProgressBar
 import inventory.guidelines
 
 from utils.config import KOALA_ROOT
@@ -42,7 +42,6 @@ USE_STOCK = True
 IS_INDICATIVE = False
 indication_context = None
 
-
 if 'preshort' in data.keys():
     LOAD_PRESHORT = data['preshort']
 if 'external' in data.keys():
@@ -57,7 +56,6 @@ if 'is_indicative' in data.keys():
 
 # Define base transforms for external data
 base_tf = inventory.electronics.inventory_locations[0]._reader.tf
-
 
 if LOAD_PRESHORT is True:
     # Load Preshort File
@@ -149,145 +147,59 @@ with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
     cobom.dump(f)
 
 
-dkv = sourcing.electronics.vendor_list[0]
-dkvmap = dkv.map
 
-with open(os.path.join(orderfolder, 'shortage.csv'), 'w') as f:
-    logger.info('Constructing Shortage File')
-    w = csv.writer(f)
-    orders_path = os.path.join(orderfolder, 'purchase-orders')
-    if not os.path.exists(orders_path):
-        os.makedirs(orders_path)
-    sourcing.electronics.begin_analysis_record()
-    w.writerow(["Component Details", '', '', '',
-                "Requirement", '', '',
-                "Guideline Compliant", '',
-                "Order Details", '', '', '', '', '', '',
-                "Vendor Pricing", '', '', '', '', '', '',
-                "Order Pricing", '', '', '', ''
-                ]
-               )
-    w.writerow(["Ident", "In gsymlib", "From DK", "Strategy",
-                "Required", "Reserved", "Shortage",
-                "Buy Qty", "Excess Qty",
-                "Vendor", "Vendor Part No", "Manufacturer", "Manufacturer Part No", "Description", "Order Qty", "Excess Qty",
-                "Vendor Currency", "Next Break Qty", "NB Unit Price", "NB Extended Price",
-                "Used Break Qty", "Unit Price", "Extended Price",
-                "Lower Break Unit Price", "Unit Price", "Effective Unit Price", "Order Qty", "Effective Extended Price",
-                "Effective Excess Price", "Excess Rationale"
-                ]
-               )
-    w.writerow(['', '', '', '',
-                "Qty", "Qty", "Qty",
-                "Qty", "Qty",
-                "", "", "", "", "", "Qty", "Qty",
-                "", "Qty", "(VC)", "(VC)",
-                "Qty", "(VC)", "(VC)",
-                "INR", "INR", "INR", "Qty", "INR", "INR"
-                ]
-               )
-    for line in cobom.lines:
-        shortage = 0
-        if USE_STOCK is True:
-            for idx, descriptor in enumerate(cobom.descriptors):
-                earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
-                avail = inventory.electronics.get_total_availability(line.ident)
-                if line.columns[idx] == 0:
-                    continue
-                if avail > line.columns[idx]:
-                    inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
-                elif avail > 0:
-                    inventory.electronics.reserve_items(line.ident, avail, earmark)
-                    pshort = line.columns[idx] - avail
-                    shortage += pshort
-                    logger.debug('Adding Partial Qty of ' + line.ident +
-                                 ' for ' + earmark + ' to shortage : ' + str(pshort))
-                else:
-                    shortage += line.columns[idx]
-                    logger.debug('Adding Full Qty of ' + line.ident +
-                                 ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
-        else:
-            shortage = line.quantity
-        if shortage > 0:
-            if gsymlib.is_recognized(line.ident):
-                in_gsymlib = "YES"
+orders_path = os.path.join(orderfolder, 'purchase-orders')
+if not os.path.exists(orders_path):
+    os.makedirs(orders_path)
+
+reservations_path = os.path.join(orderfolder, 'reservations')
+if not os.path.exists(reservations_path):
+    os.makedirs(reservations_path)
+
+unsourced = []
+pb = ProgressBar('red', block='#', empty='.')
+nlines = len(cobom.lines)
+
+for pbidx, line in enumerate(cobom.lines):
+    percentage = (float(pbidx) / nlines) * 100.00
+    pb.render(int(percentage),
+              "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Shortage File, Reservations, and Preparing Orders".format(
+                  percentage, line.ident, line.quantity))
+    shortage = 0
+    if USE_STOCK is True:
+        for idx, descriptor in enumerate(cobom.descriptors):
+            earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
+            avail = inventory.electronics.get_total_availability(line.ident)
+            if line.columns[idx] == 0:
+                continue
+            if avail > line.columns[idx]:
+                inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
+            elif avail > 0:
+                inventory.electronics.reserve_items(line.ident, avail, earmark)
+                pshort = line.columns[idx] - avail
+                shortage += pshort
+                logger.debug('Adding Partial Qty of ' + line.ident +
+                             ' for ' + earmark + ' to shortage : ' + str(pshort))
             else:
-                in_gsymlib = ""
-            dk_vpnos = dkvmap.get_partnos(line.ident)
-            strategy = dkvmap.get_strategy(line.ident)
-            buy_qty = inventory.guidelines.electronics_qty.get_compliant_qty(line.ident, shortage)
-            if len(dk_vpnos) > 0:
-                avail_from_dk = 'YES'
-            else:
-                avail_from_dk = ''
+                shortage += line.columns[idx]
+                logger.debug('Adding Full Qty of ' + line.ident +
+                             ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
+    else:
+        shortage = line.quantity
+    if shortage > 0:
+        result = sourcing.electronics.order.add(line.ident, line.quantity, shortage)
+        if result is False:
+            unsourced.append((line.ident, shortage))
 
-            row = [line.ident, in_gsymlib, avail_from_dk, strategy,
-                   line.quantity, line.quantity-shortage, shortage,
-                   buy_qty, (buy_qty-shortage)]
-            logger.debug("Attempting to source " + line.ident)
-            try:
-                vobj, vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice = sourcing.electronics.get_sourcing_information(line.ident,
-                                                                                                                         buy_qty)
-
-                vcurr = vobj.currency.symbol
-                if nbprice is not None:
-                    nbqty = nbprice.moq
-                    nbunitp_vst = nbprice.unit_price.source_value
-                    nbextp_vst = nbprice.extended_price(nbqty).source_value
-                else:
-                    nbqty = None
-                    nbunitp_vst = None
-                    nbextp_vst = None
-
-                if olduprice is not None:
-                    unitp_lb_nst = olduprice.unit_price.native_value
-                else:
-                    unitp_lb_nst = None
-
-                ubqty = ubprice.moq
-                ubunitp_vst = ubprice.unit_price.source_value
-                ubextp_vst = ubprice.extended_price(oqty).source_value
-
-                unitp_nst = ubprice.unit_price.native_value
-
-                eff_unitp_nst = effprice.unit_price.native_value
-                eff_extp_nst = effprice.extended_price(oqty).native_value
-                eff_excess_price = (oqty-shortage) * effprice.unit_price.native_value
-
-                logger.debug("Sourced " + line.ident + ":" + str((vobj.name, vpno, oqty)))
-
-                try:
-                    vpobj = vobj.get_vpart(vpno, line.ident)
-                    manufacturer = vpobj.manufacturer
-                    mpartno = vpobj.mpartno
-                    description = vpobj.vpartdesc
-                except:
-                    vpobj = None
-                    manufacturer = None
-                    description = None
-                    mpartno = None
-
-                row += [vobj.name, vpno, manufacturer, mpartno, description,
-                        oqty, (oqty-shortage),             # Order Details
-                        vcurr, nbqty, nbunitp_vst, nbextp_vst,              # Final Pricing (Vendor Currency)
-                        ubqty, ubunitp_vst, ubextp_vst,
-                        unitp_lb_nst, unitp_nst, eff_unitp_nst, oqty, eff_extp_nst,       # Final Pricing (Native Currency)
-                        eff_excess_price, urationale
-                        ]
-
-                vobj.add_to_order([oqty, vpno, line.ident])
-
-            except sourcing.electronics.SourcingException:
-                logger.warning("Could Not Source Component : " + line.ident + " : " + str(line.quantity))
-            w.writerow(row)
-    for vendor in sourcing.electronics.vendor_list:
-        vendor.finalize_order(orders_path)
-logger.info('Exported Shortage and Sourcing List to File : ' + os.linesep + os.path.join(orderfolder, 'shortage.csv'))
-sourcing.electronics.dump_analysis_file(orderfolder)
-if not os.path.exists(os.path.join(orderfolder, 'reservations')):
-    os.makedirs(os.path.join(orderfolder, 'reservations'))
-inventory.electronics.export_reservations(os.path.join(orderfolder, 'reservations'))
-
+if len(unsourced) > 0:
+    logger.warning("Unable to source the following components: ")
+    for elem in unsourced:
+        logger.warning("{0:<40}{1:>5}".format(elem[0], elem[1]))
+sourcing.electronics.order.collapse()
+sourcing.electronics.order.rebalance()
+sourcing.electronics.order.generate_orders(orders_path)
+sourcing.electronics.order.dump_to_file(os.path.join(orderfolder, 'shortage.csv'), include_others=True)
+inventory.electronics.export_reservations(reservations_path)
 
 if IS_INDICATIVE:
     logger.info('Generating Indicative Pricing Files')
@@ -304,17 +216,18 @@ if IS_INDICATIVE:
                 break
         for row in reader:
             if row[0] is not '':
-                try:
-                    pricing[row[0]] = (row[headers.index('Vendor')],
-                                       row[headers.index('Vendor Part No')],
-                                       row[headers.index('Manufacturer')],
-                                       row[headers.index('Manufacturer Part No')],
-                                       row[headers.index('Description')],
-                                       row[headers.index('Used Break Qty')],
-                                       row[headers.index('Effective Unit Price')]
-                                       )
-                except IndexError:
-                    pricing[row[0]] = None
+                if row[0] not in pricing.keys():
+                    try:
+                        pricing[row[0]] = (row[headers.index('Vendor')],
+                                           row[headers.index('Vendor Part No')],
+                                           row[headers.index('Manufacturer')],
+                                           row[headers.index('Manufacturer Part No')],
+                                           row[headers.index('Description')],
+                                           row[headers.index('Used Break Qty')],
+                                           row[headers.index('Effective Unit Price')]
+                                           )
+                    except IndexError:
+                        pricing[row[0]] = None
     summaryf = open(os.path.join(orderfolder, 'costing-summary.csv'), 'w')
     summaryw = csv.writer(summaryf)
     summaryw.writerow(["Card", "Total BOM Lines", "Uncosted BOM Lines", "Quantity",
@@ -343,15 +256,19 @@ if IS_INDICATIVE:
             writer.writerow(headers)
             for line in obom.lines:
                 total_lines += 1
-                if pricing[line.ident] is not None:
-                    writer.writerow([line.ident] + list(pricing[line.ident]) +
-                                    [line.quantity, line.quantity * float(pricing[line.ident][-1])])
+                if pricing[line.ident][0].strip() != '':
+                    try:
+                        writer.writerow([line.ident] + list(pricing[line.ident]) +
+                                        [line.quantity, line.quantity * float(pricing[line.ident][-1])])
+                    except ValueError:
+                        print pricing[line.ident][-1]
+                        raise ValueError
                     totalcost += line.quantity * float(pricing[line.ident][-1])
                 else:
-                    writer.writerow([line.ident] + [None]*(len(headers)-3) + [line.quantity] + [None])
+                    writer.writerow([line.ident] + [None] * (len(headers) - 3) + [line.quantity] + [None])
                     uncosted_idents.append([line.ident])
 
-            summaryw.writerow([k, total_lines, len(uncosted_idents), v, totalcost, totalcost*v])
+            summaryw.writerow([k, total_lines, len(uncosted_idents), v, totalcost, totalcost * v])
             logger.info('Indicative Pricing for Card ' + k + ' Written to File : ' + os.linesep + ipfile)
             for ident in uncosted_idents:
                 if ident not in all_uncosted_idents:
@@ -362,5 +279,6 @@ if IS_INDICATIVE:
     for ident in sorted(all_uncosted_idents):
         summaryw.writerow(ident)
     summaryf.close()
-    logger.info('Indicative Pricing Summary Written to File : ' + os.linesep + os.path.join(orderfolder, 'costing-summary.csv'))
+    logger.info(
+        'Indicative Pricing Summary Written to File : ' + os.linesep + os.path.join(orderfolder, 'costing-summary.csv'))
 

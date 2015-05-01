@@ -12,8 +12,16 @@ from config import NETWORK_PROXY_PORT
 from config import NETWORK_PROXY_USER
 from config import NETWORK_PROXY_PASS
 
-from config import KOALA_ROOT
 from config import ENABLE_REDIRECT_CACHING
+
+from config import TRY_REPLICATOR_CACHE_FIRST
+from config import REPLICATOR_PROXY_TYPE
+from config import REPLICATOR_PROXY_IP
+from config import REPLICATOR_PROXY_PORT
+from config import REPLICATOR_PROXY_USER
+from config import REPLICATOR_PROXY_PASS
+
+from config import KOALA_ROOT
 
 from bs4 import BeautifulSoup
 import urllib2
@@ -112,11 +120,49 @@ def _create_opener():
 opener = _create_opener()
 
 
+def _create_replicator_opener():
+    use_proxy = False
+    use_proxy_auth = False
+    proxy_handler = None
+    proxy_auth_handler = None
+
+    if REPLICATOR_PROXY_TYPE == 'http':
+        use_proxy = True
+        proxyurl = 'http://' + REPLICATOR_PROXY_IP
+        if REPLICATOR_PROXY_PORT:
+            proxyurl += ':' + REPLICATOR_PROXY_PORT
+        proxy_handler = urllib2.ProxyHandler({REPLICATOR_PROXY_TYPE: proxyurl})
+        if REPLICATOR_PROXY_USER is not None:
+            use_proxy_auth = True
+            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr.add_password(None, proxyurl, REPLICATOR_PROXY_USER, REPLICATOR_PROXY_PASS)
+            proxy_auth_handler = urllib2.ProxyBasicAuthHandler(password_mgr)
+    if use_proxy:
+        if use_proxy_auth:
+            openr = urllib2.build_opener(proxy_handler, proxy_auth_handler, CachingRedirectHandler)
+        else:
+            openr = urllib2.build_opener(proxy_handler, CachingRedirectHandler)
+    else:
+        openr = urllib2.build_opener(CachingRedirectHandler)
+    openr.addheaders = [('User-agent', 'Mozilla/5.0')]
+    return openr
+
+
+if TRY_REPLICATOR_CACHE_FIRST is True:
+    replicator_opener = _create_replicator_opener()
+
+
 def urlopen(url):
     retries = 5
     if ENABLE_REDIRECT_CACHING is True:
         while url in redirect_cache.keys():
             url = redirect_cache[url]
+    if TRY_REPLICATOR_CACHE_FIRST is True:
+        try:
+            return replicator_opener.open(url)
+        except Exception:
+            pass
+
     while retries > 0:
         try:
             page = opener.open(url)

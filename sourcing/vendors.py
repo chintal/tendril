@@ -8,6 +8,7 @@ logger = utils.log.get_logger(__name__, utils.log.INFO)
 
 import os
 import csv
+import time
 
 import entityhub.maps
 import utils.currency
@@ -165,18 +166,29 @@ class VendorBase(object):
     def add_to_order(self, line):
         if self._order is None:
             self._order = VendorOrder(self)
-        logger.info("Adding to " + self._name + " order : " + line[2] + " : " + str(line[0]))
+        logger.info("Adding to " + self._name + " order : " + line[0] + " : " + str(line[3]))
         self._order.add(line)
 
     def _dump_open_order(self, path):
         orderfile = os.path.join(path, self._name + '-order.csv')
         with open(orderfile, 'w') as orderf:
             w = csv.writer(orderf)
+            w.writerow([self._dname + " Order", None, None, None, None, time.strftime("%c")])
+            w.writerow(["Ident", "Vendor Part No", "Quantity",
+                        "Unit Price (" + self._currency.symbol + ")",
+                        "Extended Price (" + self._currency.symbol + ")",
+                        "Effective Price (" + utils.currency.native_currency_defn.symbol + ")"
+                        ])
             for line in self._order.lines:
-                w.writerow(line)
+                w.writerow([line[0], line[2], line[3],
+                            line[5].unit_price.source_value,
+                            line[5].extended_price(line[3]).source_value,
+                            line[6].extended_price(line[3]).native_value])
+            for basecost in self._orderbasecosts:
+                w.writerow([None, basecost[0], None, None, basecost[1].source_value, basecost[1].native_value])
 
     def finalize_order(self, path):
-        if len(self._order) == 0:
+        if self._order is None or len(self._order) == 0:
             logger.debug("Nothing in the order, not generating order file : " + self._name)
             return
         logger.info("Writing " + self._dname + " order to Folder : " + path)

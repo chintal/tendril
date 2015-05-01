@@ -35,9 +35,14 @@ class VendorPricelist(vendors.VendorBase):
         super(VendorPricelist, self).__init__(name, dname, pclass, mappath,
                                               currency_code, currency_symbol)
         try:
-            self.add_order_baseprice_component("Shipping Cost", self._pricelist["vendorinfo"]["orderbaseprice"])
+            self.add_order_baseprice_component("Shipping Cost", self._pricelist["vendorinfo"]["shippingcost"])
         except KeyError:
             pass
+        if "prices" not in self._pricelist:
+            try:
+                pass
+            except:
+                logger.error("No prices found for " + self.name)
 
     def search_vpnos(self, ident):
         vplist = []

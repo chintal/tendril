@@ -14,14 +14,22 @@ AUDIT_PATH = os.path.join(INSTANCE_ROOT, 'manual-audit')
 PROJECTS_ROOT = os.path.normpath('/home/chintal/quazar/workspace/qda/clone')
 # Network Details
 
-NETWORK_PROXY_TYPE = 'http'
-# NETWORK_PROXY_IP = '192.168.1.254'
-# NETWORK_PROXY_PORT = '3128'
-NETWORK_PROXY_IP = 'localhost'
-NETWORK_PROXY_PORT = '8080'
-NETWORK_PROXY_USER = None
-NETWORK_PROXY_PASS = None
+NETWORK_PROXY_TYPE = None
+NETWORK_PROXY_IP = '192.168.1.254'
+NETWORK_PROXY_PORT = '3128'
+# NETWORK_PROXY_IP = 'localhost'
+# NETWORK_PROXY_PORT = '8080'
+NETWORK_PROXY_USER = 'chintal'
+NETWORK_PROXY_PASS = 'chintal'
 ENABLE_REDIRECT_CACHING = True
+
+TRY_REPLICATOR_CACHE_FIRST = True
+REPLICATOR_PROXY_TYPE = 'http'
+REPLICATOR_PROXY_IP = 'localhost'
+REPLICATOR_PROXY_PORT = '8080'
+REPLICATOR_PROXY_USER = None
+REPLICATOR_PROXY_PASS = None
+
 
 # Currency Details
 BASE_CURRENCY = 'INR'
@@ -106,13 +114,6 @@ VENDORS_DATA = [
         'pclass': ['electronics']
     },
     {
-        'name': 'unknown',
-        'type': 'pricelist',
-        'dname': 'Unknown Vendor',
-        'mapfile-base': os.path.join(_vendor_map_folder, 'unknown'),
-        'pclass': ['electronics']
-    },
-    {
         'name': 'omega',
         'type': 'pricelist',
         'dname': 'Omega Engineering Inc',
@@ -124,6 +125,13 @@ VENDORS_DATA = [
         'type': 'pricelist',
         'dname': 'Analog Devices Inc',
         'mapfile-base': os.path.join(_vendor_map_folder, 'analogdevices'),
+        'pclass': ['electronics']
+    },
+    {
+        'name': 'unknown',
+        'type': 'pricelist',
+        'dname': 'Unknown Vendor',
+        'mapfile-base': os.path.join(_vendor_map_folder, 'unknown'),
         'pclass': ['electronics']
     },
 ]

@@ -11,7 +11,7 @@ from conventions import iec60063
 from gedaif import gsymlib
 
 from utils import log
-logger = log.get_logger(__name__, None)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class MotifLREGS1(MotifBase):
@@ -58,8 +58,8 @@ class MotifLREGS1(MotifBase):
                 break
 
     def validate(self):
-        logger.info("Validating Motif : " + self.refdes)
-        logger.info(" Vout: " + str(self.Vout) + " R2:" + str(self.R2) + " R1:" + str(self.R1))
+        logger.debug("Validating Motif : " + self.refdes)
+        logger.debug(" Vout: " + str(self.Vout) + " R2:" + str(self.R2) + " R1:" + str(self.R1))
 
     @property
     def Vout(self):

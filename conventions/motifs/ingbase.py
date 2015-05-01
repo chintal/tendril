@@ -20,8 +20,8 @@ class MotifInampGainBase(MotifBase):
         self._configdict = None
 
     def validate(self):
-        logger.info("Validating Motif : " + self.refdes)
-        logger.info("RES : " + str(self.R1) + " GAIN : " + str(self.gain))
+        logger.debug("Validating Motif : " + self.refdes)
+        logger.debug("RES : " + str(self.R1) + " GAIN : " + str(self.gain))
 
     def get_configdict_stub(self):
         stub = {'desc': 'Instrumentation Amplifier Gain',

@@ -8,6 +8,7 @@ logger = utils.log.get_logger(__name__, utils.log.INFO)
 import os
 import csv
 import yaml
+import glob
 
 import gedaif.gschem
 import gedaif.conffile
@@ -199,7 +200,10 @@ def gen_pcb_gbr(projfolder):
 
     logger.info('Regenerating ' + gbrfolder + os.linesep +
                 'Last modified : ' + str(pcb_mtime) + '; Last Created : ' + str(outf_mtime))
-
+    glb = os.path.join(configfile.projectfolder, 'gerber', '*')
+    rf = glob.glob(glb)
+    for f in rf:
+        os.remove(f)
     gbrfolder = gedaif.pcb.conv_pcb2gbr(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
     zfile = os.path.join(projfolder, gpf.pcbfile + '-gerber.zip')
     utils.zip.zipdir(gbrfolder, zfile)
