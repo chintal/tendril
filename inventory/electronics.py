@@ -72,6 +72,10 @@ class InventoryLocation(object):
         if reader is not None:
             self._load_from_reader()
 
+    @property
+    def name(self):
+        return self._dname
+
     def _load_from_reader(self):
         for (ident, qty) in self._reader.tf_row_gen:
             self._lines.append(InventoryLine(ident, qty, self))
@@ -86,6 +90,18 @@ class InventoryLocation(object):
         if is_here:
             logger.debug("Found " + ident + " in " + self._dname + " : " + str(avail_qty))
             return avail_qty
+        else:
+            return None
+
+    def get_reserve_qty(self, ident):
+        reserve_qty = 0
+        is_here = False
+        for line in self._lines:
+            if line.ident == ident:
+                is_here = True
+                reserve_qty += line.reserved_qty
+        if is_here:
+            return reserve_qty
         else:
             return None
 
@@ -134,6 +150,15 @@ def get_total_availability(ident):
         if lqty is not None:
             total_avail += lqty
     return total_avail
+
+
+def get_total_reservations(ident):
+    total_reserve = 0
+    for location in inventory_locations:
+        lqty = location.get_reserve_qty(ident)
+        if lqty is not None:
+            total_reserve += lqty
+    return total_reserve
 
 
 def reserve_items(ident, qty, earmark, die_if_not=True):

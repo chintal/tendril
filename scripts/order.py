@@ -29,7 +29,7 @@ from utils.config import KOALA_ROOT
 
 bomlist = []
 
-orderfolder = os.path.join(KOALA_ROOT, 'scratch')
+orderfolder = os.path.join(KOALA_ROOT, 'scratch', 'sourcing', 'current')
 orderfile = os.path.join(orderfolder, 'order.yaml')
 
 with open(orderfile, 'r') as f:
@@ -198,7 +198,7 @@ if len(unsourced) > 0:
 sourcing.electronics.order.collapse()
 sourcing.electronics.order.rebalance()
 sourcing.electronics.order.generate_orders(orders_path)
-sourcing.electronics.order.dump_to_file(os.path.join(orderfolder, 'shortage.csv'), include_others=True)
+sourcing.electronics.order.dump_to_file(os.path.join(orderfolder, 'shortage.csv'), include_others=False)
 inventory.electronics.export_reservations(reservations_path)
 
 if IS_INDICATIVE:

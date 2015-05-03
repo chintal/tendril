@@ -79,11 +79,14 @@ class VendorPricelist(vendors.VendorBase):
         if len(candidates) > 1:
             for candidate in candidates:
                 ltcost, loqty, lprice = candidate.get_price_qty(rqty)
-                if ltcost < tcost:
+                if ltcost < tcost and (selcandidate.vqtyavail is not None and selcandidate.vqtyavail < oqty):
                     tcost = ltcost
                     selcandidate = candidate
                     oqty = loqty
                     price = lprice
+        else:
+            if selcandidate.vqtyavail is not None and selcandidate.vqtyavail < oqty:
+                return self, None, None, None, None, None, None, None
         effprice = self.get_effective_price(price)
         return self, selcandidate.vpno, oqty, None, price, effprice, "Vendor MOQ/GL", None
 
@@ -99,7 +102,10 @@ class PricelistPart(vendors.VendorPartBase):
         self.vpno = vp_dict['vpno'].strip()
         if 'pkgqty' in vp_dict.keys():
             self.pkgqty = vp_dict['pkgqty']
-        self._vqtyavail = None
+        if 'availqty' in vp_dict.keys():
+            self._vqtyavail = vp_dict['availqty']
+        else:
+            self._vqtyavail = None
         self._get_prices(vp_dict)
 
     def _get_prices(self, vp_dict):

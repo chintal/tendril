@@ -199,6 +199,7 @@ class EntityElnBomConf(object):
             self.motiflist = configdata["motiflist"]
         else:
             self.motiflist = None
+        self.rawconfig = configdata
 
     def get_configurations(self):
         rval = []
@@ -222,7 +223,8 @@ class EntityElnBomConf(object):
                 for configuration in section["configurations"]:
                     if configuration["configname"] == config:
                         for group in configuration["groups"]:
-                            rval.append(group)
+                            if group is not None:
+                                rval.append(group)
         return rval
 
     def get_configuration(self, configname):
@@ -367,7 +369,7 @@ class EntityElnBom(EntityBomBase):
             grpobj = self.find_group(group)
             if grpobj is None:
                 logger.critical("outgroups : " + str(outgroups))
-                logger.critical("grpobj not found : " + group + ":for " + configname)
+                logger.critical("grpobj not found : " + str(group) + ":for " + configname)
             for comp in grpobj.complist:
                 if gen_refdeslist is not None and comp.refdes in gen_refdeslist:
                     comp.value = genlist[comp.refdes]

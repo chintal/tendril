@@ -181,10 +181,10 @@ def get_csil_prices(params=exparams):
         browser.type('ctl00$ContentPlaceHolder1$txtQuantity', str(qty))
         time.sleep(0.1)
         browser.type('ctl00$ContentPlaceHolder1$txtQuantity', '\t')
-        if qty > 10:
+        if qty > 4:
             loi = [10]
         else:
-            loi = [3, 10]
+            loi = [5, 10]
         for dt_s in loi:
             dt_idx = delivery_times.index(dt_s)
             dts = delivery_times[dt_idx:dt_idx+3]
@@ -341,7 +341,7 @@ def generate_pcb_pricing(projfolder, noregen=True):
             logger.info('Skipping up-to-date ' + pricingfp)
             return pricingfp
 
-    pcbparams['qty'] = range(320)
+    pcbparams['qty'] = range(9)
     sourcingdata = get_csil_prices(pcbparams)
     dumpdata = {'params': pcbparams,
                 'pricing': sourcingdata}

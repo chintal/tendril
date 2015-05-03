@@ -15,6 +15,9 @@ from gedaif.conffile import NoGedaProjectException
 
 
 def check(projectfolder):
+    # TODO Ensure attribute promotion is acceptable
+    # TODO Ensure attribute visibility is acceptable
+
     logger.info("Attempting to Validate Project at : " + projectfolder)
     try:
         gpf = gedaif.projfile.GedaProjectFile(projectfolder)

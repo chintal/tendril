@@ -246,10 +246,10 @@ class CompositeOrder(object):
         accepted_vendors = []
         # Remove Unsourceable
         rebalance_pass = 0
-        logger.info("Making Rebalance Pass " + str(rebalance_pass)
+        logger.debug("Making Rebalance Pass " + str(rebalance_pass)
                     + ": Remaining Lines : " + str(len(shadowlines)))
         # For some unknown reason this doesn't catch all the unsourceable idents in the first pass
-        for i in range(2):
+        for i in range(5):
             for line in shadowlines:
                 if line.is_sourceable is False:
                     logger.debug("Accepting unsourceable line : " + line.ident + " p1." + str(i))
@@ -258,7 +258,7 @@ class CompositeOrder(object):
         while passes > 0:
             passes -= 1
             rebalance_pass += 1
-            logger.info("Making Rebalance Pass " + str(rebalance_pass)
+            logger.debug("Making Rebalance Pass " + str(rebalance_pass)
                         + ": Remaining Lines : " + str(len(shadowlines)))
             for line in shadowlines:
                 try:
@@ -308,7 +308,7 @@ class CompositeOrder(object):
             while passes > 0 and len(shadowlines) > 0:
                 passes -= 1
                 rebalance_pass += 1
-                logger.info("Making Rebalance Pass " + str(rebalance_pass)
+                logger.debug("Making Rebalance Pass " + str(rebalance_pass)
                             + ": Remaining Lines : " + str(len(shadowlines)))
                 for line in shadowlines:
                     try:
@@ -325,13 +325,13 @@ class CompositeOrder(object):
 
         logger.info("Finished all Rebalance Passes " + str(rebalance_pass)
                     + ": Remaining Lines : " + str(len(shadowlines)))
-        if len(shadowlines) > 0:
-            print "Unhandled Idents :"
-        for line in shadowlines:
-            print line.ident, line.selsource[0].name, len(line.other_sources)
-        print "Accepted Vendors :"
-        for vendor in accepted_vendors:
-            print vendor
+        # if len(shadowlines) > 0:
+        #     print "Unhandled Idents :"
+        # for line in shadowlines:
+        #     print line.ident, line.selsource[0].name, len(line.other_sources)
+        # print "Accepted Vendors :"
+        # for vendor in accepted_vendors:
+        #     print vendor
 
     def collapse(self):
         pass

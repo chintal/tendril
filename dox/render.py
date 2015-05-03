@@ -80,8 +80,11 @@ def render_lineplot(outf, plotdata, title, note):
 
     ax.get_xaxis().tick_bottom()
     ax.get_yaxis().tick_left()
-
-    ymax = max([max(l) for l in ylists])
+    try:
+        ymax = max([max(l) for l in ylists])
+    except ValueError:
+        print ylists
+        raise ValueError
     xmin = min([min(l) for l in xlists])
     xmax = max([max(l) for l in xlists])
 

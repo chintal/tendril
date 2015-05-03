@@ -3,12 +3,13 @@ gEDA Project Dox module documentation (:mod:`dox.gedaproject`)
 ==============================================================
 """
 import utils.log
-logger = utils.log.get_logger(__name__, utils.log.INFO)
+logger = utils.log.get_logger(__name__, utils.log.DEFAULT)
 
 import os
 import csv
 import yaml
 import glob
+import shutil
 
 import gedaif.gschem
 import gedaif.conffile
@@ -255,17 +256,20 @@ def gen_pcbpricing(projfolder, namebase):
 
     pltnote = "This pricing refers to the bare PCB only. See the corresponding Config Docs for Card Pricing"
 
-    plt1data = {key: data['pricing'][key] for key in data['pricing'].keys() if key <= 11}
+    plt1data = {key: data['pricing'][key] for key in data['pricing'].keys() if key <= 10}
     plt1title = gpf.configsfile.configdata['pcbname'] + " PCB Unit Price vs Order Quantity (Low Quantity)"
     plot1file = render.render_lineplot(plot1file, plt1data, plt1title, pltnote)
 
-    plt2data = {key: data['pricing'][key] for key in data['pricing'].keys() if key > 10}
-    plt2title = gpf.configsfile.configdata['pcbname'] + " PCB Unit Price vs Order Quantity (Production Quantity)"
-    plot2file = render.render_lineplot(plot2file, plt2data, plt2title, pltnote)
-
-    utils.pdf.merge_pdf([plot1file, plot2file], plotfile)
+    if max(data['pricing'].keys()) > 10:
+        plt2data = {key: data['pricing'][key] for key in data['pricing'].keys() if key > 10}
+        plt2title = gpf.configsfile.configdata['pcbname'] + " PCB Unit Price vs Order Quantity (Production Quantity)"
+        plot2file = render.render_lineplot(plot2file, plt2data, plt2title, pltnote)
+        utils.pdf.merge_pdf([plot1file, plot2file], plotfile)
+        os.remove(plot2file)
+    else:
+        shutil.copyfile(plot1file, plotfile)
     os.remove(plot1file)
-    os.remove(plot2file)
+
     return pcbpricingfp
 
 
