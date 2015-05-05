@@ -15,8 +15,8 @@
 
 \renewcommand{\ttdefault}{pcr}
 \newcommand{\pcbname}{%{{stage.configname%}}}
-
-\newcommand{\sno}{%{{stage.sno%}}}
+\newcommand{\ptitle}{%{{stage.title%}}}
+\newcommand{\sno}{%{{'%04d' % stage.sno%}}}
 
 \usepackage[%
   automark,
@@ -25,10 +25,10 @@
   markuppercase
 ]{scrpage2}
 
-\lohead{\tt PCB Assembly Manifest  \pcbname\ S.\sno}    %% Top left on even pages
+\lohead{\tt \ptitle  AM  \pcbname\ S.\sno}    %% Top left on even pages
 \lehead{\includegraphics[width=0.12in]{%{{stage.logo%}}}\hspace{0.01in} \tt %{{stage.company%}}}    %% Top left on odd pages
 \rohead{\tt %{{stage.company%}}\hspace{0.1in}\includegraphics[width=0.12in]{%{{stage.logo%}}}}    %% Top right on even pages
-\rehead{\tt PCB Assembly Manifest  \pcbname\ S.\sno}    %% Top right on odd pages
+\rehead{\tt \ptitle  AM  \pcbname\ S.\sno}    %% Top right on odd pages
 \chead{}                       %% Top center
 
 \rofoot{\tt Page \thepage\ of \pageref{LastPage}}
@@ -36,13 +36,13 @@
 \cfoot{}
 
 
-\title{PCB Assembly Manifest}
+\title{\ptitle  Assembly Manifest}
 \subtitle{}
 \author{}
 \date{}
 
 \makeatletter
-\renewcommand{\@maketitle}{\null\vskip 0em
+\renewcommand{\@maketitle}{
 \begin{center}
   \ifx\@subject\@empty \else
     {\subject@font \@subject \par}
@@ -79,7 +79,6 @@
 \small{Card Name:} & {\ttfamily\bfseries\normalsize \pcbname} & Production Order:&  \\
 \small{S.No.:} & {\ttfamily\bfseries\normalsize \sno} & Assembly Date:& \\
 \small{Base PCB:} & {\ttfamily  %{{stage.pcbname%}}} &  & \\
-& & & \\
 \small{Description:} & \multicolumn{3}{l}{\ttfamily \parbox{0.7\textwidth}{%{{stage.desc%}}}} \\
 \end{tabularx}
 \renewcommand{\arraystretch}{1.1}
@@ -99,18 +98,19 @@
 
 \end{center}
 
-\begin{tabularx}{1.0\textwidth}{|>{\centering\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.44\textwidth}|}
+\begin{tabular}{|>{\centering\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.44\textwidth}|}
 \hline
-  \small Assembly Complete  & \small PCB Inspected & \small Blocking Issues \\
-  & & \\
-  & & \\
-  \hline
+  \small Assembly Complete  & \small PCB Inspected & \small Blocking Issues \\*
+  & & \\*
+  & & \\*
+  \cline{1-2}
   \small Date & \small Date & \\
-  & & \\
-  & & \\
+  & & \\*
 \hline
-\end{tabularx}
+\end{tabular}
+%{ if stage.evenpages == True %}
 \cleardoublepage
+%{ endif %} 
 \end{document}
 
 

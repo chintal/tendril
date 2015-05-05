@@ -92,6 +92,8 @@ fpislen_strs = [
     "CABLE SIP SSC",
     "WIRE DF13 SSC"
 ]
+
+
 def ident_transform(device, value, footprint, tf=None):
     """
     Auto-generated ident string from the component ``device``, ``value``

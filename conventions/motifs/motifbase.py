@@ -40,7 +40,7 @@ class MotifBase(object):
         for elem in self._elements:
             if elem.data['motif'].split(':')[1] == idx:
                 return elem
-        raise KeyError
+        raise KeyError(self.refdes, idx)
 
     def add_element(self, bomline):
         self._elements.append(bomline)

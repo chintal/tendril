@@ -14,7 +14,7 @@ AUDIT_PATH = os.path.join(INSTANCE_ROOT, 'manual-audit')
 PROJECTS_ROOT = os.path.normpath('/home/chintal/quazar/workspace/qda/clone')
 # Network Details
 
-NETWORK_PROXY_TYPE = None
+NETWORK_PROXY_TYPE = 'http'
 NETWORK_PROXY_IP = '192.168.1.254'
 NETWORK_PROXY_PORT = '3128'
 # NETWORK_PROXY_IP = 'localhost'
@@ -125,6 +125,13 @@ VENDORS_DATA = [
         'type': 'pricelist',
         'dname': 'Analog Devices Inc',
         'mapfile-base': os.path.join(_vendor_map_folder, 'analogdevices'),
+        'pclass': ['electronics']
+    },
+    {
+        'name': 'iedel',
+        'type': 'pricelist',
+        'dname': 'Integrated Electronics',
+        'mapfile-base': os.path.join(_vendor_map_folder, 'iedel'),
         'pclass': ['electronics']
     },
     {
