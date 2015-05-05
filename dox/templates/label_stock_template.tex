@@ -1,0 +1,26 @@
+\documentclass[9pt]{article}
+\usepackage[newdimens]{labels}
+\LabelCols=4
+\LabelRows=18
+\LeftPageMargin=11mm
+\RightPageMargin=13mm
+\TopPageMargin=6mm
+\BottomPageMargin=6mm
+\InterLabelColumn=0mm
+\InterLabelRow=0mm
+\LeftLabelBorder=1mm
+\TopLabelBorder=1mm
+\BottomLabelBorder=1mm
+\RightLabelBorder=1mm
+\LabelInfotrue
+\LabelGridtrue
+
+\begin{document}
+\begin{labels}
+
+%{ for line in stage.lines %}
+\parbox{4.6cm}{\raggedright{\tt\tiny Ref: IDT/QDA/%{{stage.sno%}}.%{{loop.index%}}} \\  {\footnotesize %{{line.ident%}}}\\{\small Qty : \textbf{%{{line.qty%}}}}}
+%{ endfor %} 
+
+\end{labels}
+\end{document}
