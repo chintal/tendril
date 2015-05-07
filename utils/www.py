@@ -159,9 +159,25 @@ def urlopen(url):
             url = redirect_cache[url]
     if TRY_REPLICATOR_CACHE_FIRST is True:
         try:
-            return replicator_opener.open(url)
-        except Exception:
-            pass
+            page = replicator_opener.open(url)
+            try:
+                if ENABLE_REDIRECT_CACHING is True and page.status == 301:
+                    logger.debug('Detected New Permanent Redirect:\n' +
+                                  url + '\n' + page.url)
+                    redirect_cache[url] = page.url
+            except AttributeError:
+                pass
+            return page
+        except urllib2.HTTPError, e:
+            logger.error("HTTP Error : " + str(e.code) + str(url))
+            if e.code == 500:
+                time.sleep(0.5)
+                retries -= 1
+            else:
+                retries = 0
+        except urllib2.URLError, e:
+            logger.error("URL Error : " + str(e.errno) + " " + str(e.reason))
+            retries = 0
 
     while retries > 0:
         try:

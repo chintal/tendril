@@ -372,7 +372,10 @@ class EntityElnBom(EntityBomBase):
                 logger.critical("grpobj not found : " + str(group) + ":for " + configname)
             for comp in grpobj.complist:
                 if gen_refdeslist is not None and comp.refdes in gen_refdeslist:
-                    comp.value = genlist[comp.refdes]
+                    if conventions.electronics.fpiswire(comp.device):
+                        comp.footprint = genlist[comp.refdes]
+                    else:
+                        comp.value = genlist[comp.refdes]
                 outbom.insert_component(comp)
 
         motifconfs = self.configurations.get_configuration_motifs(configname)

@@ -26,3 +26,5 @@ with open(fpath, 'w') as f:
         cost = entityhub.projects.get_card_indicative_cost(card)
         if cost is not None:
             writer.writerow([card, round(cost), carddesc])
+        else:
+            writer.writerow([card, None, carddesc])

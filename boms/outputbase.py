@@ -145,4 +145,5 @@ class CompositeOutputBom():
         writer = csv.writer(stream)
         writer.writerow(['device'] + [x.configname + ' x' + str(x.multiplier) for x in self.descriptors] + ['Total'])
         for line in self.lines:
-            writer.writerow([line.ident] + line.columns + [line.quantity])
+            columns = [None if x == 0 else x for x in line.columns]
+            writer.writerow([line.ident] + columns + [line.quantity])

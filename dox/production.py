@@ -7,10 +7,11 @@ Production Dox module documentation (:mod:`dox.production`)
 import boms.electronics
 import render
 import os
+import entityhub.projects
 from utils.pdf import merge_pdf
 
 
-def gen_pcb_am(projfolder, configname, outfolder, sno=None):
+def gen_pcb_am(projfolder, configname, outfolder, sno=None, indentsno=None):
     if sno is None:
         # TODO Generate real S.No. here
         sno = 1
@@ -41,7 +42,9 @@ def gen_pcb_am(projfolder, configname, outfolder, sno=None):
              'title': title,
              'sno': sno,
              'lines': obom.lines,
-             'evenpages': evenpages}
+             'evenpages': evenpages,
+             'stockindent': indentsno,
+             'repopath': entityhub.projects.card_reporoot[obom.descriptor.configname]}
 
     for config in obom.descriptor.configurations.configurations:
         if config['configname'] == configname:

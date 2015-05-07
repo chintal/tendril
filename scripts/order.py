@@ -242,6 +242,11 @@ if IS_INDICATIVE:
         ipfolder = gpf.configsfile.indicative_pricing_folder
         if not os.path.exists(ipfolder):
             os.makedirs(ipfolder)
+        for configuration in gpf.configsfile.configdata['configurations']:
+            if configuration['configname'] == k:
+                desc = configuration['desc']
+        if desc is None:
+            desc = ''
         ipfile = os.path.join(ipfolder, obom.descriptor.configname + '~' + indication_context + '.csv')
         totalcost = 0
         uncosted_idents = []
@@ -268,7 +273,7 @@ if IS_INDICATIVE:
                     writer.writerow([line.ident] + [None] * (len(headers) - 3) + [line.quantity] + [None])
                     uncosted_idents.append([line.ident])
 
-            summaryw.writerow([k, total_lines, len(uncosted_idents), v, totalcost, totalcost * v])
+            summaryw.writerow([k, total_lines, len(uncosted_idents), v, totalcost, totalcost * v, desc])
             logger.info('Indicative Pricing for Card ' + k + ' Written to File : ' + os.linesep + ipfile)
             for ident in uncosted_idents:
                 if ident not in all_uncosted_idents:

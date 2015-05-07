@@ -56,6 +56,7 @@ DEVICE_CLASSES = [
     'CONN BERG STRIP',
     'CONN TERMINAL BLOCK',
     'CONN TERMINAL',
+    'CONN DTYPE HOOD',
     'CONN DTYPE',
     'CONN INTERBOARD',
     'CONN FRC',
@@ -65,10 +66,10 @@ DEVICE_CLASSES = [
     'CONN BARREL',
     'CONN SIP',
     'CONN STEREO',
-    'CONN DF13',
     'CONN DF13 HOUS',
     'CONN DF13 WIRE',
     'CONN DF13 CRIMP',
+    'CONN DF13',
     'CONN MODULAR',
     'CONN USB',
     'SWITCH TACT',
@@ -82,16 +83,35 @@ DEVICE_CLASSES = [
 ]
 
 nofp_strs = [
+    "PCB",
     "CONN",
     "MODULE",
     "CRYSTAL OSC",
-    "HEAT SINK"
+    "HEAT SINK",
+    "SOCKET POWER",
+    "FUSE",
+    "SWITCH PUSHBTN",
+    "TRANSFORMER HEAVY",
+    "CRIMP",
+    "THIMBLE"
 ]
 
-fpislen_strs = [
-    "CABLE SIP SSC",
-    "WIRE DF13 SSC"
+fpiswire_strs = [
+    "CABLE ROUND",
+    "WIRE"
 ]
+
+fpismodlen_strs = [
+    "CABLE SIP SSC",
+    "CONN DF13 WIRE"
+]
+
+
+def fpiswire(device):
+    for st in fpiswire_strs:
+        if device.startswith(st):
+            return True
+    return False
 
 
 def ident_transform(device, value, footprint, tf=None):

@@ -77,9 +77,10 @@
 \small
 \begin{tabularx}{1.0\textwidth}{>{\raggedleft\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedleft\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}}
 \small{Card Name:} & {\ttfamily\bfseries\normalsize \pcbname} & Production Order:&  \\
-\small{S.No.:} & {\ttfamily\bfseries\normalsize \sno} & Assembly Date:& \\
-\small{Base PCB:} & {\ttfamily  %{{stage.pcbname%}}} &  & \\
+\small{S.No.:} & {\ttfamily\bfseries\normalsize \sno} & Stock Indent: & %{{stage.stockindent%}}\\
+\small{Base PCB:} & {\ttfamily  %{{stage.pcbname%}}} & Assembly Date: & \\
 \small{Description:} & \multicolumn{3}{l}{\ttfamily \parbox{0.7\textwidth}{%{{stage.desc%}}}} \\
+\small{Repository Path:} & \multicolumn{3}{l}{\ttfamily \parbox{0.7\textwidth}{%{{stage.repopath%}}}} \\
 \end{tabularx}
 \renewcommand{\arraystretch}{1.1}
 \begin{tabularx}{1.0\textwidth}{>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|}

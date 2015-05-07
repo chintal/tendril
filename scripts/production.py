@@ -90,7 +90,7 @@ logger.info("Generating Indent")
 indentfolder = orderfolder
 indentsno = data['sno']
 title = data['title']
-dox.indent.gen_stock_idt_from_cobom(orderfolder, indentsno, title, data['cards'], cobom)
+indentpath, indentsno = dox.indent.gen_stock_idt_from_cobom(orderfolder, indentsno, title, data['cards'], cobom)
 
 logger.info("Generating Production Assembly Manifest")
 
@@ -112,6 +112,7 @@ for card, qty in sorted(data['cards'].iteritems()):
     for idx in range(qty):
         manifestfiles.append(dox.production.gen_pcb_am(cardfolder, card,
                                                        manifestsfolder,
-                                                       fsno + idx))
+                                                       fsno + idx,
+                                                       indentsno))
 
 merge_pdf(manifestfiles, os.path.join(orderfolder, 'manifests.pdf'))

@@ -18,8 +18,10 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
     for line in cobom.lines:
         lines.append({'ident': line.ident, 'qty': line.quantity})
 
+    indentsno = 'IDT/QDA/' + str(sno)
+
     stage = {'title': title,
-             'sno': sno,
+             'sno': indentsno,
              'lines': lines,
              'cards': cards}
 
@@ -30,5 +32,5 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
     template = 'label_stock_template.tex'
     render.render_pdf(stage, template, labelpath)
 
-    return outpath
+    return outpath, indentsno
 
