@@ -38,6 +38,8 @@ BASE_CURRENCY_SYMBOL = 'INR '
 # Company Details
 
 COMPANY_LOGO_PATH = os.path.join(INSTANCE_ROOT, 'dox/templates/graphics/logo.png')
+COMPANY_PO_LCO_PATH = os.path.join(INSTANCE_ROOT, 'dox/templates/graphics/po-qt')
+COMPANY_PO_POINT = "Mr. Narendran"
 COMPANY_NAME = "Quazar Technologies Pvt Ltd"
 
 DOX_TEMPLATE_FOLDER = os.path.join(KOALA_ROOT, 'dox/templates')

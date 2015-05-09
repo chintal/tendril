@@ -25,7 +25,7 @@ from utils.config import VENDORS_DATA
 
 import gedaif.projfile
 import entityhub.projects
-
+import dox.purchaseorder
 
 user = None
 pw = None
@@ -263,6 +263,25 @@ class VendorCSIL(vendors.VendorBase):
         effective_unitp = price.unit_price.source_value * 112.68 / 100
         return vendors.VendorPrice(price.moq, effective_unitp, self.currency)
 
+    def _generate_purchase_order(self, path):
+        stagebase = super(VendorCSIL, self)._generate_purchase_order(path)
+        if stagebase is not None:
+            stagebase = {}
+        for line in self._order.lines:
+            stage = stagebase
+            stage['intref'] = self._order.orderref
+            stage['username'] = user
+            stage['name'] = line[2]
+            stage['qty'] = line[3]
+            stage['unitp'] = line[5].unit_price.source_value
+            stage['totalp'] = line[5].extended_price(line[3]).source_value
+            stage['total'] = line[5].extended_price(line[3]).source_value
+            vpart = self.get_vpart(line[2])
+            stage['description'] = "\\\\".join(vpart.descriptors)
+            dox.purchaseorder.render_po(stage,
+                                        self._name,
+                                        os.path.join(path, self._name + '-PO-' + line[2] + '.pdf'))
+
 
 class CSILPart(vendors.VendorPartBase):
     def __init__(self, vpartno, ident, vendor):
@@ -282,9 +301,29 @@ class CSILPart(vendors.VendorPartBase):
             raise ValueError("Unrecognized PCB")
         self._projectfolder = entityhub.projects.pcbs[self._pcbname]
         self._load_prices()
-
+        self._descriptors = []
+        self._load_descriptors()
         self._manufacturer = self._vendor.name
         self._vqtyavail = None
+
+    def _load_descriptors(self):
+        gpf = gedaif.projfile.GedaProjectFile(self._projectfolder)
+        pricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
+        if not os.path.exists(pricingfp):
+            logger.debug("PCB does not have sourcing file. Not loading prices : " + self._pcbname)
+            return None
+        with open(pricingfp, 'r') as f:
+            data = yaml.load(f)
+        self._descriptors.append(str(data['params']['dX']) + 'mm x ' + str(data['params']['dY']) + 'mm')
+        if data["params"]["layers"] == 2:
+            self._descriptors.append("Double Layer")
+        elif data["params"]["layers"] == 4:
+            self._descriptors.append("ML4")
+        if data["params"]["finish"] == 'Au':
+            self._descriptors.append("Immersion Gold/ENIG finish")
+        else:
+            self._descriptors.append("UNKNOWN FINISH: " + data["params"]["finish"])
+        self._descriptors.append("10 Working Days")
 
     def _load_prices(self):
         gpf = gedaif.projfile.GedaProjectFile(self._projectfolder)
@@ -301,6 +340,10 @@ class CSILPart(vendors.VendorPartBase):
             else:
                 price = vendors.VendorPrice(qty, prices[10], self._vendor.currency)
                 self._prices.append(price)
+
+    @property
+    def descriptors(self):
+        return self._descriptors
 
     def get_price(self, qty):
         possible_prices = []

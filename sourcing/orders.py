@@ -96,7 +96,7 @@ class CompositeOrderElem(object):
 
     def order(self):
         vobj = self._selsource[0]
-        vobj.add_to_order([self.ident] + list(self._selsource))
+        vobj.add_to_order([self.ident] + list(self._selsource), self._order.orderref)
 
     def __repr__(self):
         return str((self.ident, self.is_sourceable, self.selsource, len(self.other_sources))) + os.linesep
@@ -137,11 +137,20 @@ class CompositeOrder(object):
                   ("Excess Rationale", None)])
                 ]
 
-    def __init__(self, vendor_list=None):
+    def __init__(self, vendor_list=None, orderref=None):
         self._allowed_vendors = vendor_list
+        self._orderref = orderref
         self._lines = []
 
-    def add(self, ident, rqty, shortage):
+    @property
+    def orderref(self):
+        return self._orderref
+
+    def add(self, ident, rqty, shortage, orderref=None):
+        if self._orderref is not None and self._orderref != orderref:
+            logger.warning("Overwriting order reference to " +
+                           orderref + " from " + self._orderref)
+        self._orderref = orderref
         self._lines.append(CompositeOrderElem(self, ident, rqty, shortage))
         return self._lines[-1].is_sourceable
 

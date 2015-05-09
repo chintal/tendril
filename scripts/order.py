@@ -52,6 +52,11 @@ if 'use_stock' in data.keys():
 if 'is_indicative' in data.keys():
     IS_INDICATIVE = data['is_indicative']
     indication_context = data['context']
+if 'orderref' in data.keys():
+    orderref = data['orderref']
+else:
+    # TODO
+    orderref = 'PLACEHOLDER'
 
 
 # Define base transforms for external data
@@ -187,7 +192,7 @@ for pbidx, line in enumerate(cobom.lines):
     else:
         shortage = line.quantity
     if shortage > 0:
-        result = sourcing.electronics.order.add(line.ident, line.quantity, shortage)
+        result = sourcing.electronics.order.add(line.ident, line.quantity, shortage, orderref)
         if result is False:
             unsourced.append((line.ident, shortage))
 

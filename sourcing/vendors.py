@@ -16,10 +16,11 @@ import utils.config
 
 
 class VendorOrder(object):
-    def __init__(self, vendor):
+    def __init__(self, vendor, orderref):
         self._vendor = vendor
         self._lines = []
         self._basecost = self._vendor.order_baseprice
+        self._orderref = orderref
 
     def add(self, line):
         self._lines.append(line)
@@ -30,6 +31,10 @@ class VendorOrder(object):
     @property
     def lines(self):
         return self._lines
+
+    @property
+    def orderref(self):
+        return self._orderref
 
 
 class VendorBase(object):
@@ -163,9 +168,9 @@ class VendorBase(object):
         else:
             self._orderbasecosts.append((desc, utils.currency.CurrencyValue(value, self.currency)))
 
-    def add_to_order(self, line):
+    def add_to_order(self, line, orderref=None):
         if self._order is None:
-            self._order = VendorOrder(self)
+            self._order = VendorOrder(self, orderref)
         logger.info("Adding to " + self._name + " order : " + line[0] + " : " + str(line[3]))
         self._order.add(line)
 
@@ -187,12 +192,17 @@ class VendorBase(object):
             for basecost in self._orderbasecosts:
                 w.writerow([None, basecost[0], None, None, basecost[1].source_value, basecost[1].native_value])
 
+    def _generate_purchase_order(self, path):
+        stagebase = {}
+        return stagebase
+
     def finalize_order(self, path):
         if self._order is None or len(self._order) == 0:
             logger.debug("Nothing in the order, not generating order file : " + self._name)
             return
         logger.info("Writing " + self._dname + " order to Folder : " + path)
         self._dump_open_order(path)
+        self._generate_purchase_order(path)
         self._order = None
 
 

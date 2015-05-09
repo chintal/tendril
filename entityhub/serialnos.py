@@ -26,5 +26,6 @@ last_serial = {'cards':
                 },
                'dox':
                {'stockindent': 3,
+                'po': 1,
                 }
                }
