@@ -79,7 +79,7 @@ DEVICE_CLASSES = [
     'BATTERY',
     'HEAT SINK',
     'CABLE SIP SSC',
-    'WIRE DF13 SSC'
+    'CABLE MARKER'
 ]
 
 nofp_strs = [
@@ -93,7 +93,8 @@ nofp_strs = [
     "SWITCH PUSHBTN",
     "TRANSFORMER HEAVY",
     "CRIMP",
-    "THIMBLE"
+    "THIMBLE",
+    "CABLE MARKER"
 ]
 
 fpiswire_strs = [

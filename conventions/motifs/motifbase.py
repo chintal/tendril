@@ -47,3 +47,6 @@ class MotifBase(object):
 
     def validate(self):
         raise NotImplementedError
+
+    def __repr__(self):
+        return "MOTIF OBJECT : " + self.refdes

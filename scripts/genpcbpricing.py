@@ -7,5 +7,15 @@ import entityhub.projects
 import sourcing.csil
 
 
-for project in entityhub.projects.projects:
-    sourcing.csil.generate_pcb_pricing(entityhub.projects.projects[project])
+def generate():
+    for project in entityhub.projects.projects:
+        sourcing.csil.generate_pcb_pricing(entityhub.projects.projects[project])
+
+
+def flushpcbpricing():
+    for projectf in entityhub.projects.projects:
+        sourcing.csil.flush_pcb_pricing(entityhub.projects.projects[projectf])
+
+
+if __name__ == '__main__':
+    generate()

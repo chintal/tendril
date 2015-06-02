@@ -37,6 +37,9 @@ class OutputBomLine(object):
     def quantity(self):
         return len(self.refdeslist) * self.parent.descriptor.multiplier
 
+    def __repr__(self):
+        return "{0:<50} {1:<4} {2}".format(self.ident, self.quantity, str(self.refdeslist))
+
 
 class OutputBom(object):
 

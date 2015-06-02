@@ -128,6 +128,13 @@ class MotifDLPF1(MotifBase):
 
     def validate(self):
         logger.debug("Validating Motif : " + self.refdes)
+        logger.debug('R1 : ' + str(self.R1))
+        logger.debug('R2 : ' + str(self.R2))
+        logger.debug('C1 : ' + str(self.C1))
+        logger.debug('C2 : ' + str(self.C2))
+        logger.debug('C3 : ' + str(self.C3))
+        logger.debug('Fdiff : ' + str(self.Fdiff))
+        logger.debug('Fcm : ' + str(self.Fcm))
         assert self.R1 == self.R2
         assert self.C3 == self.C2
         assert self.C1 >= 10 * self.C2

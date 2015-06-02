@@ -17,6 +17,10 @@ from utils.config import COMPANY_NAME
 from utils.colors import tableau20
 
 
+def format_currency(value):
+    return "{:,.2f}".format(value)
+
+
 def jinja2_pdfinit():
     loader = jinja2.FileSystemLoader(DOX_TEMPLATE_FOLDER)
     renderer = jinja2.Environment(block_start_string='%{',
@@ -24,6 +28,7 @@ def jinja2_pdfinit():
                                   variable_start_string='%{{',
                                   variable_end_string='%}}',
                                   loader=loader)
+    renderer.filters['format_currency'] = format_currency
     return renderer
 
 renderer_pdf = jinja2_pdfinit()

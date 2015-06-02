@@ -51,10 +51,7 @@ class VendorDigiKey(vendors.VendorBase):
         self._searchpages_filters = {}
         super(VendorDigiKey, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
         self.add_order_baseprice_component("Shipping Cost", 40)
-
-    def get_effective_price(self, price):
-        effective_unitp = price.unit_price.source_value * 112.68 / 100
-        return vendors.VendorPrice(price.moq, effective_unitp, self.currency, price.oqmultiple)
+        self.add_order_additional_cost_component("Customs", 12.85)
 
     def get_vpart(self, vpartno, ident=None):
         if issubclass(DigiKeyElnPart, vendors.VendorElnPartBase):

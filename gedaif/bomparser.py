@@ -27,6 +27,9 @@ class BomLine(object):
         for i in range(len(columns)):
             self.data[columns[i]] = elems[i]
 
+    def __repr__(self):
+        return self.data.__repr__()
+
 
 class GedaBomParser(object):
 

@@ -49,6 +49,7 @@ class VendorBase(object):
         self._pclass = pclass
         self._order = None
         self._orderbasecosts = []
+        self._orderadditionalcosts = []
         if mappath is not None:
             self.map = mappath
 
@@ -152,8 +153,20 @@ class VendorBase(object):
                 effprice = neffprice
         return self, selcandidate.vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice
 
+    def add_order_additional_cost_component(self, desc, percent):
+        self._orderadditionalcosts.append((desc, percent))
+
     def get_effective_price(self, price):
-        return price
+        effective_unitp = price.unit_price.source_value
+        for additional_cost in self._orderadditionalcosts:
+            effective_unitp += price.unit_price.source_value * float(additional_cost[1]) / 100
+        return VendorPrice(price.moq, effective_unitp, self.currency, price.oqmultiple)
+
+    def get_additional_costs(self, price):
+        rval = []
+        for desc, percent in self._orderadditionalcosts:
+            rval.append((desc, price.source_value * percent / 100))
+        return rval
 
     @property
     def order_baseprice(self):

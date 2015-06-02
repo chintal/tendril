@@ -28,12 +28,12 @@ class VendorPricelist(vendors.VendorBase):
         if currency_symbol is None:
             currency_symbol = self._pricelist["currency"]["symbol"].strip()
         self._currency = utils.currency.CurrencyDefinition(currency_code, currency_symbol)
-        try:
-            self._efffactor = self._pricelist["vendorinfo"]["effectivefactor"]
-        except KeyError:
-            self._efffactor = 1
         super(VendorPricelist, self).__init__(name, dname, pclass, mappath,
                                               currency_code, currency_symbol)
+        if 'vendorinfo' in self._pricelist:
+            if "effectivefactor" in self._pricelist["vendorinfo"]:
+                self.add_order_additional_cost_component("Unspecified",
+                                                         self._pricelist["vendorinfo"]["effectivefactor"] * 100)
         try:
             self.add_order_baseprice_component("Shipping Cost", self._pricelist["vendorinfo"]["shippingcost"])
         except KeyError:
@@ -89,10 +89,6 @@ class VendorPricelist(vendors.VendorBase):
                 return self, None, None, None, None, None, None, None
         effprice = self.get_effective_price(price)
         return self, selcandidate.vpno, oqty, None, price, effprice, "Vendor MOQ/GL", None
-
-    def get_effective_price(self, price):
-        effective_unitp = price.unit_price.source_value * self._efffactor
-        return vendors.VendorPrice(price.moq, effective_unitp, self.currency, price.oqmultiple)
 
 
 class PricelistPart(vendors.VendorPartBase):
