@@ -386,17 +386,17 @@ class VendorDigiKey(vendors.VendorBase):
 
     @staticmethod
     def _tf_capacitance_to_canonical(cstr):
-
         cstr = utils.www.strencode(cstr)
         if cstr == '-':
+            return
+        if cstr == '*':
             return
         rex = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[pum]F)$')
 
         try:
             cparts = rex.search(cstr).groupdict()
         except AttributeError:
-            print cstr
-            raise AttributeError
+            raise AttributeError(cstr)
 
         cval = Decimal(cparts['num'])
 
@@ -766,6 +766,9 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
             qtytext = rex.search(qtytext).groupdict()['qty'].replace(',','')
             return int(qtytext)
         except:
+            rex2 = re.compile(r'^Value Added Item')
+            if rex2.match(n.text.strip().encode('ascii', 'replace')):
+                return -2
             return -1
 
     @staticmethod

@@ -195,18 +195,17 @@ class CompositeOrder(object):
             row[headers.index("Used Break Qty")] = ubprice.moq
             row[headers.index("UB Unit Price")] = ubprice.unit_price.source_value
             row[headers.index("UB Extended Price")] = ubprice.extended_price(oqty).source_value
-            row[headers.index("Unit Price")] = ubprice.unit_price.native_value
+            row[headers.index("Unit Price")] = "%.2f" % ubprice.unit_price.native_value
 
         if effprice is not None:
-            row[headers.index("Effective Unit Price")] = effprice.unit_price.native_value
-            row[headers.index("Effective Extended Price")] = effprice.extended_price(oqty).native_value
-            row[headers.index("Effective Excess Price")] = (oqty-basereq) * effprice.unit_price.native_value
+            row[headers.index("Effective Unit Price")] = "%.2f" % effprice.unit_price.native_value
+            row[headers.index("Effective Extended Price")] = "%.2f" % effprice.extended_price(oqty).native_value
+            row[headers.index("Effective Excess Price")] = "%.2f" % ((oqty-basereq) * effprice.unit_price.native_value)
 
         if olduprice is not None:
-            row[headers.index("Lower Break Unit Price")] = olduprice.unit_price.native_value
+            row[headers.index("Lower Break Unit Price")] = "%.2f" % olduprice.unit_price.native_value
 
         row[headers.index("Excess Rationale")] = urationale
-
         return row
 
     def _render_line(self, line, writer, include_others):
@@ -256,7 +255,7 @@ class CompositeOrder(object):
         # Remove Unsourceable
         rebalance_pass = 0
         logger.debug("Making Rebalance Pass " + str(rebalance_pass)
-                    + ": Remaining Lines : " + str(len(shadowlines)))
+                     + ": Remaining Lines : " + str(len(shadowlines)))
         # For some unknown reason this doesn't catch all the unsourceable idents in the first pass
         for i in range(5):
             for line in shadowlines:

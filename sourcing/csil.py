@@ -56,7 +56,7 @@ exparams = {
     'dY': '151',
     'qty': range(70),
     'time': 10,      # 5, 7, 10, 12, 15, 18, 21, 25, 30
-    'finish': 'Au',  # HAL, Ag, Au, PBFREE, NP, I, OC
+    'finish': 'Au',  # HAL, Sn, Au, PBFREE, H, NP, I, OC
 }
 
 
@@ -356,8 +356,21 @@ class CSILPart(vendors.VendorPartBase):
             self._descriptors.append("Double Layer")
         elif data["params"]["layers"] == 4:
             self._descriptors.append("ML4")
+        # HAL, Sn, Au, PBFREE, H, NP, I, OC
         if data["params"]["finish"] == 'Au':
             self._descriptors.append("Immersion Gold/ENIG finish")
+        elif data["params"]["finish"] == 'Sn':
+            self._descriptors.append("Immersion Tin finish")
+        elif data["params"]["finish"] == 'PBFREE':
+            self._descriptors.append("Any Lead Free finish")
+        elif data["params"]["finish"] == 'H':
+            self._descriptors.append("Lead Free HAL finish")
+        elif data["params"]["finish"] == 'NP':
+            self._descriptors.append("No Copper finish")
+        elif data["params"]["finish"] == 'I':
+            self._descriptors.append("OSP finish")
+        elif data["params"]["finish"] == 'OC':
+            self._descriptors.append("Only Copper finish")
         else:
             self._descriptors.append("UNKNOWN FINISH: " + data["params"]["finish"])
         self._descriptors.append("10 Working Days")

@@ -107,7 +107,7 @@ class VendorBase(object):
         candidates = [self.get_vpart(x) for x in candidate_names]
 
         candidates = [x for x in candidates if x.abs_moq <= rqty]
-        candidates = [x for x in candidates if x.vqtyavail is None or x.vqtyavail > rqty]
+        candidates = [x for x in candidates if x.vqtyavail is None or x.vqtyavail > rqty or x.vqtyavail == -2]
 
         oqty = rqty
 
@@ -125,6 +125,10 @@ class VendorBase(object):
             if ntcost < tcost:
                 tcost = ntcost
                 selcandidate = candidate
+
+        if selcandidate.vqtyavail == -2:
+            logger.warning("Vendor available quantity could not be confirmed. Verify manually : "
+                           + self.name + " " + selcandidate.vpno + os.linesep + os.linesep + os.linesep )
 
         ubprice, nbprice = selcandidate.get_price(oqty)
         effprice = self.get_effective_price(ubprice)

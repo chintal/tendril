@@ -66,7 +66,11 @@ class StockXlsReader(object):
     def _is_balance(item):
         if 'Balance on' in item:
             match = re.search(r'\d{2}/\d{2}/\d{4}', item)
-            date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+            try:
+                date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+            except AttributeError:
+                print "Tried to match " + item
+                return None
             return date
         return None
 

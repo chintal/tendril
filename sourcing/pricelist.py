@@ -12,6 +12,8 @@ import re
 
 import vendors
 import utils.currency
+import conventions.electronics
+import conventions.iec60063
 
 from utils.config import PRICELISTVENDORS_FOLDER
 
@@ -43,6 +45,77 @@ class VendorPricelist(vendors.VendorBase):
                 pass
             except:
                 logger.error("No prices found for " + self.name)
+        if "pricegens" in self._pricelist:
+            self._generate_insert_idents()
+
+    def _generate_insert_idents(self):
+        for pricegen in self._pricelist['pricegens']:
+                if pricegen['vpno'] != 'ident':
+                    logger.error("Unknown VPNO transform : " +
+                                 pricegen['device'] + "" + pricegen['value'])
+                idents = self._get_generator_idents(pricegen)
+                for ident in idents:
+                    partdict = pricegen.copy()
+                    partdict['vpno'] = ident
+                    partdict['ident'] = ident
+                    self._pricelist["prices"].append(partdict)
+
+    def _get_generator_idents(self, pricegen):
+        return [conventions.electronics.ident_transform(pricegen['device'],
+                                                        x,
+                                                        pricegen['footprint'])
+                for x in self._get_generator_values(pricegen)]
+
+    @staticmethod
+    def _get_generator_values(pricegen):
+        """
+        TODO This function should be parcelled out to conventions
+        :param gendata:
+        :return:
+        """
+        if pricegen['type'] == 'simple':
+            return pricegen['values']
+        values = []
+
+        if pricegen['type'] == 'resistor':
+            if 'resistances' in pricegen.keys():
+                for resistance in pricegen['resistances']:
+                    values.append(resistance)
+            if 'generators' in pricegen.keys():
+                for generator in pricegen['generators']:
+                    if generator['std'] == 'iec60063':
+                        rvalues = conventions.iec60063.gen_vals(generator['series'],
+                                                                conventions.iec60063.res_ostrs,
+                                                                start=generator['start'],
+                                                                end=generator['end'])
+                        for rvalue in rvalues:
+                            values.append(conventions.electronics.construct_resistor(rvalue, generator['wattage']))
+                    else:
+                        raise ValueError
+            if 'values' in pricegen.keys():
+                if pricegen['values'][0].strip() != '':
+                    values += pricegen['values']
+            return values
+
+        if pricegen['type'] == 'capacitor':
+            if 'capacitances' in pricegen.keys():
+                for capacitance in pricegen['capacitances']:
+                        values.append(capacitance)
+            if 'generators' in pricegen.keys():
+                for generator in pricegen['generators']:
+                    if generator['std'] == 'iec60063':
+                        cvalues = conventions.iec60063.gen_vals(generator['series'],
+                                                                conventions.iec60063.cap_ostrs,
+                                                                start=generator['start'],
+                                                                end=generator['end'])
+                        for cvalue in cvalues:
+                            values.append(conventions.electronics.construct_capacitor(cvalue, generator['voltage']))
+                    else:
+                        raise ValueError
+            if 'values' in pricegen.keys():
+                if pricegen['values'][0].strip() != '':
+                    values += pricegen['values']
+            return values
 
     def search_vpnos(self, ident):
         vplist = []

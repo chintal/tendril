@@ -5,7 +5,7 @@ See the COPYING, README, and INSTALL files for more information
 
 from utils import log
 
-logger = log.get_logger(__name__, log.INFO)
+logger = log.get_logger(__name__, log.DEBUG)
 
 import yaml
 import csv
@@ -37,16 +37,31 @@ with open(orderfile, 'r') as f:
 
 LOAD_PRESHORT = False
 LOAD_EXTERNAL_REQ = False
+EXTERNAL_REQ_IMMEDIATE = True
 external_req_file = None
 USE_STOCK = True
 IS_INDICATIVE = False
 indication_context = None
+PRIORITIZE = False
+IMMEDIATE_EARMARKS = []
 
 if 'preshort' in data.keys():
     LOAD_PRESHORT = data['preshort']
 if 'external' in data.keys():
-    external_req_file = os.path.join(orderfolder, data['external'])
+    external_req_file = os.path.join(orderfolder, data['external']['file'])
     LOAD_EXTERNAL_REQ = True
+    try:
+        if data['external']['priority'] == 'immediate':
+            EXTERNAL_REQ_IMMEDIATE = True
+        elif data['external']['priority'] == 'normal':
+            EXTERNAL_REQ_IMMEDIATE = False
+        else:
+            logger.warning("External Req File Priority Not Recognized. Assuming Immediate")
+            EXTERNAL_REQ_IMMEDIATE = True
+    except KeyError:
+        logger.warning("External Req File Priority Not Found. Assuming Immediate")
+        EXTERNAL_REQ_IMMEDIATE = True
+
 if 'use_stock' in data.keys():
     USE_STOCK = data['use_stock']
 if 'is_indicative' in data.keys():
@@ -56,8 +71,10 @@ if 'orderref' in data.keys():
     orderref = data['orderref']
 else:
     # TODO
-    orderref = 'PLACEHOLDER'
-
+    orderref = ''
+if 'prioritize' in data.keys():
+    PRIORITIZE = data['prioritize']
+    IMMEDIATE_EARMARKS = data['immediate']
 
 # Define base transforms for external data
 base_tf = inventory.electronics.inventory_locations[0]._reader.tf
@@ -94,6 +111,7 @@ if LOAD_PRESHORT is True:
 # Load External Requisitions
 if LOAD_EXTERNAL_REQ is True:
     if os.path.exists(external_req_file):
+        logger.info("Loading External Req File : " + external_req_file)
         with open(external_req_file, 'r') as f:
             header = []
             reader = csv.reader(f)
@@ -132,6 +150,8 @@ if LOAD_EXTERNAL_REQ is True:
 
             for obom in oboms:
                 logger.info('Inserting External Bom : ' + obom.descriptor.configname)
+                if EXTERNAL_REQ_IMMEDIATE is True:
+                    IMMEDIATE_EARMARKS.append(obom.descriptor.configname)
                 bomlist.append(obom)
 
 
@@ -146,11 +166,14 @@ for k, v in data['cards'].iteritems():
     bomlist.append(obom)
 
 cobom = boms.outputbase.CompositeOutputBom(bomlist)
+if PRIORITIZE is True:
+    immediate_idxs = cobom.get_subset_idxs(IMMEDIATE_EARMARKS)
+else:
+    immediate_idxs = range(len(cobom.descriptors))
 
 with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
     logger.info('Exporting Composite Output BOM to File : ' + os.linesep + os.path.join(orderfolder, 'cobom.csv'))
     cobom.dump(f)
-
 
 
 orders_path = os.path.join(orderfolder, 'purchase-orders')
@@ -162,35 +185,94 @@ if not os.path.exists(reservations_path):
     os.makedirs(reservations_path)
 
 unsourced = []
+deferred = []
 pb = ProgressBar('red', block='#', empty='.')
 nlines = len(cobom.lines)
 
+# TODO Heavily refactor
+
 for pbidx, line in enumerate(cobom.lines):
-    percentage = (float(pbidx) / nlines) * 100.00
-    pb.render(int(percentage),
-              "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Shortage File, Reservations, and Preparing Orders".format(
-                  percentage, line.ident, line.quantity))
+    # percentage = (float(pbidx) / nlines) * 100.00
+    # pb.render(int(percentage),
+    #           "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Shortage File, Reservations, and Preparing Orders".format(
+    #               percentage, line.ident, line.quantity))
     shortage = 0
     if USE_STOCK is True:
-        for idx, descriptor in enumerate(cobom.descriptors):
-            earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
+        if PRIORITIZE is False:
+            for idx, descriptor in enumerate(cobom.descriptors):
+                earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
+                avail = inventory.electronics.get_total_availability(line.ident)
+                if line.columns[idx] == 0:
+                    continue
+                if avail > line.columns[idx]:
+                    inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
+                elif avail > 0:
+                    inventory.electronics.reserve_items(line.ident, avail, earmark)
+                    pshort = line.columns[idx] - avail
+                    shortage += pshort
+                    logger.debug('Adding Partial Qty of ' + line.ident +
+                                 ' for ' + earmark + ' to shortage : ' + str(pshort))
+                else:
+                    shortage += line.columns[idx]
+                    logger.debug('Adding Full Qty of ' + line.ident +
+                                 ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
+        else:
             avail = inventory.electronics.get_total_availability(line.ident)
-            if line.columns[idx] == 0:
-                continue
-            if avail > line.columns[idx]:
-                inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
-            elif avail > 0:
-                inventory.electronics.reserve_items(line.ident, avail, earmark)
-                pshort = line.columns[idx] - avail
-                shortage += pshort
-                logger.debug('Adding Partial Qty of ' + line.ident +
-                             ' for ' + earmark + ' to shortage : ' + str(pshort))
+            if avail >= line.subset_qty(immediate_idxs):
+                if avail < line.quantity:
+                    deferred.append((line.ident, line.quantity - avail))
+                logger.debug('Availability surpasses priority requirement. Rejecting for order : ' + line.ident)
+                shortage = 0
             else:
-                shortage += line.columns[idx]
-                logger.debug('Adding Full Qty of ' + line.ident +
-                             ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
+                logger.debug('Availability falls short of priority requirement. Accepting for order : ' + line.ident)
+                # Reserve for immediate
+                for idx, descriptor in enumerate(cobom.descriptors):
+                    if idx in immediate_idxs:
+                        earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
+                        avail = inventory.electronics.get_total_availability(line.ident)
+                        if line.columns[idx] == 0:
+                            continue
+                        if avail > line.columns[idx]:
+                            inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
+                        elif avail > 0:
+                            inventory.electronics.reserve_items(line.ident, avail, earmark)
+                            pshort = line.columns[idx] - avail
+                            shortage += pshort
+                            logger.debug('Adding Partial Qty of ' + line.ident +
+                                         ' for ' + earmark + ' to shortage : ' + str(pshort))
+                        else:
+                            shortage += line.columns[idx]
+                            logger.debug('Adding Full Qty of ' + line.ident +
+                                         ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
+                # Reserve for the rest
+                for idx, descriptor in enumerate(cobom.descriptors):
+                    if idx not in immediate_idxs:
+                        earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
+                        avail = inventory.electronics.get_total_availability(line.ident)
+                        if line.columns[idx] == 0:
+                            continue
+                        if avail > line.columns[idx]:
+                            inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
+                        elif avail > 0:
+                            inventory.electronics.reserve_items(line.ident, avail, earmark)
+                            pshort = line.columns[idx] - avail
+                            shortage += pshort
+                            logger.debug('Adding Partial Qty of ' + line.ident +
+                                         ' for ' + earmark + ' to shortage : ' + str(pshort))
+                        else:
+                            shortage += line.columns[idx]
+                            logger.debug('Adding Full Qty of ' + line.ident +
+                                         ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
     else:
-        shortage = line.quantity
+        if PRIORITIZE is False:
+            shortage = line.quantity
+        else:
+            if line.subset_qty(immediate_idxs) > 0:
+                logger.debug("Accepting for priority inclusion : " + line.ident)
+                shortage = line.quantity
+            else:
+                logger.debug("Rejecting for priority inclusion : " + line.ident)
+                shortage = 0
     if shortage > 0:
         result = sourcing.electronics.order.add(line.ident, line.quantity, shortage, orderref)
         if result is False:
@@ -200,6 +282,11 @@ if len(unsourced) > 0:
     logger.warning("Unable to source the following components: ")
     for elem in unsourced:
         logger.warning("{0:<40}{1:>5}".format(elem[0], elem[1]))
+if len(deferred) > 0:
+    logger.warning("Deferred sourcing of the following components: ")
+    for elem in deferred:
+        logger.warning("{0:<40}{1:>5}".format(elem[0], elem[1]))
+
 sourcing.electronics.order.collapse()
 sourcing.electronics.order.rebalance()
 sourcing.electronics.order.generate_orders(orders_path)

@@ -96,8 +96,21 @@ class CompositeOutputBomLine(object):
 
     @property
     def quantity(self):
-        return sum(self.columns)
+        try:
+            return sum(self.columns)
+        except TypeError:
+            print self.ident
+            raise TypeError(self.columns)
 
+    def subset_qty(self, idxs):
+        try:
+            rval = 0
+            for idx in idxs:
+                rval += self.columns[idx]
+            return rval
+        except TypeError:
+            print self.ident
+            raise TypeError(self.columns)
 
 class CompositeOutputBom():
     def __init__(self, bom_list):
@@ -109,6 +122,14 @@ class CompositeOutputBom():
             self.insert_bom(bom, i)
             i += 1
         self.sort_by_ident()
+
+    def get_subset_idxs(self, confignames):
+        rval = []
+        for configname in confignames:
+            for idx, descriptor in enumerate(self.descriptors):
+                if descriptor.configname == configname:
+                    rval.append(idx)
+        return rval
 
     def insert_bom(self, bom, i):
         """
