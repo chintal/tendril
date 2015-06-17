@@ -21,7 +21,7 @@ from config import REPLICATOR_PROXY_PORT
 from config import REPLICATOR_PROXY_USER
 from config import REPLICATOR_PROXY_PASS
 
-from config import KOALA_ROOT
+from config import INSTANCE_CACHE
 
 from bs4 import BeautifulSoup
 import urllib2
@@ -43,7 +43,7 @@ def strencode(string):
     return nstring.encode('ascii', 'replace')
 
 
-REDIR_CACHE_FILE = os.path.join(KOALA_ROOT, 'utils', 'redirects.p')
+REDIR_CACHE_FILE = os.path.join(INSTANCE_CACHE, 'redirects.p')
 
 try:
     with open(REDIR_CACHE_FILE, "rb") as rdcf:
