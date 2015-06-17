@@ -9,10 +9,10 @@ import csv
 import entityhub.projects
 import gedaif.conffile
 
-from utils.config import KOALA_ROOT
+from utils.config import INSTANCE_ROOT
 
 
-fpath = os.path.join(KOALA_ROOT, 'scratch', 'costing-summary.csv')
+fpath = os.path.join(INSTANCE_ROOT, 'scratch', 'costing-summary-all.csv')
 with open(fpath, 'w') as f:
     writer = csv.writer(f)
     writer.writerow(["Card", "Indicative Cost"])

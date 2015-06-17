@@ -9,6 +9,7 @@ logger = utils.log.get_logger(__name__, utils.log.DEFAULT)
 import os
 import yaml
 import re
+import csv
 
 import vendors
 import utils.currency
@@ -47,6 +48,27 @@ class VendorPricelist(vendors.VendorBase):
                 logger.error("No prices found for " + self.name)
         if "pricegens" in self._pricelist:
             self._generate_insert_idents()
+        if "pricecsv" in self._pricelist:
+            self._load_pricecsv(self._pricelist["pricecsv"])
+
+    def _load_pricecsv(self, fname):
+        pricecsvpath = os.path.join(PRICELISTVENDORS_FOLDER, fname)
+        with open(pricecsvpath, 'r') as f:
+            reader = csv.reader(f)
+            for line in reader:
+                line = [elem.strip() for elem in line]
+                if line[0] == '':
+                    continue
+                if line[0] == 'ident':
+                    continue
+                partdict = {'ident': line[0], 'vpno': line[1],
+                            'unitp': float(line[2]), 'moq': int(line[3]),
+                            'oqmultiple': int(line[4]), 'pkgqty': int(line[5])}
+                try:
+                    partdict['avail'] = int(line[6])
+                except ValueError:
+                    partdict['avail'] = None
+                self._pricelist["prices"].append(partdict)
 
     def _generate_insert_idents(self):
         for pricegen in self._pricelist['pricegens']:

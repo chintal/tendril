@@ -5,7 +5,7 @@ See the COPYING, README, and INSTALL files for more information
 
 from utils import log
 
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 import yaml
 import csv
@@ -24,12 +24,12 @@ from gedaif import projfile
 from utils.progressbar.progressbar import ProgressBar
 import inventory.guidelines
 
-from utils.config import KOALA_ROOT
+from utils.config import INSTANCE_ROOT
 
 
 bomlist = []
 
-orderfolder = os.path.join(KOALA_ROOT, 'scratch', 'sourcing', 'current')
+orderfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'sourcing', 'current')
 orderfile = os.path.join(orderfolder, 'order.yaml')
 
 with open(orderfile, 'r') as f:
@@ -47,21 +47,6 @@ IMMEDIATE_EARMARKS = []
 
 if 'preshort' in data.keys():
     LOAD_PRESHORT = data['preshort']
-if 'external' in data.keys():
-    external_req_file = os.path.join(orderfolder, data['external']['file'])
-    LOAD_EXTERNAL_REQ = True
-    try:
-        if data['external']['priority'] == 'immediate':
-            EXTERNAL_REQ_IMMEDIATE = True
-        elif data['external']['priority'] == 'normal':
-            EXTERNAL_REQ_IMMEDIATE = False
-        else:
-            logger.warning("External Req File Priority Not Recognized. Assuming Immediate")
-            EXTERNAL_REQ_IMMEDIATE = True
-    except KeyError:
-        logger.warning("External Req File Priority Not Found. Assuming Immediate")
-        EXTERNAL_REQ_IMMEDIATE = True
-
 if 'use_stock' in data.keys():
     USE_STOCK = data['use_stock']
 if 'is_indicative' in data.keys():
@@ -84,7 +69,7 @@ if LOAD_PRESHORT is True:
     if os.path.exists(os.path.join(orderfolder, 'preshort.csv')):
         with open(os.path.join(orderfolder, 'preshort.csv'), 'r') as f:
             logger.debug('Creating PRESHORT Bom')
-            obom_descriptor = boms.outputbase.OutputElnBomDescriptor('PRESHORT', os.path.join(KOALA_ROOT, 'scratch'),
+            obom_descriptor = boms.outputbase.OutputElnBomDescriptor('PRESHORT', os.path.join(INSTANCE_ROOT, 'scratch'),
                                                                      'PRESHORT', None)
             obom = boms.outputbase.OutputBom(obom_descriptor)
 
@@ -106,53 +91,63 @@ if LOAD_PRESHORT is True:
                 else:
                     print line[1], 'No'
             logger.info('Inserting PRESHORT Bom')
+            IMMEDIATE_EARMARKS.append(obom.descriptor.configname)
             bomlist.append(obom)
 
-# Load External Requisitions
-if LOAD_EXTERNAL_REQ is True:
-    if os.path.exists(external_req_file):
-        logger.info("Loading External Req File : " + external_req_file)
-        with open(external_req_file, 'r') as f:
-            header = []
-            reader = csv.reader(f)
-            for line in reader:
-                line = [elem.strip() for elem in line]
-                if line[0] == 'Device':
-                    header = line
-                    break
+if 'external' in data.keys():
+    for exf in data['external']:
+        external_req_file = os.path.join(orderfolder, exf['file'])
+        if exf['priority'] == 'normal':
+            EXTERNAL_REQ_IMMEDIATE = False
+        elif exf['priority'] == 'immediate':
+            EXTERNAL_REQ_IMMEDIATE = True
+        else:
+            EXTERNAL_REQ_IMMEDIATE = True
+            logger.warning("External Req File Priority Not Recognized. Assuming Immediate")
 
-            logger.info('Inserting External Boms')
-            oboms = []
-            for head in header[1:]:
-                logger.debug('Creating Bom : ' + head)
-                obom_descriptor = boms.outputbase.OutputElnBomDescriptor(head, os.path.join(KOALA_ROOT, 'scratch'),
-                                                                         head, None)
-                obom = boms.outputbase.OutputBom(obom_descriptor)
-                oboms.append(obom)
+        if os.path.exists(external_req_file):
+            logger.info("Loading External Req File : " + external_req_file)
+            with open(external_req_file, 'r') as f:
+                header = []
+                reader = csv.reader(f)
+                for line in reader:
+                    line = [elem.strip() for elem in line]
+                    if line[0] == 'Device':
+                        header = line
+                        break
 
-            for line in reader:
-                line = [elem.strip() for elem in line]
-                if line[0] == '':
-                    continue
-                if line[0] == 'END':
-                    break
-                if not base_tf.has_contextual_repr(line[0]):
-                    print line[0] + ' Possibly not recognized'
-                device, value, footprint = conventions.electronics.parse_ident(base_tf.get_canonical_repr(line[0]))
-                # print base_tf.get_canonical_repr(line[0])
-                item = boms.electronics.EntityElnComp()
-                item.define('Undef', device, value, footprint)
-                for idx, col in enumerate(line[1:]):
-                    num = int(col)
-                    if num > 0:
-                        for i in range(num):
-                            oboms[idx].insert_component(item)
+                logger.info('Inserting External Boms')
+                oboms = []
+                for head in header[1:]:
+                    logger.debug('Creating Bom : ' + head)
+                    obom_descriptor = boms.outputbase.OutputElnBomDescriptor(head, os.path.join(INSTANCE_ROOT, 'scratch'),
+                                                                             head, None)
+                    obom = boms.outputbase.OutputBom(obom_descriptor)
+                    oboms.append(obom)
 
-            for obom in oboms:
-                logger.info('Inserting External Bom : ' + obom.descriptor.configname)
-                if EXTERNAL_REQ_IMMEDIATE is True:
-                    IMMEDIATE_EARMARKS.append(obom.descriptor.configname)
-                bomlist.append(obom)
+                for line in reader:
+                    line = [elem.strip() for elem in line]
+                    if line[0] == '':
+                        continue
+                    if line[0] == 'END':
+                        break
+                    if not base_tf.has_contextual_repr(line[0]):
+                        print line[0] + ' Possibly not recognized'
+                    device, value, footprint = conventions.electronics.parse_ident(base_tf.get_canonical_repr(line[0]))
+                    # print base_tf.get_canonical_repr(line[0])
+                    item = boms.electronics.EntityElnComp()
+                    item.define('Undef', device, value, footprint)
+                    for idx, col in enumerate(line[1:]):
+                        num = int(col)
+                        if num > 0:
+                            for i in range(num):
+                                oboms[idx].insert_component(item)
+
+                for obom in oboms:
+                    logger.info('Inserting External Bom : ' + obom.descriptor.configname)
+                    if EXTERNAL_REQ_IMMEDIATE is True:
+                        IMMEDIATE_EARMARKS.append(obom.descriptor.configname)
+                    bomlist.append(obom)
 
 
 # Generate Koala Requisitions
@@ -192,11 +187,12 @@ nlines = len(cobom.lines)
 # TODO Heavily refactor
 
 for pbidx, line in enumerate(cobom.lines):
-    # percentage = (float(pbidx) / nlines) * 100.00
-    # pb.render(int(percentage),
-    #           "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Shortage File, Reservations, and Preparing Orders".format(
-    #               percentage, line.ident, line.quantity))
-    shortage = 0
+    if logger.getEffectiveLevel() >= log.INFO or (PRIORITIZE is False and USE_STOCK is False):
+        percentage = (float(pbidx) / nlines) * 100.00
+        pb.render(int(percentage),
+                  "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Shortage File, Reservations, and Preparing Orders".format(
+                      percentage, line.ident, line.quantity))
+        shortage = 0
     if USE_STOCK is True:
         if PRIORITIZE is False:
             for idx, descriptor in enumerate(cobom.descriptors):

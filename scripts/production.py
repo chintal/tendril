@@ -22,11 +22,11 @@ from entityhub import serialnos
 
 from utils.pdf import merge_pdf
 from utils.progressbar.progressbar import ProgressBar
-from utils.config import KOALA_ROOT
+from utils.config import INSTANCE_ROOT
 
 bomlist = []
 
-orderfolder = os.path.join(KOALA_ROOT, 'scratch', 'production', 'current')
+orderfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'production', 'current')
 orderfile = os.path.join(orderfolder, 'order.yaml')
 
 with open(orderfile, 'r') as f:
