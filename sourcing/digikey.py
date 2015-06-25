@@ -3,27 +3,33 @@ Digi-Key Sourcing Module documentation (:mod:`sourcing.digikey`)
 ================================================================
 """
 
-import logging
+from utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
+
 import locale
 import re
+import os
 import urllib
 from decimal import Decimal
 import traceback
-import os
+import csv
+import codecs
 
 from bs4 import BeautifulSoup
 
 import vendors
+import customs
 import utils.www
 import utils.currency
 import conventions.electronics
 
+from utils.config import INSTANCE_ROOT
 
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 
 class VendorDigiKey(vendors.VendorBase):
-    def __init__(self, name, dname, pclass, mappath=None, currency_code=None, currency_symbol=None):
+    def __init__(self, name, dname, pclass, mappath=None, currency_code=None, currency_symbol=None, ):
         self._devices = ['IC SMD',
                          'IC THRU',
                          'IC PLCC',
@@ -71,15 +77,15 @@ class VendorDigiKey(vendors.VendorBase):
                 try:
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
-                    logging.warning(ident + ' :: DK Search for ' + device + ' Not Implemented')
+                    logger.warning(ident + ' :: DK Search for ' + device + ' Not Implemented')
                     return None, 'NOT_IMPL'
             if device in self._devices:
                 return self._get_search_vpnos(device, value, footprint)
             else:
                 return None, 'FILTER_NODEVICE'
         except Exception, e:
-            logging.error(traceback.format_exc())
-            logging.error('Fatal Error searching for : ' + ident)
+            logger.error(traceback.format_exc())
+            logger.error('Fatal Error searching for : ' + ident)
             return None, None
 
     @staticmethod
@@ -463,8 +469,8 @@ class VendorDigiKey(vendors.VendorBase):
                     options = [(self._tf_tolerance_to_canonical(option[0]), option[1]) for option in options]
                 filters[header] = (fname, options)
         except Exception, e:
-            logging.error(traceback.format_exc())
-            logging.error('idx :' + str(idx))
+            logger.error(traceback.format_exc())
+            logger.error('idx :' + str(idx))
             return False, None
         return True, filters
 
@@ -675,7 +681,7 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
         if dkpartno is not None:
             self.vpno = dkpartno
         else:
-            logging.error("Not enough information to create a Digikey Part")
+            logger.error("Not enough information to create a Digikey Part")
         self._get_data()
 
     def _get_data(self):
@@ -683,7 +689,7 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
                + urllib.quote_plus(self.vpno))
         page = utils.www.urlopen(url)
         if page is None:
-            logging.error("Unable to open DigiKey product page : " + self.vpno)
+            logger.error("Unable to open DigiKey product page : " + self.vpno)
             return
         soup = BeautifulSoup(page)
 
@@ -697,7 +703,7 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
             self.vqtyavail = self._get_avail_qty(soup)
             self.vpartdesc = self._get_description(soup)
         except AttributeError:
-            logging.error("Failed to acquire part information : " + self.vpno + url)
+            logger.error("Failed to acquire part information : " + self.vpno + url)
             # TODO raise AttributeError
 
     def _get_prices(self, soup):
@@ -712,17 +718,17 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
                         moq = locale.atoi(cells[0])
                     except ValueError:
                         moq = 0
-                        logging.error(cells[0] + " found while acquiring moq for " + self.vpno)
+                        logger.error(cells[0] + " found while acquiring moq for " + self.vpno)
                     try:
                         price = locale.atof(cells[1])
                     except ValueError:
                         price = 0
-                        logging.error(cells[1] + " found while acquiring price for " + self.vpno)
+                        logger.error(cells[1] + " found while acquiring price for " + self.vpno)
                     prices.append(vendors.VendorPrice(moq,
                                                       price,
                                                       self._vendor.currency))
         except AttributeError:
-            logging.error("Pricing table not found or other error for " + self.vpno)
+            logger.error("Pricing table not found or other error for " + self.vpno)
         return prices
 
     @staticmethod
@@ -778,3 +784,53 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
             return desc_cell.text.strip().encode('ascii', 'replace')
         except:
             return ''
+
+
+class DigiKeyInvoice(customs.CustomsInvoice):
+    def __init__(self, vendor=None, inv_yaml=None):
+        if vendor is None:
+            vendor = VendorDigiKey('digikey', 'transient', 'electronics',
+                                   currency_code='USD', currency_symbol='US$')
+
+        if inv_yaml is None:
+            inv_yaml = os.path.join(INSTANCE_ROOT, 'scratch', 'customs', 'inv_data.yaml')
+        self._working_folder = os.path.split(inv_yaml)[0]
+
+        super(DigiKeyInvoice, self).__init__(vendor, inv_yaml)
+
+    def _acquire_lines(self):
+        logger.info("Acquiring Lines")
+        invoice_file = os.path.join(self._working_folder, self._data['invoice_file'])
+        with open(invoice_file) as f:
+            reader = csv.reader(f)
+            header = None
+            for line in reader:
+                if line[0].startswith(codecs.BOM_UTF8):
+                    line[0] = line[0][3:]
+                if line[0] == 'Index':
+                    header = line
+                    break
+            if header is None:
+                raise ValueError
+            for line in reader:
+                if line[0] != '':
+                    idx = line[header.index('Index')].strip()
+                    qty = int(line[header.index('Quantity')].strip())
+                    vpno = line[header.index('Part Number')].strip()
+                    mpno = line[header.index('Manufacturer Part Number')].strip()
+                    desc = line[header.index('Description')].strip()
+                    ident = line[header.index('Customer Reference')].strip()
+                    boqty = line[header.index('Backorder')].strip()
+                    try:
+                        if int(boqty) > 0:
+                            logger.warning("Apparant backorder. Crosscheck customs treatment for: "
+                                           + idx + ' ' + ident)
+                    except ValueError:
+                        print line
+
+                    unitp_str = line[header.index('Unit Price')].strip()
+                    extendedp_str = line[header.index('Extended Price')].strip()
+
+                    unitp = utils.currency.CurrencyValue(float(unitp_str), self._vendor.currency)
+                    lineobj = customs.CustomsInvoiceLine(self, ident, vpno, unitp, qty, idx=idx, desc=desc)
+                    self._lines.append(lineobj)

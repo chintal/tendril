@@ -203,12 +203,21 @@ def is_recognized(ident):
     return False
 
 
-def get_symbol(ident):
+def get_symbol(ident, case_insensitive=False):
     for symbol in gsymlib:
-        if symbol.ident == ident:
-            return symbol
+        if case_insensitive is False:
+            if symbol.ident == ident:
+                return symbol
+        else:
+            if symbol.ident.upper() == ident.upper():
+                return symbol
     raise ValueError(ident)
 
+def get_symbol_folder(ident, case_insensitive=False):
+    symobj = get_symbol(ident, case_insensitive=case_insensitive)
+    sympath = symobj.fpath
+    symfolder = os.path.split(sympath)[0]
+    return os.path.relpath(symfolder, GEDA_SYMLIB_ROOT)
 
 def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
     for symbol in gsymlib:

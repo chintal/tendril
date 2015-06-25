@@ -15,6 +15,71 @@ import utils.currency
 import utils.config
 
 
+class VendorInvoiceLine(object):
+    def __init__(self, invoice, ident, vpno, unitp, qty, desc=None):
+        self._invoice = invoice
+        self._ident = ident
+        self._vpno = vpno
+        self._unitp = unitp
+        self._qty = qty
+        self._desc = desc
+
+    @property
+    def desc(self):
+        return self._desc
+
+    @property
+    def ident(self):
+        return self._ident
+
+    @property
+    def vpno(self):
+        return self._vpno
+
+    @property
+    def unitprice(self):
+        return self._unitp
+
+    @property
+    def extendedprice(self):
+        return utils.currency.CurrencyValue(self._unitp._val * self._qty,
+                                            self._unitp._currency_def)
+
+    @property
+    def effectiveprice(self):
+        return self.extendedprice
+
+    @property
+    def qty(self):
+        return self._qty
+
+
+class VendorInvoice(object):
+    def __init__(self, vendor, inv_no, inv_date):
+        self._vendor = vendor
+        self._inv_no = inv_no
+        self._inv_date = inv_date
+        self._lines = []
+        if self._linetype is None:
+            self._linetype = VendorInvoiceLine
+        self._acquire_lines()
+
+    @property
+    def lines(self):
+        return self._lines
+
+    @property
+    def extendedtotal(self):
+        return sum([x.extendedprice for x in self._lines])
+
+    @property
+    def effectivetotal(self):
+        return sum([x.effectiveprice for x in self._lines])
+
+    def _acquire_lines(self):
+        raise NotImplementedError
+
+
 class VendorOrder(object):
     def __init__(self, vendor, orderref):
         self._vendor = vendor

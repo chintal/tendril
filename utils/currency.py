@@ -10,6 +10,7 @@ import utils.www
 import urllib
 import urllib2
 import json
+import numbers
 
 
 class CurrencyDefinition(object):
@@ -64,7 +65,7 @@ class CurrencyValue(object):
 
     @property
     def native_string(self):
-        return BASE_CURRENCY_SYMBOL + str(self.native_value)
+        return BASE_CURRENCY_SYMBOL + "{0:.2f}".format(self.native_value)
 
     @property
     def source_value(self):
@@ -72,7 +73,7 @@ class CurrencyValue(object):
 
     @property
     def source_string(self):
-        return self._currency_def.symbol + str(self._val)
+        return self._currency_def.symbol + "{0:.2f}".format(self._val)
 
     @property
     def source_currency(self):
@@ -84,5 +85,37 @@ class CurrencyValue(object):
     def __float__(self):
         return self.native_value
 
+    def __add__(self, other):
+        if self._currency_def.symbol == other.source_currency.symbol:
+            return CurrencyValue(self.source_value + other.source_value, self.source_currency)
+        else:
+            return CurrencyValue(self.native_value + other.native_value, native_currency_defn)
 
+    def __radd__(self, other):
+        if other == 0:
+            return self
+        else:
+            return self.__add__(other)
 
+    def __mul__(self, other):
+        if isinstance(other, numbers.Number):
+            return CurrencyValue(self.source_value * other, self.source_currency)
+        else:
+            raise TypeError
+
+    def __div__(self, other):
+        if isinstance(other, numbers.Number):
+            return CurrencyValue(self.source_value / other, self.source_currency)
+        elif isinstance(other, CurrencyValue):
+            return self.native_value / other.native_value
+        else:
+            raise TypeError
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __sub__(self, other):
+        if other == 0:
+            return self
+        else:
+            return self.__add__(other.__mul__(-1))

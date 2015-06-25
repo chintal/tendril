@@ -364,7 +364,7 @@ class CSILPart(vendors.VendorPartBase):
         elif data["params"]["finish"] == 'PBFREE':
             self._descriptors.append("Any Lead Free finish")
         elif data["params"]["finish"] == 'H':
-            self._descriptors.append("Lead Free HAL finish")
+            self._descriptors.append("Lead F ree HAL finish")
         elif data["params"]["finish"] == 'NP':
             self._descriptors.append("No Copper finish")
         elif data["params"]["finish"] == 'I':

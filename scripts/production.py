@@ -101,18 +101,23 @@ manifestfiles = []
 
 for card, qty in sorted(data['cards'].iteritems()):
     try:
-        fsno = serialnos.last_serial['cards'][card] + 1
-    except KeyError:
-        fsno = 1
-    try:
         cardfolder = projects.cards[card]
     except KeyError:
         logger.error("Could not find Card in entityhub.cards")
         raise KeyError
     for idx in range(qty):
-        manifestfiles.append(dox.production.gen_pcb_am(cardfolder, card,
-                                                       manifestsfolder,
-                                                       fsno + idx,
-                                                       indentsno))
+        # TODO Correct Series?
+        series = 'QDA'
+        # Use PCB/Card Serial Number instead
+        cardsno = serialnos.get_serialno("QDA", card)
+        # TODO Figure out cables vs PCBs?
+        # TODO Register Generated Documentation as well
+        am_path = dox.production.gen_pcb_am(cardfolder, card,
+                                            manifestsfolder,
+                                            cardsno,
+                                            indentsno)
+        manifestfiles.append(am_path)
+        serialnos.register_document(cardsno, am_path, "ASSEMBLY MANIFEST", card)
+
 
 merge_pdf(manifestfiles, os.path.join(orderfolder, 'manifests.pdf'))
