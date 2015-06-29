@@ -5,6 +5,7 @@ Dox Render module documentation (:mod:`dox.render`)
 
 import os
 import subprocess
+import re
 
 import jinja2
 import matplotlib
@@ -13,12 +14,25 @@ matplotlib.use('PDF')
 from utils.config import DOX_TEMPLATE_FOLDER
 from utils.config import COMPANY_LOGO_PATH
 from utils.config import COMPANY_NAME
+from utils.config import COMPANY_ADDRESS_LINE
 
 from utils.colors import tableau20
 
 
 def format_currency(value):
     return "{:,.2f}".format(value)
+
+
+def escape_latex(string):
+    if string is not None:
+        string = string.replace('\\', '\\\\')
+        string = string.replace('$', '\$')
+        string = string.replace('%', '\%')
+        string = string.replace('&', '\&')
+        string = string.replace('INR ', '\\rupee~')
+    else:
+        string = ''
+    return string
 
 
 def jinja2_pdfinit():
@@ -29,20 +43,22 @@ def jinja2_pdfinit():
                                   variable_end_string='%}}',
                                   loader=loader)
     renderer.filters['format_currency'] = format_currency
+    renderer.filters['escape_latex'] = escape_latex
     return renderer
 
 renderer_pdf = jinja2_pdfinit()
 
 
-def render_pdf(stage, template, outpath):
+def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
 
     template = renderer_pdf.get_template(template)
 
     stage['logo'] = COMPANY_LOGO_PATH
     stage['company'] = COMPANY_NAME
+    stage['company_address_line'] = COMPANY_ADDRESS_LINE
     texpath = os.path.splitext(outpath)[0] + ".tex"
     with open(texpath, "wb") as f:
-        f.write(template.render(stage=stage))
+        f.write(template.render(stage=stage, **kwargs))
 
     texpath = os.path.splitext(outpath)[0] + ".tex"
     auxpath = os.path.splitext(outpath)[0] + ".aux"
@@ -54,9 +70,10 @@ def render_pdf(stage, template, outpath):
     for i in range(3):
         subprocess.call(pdflatex_cmd)
 
-    os.remove(texpath)
-    os.remove(auxpath)
-    os.remove(logpath)
+    if remove_sources is True:
+        os.remove(texpath)
+        os.remove(auxpath)
+        os.remove(logpath)
 
     return outpath
 

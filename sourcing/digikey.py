@@ -14,6 +14,7 @@ from decimal import Decimal
 import traceback
 import csv
 import codecs
+import yaml
 
 from bs4 import BeautifulSoup
 
@@ -791,11 +792,9 @@ class DigiKeyInvoice(customs.CustomsInvoice):
         if vendor is None:
             vendor = VendorDigiKey('digikey', 'transient', 'electronics',
                                    currency_code='USD', currency_symbol='US$')
-
         if inv_yaml is None:
             inv_yaml = os.path.join(INSTANCE_ROOT, 'scratch', 'customs', 'inv_data.yaml')
         self._working_folder = os.path.split(inv_yaml)[0]
-
         super(DigiKeyInvoice, self).__init__(vendor, inv_yaml)
 
     def _acquire_lines(self):

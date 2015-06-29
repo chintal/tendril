@@ -65,6 +65,22 @@ class VendorInvoice(object):
         self._acquire_lines()
 
     @property
+    def currency(self):
+        return self._vendor.currency
+
+    @property
+    def inv_no(self):
+        return self._inv_no
+
+    @property
+    def inv_date(self):
+        return self._inv_date
+
+    @property
+    def linecount(self):
+        return len(self._lines)
+
+    @property
     def lines(self):
         return self._lines
 

@@ -11,7 +11,6 @@ import os
 
 import vendors
 import gedaif.gsymlib
-import dox.customs
 import utils.currency
 from utils.config import CUSTOMSDEFAULTS_FOLDER
 
@@ -35,6 +34,39 @@ class CustomsSection(object):
             self._desc = hsdict['desc']
         else:
             self._desc = None
+        self.bcd = None
+        self.bcd_notif = None
+        self.cvd = None
+        self.cvd_notif = None
+        self.acvd = None
+        self.acvd_notif = None
+        self.cec = None
+        self.cec_notif = None
+        self.cshec = None
+        self.cshec_notif = None
+        self.cvdec = None
+        self.cvdec_notif = None
+        self.cvdshec = None
+        self.cvdshec_notif = None
+
+        if 'duties' in hsdict.keys():
+            self._load_duties(hsdict['duties'])
+
+    def _load_duties(self, dutiesdict):
+        self.bcd = dutiesdict['bcd']['rate']
+        self.bcd_notif = dutiesdict['bcd']['notification']
+        self.cvd = dutiesdict['cvd']['rate']
+        self.cvd_notif = dutiesdict['cvd']['notification']
+        self.acvd = dutiesdict['acvd']['rate']
+        self.acvd_notif = dutiesdict['acvd']['notification']
+        self.cec = dutiesdict['cec']['rate']
+        self.cec_notif = dutiesdict['cec']['notification']
+        self.cshec = dutiesdict['cshec']['rate']
+        self.cshec_notif = dutiesdict['cshec']['notification']
+        self.cvdec = dutiesdict['cvdec']['rate']
+        self.cvdec_notif = dutiesdict['cvdec']['notification']
+        self.cvdshec = dutiesdict['cvdshec']['rate']
+        self.cvdshec_notif = dutiesdict['cvdshec']['notification']
 
     @property
     def code(self):
@@ -43,6 +75,10 @@ class CustomsSection(object):
     @property
     def name(self):
         return self._name
+
+    @property
+    def desc(self):
+        return self._desc
 
     @property
     def idents(self):
@@ -103,15 +139,24 @@ class CustomsInvoice(vendors.VendorInvoice):
             inv_data = yaml.load(f)
             self._data.update(inv_data)
         self._linetype = CustomsInvoiceLine
+        vendor.currency = utils.currency.CurrencyDefinition(vendor.currency.code,
+                                                            vendor.currency.symbol,
+                                                            exchval=self._data['exchrate'])
         super(CustomsInvoice, self).__init__(vendor, self._data['invoice_no'], self._data['invoice_date'])
+
         self.freight = 0
         self.insurance_pc = 0
+        self._includes_freight = False
+        self._added_insurance = False
         self._process_other_costs()
         hs_codes_file = os.path.join(CUSTOMSDEFAULTS_FOLDER, 'hs_codes.yaml')
         with open(hs_codes_file, 'r') as f:
             self._hs_codes = yaml.load(f)
         self._sections = []
-        self._classify()
+
+    @property
+    def given_data(self):
+        return self._data
 
     def _process_other_costs(self):
         for k, v in self._data['costs_not_included'].iteritems():
@@ -119,14 +164,48 @@ class CustomsInvoice(vendors.VendorInvoice):
                 self._data['costs_not_included'][k] = 'None'
             elif v == 'INCL':
                 self._data['costs_not_included'][k] = 'None, included in Invoice'
+            elif v == 'LISTED':
+                self._data['costs_not_included'][k] = 'Listed in Invoice'
             else:
                 logger.warning("Unrecognized Other Costs definition for " + k + " : " + v)
+
         if self._data['costs_not_included']['FREIGHT'] == 'None, included in Invoice':
             self.freight = utils.currency.CurrencyValue(float(self._data['shipping_cost_incl']),
-                                                         self._vendor.currency)
+                                                        self._vendor.currency)
             self._data['costs_not_included']['FREIGHT'] += " ({0})".format(self.freight.source_string)
+            self._includes_freight = True
+        if self._data['costs_not_included']['FREIGHT'] == 'Listed in Invoice':
+            self.freight = utils.currency.CurrencyValue(float(self._data['shipping_cost_listed']),
+                                                        self._vendor.currency)
+            self._data['costs_not_included']['FREIGHT'] = "{0} (as listed in the invoice)".format(self.freight.source_string)
+            self._includes_freight = True
+
+        ins = 0
         if 'insurance_pc' in self._data.keys():
             self.insurance_pc = float(self._data['insurance_pc'])
+            if self.insurance_pc > 0:
+                self._added_insurance = True
+                ins = (self.extendedtotal * self.insurance_pc/100)
+                self._data['costs_not_included']['INSURANCE'] = "{0} (@{1}% {2})".format(ins.source_string, self.insurance_pc, self._data['insurance_note'])
+
+        if 'handling_pc' in self._data.keys():
+            self.handling_pc = float(self._data['handling_pc'])
+            if self.handling_pc > 0:
+                self._added_handling = True
+                iv = ((self.extendedtotal + self.freight + ins) * self.handling_pc/100).source_string
+                self._data['costs_not_included']['HANDLING'] = "{0} (@{1}% {2})".format(iv, self.handling_pc, self._data['handling_note'])
+
+    @property
+    def includes_freight(self):
+        return self._includes_freight
+
+    @property
+    def added_insurance(self):
+        return self._added_insurance
+
+    @property
+    def added_handling(self):
+        return self._added_handling
 
     @property
     def source_folder(self):
@@ -149,11 +228,29 @@ class CustomsInvoice(vendors.VendorInvoice):
                 rval.append(line.hs_section)
         return sorted(rval, key=lambda x: x.code)
 
-    def getsectionlines(self, hssection):
+    def getsection_lines(self, hssection):
         rval = []
         for line in self._lines:
             if line.hs_section == hssection:
                 rval.append(line)
+        return rval
+
+    def getsection_idxs(self, hssection):
+        rval = []
+        for line in self.getsection_lines(hssection):
+            rval.append(line.idx)
+        return rval
+
+    def getsection_qty(self, hssection):
+        rval = 0
+        for line in self.getsection_lines(hssection):
+            rval += line.qty
+        return rval
+
+    def getsection_assessabletotal(self, hssection):
+        rval = 0
+        for line in self.getsection_lines(hssection):
+            rval += line.assessableprice
         return rval
 
     @property
@@ -168,9 +265,56 @@ class CustomsInvoice(vendors.VendorInvoice):
     def assessabletotal(self):
         return sum([x.assessableprice for x in self._lines])
 
-    def _classify(self):
-        logger.info("Attempting to classify")
-        pass
+    @property
+    def bcd(self):
+        return sum([x.bcd.value for x in self.lines])
+
+    @property
+    def cvd(self):
+        return sum([x.cvd.value for x in self.lines])
+
+    @property
+    def cec(self):
+        return sum([x.cec.value for x in self.lines])
+
+    @property
+    def cshec(self):
+        return sum([x.cshec.value for x in self.lines])
+
+    @property
+    def cvdec(self):
+        return sum([x.cvdec.value for x in self.lines])
+
+    @property
+    def cvdshec(self):
+        return sum([x.cvdshec.value for x in self.lines])
+
+    @property
+    def acvd(self):
+        return sum([x.acvd.value for x in self.lines])
+
+    @property
+    def dutypayable(self):
+        return self.bcd + self.cvd + self.cec + self.cshec + self.cvdec + self.cvdshec + self.acvd
+
+    @property
+    def effectiverate_cif(self):
+        return (self.dutypayable / self.assessabletotal) * 100
+
+    @property
+    def effectiverate_fob(self):
+        return (self.dutypayable / self.extendedtotal) * 100
+
+
+class DutyComponent(object):
+    def __init__(self, title, rate, notification, value):
+        self.title = title
+        self.rate = rate
+        self.notification = notification
+        self.value = value
+
+    def __repr__(self):
+        return "{0:>50} (@{1:>5}%) : {2:>13}   Notification : {3}".format(self.title, self.rate, self.value.native_string, self.notification)
 
 
 class CustomsInvoiceLine(vendors.VendorInvoiceLine):
@@ -183,13 +327,9 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
         self._idx = idx
 
     @property
-    def assessableprice(self):
-        rval = self.extendedprice
-        if self._invoice.freight is not None:
-            rval += self._invoice.freight * (self.extendedprice / self._invoice.extendedtotal)
-        if self._invoice.insurance_pc is not None:
-            rval += self.extendedprice * (self._invoice.insurance_pc / 100)
-        return rval
+    def dutypayable(self):
+        return self.bcd.value + self.cvd.value + self.cec.value + self.cshec.value + \
+               self.cvdec.value + self.cvdshec.value + self.acvd.value
 
     @property
     def idx(self):
@@ -205,6 +345,92 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
         if hs_section is None:
             logger.warning("Could not classify : " + self.ident)
         return hs_section
+
+    @property
+    def bcd(self):
+        return DutyComponent("BCD", self.hs_section.bcd, self.hs_section.bcd_notif,
+                             self.assessableprice * self.hs_section.bcd/100.0)
+
+    @property
+    def cvd(self):
+        return DutyComponent("CVD", self.hs_section.cvd, self.hs_section.cvd_notif,
+                             (self.assessableprice + self.bcd.value) * self.hs_section.cvd/100.0)
+
+    @property
+    def cec(self):
+        return DutyComponent("C EC", self.hs_section.cec, self.hs_section.cec_notif,
+                             self.bcd.value * self.hs_section.cec/100.0)
+
+    @property
+    def cshec(self):
+        return DutyComponent("C SHEC", self.hs_section.cshec,
+                             self.hs_section.cshec_notif,
+                             self.bcd.value * self.hs_section.cshec/100.0)
+
+    @property
+    def cvdec(self):
+        return DutyComponent("CVD EC", self.hs_section.cvdec, self.hs_section.cvdec_notif,
+                             self.cvd.value * self.hs_section.cvdec/100.0)
+
+    @property
+    def cvdshec(self):
+        return DutyComponent("CVD SHEC", self.hs_section.cvdshec,
+                             self.hs_section.cvdshec_notif,
+                             self.cvd.value * self.hs_section.cvdshec/100.0)
+
+    @property
+    def acvd(self):
+        return DutyComponent("SAD", self.hs_section.acvd,
+                             self.hs_section.acvd_notif,
+                             (self.assessableprice + self.bcd.value + self.cvd.value + self.cec.value + self.cshec.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.acvd/100.0)
+
+    @property
+    def invoice_fraction(self):
+        return self.extendedprice / self._invoice.extendedtotal
+
+    @property
+    def freight(self):
+        if self._invoice.freight is None:
+            return 0
+        return self._invoice.freight * self.invoice_fraction
+
+    @property
+    def insurance(self):
+        if self._invoice.insurance_pc is None:
+            return 0
+        return self.extendedprice * (self._invoice.insurance_pc / 100.0)
+
+    @property
+    def cifprice(self):
+        return self.extendedprice + self.freight + self.insurance
+
+    @property
+    def handling(self):
+        if self._invoice.handling_pc is None:
+            return 0
+        return self.cifprice * (self._invoice.handling_pc / 100.0)
+
+    @property
+    def assessableprice(self):
+        rval = self.extendedprice
+        rval += self.freight
+        rval += self.insurance
+        rval += self.handling
+        return rval
+
+    def print_duties(self):
+        print "{0:>60} : {2:>13}  {3:>13}".format("Extended Value", '', self.extendedprice.native_string, self.extendedprice.source_string)
+        print "{0:>60} : {2:>13}".format("Freight Value", '', self.freight, '')
+        print "{0:>60} : {2:>13}".format("Insurance Value", '', self.insurance, '')
+        print "{0:>60} : {2:>13}".format("Handling Value", '', self.handling, '')
+        print "{0:>60} : {2:>13}".format("Assessable Value", '', self.assessableprice, '')
+        print self.bcd
+        print self.cvd
+        print self.cec
+        print self.cshec
+        print self.cvdec
+        print self.cvdshec
+        print self.acvd
 
     def __repr__(self):
         if self.hs_section is not None:

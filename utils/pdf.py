@@ -13,8 +13,10 @@ import PyPDF2
 import os
 import subprocess
 
+import dox.wallet
 
-def merge_pdf(pdflist, outfilepath):
+
+def merge_pdf(pdflist, outfilepath, remove_sources=False):
     """
     Merges PDF files.
     Sources are PDF files whose paths are listed in ``pdflist`` and
@@ -32,6 +34,10 @@ def merge_pdf(pdflist, outfilepath):
         f = os.path.normpath(f)
         merger.append(PyPDF2.PdfFileReader(file(f, 'rb')))
     merger.write(outfilepath)
+    if remove_sources is True:
+        for f in pdflist:
+            if not dox.wallet.is_in_wallet(f):
+                os.remove(f)
     return outfilepath
 
 

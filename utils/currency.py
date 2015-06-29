@@ -23,6 +23,10 @@ class CurrencyDefinition(object):
             self._exchval = self._get_exchval(self._code)
 
     @property
+    def code(self):
+        return self._code
+
+    @property
     def symbol(self):
         if self._symbol is not None:
             return self._symbol
@@ -48,6 +52,15 @@ class CurrencyDefinition(object):
             raise KeyError(code)
         return rate
 
+    def __eq__(self, other):
+        if self.code != other.code:
+            return False
+        if self.symbol != other.symbol:
+            return False
+        if self.exchval != other.exchval:
+            return False
+        return True
+
 native_currency_defn = CurrencyDefinition(BASE_CURRENCY, BASE_CURRENCY_SYMBOL)
 
 
@@ -65,7 +78,7 @@ class CurrencyValue(object):
 
     @property
     def native_string(self):
-        return BASE_CURRENCY_SYMBOL + "{0:.2f}".format(self.native_value)
+        return BASE_CURRENCY_SYMBOL + "{0:,.2f}".format(self.native_value)
 
     @property
     def source_value(self):
@@ -73,7 +86,7 @@ class CurrencyValue(object):
 
     @property
     def source_string(self):
-        return self._currency_def.symbol + "{0:.2f}".format(self._val)
+        return self._currency_def.symbol + "{0:,.2f}".format(self._val)
 
     @property
     def source_currency(self):
