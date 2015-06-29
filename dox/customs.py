@@ -9,12 +9,15 @@ import copy
 
 import render
 import wallet
+import docstore
+
 from utils import pdf
+import entityhub.serialnos
 
 from utils.config import COMPANY_GOVT_POINT
 
 
-def gen_declaration(invoice, target_folder, copyt):
+def gen_declaration(invoice, target_folder, copyt, serialno):
     outpath = os.path.join(target_folder, "customs-declaration-" + copyt + '-' + str(invoice.inv_no) + ".pdf")
 
     given_data = copy.deepcopy(invoice.given_data)
@@ -35,13 +38,14 @@ def gen_declaration(invoice, target_folder, copyt):
              'extended_total_sc': render.escape_latex(invoice.extendedtotal.source_string),
              'assessable_total_sc': render.escape_latex(invoice.assessabletotal.source_string),
              'assessable_total_nc': render.escape_latex(invoice.assessabletotal.native_string),
-             'copyt': copyt
+             'copyt': copyt,
+             'sno': serialno
              }
 
     return render.render_pdf(stage, 'customs/decl.tex', outpath)
 
 
-def gen_valuation(invoice, target_folder):
+def gen_valuation(invoice, target_folder, serialno):
     outpath = os.path.join(target_folder, "customs-valuation-" + str(invoice.inv_no) + ".pdf")
 
     note1 = ''
@@ -75,35 +79,40 @@ def gen_valuation(invoice, target_folder):
              'include_note2': include_note2,
              'extended_total_sc': render.escape_latex(invoice.extendedtotal.source_string),
              'assessable_total_sc': render.escape_latex(invoice.assessabletotal.source_string),
-             'assessable_total_nc': render.escape_latex(invoice.assessabletotal.native_string)
+             'assessable_total_nc': render.escape_latex(invoice.assessabletotal.native_string),
+             'sno': serialno
              }
 
     return render.render_pdf(stage, 'customs/valuation.tex', outpath)
 
 
-def gen_rsp_declaration(invoice, target_folder):
+def gen_rsp_declaration(invoice, target_folder, serialno):
     outpath = os.path.join(target_folder, "customs-rsp-declaration-" + str(invoice.inv_no) + ".pdf")
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
              'inv_no': invoice.inv_no,
              'inv_date': invoice.inv_date,
-             'given_data': invoice.given_data}
+             'given_data': invoice.given_data,
+             'sno': serialno
+             }
 
     return render.render_pdf(stage, 'customs/rsp-declaration.tex', outpath)
 
 
-def gen_authorization(invoice, target_folder):
+def gen_authorization(invoice, target_folder, serialno):
     outpath = os.path.join(target_folder, "customs-authorization-" + str(invoice.inv_no) + ".pdf")
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
              'inv_no': invoice.inv_no,
              'inv_date': invoice.inv_date,
-             'given_data': invoice.given_data}
+             'given_data': invoice.given_data,
+             'sno': serialno
+             }
 
     return render.render_pdf(stage, 'customs/authorization.tex', outpath)
 
 
-def gen_tech_writeup(invoice, target_folder):
+def gen_tech_writeup(invoice, target_folder, serialno):
     outpath = os.path.join(target_folder, "customs-tech-writeup-" + str(invoice.inv_no) + ".pdf")
     sectable = []
     tqty = 0
@@ -138,32 +147,40 @@ def gen_tech_writeup(invoice, target_folder):
              'sectable': sectable,
              'tqty': tqty,
              'tvalue': render.escape_latex(tvalue.source_string),
-             'unclassified': unclassified}
+             'unclassified': unclassified,
+             'sno': serialno
+             }
     return render.render_pdf(stage, 'customs/technical-writeup.tex', outpath)
 
-def gen_verification_sections(invoice, target_folder):
+
+def gen_verification_sections(invoice, target_folder, register, serialno, efield, series):
     outpath = os.path.join(target_folder, "customs-verification-sections-" + str(invoice.inv_no) + ".pdf")
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
              'inv_no': invoice.inv_no,
              'inv_date': invoice.inv_date,
              'given_data': invoice.given_data,
-             'lines': invoice.lines}
+             'lines': invoice.lines,
+             'sno': serialno,
+             }
 
-    return render.render_pdf(stage, 'customs/verification-sections.tex', outpath)
+    outpath = render.render_pdf(stage, 'customs/verification-sections.tex', outpath)
+    if register is True:
+        docstore.register_document(serialno, docpath=outpath, doctype='CUST-VERIF-SEC', efield=efield, series=series)
+    return outpath
 
 
-def gen_submitdocs(invoice, target_folder):
-    lh_files = [gen_authorization(invoice, target_folder),
-                gen_rsp_declaration(invoice, target_folder),
-                gen_valuation(invoice, target_folder),
-                gen_tech_writeup(invoice, target_folder)
+def gen_submitdocs(invoice, target_folder, register, serialno, efield, series):
+    lh_files = [gen_authorization(invoice, target_folder, serialno),
+                gen_rsp_declaration(invoice, target_folder, serialno),
+                gen_valuation(invoice, target_folder, serialno),
+                gen_tech_writeup(invoice, target_folder, serialno)
                 ]
     lh_fpath = os.path.join(target_folder, "customs-printable-lh-" + str(invoice.inv_no) + ".pdf")
     lh_fpath = pdf.merge_pdf(lh_files, lh_fpath, remove_sources=True)
 
-    pp_files = [gen_declaration(invoice, target_folder, 'ORIGINAL'),
-                gen_declaration(invoice, target_folder, 'DUPLICATE'),
+    pp_files = [gen_declaration(invoice, target_folder, 'ORIGINAL', serialno),
+                gen_declaration(invoice, target_folder, 'DUPLICATE', serialno),
                 wallet.get_document_path('CUSTOMS-DECL'),
                 wallet.get_document_path('CUSTOMS-DECL'),
                 wallet.get_document_path('IEC'),
@@ -171,10 +188,13 @@ def gen_submitdocs(invoice, target_folder):
     pp_fpath = os.path.join(target_folder, "customs-printable-pp-" + str(invoice.inv_no) + ".pdf")
     pp_fpath = pdf.merge_pdf(pp_files, pp_fpath, remove_sources=True)
 
+    if register is True:
+        docstore.register_document(serialno, docpath=lh_fpath, doctype='CUST-PRINTABLE-LH', efield=efield, series=series)
+        docstore.register_document(serialno, docpath=pp_fpath, doctype='CUST-PRINTABLE-PP', efield=efield, series=series)
     files = [lh_fpath, pp_fpath]
     return files
 
-def gen_verification_checklist(invoice, target_folder):
+def gen_verification_checklist(invoice, target_folder, register, serialno, efield, series):
     outpath = os.path.join(target_folder, "customs-verification-duties-" + str(invoice.inv_no) + ".pdf")
     summary = []
     for section in invoice.hssections:
@@ -188,7 +208,8 @@ def gen_verification_checklist(invoice, target_folder):
                   'cec': sum([x.cec.value for x in invoice.getsection_lines(hssection=section)]),
                   'cshec': sum([x.cshec.value for x in invoice.getsection_lines(hssection=section)]),
                   'cvdec': sum([x.cvdec.value for x in invoice.getsection_lines(hssection=section)]),
-                  'cvdshec': sum([x.cvdshec.value for x in invoice.getsection_lines(hssection=section)])}
+                  'cvdshec': sum([x.cvdshec.value for x in invoice.getsection_lines(hssection=section)]),
+                  }
         summary.append(secsum)
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
@@ -197,21 +218,33 @@ def gen_verification_checklist(invoice, target_folder):
              'given_data': invoice.given_data,
              'lines': invoice.lines,
              'summary': summary,
-             'invoice': invoice}
+             'invoice': invoice,
+             'sno': serialno}
+    outpath = render.render_pdf(stage, 'customs/verification-duties.tex', outpath)
+    if register is True:
+        docstore.register_document(serialno, docpath=outpath, doctype='CUST-VERIF-BOE',
+                                   efield=efield, series=series)
+    return outpath
 
-    return render.render_pdf(stage, 'customs/verification-duties.tex', outpath)
 
-
-def gen_verificationdocs(invoice, target_folder):
-    files = [gen_verification_sections(invoice, target_folder),
-             gen_verification_checklist(invoice, target_folder)
+def gen_verificationdocs(invoice, target_folder, register, serialno, efield, series):
+    files = [gen_verification_sections(invoice, target_folder, register, serialno, efield, series),
+             gen_verification_checklist(invoice, target_folder, register, serialno, efield, series)
              ]
     return files
 
 
-def generate_docs(invoice, target_folder=None):
+def generate_docs(invoice, target_folder=None, serialno=None, register=True, efield=None):
+    if efield is None:
+        efield = ' '.join([invoice.vendor_name, str(invoice.inv_no)])
+    if serialno is None:
+        serialno = entityhub.serialnos.get_serialno('CUST',
+                                                    efield,
+                                                    register=register)
     if target_folder is None:
         target_folder = invoice.source_folder
-    files = gen_submitdocs(invoice, target_folder)
-    files.extend(gen_verificationdocs(invoice, target_folder))
+    files = gen_submitdocs(invoice, target_folder, register=register,
+                           serialno=serialno, efield=efield, series='CUST')
+    files.extend(gen_verificationdocs(invoice, target_folder, register=register,
+                                      serialno=serialno, efield=efield, series='CUST'))
     return files

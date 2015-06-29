@@ -65,6 +65,10 @@ class VendorInvoice(object):
         self._acquire_lines()
 
     @property
+    def vendor_name(self):
+        return self._vendor.name
+
+    @property
     def currency(self):
         return self._vendor.currency
 

@@ -9,6 +9,9 @@ logger = log.get_logger(__name__, log.DEFAULT)
 import os
 import dataset
 
+import logging
+logging.getLogger('dataset.persistence.database').setLevel(logging.WARNING)
+
 from utils.config import INSTANCE_ROOT
 
 state_ds = dataset.connect('sqlite:///' + os.path.join(INSTANCE_ROOT, 'db', 'state.db'))

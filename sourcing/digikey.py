@@ -790,7 +790,7 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
 class DigiKeyInvoice(customs.CustomsInvoice):
     def __init__(self, vendor=None, inv_yaml=None):
         if vendor is None:
-            vendor = VendorDigiKey('digikey', 'transient', 'electronics',
+            vendor = VendorDigiKey('digikey', 'DIGIKEY', 'electronics',
                                    currency_code='USD', currency_symbol='US$')
         if inv_yaml is None:
             inv_yaml = os.path.join(INSTANCE_ROOT, 'scratch', 'customs', 'inv_data.yaml')
