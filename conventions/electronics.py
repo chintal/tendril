@@ -99,7 +99,8 @@ nofp_strs = [
 
 fpiswire_strs = [
     "CABLE ROUND",
-    "WIRE"
+    "WIRE",
+    "CABLE SIP SSC"
 ]
 
 fpismodlen_strs = [

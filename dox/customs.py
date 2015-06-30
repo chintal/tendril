@@ -39,7 +39,7 @@ def gen_declaration(invoice, target_folder, copyt, serialno):
              'assessable_total_sc': render.escape_latex(invoice.assessabletotal.source_string),
              'assessable_total_nc': render.escape_latex(invoice.assessabletotal.native_string),
              'copyt': copyt,
-             'sno': serialno
+             'sno': serialno + '.5'
              }
 
     return render.render_pdf(stage, 'customs/decl.tex', outpath)
@@ -80,7 +80,7 @@ def gen_valuation(invoice, target_folder, serialno):
              'extended_total_sc': render.escape_latex(invoice.extendedtotal.source_string),
              'assessable_total_sc': render.escape_latex(invoice.assessabletotal.source_string),
              'assessable_total_nc': render.escape_latex(invoice.assessabletotal.native_string),
-             'sno': serialno
+             'sno': serialno + '.3'
              }
 
     return render.render_pdf(stage, 'customs/valuation.tex', outpath)
@@ -93,7 +93,7 @@ def gen_rsp_declaration(invoice, target_folder, serialno):
              'inv_no': invoice.inv_no,
              'inv_date': invoice.inv_date,
              'given_data': invoice.given_data,
-             'sno': serialno
+             'sno': serialno + '.2'
              }
 
     return render.render_pdf(stage, 'customs/rsp-declaration.tex', outpath)
@@ -106,7 +106,7 @@ def gen_authorization(invoice, target_folder, serialno):
              'inv_no': invoice.inv_no,
              'inv_date': invoice.inv_date,
              'given_data': invoice.given_data,
-             'sno': serialno
+             'sno': serialno + '.1'
              }
 
     return render.render_pdf(stage, 'customs/authorization.tex', outpath)
@@ -148,7 +148,7 @@ def gen_tech_writeup(invoice, target_folder, serialno):
              'tqty': tqty,
              'tvalue': render.escape_latex(tvalue.source_string),
              'unclassified': unclassified,
-             'sno': serialno
+             'sno': serialno + '.4'
              }
     return render.render_pdf(stage, 'customs/technical-writeup.tex', outpath)
 
@@ -161,7 +161,7 @@ def gen_verification_sections(invoice, target_folder, register, serialno, efield
              'inv_date': invoice.inv_date,
              'given_data': invoice.given_data,
              'lines': invoice.lines,
-             'sno': serialno,
+             'sno': serialno + '.6',
              }
 
     outpath = render.render_pdf(stage, 'customs/verification-sections.tex', outpath)
@@ -219,7 +219,7 @@ def gen_verification_checklist(invoice, target_folder, register, serialno, efiel
              'lines': invoice.lines,
              'summary': summary,
              'invoice': invoice,
-             'sno': serialno}
+             'sno': serialno + '.7'}
     outpath = render.render_pdf(stage, 'customs/verification-duties.tex', outpath)
     if register is True:
         docstore.register_document(serialno, docpath=outpath, doctype='CUST-VERIF-BOE',
@@ -247,4 +247,4 @@ def generate_docs(invoice, target_folder=None, serialno=None, register=True, efi
                            serialno=serialno, efield=efield, series='CUST')
     files.extend(gen_verificationdocs(invoice, target_folder, register=register,
                                       serialno=serialno, efield=efield, series='CUST'))
-    return files
+    return serialno

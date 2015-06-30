@@ -12,7 +12,7 @@
 \pdfmapfile{=tfrupee.map}
 \usepackage{lastpage}
 
-
+\newcommand{\sno}{%{{stage.sno%}}}
 \newcommand{\invno}{%{{stage.inv_no%}}}
 
 \usepackage[%
@@ -24,8 +24,8 @@
 
 \lehead{\includegraphics[width=0.12in]{%{{stage.logo%}}}\hspace{0.01in} \tt %{{stage.company%}}}    %% Top left on odd pages
 \rohead{\tt %{{stage.company%}}\hspace{0.1in}\includegraphics[width=0.12in]{%{{stage.logo%}}}}      %% Top right on even pages
-\lohead{{\small Customs Duties Verification } \invno}    %% Top left on odd pages
-\rehead{{\small Customs Duties Verification } \invno}    %% Top right on even pages
+\lohead{{\small Customs Duties Verification } \sno}    %% Top left on odd pages
+\rehead{{\small Customs Duties Verification } \sno}    %% Top right on even pages
 \chead{}                       %% Top center
 \cfoot{Page \thepage\ of \pageref{LastPage}}
 

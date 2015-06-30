@@ -19,20 +19,45 @@ snodoc_table = utils.state.state_ds['snodoc']
 def list_all_serialnos():
     results = sno_table.find()
     for result in results:
-        print result['sno'] + ' :  ' + result['efield']
+        print result['sno'] + ' :  ' + result['efield'] + ' : ' + result['parent']
+
+
+def serialno_exists(serial):
+    results = sno_table.find(sno=serial)
+    if len(results) > 0:
+        if len(results) > 1:
+            logger.warning("Possible duplicate sno : " + serial)
+        return True
 
 
 def register_serialno(sno, efield=None):
     logger.info("Registering new serial number : " + sno)
-    sno_table.insert(dict(sno=sno, efield=efield))
+    sno_table.upsert(dict(sno=sno, efield=efield, keys=['sno'], parent=None))
 
 
 def get_series(sno):
     return sno.split('-')[0]
 
 
-def delete_serialno(sno):
+def delete_serialno(sno, linked=False):
     pass
+
+
+def link_serialno(child, parent):
+    logger.info("Linking " + child + " to parent " + parent)
+    sno_table.update(dict(sno=child, parent=parent), keys=['sno'])
+
+
+def get_parent_serialno(sno):
+    results = sno_table.find(sno=sno)
+    if len(results) == 0:
+        return None
+    return results[0]['parent']
+
+
+def get_child_serialnos(sno):
+    results = sno_table.find(parent=sno)
+    return [x['sno'] for x in results]
 
 
 def get_serialno(series, efield=None, register=True, start_seed='100A'):
