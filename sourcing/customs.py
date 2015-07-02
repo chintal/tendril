@@ -125,7 +125,7 @@ hs_classifier = CustomsClassifier()
 
 
 class CustomsInvoice(vendors.VendorInvoice):
-    def __init__(self, vendor, inv_yaml):
+    def __init__(self, vendor, inv_yaml, working_folder=None):
         vendor_defaults_file = os.path.join(CUSTOMSDEFAULTS_FOLDER, vendor._name + '.yaml')
         self._data = {}
         if os.path.exists(vendor_defaults_file):
@@ -135,6 +135,10 @@ class CustomsInvoice(vendors.VendorInvoice):
         else:
             logger.warning("Vendor Customs Defaults File Not Found : " + vendor_defaults_file)
         self._source_folder = os.path.split(inv_yaml)[0]
+        if working_folder is None:
+            self._working_folder = self._source_folder
+        else:
+            self._working_folder = working_folder
         with open(inv_yaml, 'r') as f:
             inv_data = yaml.load(f)
             self._data.update(inv_data)
@@ -210,6 +214,16 @@ class CustomsInvoice(vendors.VendorInvoice):
     @property
     def source_folder(self):
         return self._source_folder
+
+    @property
+    def working_folder(self):
+        return self._working_folder
+
+    @property
+    def source_files(self):
+        rval = [(os.path.join(self._source_folder, 'inv_data.yaml'), 'INVOICE-DATA-YAML'),
+                (os.path.join(self._source_folder, self._data['invoice_file']), 'INVOICE-FILE-CSV')]
+        return rval
 
     @property
     def idxs(self):

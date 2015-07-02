@@ -9,6 +9,7 @@ logger = log.get_logger(__name__, log.INFO)
 import idstring
 
 import utils.state
+import dox.docstore
 
 
 sno_table = utils.state.state_ds['sno']
@@ -19,7 +20,7 @@ snodoc_table = utils.state.state_ds['snodoc']
 def list_all_serialnos():
     results = sno_table.find()
     for result in results:
-        print result['sno'] + ' :  ' + result['efield'] + ' : ' + result['parent']
+        print result['sno'] + ' :  ' + str(result['efield']) + ' : ' + str(result['parent'])
 
 
 def serialno_exists(serial):
@@ -30,17 +31,23 @@ def serialno_exists(serial):
         return True
 
 
-def register_serialno(sno, efield=None):
+def register_serialno(sno, efield=None, parent=None):
     logger.info("Registering new serial number : " + sno)
-    sno_table.upsert(dict(sno=sno, efield=efield, keys=['sno'], parent=None))
+    sno_table.upsert(dict(sno=sno, efield=efield, parent=parent), keys=['sno'])
 
 
 def get_series(sno):
     return sno.split('-')[0]
 
 
-def delete_serialno(sno, linked=False):
-    pass
+def delete_serialno(sno, recurse=False, docs=False):
+    if recurse is True:
+        for sno in get_child_serialnos(sno):
+            delete_serialno(sno, True, docs)
+    if docs is True:
+        for document in dox.docstore.get_sno_documents(sno):
+            dox.docstore.delete_document(document)
+    sno_table.delete(sno=sno)
 
 
 def link_serialno(child, parent):

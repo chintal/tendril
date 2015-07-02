@@ -788,18 +788,18 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
 
 
 class DigiKeyInvoice(customs.CustomsInvoice):
-    def __init__(self, vendor=None, inv_yaml=None):
+    def __init__(self, vendor=None, inv_yaml=None, working_folder=None):
         if vendor is None:
             vendor = VendorDigiKey('digikey', 'DIGIKEY', 'electronics',
                                    currency_code='USD', currency_symbol='US$')
         if inv_yaml is None:
             inv_yaml = os.path.join(INSTANCE_ROOT, 'scratch', 'customs', 'inv_data.yaml')
-        self._working_folder = os.path.split(inv_yaml)[0]
-        super(DigiKeyInvoice, self).__init__(vendor, inv_yaml)
+
+        super(DigiKeyInvoice, self).__init__(vendor, inv_yaml, working_folder)
 
     def _acquire_lines(self):
         logger.info("Acquiring Lines")
-        invoice_file = os.path.join(self._working_folder, self._data['invoice_file'])
+        invoice_file = os.path.join(self._source_folder, self._data['invoice_file'])
         with open(invoice_file) as f:
             reader = csv.reader(f)
             header = None

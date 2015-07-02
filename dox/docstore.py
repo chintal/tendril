@@ -12,22 +12,65 @@ import os
 import shutil
 
 import utils.state
-
 from utils.config import DOCSTORE_ROOT
 
 snodoc_table = utils.state.state_ds['snodoc']
 
 
-def list_documents(sno):
-    results = snodoc_table.find(sno=sno)
+class DocumentBase(object):
+    def __init__(self, doctype, docpath, timestamp, efield):
+        self.doctype = doctype
+        self.docpath = docpath
+        self.timestamp = timestamp
+        self.efield = efield
+
+    @property
+    def sno(self):
+        results = snodoc_table.find(docpath=self.docpath)
+        rval = []
+        for result in results:
+            rval.append(result['sno'])
+        return rval
+
+    def __repr__(self):
+        return '{0:<35} {1:<20} {3:<25} {2:<40} '.format(str(self.timestamp), str(self.doctype), str(self.docpath), str(self.efield))
+
+
+def list_sno_documents(sno):
+    results = get_sno_documents(sno)
     print ("Documents for Serial No. : " + sno)
     for result in results:
-        print '{0:<35} {1:<20} {3:<25} {2:<40} '.format(str(result['timestamp']), str(result['doctype']), str(result['docpath']), str(result['efield']))
+        print result
+
+
+def get_sno_documents(sno):
+    if sno == '*':
+        results = snodoc_table.find()
+    else:
+        results = snodoc_table.find(sno=sno)
+    rval = []
+    for result in results:
+        rval.append(DocumentBase(result['doctype'], result['docpath'], result['timestamp'], result['efield']))
+    return rval
+
+
+def delete_document(docpath):
+    deregister_document(docpath, sno='*')
+    os.remove(os.path.join(DOCSTORE_ROOT, docpath))
+
+
+def deregister_document(docpath, sno=None):
+    if sno is None:
+        raise ValueError("Specify serial number or '*' for all")
+    elif sno == '*':
+        snodoc_table.delete(docpath=docpath)
+    else:
+        snodoc_table.delete(docpath=docpath, sno=sno)
 
 
 def insert_document(sno, docpath, series):
     fname = os.path.split(docpath)[1]
-    storepath = os.path.join(DOCSTORE_ROOT, series, sno + '-' + fname)
+    storepath = os.path.join(DOCSTORE_ROOT, series.replace('/', os.path.sep), sno + '-' + fname)
     if not os.path.exists(os.path.dirname(storepath)):
         os.makedirs(os.path.dirname(storepath))
     shutil.copyfile(docpath, storepath)

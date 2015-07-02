@@ -153,24 +153,7 @@ def gen_tech_writeup(invoice, target_folder, serialno):
     return render.render_pdf(stage, 'customs/technical-writeup.tex', outpath)
 
 
-def gen_verification_sections(invoice, target_folder, register, serialno, efield, series):
-    outpath = os.path.join(target_folder, "customs-verification-sections-" + str(invoice.inv_no) + ".pdf")
-    stage = {'date': datetime.date.today().isoformat(),
-             'signatory': COMPANY_GOVT_POINT,
-             'inv_no': invoice.inv_no,
-             'inv_date': invoice.inv_date,
-             'given_data': invoice.given_data,
-             'lines': invoice.lines,
-             'sno': serialno + '.6',
-             }
-
-    outpath = render.render_pdf(stage, 'customs/verification-sections.tex', outpath)
-    if register is True:
-        docstore.register_document(serialno, docpath=outpath, doctype='CUST-VERIF-SEC', efield=efield, series=series)
-    return outpath
-
-
-def gen_submitdocs(invoice, target_folder, register, serialno, efield, series):
+def gen_submitdocs(invoice, target_folder, serialno):
     lh_files = [gen_authorization(invoice, target_folder, serialno),
                 gen_rsp_declaration(invoice, target_folder, serialno),
                 gen_valuation(invoice, target_folder, serialno),
@@ -188,13 +171,26 @@ def gen_submitdocs(invoice, target_folder, register, serialno, efield, series):
     pp_fpath = os.path.join(target_folder, "customs-printable-pp-" + str(invoice.inv_no) + ".pdf")
     pp_fpath = pdf.merge_pdf(pp_files, pp_fpath, remove_sources=True)
 
-    if register is True:
-        docstore.register_document(serialno, docpath=lh_fpath, doctype='CUST-PRINTABLE-LH', efield=efield, series=series)
-        docstore.register_document(serialno, docpath=pp_fpath, doctype='CUST-PRINTABLE-PP', efield=efield, series=series)
-    files = [lh_fpath, pp_fpath]
+    files = [(lh_fpath, 'CUST-PRINTABLE-LH'), (pp_fpath, 'CUST-PRINTABLE-PP')]
     return files
 
-def gen_verification_checklist(invoice, target_folder, register, serialno, efield, series):
+
+def gen_verification_sections(invoice, target_folder, serialno):
+    outpath = os.path.join(target_folder, "customs-verification-sections-" + str(invoice.inv_no) + ".pdf")
+    stage = {'date': datetime.date.today().isoformat(),
+             'signatory': COMPANY_GOVT_POINT,
+             'inv_no': invoice.inv_no,
+             'inv_date': invoice.inv_date,
+             'given_data': invoice.given_data,
+             'lines': invoice.lines,
+             'sno': serialno + '.6',
+             }
+
+    outpath = render.render_pdf(stage, 'customs/verification-sections.tex', outpath)
+    return outpath, 'CUST-VERIF-SEC'
+
+
+def gen_verification_checklist(invoice, target_folder, serialno):
     outpath = os.path.join(target_folder, "customs-verification-duties-" + str(invoice.inv_no) + ".pdf")
     summary = []
     for section in invoice.hssections:
@@ -221,15 +217,12 @@ def gen_verification_checklist(invoice, target_folder, register, serialno, efiel
              'invoice': invoice,
              'sno': serialno + '.7'}
     outpath = render.render_pdf(stage, 'customs/verification-duties.tex', outpath)
-    if register is True:
-        docstore.register_document(serialno, docpath=outpath, doctype='CUST-VERIF-BOE',
-                                   efield=efield, series=series)
-    return outpath
+    return outpath, 'CUST-VERIF-BOE'
 
 
-def gen_verificationdocs(invoice, target_folder, register, serialno, efield, series):
-    files = [gen_verification_sections(invoice, target_folder, register, serialno, efield, series),
-             gen_verification_checklist(invoice, target_folder, register, serialno, efield, series)
+def gen_verificationdocs(invoice, target_folder, serialno):
+    files = [gen_verification_sections(invoice, target_folder, serialno),
+             gen_verification_checklist(invoice, target_folder, serialno)
              ]
     return files
 
@@ -238,13 +231,16 @@ def generate_docs(invoice, target_folder=None, serialno=None, register=True, efi
     if efield is None:
         efield = ' '.join([invoice.vendor_name, str(invoice.inv_no)])
     if serialno is None:
-        serialno = entityhub.serialnos.get_serialno('CUST',
+        serialno = entityhub.serialnos.get_serialno('PINV',
                                                     efield,
                                                     register=register)
     if target_folder is None:
         target_folder = invoice.source_folder
-    files = gen_submitdocs(invoice, target_folder, register=register,
-                           serialno=serialno, efield=efield, series='CUST')
-    files.extend(gen_verificationdocs(invoice, target_folder, register=register,
-                                      serialno=serialno, efield=efield, series='CUST'))
+    files = gen_submitdocs(invoice, target_folder, serialno=serialno)
+    files.extend(gen_verificationdocs(invoice, target_folder, serialno=serialno))
+    files.extend(invoice.source_files)
+    if register is True:
+        for document in files:
+            docstore.register_document(serialno, docpath=document[0], doctype=document[1],
+                                       efield=efield, series='PINV')
     return serialno
