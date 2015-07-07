@@ -19,25 +19,9 @@ import gedaif.gsymlib
 import entityhub.transforms
 
 
-class StockXlsReader(object):
-    def __init__(self, xlf, sname, location, tfpath):
-        """
-
-        :type xlf: utils.ooutils.XLFile
-        """
+class InventoryReaderBase(object):
+    def __init__(self, location, tfpath):
         self.location = location
-        self.sheetname = sname
-        assert isinstance(xlf, utils.libreoffice.XLFile)
-        self._xlf = xlf
-        self.filepath = xlf.fpath
-        self.qtydate = None
-
-        self._csvpath = xlf.get_csv_path(sname)
-        self._csvfile = open(self._csvpath, 'rb')
-        self._csvreader = csv.reader(self._csvfile)
-        self._colident = 0
-        self._colqty = -1
-
         self._tfpath = tfpath
         self.tf = None
         if os.path.isfile(tfpath):
@@ -45,6 +29,31 @@ class StockXlsReader(object):
         else:
             logger.warning("Transform File missing : " + self._tfpath)
 
+
+class InventoryDBReader(InventoryReaderBase):
+    def __init__(self, location, tfpath):
+        super(InventoryDBReader, self).__init__(location, tfpath)
+
+
+
+class StockXlsReader(InventoryReaderBase):
+    def __init__(self, xlf, sname, location, tfpath):
+        """
+
+            :type xlf: utils.ooutils.XLFile
+            """
+        super(StockXlsReader, self).__init__(location, tfpath)
+
+        self.sheetname = sname
+        assert isinstance(xlf, utils.libreoffice.XLFile)
+        self._xlf = xlf
+        self.filepath = xlf.fpath
+        self.qtydate = None
+        self._csvpath = xlf.get_csv_path(sname)
+        self._csvfile = open(self._csvpath, 'rb')
+        self._csvreader = csv.reader(self._csvfile)
+        self._colident = 0
+        self._colqty = -1
         self._skip_to_header()
         self.row_gen = self._row_gen()
         self.tf_row_gen = self._tf_row_gen()
@@ -150,31 +159,6 @@ def gen_canonical_transform(elec_inven_data_idx, regen=True):
                     in_symlib = False
                 outw.writerow((line[0], line[0], line[0], 'NEW', in_symlib))
         outf.close()
-
-
-def helper_transform(ident):
-    """
-
-    :type ident: str
-    """
-    cident = ident
-    if ident.startswith(('CAP CER SMD', 'RES SMD')):
-        if ident.endswith('0805'):
-            cident = ident
-        elif ident.endswith(('F', 'E', 'K', 'M')):
-            cident = ident + ' 0805'
-        else:
-            logger.warning("Possibly Malformed ident : " + ident)
-            cident = ident
-    if ident.startswith(('CRYSTAL 2PIN')):
-        if ident.endswith('HC49'):
-            cident = ident
-        elif ident.endswith(('Hz')):
-            cident = ident + ' HC49'
-        else:
-            logger.warning("Possibly Malformed ident : " + ident)
-            cident = ident
-    return cident
 
 
 if __name__ == "__main__":

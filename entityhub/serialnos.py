@@ -17,6 +17,12 @@ nsno_table = utils.state.state_ds['nsno']
 snodoc_table = utils.state.state_ds['snodoc']
 
 
+def get_all_serialnos():
+    results = sno_table.find()
+    for result in results:
+        yield result['sno']
+
+
 def list_all_serialnos():
     results = sno_table.find()
     for result in results:
@@ -38,6 +44,15 @@ def register_serialno(sno, efield=None, parent=None):
 
 def get_series(sno):
     return sno.split('-')[0]
+
+
+def delete_series(series):
+    for serialno in get_all_serialnos():
+        if get_series(serialno) == series:
+            logger.info("Deleting Serial No : " + serialno)
+            delete_serialno(serialno)
+    logger.info("Deleting Series : " + series)
+    nsno_table.delete(series=series)
 
 
 def delete_serialno(sno, recurse=False, docs=False):

@@ -9,8 +9,10 @@ logger = log.get_logger(__name__, log.INFO)
 import os
 import csv
 
-import acquire
 from utils.config import ELECTRONICS_INVENTORY_DATA
+
+import acquire
+from db.controller import get_inventorylocationcode
 
 
 inventory_locations = []
@@ -68,9 +70,14 @@ class InventoryLocation(object):
         self._name = name
         self._dname = dname
         self._lines = []
+        self._code = None
+
         self._reader = reader
         if reader is not None:
             self._load_from_reader()
+
+    def _get_code(self):
+        self._code = get_inventorylocationcode(self._dname)
 
     @property
     def name(self):
