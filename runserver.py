@@ -10,4 +10,4 @@ from frontend.startup.init_app import init_app
 init_app(app, db)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

@@ -1,0 +1,13 @@
+.valign-middle {
+    display: table;
+}
+
+.valign-middle .columns {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.valign-middle .columns,
+.valign-middle [class*="column"] + [class*="column"]:last-child {
+    float: none;
+}

@@ -1,18 +1,18 @@
 {% macro render_field(field, label=None, label_visible=true, right_url=None, right_label=None) -%}
-    <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+    <div {% if field.errors %} class="error"{% endif %}>
         {% if field.type != 'HiddenField' and label_visible %}
             {% if not label %}{% set label=field.label.text %}{% endif %}
-            <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
+            <label {% if field.errors %} class="error"{% endif %}>{{ label|safe }}</label>
         {% endif %}
         {{ field(class_='form-control', **kwargs) }}
         {% if field.errors %}
             {% for e in field.errors %}
-                <p class="help-block">{{ e }}</p>
+                <small class="error">{{ e }}</small>
             {% endfor %}
         {% endif %}
     </div>
 {%- endmacro %}
- 
+
 {% macro render_checkbox_field(field, label=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
     <div class="checkbox">
@@ -21,7 +21,7 @@
         </label>
     </div>
 {%- endmacro %}
- 
+
 {% macro render_radio_field(field) -%}
     {% for value, label, checked in field.iter_choices() %}
         <div class="radio">
@@ -35,8 +35,5 @@
 
 {% macro render_submit_field(field, label=None, tabindex=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
-    {#<button type="submit" class="form-control btn btn-default btn-primary">{{label}}</button>#}
-    <input type="submit" value="{{label}}"
-           {% if tabindex %}tabindex="{{ tabindex }}"{% endif %}
-           >
+    <input type="submit" class="button small expand radius" value="{{label}}" {% if tabindex %}tabindex="{{ tabindex }}"{% endif %} >
 {%- endmacro %}
