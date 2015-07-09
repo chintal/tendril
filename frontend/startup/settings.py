@@ -41,6 +41,8 @@ APP_SYSTEM_ERROR_SUBJECT_LINE = APP_NAME + " system error"
 CSRF_ENABLED = True
 
 # Flask-User settings
-USER_APP_NAME                   = APP_NAME
-USER_LOGIN_TEMPLATE             = 'flask_user/login_or_register.html'
-USER_REGISTER_TEMPLATE          = 'flask_user/login_or_register.html'
+USER_APP_NAME                           = APP_NAME
+USER_LOGIN_TEMPLATE                     = 'flask_user/login_or_register.html'
+USER_REGISTER_TEMPLATE                  = 'flask_user/login_or_register.html'
+USER_AFTER_CHANGE_PASSWORD_ENDPOINT     = 'user.profile'
+USER_AFTER_CHANGE_USERNAME_ENDPOINT     = 'user.profile'

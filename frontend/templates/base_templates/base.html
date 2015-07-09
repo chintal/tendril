@@ -3,7 +3,7 @@
   <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title> TITLE | Koala </title>
+      <title> {% if pagetitle %} {{ pagetitle }} | {% endif %} Koala </title>
       <link rel="stylesheet" href="/static/css/normalize.css" />
       <link rel="stylesheet" href="/static/css/foundation.css" />
       <link rel="stylesheet" href="/static/css/foundation-icons.css">
@@ -35,7 +35,7 @@
             </li>
 	        <li class="has-dropdown">
 	    	    {% if current_user.is_authenticated() %}
-                <a href="#">{{ current_user.fullname or current_user.user_auth.username }}</a>
+                <a href="#">{{ current_user.full_name or current_user.user_auth.username }}</a>
                 <ul class="dropdown">
 		  		    <li><a href="{{ url_for('user_profile_page') }}">User Profile</a></li>
                     <li><a href="{{ url_for('user.logout') }}">Log Out</a></li>
@@ -62,7 +62,10 @@
 		      {% if category=='error' %}
 			    {% set category='danger' %}
 		      {% endif %}
-		      <div data-alert class="alert-box {{category}} radius">{{ message|safe }}<a href="#" class="close">⊗</a></div>
+		      <div data-alert class="alert-box {{category}} radius">
+                  {{ message|safe }}
+                  <a href="#" class="close">⊗</a>
+              </div>
 		    {% endfor %}
 	      {% endif %}
 	  {%- endwith %}
