@@ -132,3 +132,13 @@ class CurrencyValue(object):
             return self
         else:
             return self.__add__(other.__mul__(-1))
+
+    def __cmp__(self, other):
+        if not isinstance(other, CurrencyValue):
+            raise TypeError
+        if self.native_value == other.native_value:
+            return 0
+        elif self.native_value < other.native_value:
+            return -1
+        else:
+            return 1

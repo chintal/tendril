@@ -67,7 +67,7 @@
   \hline
   \rowcolor[gray]{0.9}\centering\textbf{S.No.} & \centering\textbf{Item} & \centering\textbf{Qty Required} &\centering\textbf{Recieved} & \centering\textbf{Shortage}\tabularnewline\hline
   %{ for line in stage.lines %}
-  \small{%{{loop.index%}}.} & \small{%{{line.ident%}}} & {%{{line.qty%}}} &  &  \tabularnewline\hline 
+  \small{%{{loop.index%}}.} & \small{%{{line.ident|escape_latex%}}} & {%{{line.qty%}}} &  &  \tabularnewline\hline 
   %{ endfor %} 
   
 \end{tabularx}

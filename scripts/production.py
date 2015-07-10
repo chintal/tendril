@@ -29,6 +29,7 @@ bomlist = []
 orderfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'production', 'current')
 orderfile = os.path.join(orderfolder, 'order.yaml')
 
+
 with open(orderfile, 'r') as f:
     data = yaml.load(f)
 
@@ -43,6 +44,7 @@ for k, v in data['cards'].iteritems():
     bomlist.append(obom)
 
 cobom = boms.outputbase.CompositeOutputBom(bomlist)
+cobom.collapse_wires()
 
 with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
     logger.info('Exporting Composite Output BOM to File : ' + os.linesep + os.path.join(orderfolder, 'cobom.csv'))
@@ -109,7 +111,7 @@ for card, qty in sorted(data['cards'].iteritems()):
         # TODO Correct Series?
         series = 'QDA'
         # Use PCB/Card Serial Number instead
-        cardsno = serialnos.get_serialno("QDA", card)
+        cardsno = serialnos.get_serialno("QDA", efield=card, register=False)
         # TODO Figure out cables vs PCBs?
         # TODO Register Generated Documentation as well
         am_path = dox.production.gen_pcb_am(cardfolder, card,
@@ -117,7 +119,8 @@ for card, qty in sorted(data['cards'].iteritems()):
                                             cardsno,
                                             indentsno)
         manifestfiles.append(am_path)
-        serialnos.register_document(cardsno, am_path, "ASSEMBLY MANIFEST", card)
+        logger.info("Trying to Register : " + cardsno + " : " + am_path)
+        # serialnos.register_document(cardsno, am_path, "ASSEMBLY MANIFEST", card)
 
 
 merge_pdf(manifestfiles, os.path.join(orderfolder, 'manifests.pdf'))

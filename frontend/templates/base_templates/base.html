@@ -75,6 +75,25 @@
     <div class="small-12 large-10 columns small-centered">
         {% block main %}{% endblock %}
     </div>
+
+    <footer style="margin-top:1px;">
+    <div class="row">
+        <div class="small-12 large-10 columns small-centered" id="footer">
+        <div class="small-6 columns copyright">
+              Copyright © 2015 Quazar Technologies Pvt. Ltd. All Rights Reserved. <br>
+              Powered by Koala
+        </div>
+        <div class="small-6 columns">
+          <ul>
+            <li class="first"><a href=" {{ url_for('home_page') }} ">Home</a></li>
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">Sources</a></li>
+          </ul>
+        </div>
+        </div>
+    </div>
+    </footer>
+
     <script src="/static/js/vendor/jquery.js"></script>
     <script src="/static/js/foundation/foundation.js"></script>
     <script src="/static/js/foundation/foundation.topbar.js"></script>
@@ -82,14 +101,18 @@
     <script src="/static/js/foundation/foundation.magellan.js"></script>
     <script src="/static/js/foundation/foundation.equalizer.js"></script>
     <script src="/static/js/foundation/foundation.alert.js"></script>
+    <script src="/static/js/vendor/stickyFooter.js"></script>
     <script>
-    $(document).foundation( {
+    $(document).foundation({
         equalizer : {
             // Specify if Equalizer should make elements equal height once they become stacked.
             equalize_on_stack: false,
             // Allow equalizer to resize hidden elements
             act_on_hidden_el: false
         }
+    });
+    $(document).on('close.fndtn.alert', function(event) {
+        $(document).foundation('reflow');
     });
     </script>
 </body>

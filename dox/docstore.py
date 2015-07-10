@@ -70,7 +70,9 @@ def deregister_document(docpath, sno=None):
 
 def insert_document(sno, docpath, series):
     fname = os.path.split(docpath)[1]
-    storepath = os.path.join(DOCSTORE_ROOT, series.replace('/', os.path.sep), sno + '-' + fname)
+    if not fname.startswith(sno) and not os.path.splitext(fname)[0].endswith(sno):
+        fname = sno + '-' + fname
+    storepath = os.path.join(DOCSTORE_ROOT, series.replace('/', os.path.sep), fname)
     if not os.path.exists(os.path.dirname(storepath)):
         os.makedirs(os.path.dirname(storepath))
     shutil.copyfile(docpath, storepath)

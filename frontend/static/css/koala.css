@@ -11,3 +11,40 @@
 .valign-middle [class*="column"] + [class*="column"]:last-child {
     float: none;
 }
+
+footer {
+ background-color:#333;
+ color:#FFF;
+ padding-top:0.5em;
+}
+
+#footer ul {
+ list-style: none;
+ float: right;
+}
+
+#footer a {
+ color:#EEE;
+ font-size: smaller;
+ font-weight: lighter;
+}
+
+#footer li {
+ display: inline;
+ margin: 0;
+ padding-left: 0.4em;
+ padding-bottom: 0.3em;
+ border-left: 1px solid;
+}
+
+#footer .first {
+ padding-left: 0;
+ border: 0;
+}
+
+.copyright {
+ color:#EEE;
+ font-size: smaller;
+ font-weight: lighter;
+}
+

@@ -29,6 +29,7 @@ def escape_latex(string):
         string = string.replace('$', '\$')
         string = string.replace('%', '\%')
         string = string.replace('&', '\&')
+        string = string.replace('_', '\_')
         string = string.replace('INR ', '\\rupee~')
     else:
         string = ''

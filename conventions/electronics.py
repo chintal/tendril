@@ -73,13 +73,26 @@ DEVICE_CLASSES = [
     'CONN MODULAR',
     'CONN USB',
     'SWITCH TACT',
-    'SWITCH PUSHBUTTON',
+    'SWITCH PUSHBTN',
+    'SWITCH ROCKER',
     'TESTPOINT',
     'SOLDER DOT',
     'BATTERY',
     'HEAT SINK',
+    'CABLE FRC',
     'CABLE SIP SSC',
-    'CABLE MARKER'
+    'CABLE MARKER',
+    'CABLE ROUND SHLD',
+    'CONN CIRCULAR',
+    'WIRE INSULATED',
+    'SLEEVE SHRINK',
+    'CRIMP',
+    'THIMBLE',
+    'FUSE HOLDER',
+    'FUSE',
+    'SOCKET POWER',
+    'POWER CORD',
+    'USB CABLE'
 ]
 
 nofp_strs = [
@@ -91,16 +104,20 @@ nofp_strs = [
     "SOCKET POWER",
     "FUSE",
     "SWITCH PUSHBTN",
+    "SWITCH ROCKER",
     "TRANSFORMER HEAVY",
     "CRIMP",
     "THIMBLE",
-    "CABLE MARKER"
+    "CABLE MARKER",
+    "POWER CORD",
+    "USB CABLE"
 ]
 
 fpiswire_strs = [
     "CABLE ROUND",
     "WIRE",
-    "CABLE SIP SSC"
+    "CABLE FRC",
+    "SLEEVE SHRINK",
 ]
 
 fpismodlen_strs = [
@@ -113,6 +130,13 @@ def fpiswire(device):
     for st in fpiswire_strs:
         if device.startswith(st):
             return True
+    return False
+
+
+def fpiswire_ident(ident):
+    device, value, footprint = parse_ident(ident)
+    if fpiswire(device):
+        return True
     return False
 
 

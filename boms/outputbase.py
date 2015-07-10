@@ -3,10 +3,13 @@ This file is part of koala
 See the COPYING, README, and INSTALL files for more information
 """
 from utils import log
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 import csv
 from entitybase import EntityBase
+from conventions.electronics import fpiswire
+from conventions.electronics import parse_ident
+from conventions.lengths import Length
 
 
 class OutputElnBomDescriptor(object):
@@ -35,6 +38,20 @@ class OutputBomLine(object):
 
     @property
     def quantity(self):
+        device, value, footprint = parse_ident(self.ident)
+        if device is None:
+            logger.warning("Device not identified : " + self.ident)
+        elif fpiswire(device):
+            try:
+                elen = Length(footprint) * 10/100
+                if elen < Length('5mm'):
+                    elen = Length('5mm')
+                elif elen > Length('1inch'):
+                    elen = Length('1inch')
+                return len(self.refdeslist) * (Length(footprint) + elen) * self.parent.descriptor.multiplier
+            except ValueError:
+                logger.error("Problem parsing length for ident : " + self.ident)
+                raise
         return len(self.refdeslist) * self.parent.descriptor.multiplier
 
     def __repr__(self):
@@ -112,7 +129,12 @@ class CompositeOutputBomLine(object):
             print self.ident
             raise TypeError(self.columns)
 
-class CompositeOutputBom():
+    def merge_line(self, cline):
+        for idx, column in enumerate(self.columns):
+            self.columns[idx] += cline.columns[idx]
+
+
+class CompositeOutputBom(object):
     def __init__(self, bom_list):
         self.descriptors = []
         self.lines = []
@@ -145,20 +167,20 @@ class CompositeOutputBom():
 
         :type line: outputbase.OutputBomLine
         """
-        cline = self.find_by_ident(line)
+        cline = self.find_by_ident(line.ident)
         if cline is None:
             cline = CompositeOutputBomLine(line, self.colcount)
             self.lines.append(cline)
         cline.add(line, i)
 
-    def find_by_ident(self, line):
+    def find_by_ident(self, ident):
         """
 
         :type line: outputbase.OutputBomLine
         """
         for cline in self.lines:
             assert isinstance(cline, CompositeOutputBomLine)
-            if cline.ident == line.ident:
+            if cline.ident == ident:
                 return cline
         return None
 
@@ -171,3 +193,17 @@ class CompositeOutputBom():
         for line in self.lines:
             columns = [None if x == 0 else x for x in line.columns]
             writer.writerow([line.ident] + columns + [line.quantity])
+
+    def collapse_wires(self):
+        for line in self.lines:
+            device, value, footprint = parse_ident(line.ident)
+            if device is None:
+                continue
+            if fpiswire(device):
+                newident = device + ' ' + value
+                newline = self.find_by_ident(newident)
+                if newline is None:
+                    line.ident = newident
+                else:
+                    newline.merge_line(line)
+                    self.lines.remove(line)
