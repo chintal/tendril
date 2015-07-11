@@ -9,7 +9,8 @@ import math
 import numbers
 import re
 
-lrex = re.compile(ur'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|(((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$))')
+lrex = re.compile(ur'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|(((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$))',
+                  re.IGNORECASE)
 
 
 class Length(object):
