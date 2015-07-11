@@ -63,6 +63,10 @@ def gen_valuation(invoice, target_folder, serialno):
     include_note2 = False
     if len(note2) > 0:
         include_note2 = True
+    if invoice.given_data['bank_ref'] is None:
+        is_wire = False
+    else:
+        is_wire = True
 
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
@@ -80,7 +84,8 @@ def gen_valuation(invoice, target_folder, serialno):
              'extended_total_sc': render.escape_latex(invoice.extendedtotal.source_string),
              'assessable_total_sc': render.escape_latex(invoice.assessabletotal.source_string),
              'assessable_total_nc': render.escape_latex(invoice.assessabletotal.native_string),
-             'sno': serialno + '.3'
+             'sno': serialno + '.3',
+             'is_wire': is_wire
              }
 
     return render.render_pdf(stage, 'customs/valuation.tex', outpath)
@@ -227,13 +232,17 @@ def gen_verificationdocs(invoice, target_folder, serialno):
     return files
 
 
-def generate_docs(invoice, target_folder=None, serialno=None, register=True, efield=None):
+def generate_docs(invoice, target_folder=None, serialno=None, register=False, efield=None):
     if efield is None:
         efield = ' '.join([invoice.vendor_name, str(invoice.inv_no)])
     if serialno is None:
-        serialno = entityhub.serialnos.get_serialno('PINV',
-                                                    efield,
-                                                    register=register)
+        if os.path.exists(os.path.join(invoice.source_folder, 'wsno')):
+            with open(os.path.join(invoice.source_folder, 'wsno'), 'r') as f:
+                serialno = f.readline()
+        else:
+            serialno = entityhub.serialnos.get_serialno('PINV',
+                                                        efield,
+                                                        register=register)
     if target_folder is None:
         target_folder = invoice.source_folder
     files = gen_submitdocs(invoice, target_folder, serialno=serialno)

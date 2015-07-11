@@ -10,9 +10,11 @@ import datetime
 import pytz
 import os
 import shutil
+import glob
 
 import utils.state
 from utils.config import DOCSTORE_ROOT
+from utils.config import INSTANCE_ROOT
 
 snodoc_table = utils.state.state_ds['snodoc']
 
@@ -52,6 +54,33 @@ def get_sno_documents(sno):
     for result in results:
         rval.append(DocumentBase(result['doctype'], result['docpath'], result['timestamp'], result['efield']))
     return rval
+
+
+def copy_docs_to_workspace(sno, workspace=None, clearws=False, setwsno=True, iagree=False):
+    if workspace is None:
+        workspace = os.path.join(INSTANCE_ROOT, 'scratch', 'workspace')
+    elif workspace.startswith('/'):
+        workspace = workspace
+        if clearws is True and iagree is False:
+            raise StandardError('Workspace defined outside the Instance Scratch Area, and clearws is set to True. '
+                                'All files within the provided path will be removed. '
+                                'Set the iagree argument to True to accept responsibility for what you\'re doing.')
+    else:
+        workspace = os.path.join(INSTANCE_ROOT, 'scratch', 'customs')
+    if clearws is True:
+        glb = os.path.join(workspace, '*')
+        rf = glob.glob(glb)
+        for f in rf:
+            os.remove(f)
+    if setwsno is True:
+        with open(os.path.join(workspace, 'wsno'), 'w') as f:
+            f.write(sno)
+    for doc in get_sno_documents(sno):
+        docname = os.path.split(doc.docpath)[1]
+        if docname.startswith(sno):
+            docname = docname[len(sno)+1:]
+        shutil.copy(os.path.join(DOCSTORE_ROOT, doc.docpath),
+                    os.path.join(workspace, docname))
 
 
 def delete_document(docpath):

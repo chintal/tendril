@@ -25,7 +25,7 @@
 \opening{Dear Sir/Madam,}
 % \pagestyle{fancy}
 \small{
-  The valuation of the items imported is as per {\tt Rule 4(1) of the Customs Valuation (Determination of Value of Imported Goods) Rules, 2007}, i.e., the price as paid. The Invoice (in %{{stage.currency%}}) numbered %{{stage.inv_no%}} \ issued by %{{stage.given_data.supplier_name%}} to us, i.e., %{{stage.company%}} is attached as proof of the same. Also attached is a copy of the Debit Advice for Import Advance Remittance issued to us by our Bank (%{{stage.given_data.bank%}}), Bill Reference No. %{{stage.given_data.bank_ref%}}, for the Wire Transfer via SWIFT executed as pre-payment for the purchase.
+  The valuation of the items imported is as per {\tt Rule 4(1) of the Customs Valuation (Determination of Value of Imported Goods) Rules, 2007}, i.e., the price as paid. The Invoice (in %{{stage.currency%}}) numbered %{{stage.inv_no%}} \ issued by %{{stage.given_data.supplier_name%}} to us, i.e., %{{stage.company%}} is attached as proof of the same. %{ if stage.is_wire == True %}Also attached is a copy of the Debit Advice for Import Advance Remittance issued to us by our Bank (%{{stage.given_data.bank%}}), Bill Reference No. %{{stage.given_data.bank_ref%}}, for the Wire Transfer via SWIFT executed as pre-payment for the purchase. %{ endif %}
   \vspace{0.8em}
   
   Valuation is done on the basis of the total invoice amount of %{{stage.inv_total%}}, as detailed in the %{{stage.given_data.supplier_name%}} Invoice. %{{stage.note1%}} 
@@ -38,8 +38,8 @@
   An exchange rate of \rupee~%{{stage.exchrate%}} / %{{stage.currency%}}1 is applied vide {\tt Notification No.%{{stage.exchnotif%}}}, dated %{{stage.exchnotifdt%}}. 
   \vspace{0.8em}
   
-  %{{stage.given_data.assessaddendum%}}
-  Additional charges borne by us in the form of Bank Fee, paid to %{{stage.given_data.bank%}}, India, for the wire transfer, and Government of India Taxes and Cesses on this financial transaction between us, i.e., %{{stage.company%}} and our Indian banker, i.e., %{{stage.given_data.bank%}}, have not been included in the valuation.
+  %{{stage.given_data.assessaddendum or ''%}}
+  %{if stage.is_wire == True %} Additional charges borne by us in the form of Bank Fee, paid to %{{stage.given_data.bank%}}, India, for the wire transfer, and Government of India Taxes and Cesses on this financial transaction between us, i.e., %{{stage.company%}} and our Indian banker, i.e., %{{stage.given_data.bank%}}, have not been included in the valuation. %{ endif %}
   \vspace{0.8em}
   
   The total valuation of the contents of the shipments as calculated comes out at %{{stage.assessable_total_sc%}}, or %{{stage.assessable_total_nc%}}, which is used in the Customs Declaration Form. 

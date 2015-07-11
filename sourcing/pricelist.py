@@ -10,13 +10,16 @@ import os
 import yaml
 import re
 import csv
+import codecs
 
 import vendors
 import utils.currency
 import conventions.electronics
 import conventions.iec60063
+import customs
 
 from utils.config import PRICELISTVENDORS_FOLDER
+from utils.config import INSTANCE_ROOT
 
 
 class VendorPricelist(vendors.VendorBase):
@@ -229,3 +232,50 @@ class PricelistPart(vendors.VendorPartBase):
                 lprice = price
                 loqty = tqty
         return lcost, loqty, lprice
+
+
+class AnalogDevicesInvoice(customs.CustomsInvoice):
+    def __init__(self, vendor=None, inv_yaml=None, working_folder=None):
+        if vendor is None:
+            vendor = VendorPricelist('analogdevices', 'Analog Devices Inc', 'electronics')
+        if inv_yaml is None:
+            inv_yaml = os.path.join(INSTANCE_ROOT, 'scratch', 'customs', 'inv_data.yaml')
+
+        super(AnalogDevicesInvoice, self).__init__(vendor, inv_yaml, working_folder)
+
+    def _acquire_lines(self):
+        logger.info("Acquiring Lines")
+        invoice_file = os.path.join(self._source_folder, self._data['invoice_file'])
+        with open(invoice_file) as f:
+            reader = csv.reader(f)
+            header = None
+            for line in reader:
+                if line[0].startswith(codecs.BOM_UTF8):
+                    line[0] = line[0][3:]
+                if line[0] == 'Index':
+                    header = line
+                    break
+            if header is None:
+                raise ValueError
+            for line in reader:
+                if line[0] != '':
+                    idx = line[header.index('Index')].strip()
+                    qty = int(line[header.index('Quantity')].strip())
+                    vpno = line[header.index('Part Number')].strip()
+                    mpno = line[header.index('Manufacturer Part Number')].strip()
+                    desc = line[header.index('Description')].strip()
+                    ident = line[header.index('Customer Reference')].strip()
+                    boqty = line[header.index('Backorder')].strip()
+                    try:
+                        if int(boqty) > 0:
+                            logger.warning("Apparant backorder. Crosscheck customs treatment for: "
+                                           + idx + ' ' + ident)
+                    except ValueError:
+                        print line
+
+                    unitp_str = line[header.index('Unit Price')].strip()
+                    extendedp_str = line[header.index('Extended Price')].strip()
+
+                    unitp = utils.currency.CurrencyValue(float(unitp_str), self._vendor.currency)
+                    lineobj = customs.CustomsInvoiceLine(self, ident, vpno, unitp, qty, idx=idx, desc=desc)
+                    self._lines.append(lineobj)

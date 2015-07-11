@@ -451,3 +451,5 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
             return "{0:<3} {1:<40} {2:<35} {3:>10} {4:>15}".format(self.idx, self._ident, self._desc, self.hs_section.code, self.hs_section.name)
         else:
             return "{0:<3} {1:<40} {2:<35} {3:>10} {4:>15}".format(self.idx, self._ident, self._desc, '----------', 'Unclassified')
+
+
