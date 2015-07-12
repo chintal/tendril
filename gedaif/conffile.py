@@ -42,3 +42,12 @@ class ConfigsFile(object):
     @property
     def projectfolder(self):
         return self._projectfolder
+
+    def description(self, configname=None):
+        if configname is None:
+            return self.configdata['desc']
+        else:
+            for configuration in self.configdata['configurations']:
+                if configuration['configname'] == configname:
+                    return configuration['desc']
+        raise ValueError

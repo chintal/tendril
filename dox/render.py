@@ -3,9 +3,11 @@ Dox Render module documentation (:mod:`dox.render`)
 ===================================================
 """
 
+from utils import log
+logger = log.get_logger(__name__, log.INFO)
+
 import os
 import subprocess
-import re
 
 import jinja2
 import matplotlib
@@ -51,7 +53,9 @@ renderer_pdf = jinja2_pdfinit()
 
 
 def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
-
+    if not os.path.exists(template) and not os.path.exists(os.path.join(DOX_TEMPLATE_FOLDER, template)):
+        logger.error("Template not found : " + template)
+        raise ValueError
     template = renderer_pdf.get_template(template)
 
     stage['logo'] = COMPANY_LOGO_PATH

@@ -13,6 +13,7 @@ import shutil
 import glob
 
 import utils.state
+import entityhub.serialnos
 from utils.config import DOCSTORE_ROOT
 from utils.config import INSTANCE_ROOT
 
@@ -66,7 +67,7 @@ def copy_docs_to_workspace(sno, workspace=None, clearws=False, setwsno=True, iag
                                 'All files within the provided path will be removed. '
                                 'Set the iagree argument to True to accept responsibility for what you\'re doing.')
     else:
-        workspace = os.path.join(INSTANCE_ROOT, 'scratch', 'customs')
+        workspace = os.path.join(INSTANCE_ROOT, 'scratch', workspace)
     if clearws is True:
         glb = os.path.join(workspace, '*')
         rf = glob.glob(glb)
@@ -78,7 +79,8 @@ def copy_docs_to_workspace(sno, workspace=None, clearws=False, setwsno=True, iag
     for doc in get_sno_documents(sno):
         docname = os.path.split(doc.docpath)[1]
         if docname.startswith(sno):
-            docname = docname[len(sno)+1:]
+            if not os.path.splitext(docname)[0] == sno:
+                docname = docname[len(sno)+1:]
         shutil.copy(os.path.join(DOCSTORE_ROOT, doc.docpath),
                     os.path.join(workspace, docname))
 
@@ -101,6 +103,8 @@ def insert_document(sno, docpath, series):
     fname = os.path.split(docpath)[1]
     if not fname.startswith(sno) and not os.path.splitext(fname)[0].endswith(sno):
         fname = sno + '-' + fname
+    if series is None:
+        series = entityhub.serialnos.get_series(sno)
     storepath = os.path.join(DOCSTORE_ROOT, series.replace('/', os.path.sep), fname)
     if not os.path.exists(os.path.dirname(storepath)):
         os.makedirs(os.path.dirname(storepath))

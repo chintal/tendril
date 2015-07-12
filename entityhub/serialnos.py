@@ -9,13 +9,16 @@ logger = log.get_logger(__name__, log.INFO)
 import idstring
 
 import utils.state
-import dox.docstore
 
 
 sno_table = utils.state.state_ds['sno']
 nsno_table = utils.state.state_ds['nsno']
 snodoc_table = utils.state.state_ds['snodoc']
 
+
+def get_sno_efield(sno):
+    results = sno_table.find_one(sno=sno)
+    return results['efield']
 
 def get_all_serialnos():
     results = sno_table.find()
@@ -60,6 +63,7 @@ def delete_serialno(sno, recurse=False, docs=False):
         for sno in get_child_serialnos(sno):
             delete_serialno(sno, True, docs)
     if docs is True:
+        import dox.docstore
         for document in dox.docstore.get_sno_documents(sno):
             dox.docstore.delete_document(document)
     sno_table.delete(sno=sno)
