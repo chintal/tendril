@@ -13,9 +13,8 @@ import render
 from utils.fs import TEMPDIR
 from utils.config import COMPANY_NAME
 from utils.config import COMPANY_LOGO_PATH
-from utils.config import DOX_TEMPLATE_FOLDER
 
-LABEL_TEMPLATES_ROOT = os.path.join(DOX_TEMPLATE_FOLDER, 'labels')
+LABEL_TEMPLATES_ROOT = 'labels'
 
 
 class LabelBase(object):
@@ -50,7 +49,12 @@ class LabelBase(object):
 
     @property
     def ident(self):
-        return self._ident
+        # if len(self._ident) > 16:
+        #     return r"\tiny " + self._ident
+        # if len(self._ident) > 14:
+        #     return r"\scriptsize " + self._ident
+        # else:
+        return r"\footnotesize " + self._ident
 
     @property
     def branding(self):
@@ -125,7 +129,8 @@ class LabelSheet(object):
 
     def generate_pdf(self, targetfolder):
         stage = {'labels': self._labels}
-        render.render_pdf(stage, self._base.templatefile, os.path.join(targetfolder, 'labels-' + self.code + '.pdf'))
+        return render.render_pdf(stage, self._base.templatefile,
+                                 os.path.join(targetfolder, 'labels-' + self.code + '.pdf'))
 
 
 class LabelMaker(object):
@@ -147,7 +152,9 @@ class LabelMaker(object):
         return {x.code: x for x in self._sheets}
 
     def generate_pdfs(self, targetfolder):
+        rval = []
         for sheet in self._sheets:
-            sheet.generate_pdf(targetfolder)
+            rval.append(sheet.generate_pdf(targetfolder))
+        return rval
 
 manager = LabelMaker()

@@ -17,7 +17,9 @@ import inventory.electronics
 import dox.production
 import dox.indent
 import dox.docstore
+import dox.labelmaker
 import gedaif.conffile
+
 
 from entityhub import projects
 from entityhub import serialnos
@@ -218,6 +220,15 @@ for card, qty in sorted(data['cards'].iteritems()):
         # Lazy test procedure, Label when used
         lblst = "@USE"
     series = cardconf.configdata['snoseries']
+    genlabel = False
+    labels = []
+    if isinstance(cardconf.configdata['documentation']['label'], dict):
+        for k in sorted(cardconf.configdata['documentation']['label'].keys()):
+            labels.append({'code': k, 'ident': card + '.' + cardconf.configdata['label'][k]})
+        genlabel = True
+    elif isinstance(cardconf.configdata['documentation']['label'], str):
+        labels.append({'code': cardconf.configdata['documentation']['label'], 'ident': card})
+        genlabel = True
 
     for idx in range(qty):
         if card in snomap.keys():
@@ -234,6 +245,9 @@ for card, qty in sorted(data['cards'].iteritems()):
             serialnos.link_serialno(sno, PROD_ORD_SNO)
         c = {'sno': sno, 'ident': card, 'prodst': prodst, 'lblst': lblst, 'testst': testst}
         snos.append(c)
+        if genlabel is True:
+            for label in labels:
+                dox.labelmaker.manager.add_label(label['code'], label['ident'], sno)
         if genmanifest is True:
             ampath = dox.production.gen_pcb_am(cardfolder, card,
                                                manifestsfolder, sno,
@@ -247,16 +261,23 @@ production_order = dox.production.gen_production_order(orderfolder, PROD_ORD_SNO
                                                        data, snos,
                                                        sourcing_orders=SOURCING_ORDERS,
                                                        root_orders=ROOT_ORDERS)
+labelpaths = dox.labelmaker.manager.generate_pdfs(orderfolder)
 
+if len(labelpaths) > 0:
+    merge_pdf(labelpaths, os.path.join(orderfolder, 'device-labels.pdf'))
 if len(addldocs) > 0:
     merge_pdf([production_order] + addldocs, production_order, remove_sources=False)
 if len(manifestfiles) > 0:
     merge_pdf(manifestfiles, os.path.join(orderfolder, 'manifests-printable.pdf'))
 
 if REGISTER is True:
+    if os.path.exists(os.path.join(orderfolder, 'device-labels.pdf')):
+        dox.docstore.register_document(PROD_ORD_SNO, os.path.join(orderfolder, 'device-labels.pdf'),
+                                       'DEVICE LABELS', data['title'])
     dox.docstore.register_document(PROD_ORD_SNO, production_order, 'PRODUCTION ORDER', data['title'])
     dox.docstore.register_document(PROD_ORD_SNO, orderfile, 'PRODUCTION ORDER YAML', data['title'])
 else:
+    logger.info("Not registering document : DEVICE LABELS " + PROD_ORD_SNO)
     logger.info("Not registering document : PRODUCTION ORDER " + PROD_ORD_SNO)
     logger.info("Not registering document : PRODUCTION ORDER YAML " + PROD_ORD_SNO)
 
