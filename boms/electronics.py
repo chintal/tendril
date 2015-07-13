@@ -328,7 +328,7 @@ class EntityElnBom(EntityBomBase):
             if item.data['device'] == 'TESTPOINT':
                 continue
             tgroup = self.find_tgroup(item)
-            tgroup.insert(item)
+            skip = False
             if item.data['footprint'] == 'MY-TO220':
                 comp = EntityElnComp()
                 comp.define('HS' + item.data['refdes'][1:], 'HEAT SINK', 'TO220')
@@ -339,9 +339,9 @@ class EntityElnBom(EntityBomBase):
                 comp = EntityElnComp()
                 comp.define(item.data['refdes'], 'CONN SIP', "16PIN PM ST", "MY-MTA100-16")
                 tgroup.insert_eln_comp(comp)
-                comp = EntityElnComp()
-                comp.define(item.data['refdes'], 'CABLE SIP SSC', "16PIN", "12INCH")
-                tgroup.insert_eln_comp(comp)
+                skip = True
+            if not skip:
+                tgroup.insert(item)
         for item in parser.motif_gen:
             self._motifs.append(item)
 

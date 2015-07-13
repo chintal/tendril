@@ -90,9 +90,14 @@ class LabelBase(object):
 class LabelCW1(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
 
+class LabelP1(LabelBase):
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
+
+class LabelP2(LabelBase):
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
 
 class LabelD1(LabelBase):
-    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'D1_template.tex')
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
 
 
 def get_labelbase(code):
@@ -101,6 +106,10 @@ def get_labelbase(code):
         return LabelCW1
     elif code == 'D1':
         return LabelD1
+    elif code == 'P1':
+        return LabelP1
+    elif code == 'P2':
+        return LabelP2
     else:
         return LabelBase
 

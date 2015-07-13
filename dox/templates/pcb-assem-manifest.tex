@@ -1,8 +1,6 @@
-\documentclass[fontsize = 9pt, BCOR=1.5cm, DIV=14, twoside, titlepage = false]{scrartcl}
-%\usepackage[top=1.5in, bottom=1in, right=1in, left=1in]{geometry}
+\documentclass[fontsize=9pt, BCOR=1.5cm, DIV=14, twoside, titlepage = false]{scrartcl}
+\usepackage[top=2cm, bottom=3cm, left=2.5cm, right=2.5cm]{geometry}
 \usepackage[utf8]{inputenc}
-\usepackage{}
-%\usepackage{fancyhdr}
 \usepackage{graphicx}
 \usepackage{tabularx}
 \usepackage{ltablex}
@@ -25,10 +23,10 @@
   markuppercase
 ]{scrpage2}
 
-\lohead{\tt \ptitle  AM  \pcbname\ S.\sno}    %% Top left on even pages
-\lehead{\includegraphics[width=0.12in]{%{{stage.logo%}}}\hspace{0.01in} \tt %{{stage.company%}}}    %% Top left on odd pages
-\rohead{\tt %{{stage.company%}}\hspace{0.1in}\includegraphics[width=0.12in]{%{{stage.logo%}}}}    %% Top right on even pages
-\rehead{\tt \ptitle  AM  \pcbname\ S.\sno}    %% Top right on odd pages
+\lehead{\tt \ptitle  AM  \pcbname\ S.\sno}    %% Top left on even pages
+\lohead{\includegraphics[width=0.12in]{%{{stage.logo%}}}\hspace{0.01in} \tt %{{stage.company%}}}    %% Top left on odd pages
+\rehead{\tt %{{stage.company%}}\hspace{0.1in}\includegraphics[width=0.12in]{%{{stage.logo%}}}}    %% Top right on even pages
+\rohead{\tt \ptitle  AM  \pcbname\ S.\sno}    %% Top right on odd pages
 \chead{}                       %% Top center
 
 \rofoot{\tt Page \thepage\ of \pageref{LastPage}}
@@ -88,8 +86,8 @@
   \multicolumn{10}{|c|}{\cellcolor[gray]{0.8}\normalsize\textbf{BOM}}\tabularnewline\hline
   %{ for line in stage.lines %}
   %{ if line.refdeslist|count > 5 %}
-  \rowcolor[gray]{0.9}\multicolumn{1}{|c|}{%{{loop.index%}}.} & \multicolumn{6}{l}{%{{line.ident|escape_latex%}}} & \multicolumn{3}{r|}{%{{line.quantity%}}} \\*\hline
-  %{ for refdes in line.refdeslist %} & %{{refdes%}} %{ if loop.last %} %{set llen = loop.index%9 %} %{ if llen == 0 %} %{set llen = 9 %} %{endif%}  \\* %{for i in range(llen)%} & %{endfor%} \\\hline %{ elif loop.index is divisibleby 9 %} \\* & & & & & & & & & \\*\cline{2-10}  %{ endif %} %{ endfor %} 
+  \rowcolor[gray]{0.9}\multicolumn{1}{|c|}{%{{loop.index%}}.} & \multicolumn{6}{l}{%{{line.ident|escape_latex%}}} & \multicolumn{3}{r|}{%{{line.quantity%}}} \\\hline\nopagebreak[4]
+  %{ for refdes in line.refdeslist %} & %{{refdes%}} %{ if loop.last %} %{set llen = loop.index%9 %} %{ if llen == 0 %} %{set llen = 9 %} %{endif%}  \\* %{for i in range(llen)%} & %{endfor%} \\\hline %{ elif loop.index is divisibleby 9 %} \\\nopagebreak[4] & & & & & & & & & \\\cline{2-10}\nopagebreak[4]  %{ endif %} %{ endfor %} 
   %{ else %}
   \multicolumn{1}{|c|}{\cellcolor[gray]{0.9} %{{loop.index%}}.} & \multicolumn{%{{8-line.refdeslist|count%}}}{l|}{\cellcolor[gray]{0.9}\parbox{%{{0.07*(8-line.refdeslist|count)%}}\textwidth}{%{{line.ident|escape_latex%}}}} & %{ for refdes in line.refdeslist %} %{{refdes%}} & %{ endfor %} \multicolumn{1}{r|}{\cellcolor[gray]{0.9} %{{line.quantity%}}} \\\cline{1-%{{9-line.refdeslist|count%}}}\cline{10-10}  
   \multicolumn{%{{9-line.refdeslist|count%}}}{|c|}{\cellcolor[gray]{0.98}} & %{ for refdes in line.refdeslist %} & %{ endfor %} \multicolumn{1}{r|}{\cellcolor[gray]{0.99}} \\\hline  
@@ -101,12 +99,9 @@
 
 \begin{tabular}{|>{\centering\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.44\textwidth}|}
 \hline
-  \small Assembly Complete  & \small PCB Inspected & \small Blocking Issues \\*
-  & & \\*
-  & & \\*
-  \cline{1-2}
+  \small Assembly Complete  & \small PCB Inspected & \small Blocking Issues \\\nopagebreak[4]
+  & & \\\nopagebreak[4]
   \small Date & \small Date & \\
-  & & \\*
 \hline
 \end{tabular}
 %{ if stage.evenpages == True %}

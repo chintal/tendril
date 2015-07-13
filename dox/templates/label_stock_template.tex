@@ -1,7 +1,10 @@
-\documentclass[9pt]{article}
+\documentclass[8pt]{article}
 \usepackage[newdimens]{labels}
-\LabelCols=4
-\LabelRows=18
+\usepackage{PTSansNarrow} 
+\renewcommand*\familydefault{\sfdefault} %% Only if the base font of the document is to be sans serif
+\usepackage[T1]{fontenc}
+\LabelCols=5
+\LabelRows=22
 \LeftPageMargin=11mm
 \RightPageMargin=13mm
 \TopPageMargin=6mm
@@ -17,10 +20,8 @@
 
 \begin{document}
 \begin{labels}
-
 %{ for line in stage.lines %}
-\parbox{4.6cm}{\raggedright{\tt\tiny Ref: %{{stage.sno%}}.%{{loop.index%}}} \\  {\footnotesize %{{line.ident|escape_latex%}}}\\{\small Qty : \textbf{%{{line.qty%}}}}}
+\parbox{3.6cm}{\raggedright{\tt\scriptsize %{{stage.sno%}}.%{{loop.index%}}} \hfill {\footnotesize Qty : \textbf{\small %{{line.qty%}}}} \\  {\footnotesize\bfseries %{{line.ident|escape_latex%}}}}
 %{ endfor %} 
-
 \end{labels}
 \end{document}
