@@ -12,6 +12,7 @@
 \pdfmapfile{=tfrupee.map}
 \usepackage{lastpage}
 
+
 \newcommand{\sno}{%{{stage.sno%}}}
 \newcommand{\invno}{%{{stage.inv_no%}}}
 
@@ -74,10 +75,10 @@
     %{ for line in stage.lines %}
       %{{ line.idx %}} & \texttt{QTY} & \texttt{%{{ line.qty %}}} & & \texttt{Extended Price} & \texttt{%{{ line.extendedprice.source_string|escape_latex %}}} & \texttt{%{{line.bcd.notification|escape_latex%}}} & \texttt{%{{line.bcd.title%}} (%{{line.bcd.rate%}}\%)} & \texttt{%{{line.bcd.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
       & \texttt{U/PRICE} & \texttt{%{{ line.unitprice.source_string|escape_latex%}}} & \texttt{%{{ stage.given_data.valuation_method_short %}}} & \texttt{FOB Value} & \texttt{%{{line.extendedprice.native_string|escape_latex%}}} & \texttt{%{{line.cvd.notification|escape_latex%}}} & \texttt{%{{line.cvd.title%}} (%{{line.cvd.rate%}}\%)} & \texttt{%{{line.cvd.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
-      & \texttt{IDENT} & \texttt{%{{ line.ident|escape_latex%}}} & \texttt{%{{ stage.given_data.freight_note %}}} & \texttt{Freight Value} & \texttt{%{{line.freight.native_string|escape_latex%}}} & \texttt{%{{line.cec.notification|escape_latex%}}} & \texttt{%{{line.cec.title%}} (%{{line.cec.rate%}}\%)} & \texttt{%{{line.cec.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
-      & \texttt{VPNO} & \texttt{%{{line.vpno|escape_latex%}}} & \texttt{%{{ stage.given_data.insurance_pc%}}\% of FOB} & \texttt{Insurance Value} & \texttt{%{{line.insurance.native_string|escape_latex%}}} & \texttt{%{{line.cshec.notification|escape_latex%}}} & \texttt{%{{line.cshec.title|escape_latex%}} (%{{line.cshec.rate%}}\%)} & \texttt{%{{line.cshec.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
-      & \texttt{DESC} & \texttt{%{{ line.desc|escape_latex%}}} & \multicolumn{2}{r}{\texttt{CIF Value}} & \texttt{%{{line.cifprice.native_string|escape_latex%}}} & \texttt{%{{line.cvdec.notification%}}} & \texttt{%{{line.cvdec.title%}} (%{{line.cvdec.rate%}}\%)} & \texttt{%{{line.cvdec.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
-      & \texttt{HS CODE} & \texttt{\bfseries %{{ line.hs_section.code|escape_latex%}}} & \texttt{%{{ stage.given_data.handling_pc%}}\% of CIF} & \texttt{Handling Value} & \texttt{%{{line.handling.native_string|escape_latex%}}} & \texttt{%{{line.cvdshec.notification%}}} & \texttt{%{{line.cvdshec.title%}} (%{{line.cvdshec.rate%}}\%)} & \texttt{%{{line.cvdshec.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
+      & \texttt{IDENT} & \texttt{%{{ line.ident|escape_latex%}}} & \texttt{%{{ stage.given_data.freight_note %}}} & \texttt{Freight Value} & \texttt{%{{line.freight.native_string|escape_latex%}}} & \texttt{%{{line.cvdec.notification%}}} & \texttt{%{{line.cvdec.title%}} (%{{line.cvdec.rate%}}\%)} & \texttt{%{{line.cvdec.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
+      & \texttt{VPNO} & \texttt{%{{line.vpno|escape_latex%}}} & \texttt{%{{ stage.given_data.insurance_pc%}}\% of FOB} & \texttt{Insurance Value} & \texttt{%{{line.insurance.native_string|escape_latex%}}} & \texttt{%{{line.cvdshec.notification%}}} & \texttt{%{{line.cvdshec.title%}} (%{{line.cvdshec.rate%}}\%)} & \texttt{%{{line.cvdshec.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
+      & \texttt{DESC} & \texttt{%{{ line.desc|escape_latex%}}} & \multicolumn{2}{r}{\texttt{CIF Value}} & \texttt{%{{line.cifprice.native_string|escape_latex%}}} & \texttt{%{{line.cec.notification|escape_latex%}}} & \texttt{%{{line.cec.title%}} (%{{line.cec.rate%}}\%)} & \texttt{%{{line.cec.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
+      & \texttt{HS CODE} & \texttt{\bfseries %{{ line.hs_section.code|escape_latex%}}} & \texttt{%{{ stage.given_data.handling_pc%}}\% of CIF} & \texttt{Handling Value} & \texttt{%{{line.handling.native_string|escape_latex%}}} & \texttt{%{{line.cshec.notification|escape_latex%}}} & \texttt{%{{line.cshec.title|escape_latex%}} (%{{line.cshec.rate%}}\%)} & \texttt{%{{line.cshec.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
       &  & \texttt{%{{ line.hs_section.name|escape_latex%}}} & \multicolumn{2}{r}{\textbf{\texttt{Assessable Value}}} & \texttt{\bfseries %{{line.assessableprice.native_string|escape_latex%}}} & \texttt{%{{line.acvd.notification%}}} & \texttt{%{{line.acvd.title%}} (%{{line.acvd.rate%}}\%)} & \texttt{%{{line.acvd.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
       &  &  &  & &  & \multicolumn{2}{r}{\textbf{\texttt{Total Duties Payable}}} & \texttt{\bfseries %{{line.dutypayable.native_string|escape_latex%}}} & \\
       \hline
@@ -104,33 +105,42 @@
       %{{ loop.index %}} & \multicolumn{7}{l|}{\cellcolor[gray]{0.97}\parbox{0.90\textwidth}{\strut \strut %{{ line.section.desc|escape_latex %}}}} \\\nopagebreak[4]
       & \texttt{HS CODE} & \texttt{%{{ line.code %}}} & \texttt{%{{ line.section.bcd_notif|escape_latex %}}} & \texttt{BCD} & \texttt{%{{ line.section.bcd %}}\%} & \texttt{%{{ line.bcd.native_string|escape_latex %}}} &  \\\nopagebreak[4]
       & \texttt{HS NAME} & \texttt{%{{ line.name %}}} & \texttt{%{{ line.section.cvd_notif|escape_latex %}}} & \texttt{CVD} & \texttt{%{{ line.section.cvd %}}\%} & \texttt{%{{ line.cvd.native_string|escape_latex %}}} &  \\\nopagebreak[4]
-      & \texttt{ASSES VALUE} & \texttt{%{{ line.assessablevalue.native_string|escape_latex %}}} & \texttt{%{{ line.section.cec_notif|escape_latex %}}} & \texttt{Edu Cess} & \texttt{%{{ line.section.cec %}}\%} & \texttt{%{{ line.cec.native_string|escape_latex %}}} & \\\nopagebreak[4]
-      & \texttt{QTY} & \texttt{%{{ line.qty %}}} & \texttt{%{{ line.section.cshec_notif|escape_latex %}}} & \texttt{S\&HE Cess} & \texttt{%{{ line.section.cshec %}}\%} & \texttt{%{{ line.cshec.native_string|escape_latex %}}} & \\\nopagebreak[4]
-      & \texttt{IDXs} & \multirow{3}{*}[\normalbaselineskip]{\parbox{0.2\textwidth}{\texttt{%{for idx in line.idxs %}%{{idx%}}%{if not loop.last %}, %{endif%}%{endfor%}}}} & \texttt{%{{ line.section.cvdec_notif|escape_latex %}}} & \texttt{CVD EC} & \texttt{%{{ line.section.cvdec %}}\%} & \texttt{%{{ line.cvdec.native_string|escape_latex %}}} & \\\nopagebreak[4]
-      &  &  & \texttt{%{{ line.section.cvdshec_notif|escape_latex %}}} & \texttt{CVD SHEC} & \texttt{%{{ line.section.cvdshec %}}\%} & \texttt{%{{ line.cvdshec.native_string|escape_latex %}}} &  \\\nopagebreak[4]
+      & \texttt{ASSES VALUE} & \texttt{%{{ line.assessablevalue.native_string|escape_latex %}}} &  \texttt{%{{ line.section.cvdec_notif|escape_latex %}}} & \texttt{CVD EC} & \texttt{%{{ line.section.cvdec %}}\%} & \texttt{%{{ line.cvdec.native_string|escape_latex %}}} & \\\nopagebreak[4]
+      & \texttt{QTY} & \texttt{%{{ line.qty %}}} & \texttt{%{{ line.section.cvdshec_notif|escape_latex %}}} & \texttt{CVD SHEC} & \texttt{%{{ line.section.cvdshec %}}\%} & \texttt{%{{ line.cvdshec.native_string|escape_latex %}}} &  \\\nopagebreak[4]
+      & \texttt{IDXs} & \multirow{3}{*}[\normalbaselineskip]{\parbox{0.2\textwidth}{\texttt{%{for idx in line.idxs %}%{{idx%}}%{if not loop.last %}, %{endif%}%{endfor%}}}} & \texttt{%{{ line.section.cec_notif|escape_latex %}}} & \texttt{Edu Cess} & \texttt{%{{ line.section.cec %}}\%} & \texttt{%{{ line.cec.native_string|escape_latex %}}} & \\\nopagebreak[4]
+      &  &  & \texttt{%{{ line.section.cshec_notif|escape_latex %}}} & \texttt{S\&HE Cess} & \texttt{%{{ line.section.cshec %}}\%} & \texttt{%{{ line.cshec.native_string|escape_latex %}}} & \\\nopagebreak[4]
       &  &  & \texttt{%{{ line.section.acvd_notif|escape_latex %}}} & \texttt{SAD} & \texttt{%{{ line.section.acvd %}}\%} & \texttt{%{{ line.acvd.native_string|escape_latex %}}} & \\\hline
     %{ endfor %}
 \end{tabularx}
  
 \end{center}
 
+\renewcommand{\arraystretch}{2}
 \section*{Totals}
-\normalsize
+\large
 \ttfamily
-\begin{tabular}{|l r|}
-  \hline
-  {\bfseries Total FOB Value} & {\bfseries %{{ stage.invoice.extendedtotal.native_string|escape_latex %}}} \\\hline
-  {\bfseries Total Assessable Value} & {\bfseries %{{ stage.invoice.assessabletotal.native_string|escape_latex %}}} \\\hline
-  {\bfseries Total BCD} & %{{ stage.invoice.bcd.native_string|escape_latex %}}  \\\nopagebreak[4]
-  {\bfseries Total CVD} & %{{ stage.invoice.cvd.native_string|escape_latex %}}  \\\nopagebreak[4]
-  {\bfseries Total Edu Cess on BCD} & %{{ stage.invoice.cec.native_string|escape_latex %}}  \\\nopagebreak[4]
-  {\bfseries Total SHEC on BCD} & %{{ stage.invoice.cshec.native_string|escape_latex %}}  \\\nopagebreak[4]
-  {\bfseries Total Edu Cess on CVD} & %{{ stage.invoice.cvdec.native_string|escape_latex %}}  \\\nopagebreak[4]
-  {\bfseries Total SHEC on CVD} & %{{ stage.invoice.cvdshec.native_string|escape_latex %}}  \\\nopagebreak[4]
-  {\bfseries Total SAD} & %{{ stage.invoice.acvd.native_string|escape_latex %}}  \\\nopagebreak[4]
-  {\bfseries Total Duty Payable} & {\bfseries %{{ stage.invoice.dutypayable.native_string|escape_latex %}}}  \\\hline
-  {\bfseries Effective Duty Rate (CIF)} & {\bfseries %{{ stage.invoice.effectiverate_cif |round(2, 'ceil') %}}\%}  \\\hline
-  {\bfseries Effective Duty Rate (FOB)} & {\bfseries %{{ stage.invoice.effectiverate_fob |round(2, 'ceil') %}}\%}  \\\hline
+\begin{tabular}{r l r r}  
+ & {\bfseries Total FOB Value} & {\bfseries %{{ stage.invoice.extendedtotal.source_string|escape_latex %}}} & {\bfseries %{{ stage.invoice.extendedtotal.native_string|escape_latex %}}} \\
+ %{if stage.invoice.includes_freight%} {\small (As per Invoice)} %{endif%}& {\bfseries Total Freight} & {%{{ stage.invoice.freight.source_string|escape_latex %}}} & {%{{ stage.invoice.freight.native_string|escape_latex %}}} \\
+ %{if stage.invoice.added_insurance%}{\small (\@%{{stage.invoice.insurance_pc%}}\% %{{stage.given_data.insurance_note%}})} %{endif%} & {\bfseries Total Insurance} & {%{{ stage.invoice.insurance.source_string|escape_latex %}}} & {%{{ stage.invoice.insurance.native_string|escape_latex %}}} \\\hline
+ & {\bfseries Total CIF Value} & {\bfseries %{{ stage.invoice.cif.source_string|escape_latex %}}} & {\bfseries %{{ stage.invoice.cif.native_string|escape_latex %}}} \\
+%{if stage.invoice.added_handling%}{\small (\@%{{stage.invoice.handling_pc%}}\% %{{stage.given_data.handling_note%}})} %{endif%}  & {\bfseries Total Landing Charges} & {%{{ stage.invoice.landing.source_string|escape_latex %}}} & {%{{ stage.invoice.landing.native_string|escape_latex %}}} \\\hline
+ & {\bfseries Total Assessable Value} & {\bfseries %{{ stage.invoice.assessabletotal.source_string|escape_latex %}}} & {\bfseries %{{ stage.invoice.assessabletotal.native_string|escape_latex %}}} \\
+\end{tabular}
+\quad
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{l r}
+\textbf{Total Assessable Value} & {\bfseries %{{ stage.invoice.assessabletotal.native_string|escape_latex %}}}\\\hline\nopagebreak[4]
+\textbf{Total BCD} & %{{ stage.invoice.bcd.native_string|escape_latex %}}\\\nopagebreak[4]
+\textbf{Total CVD} & %{{ stage.invoice.cvd.native_string|escape_latex %}}\\\nopagebreak[4]
+\textbf{Total Edu Cess on CVD} & %{{ stage.invoice.cvdec.native_string|escape_latex %}}\\\nopagebreak[4]
+\textbf{Total SHEC on CVD} & %{{ stage.invoice.cvdshec.native_string|escape_latex %}}\\\nopagebreak[4]
+\textbf{Total Edu Cess on Customs Duty} & %{{ stage.invoice.cec.native_string|escape_latex %}}\\\nopagebreak[4]
+\textbf{Total SHEC on Customs Duty} & %{{ stage.invoice.cshec.native_string|escape_latex %}}\\\nopagebreak[4]
+\textbf{Total SAD} & %{{ stage.invoice.acvd.native_string|escape_latex %}}\\\hline\nopagebreak[4]
+\textbf{Total Duty Payable} & {\bfseries %{{ stage.invoice.dutypayable.native_string|escape_latex %}}}\\\nopagebreak[4]
+\textbf{Effective Duty Rate (CIF)} & {\bfseries %{{ stage.invoice.effectiverate_cif |round(2, 'ceil') %}}\%}\\\nopagebreak[4]
+\textbf{Effective Duty Rate (FOB)} & {\bfseries %{{ stage.invoice.effectiverate_fob |round(2, 'ceil') %}}\%}\\
 \end{tabular}
 
 \begin{table}[b!]

@@ -184,24 +184,33 @@ class CustomsInvoice(vendors.VendorInvoice):
             self._data['costs_not_included']['FREIGHT'] = "{0} (as listed in the invoice)".format(self.freight.source_string)
             self._includes_freight = True
 
-        ins = 0
         if 'insurance_pc' in self._data.keys():
             self.insurance_pc = float(self._data['insurance_pc'])
             if self.insurance_pc > 0:
                 self._added_insurance = True
-                ins = (self.extendedtotal * self.insurance_pc/100)
-                self._data['costs_not_included']['INSURANCE'] = "{0} (@{1}% {2})".format(ins.source_string, self.insurance_pc, self._data['insurance_note'])
+                self._data['costs_not_included']['INSURANCE'] = "{0} (@{1}% {2})".format(self.insurance.source_string, self.insurance_pc, self._data['insurance_note'])
 
         if 'handling_pc' in self._data.keys():
             self.handling_pc = float(self._data['handling_pc'])
             if self.handling_pc > 0:
                 self._added_handling = True
-                iv = ((self.extendedtotal + self.freight + ins) * self.handling_pc/100).source_string
-                self._data['costs_not_included']['HANDLING'] = "{0} (@{1}% {2})".format(iv, self.handling_pc, self._data['handling_note'])
+                self._data['costs_not_included']['LANDING'] = "{0} (@{1}% {2})".format(self.landing.source_string, self.handling_pc, self._data['handling_note'])
+
+    @property
+    def insurance(self):
+        return self.extendedtotal * self.insurance_pc/100
 
     @property
     def includes_freight(self):
         return self._includes_freight
+
+    @property
+    def landing(self):
+        return self.cif * self.handling_pc/100
+
+    @property
+    def cif(self):
+        return self.extendedtotal + self.freight + self.insurance
 
     @property
     def added_insurance(self):
@@ -373,13 +382,13 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
     @property
     def cec(self):
         return DutyComponent("C EC", self.hs_section.cec, self.hs_section.cec_notif,
-                             self.bcd.value * self.hs_section.cec/100.0)
+                             (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cec/100.0)
 
     @property
     def cshec(self):
         return DutyComponent("C SHEC", self.hs_section.cshec,
                              self.hs_section.cshec_notif,
-                             self.bcd.value * self.hs_section.cshec/100.0)
+                             (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cshec/100.0)
 
     @property
     def cvdec(self):

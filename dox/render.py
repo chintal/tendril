@@ -17,6 +17,7 @@ from utils.config import DOX_TEMPLATE_FOLDER
 from utils.config import COMPANY_LOGO_PATH
 from utils.config import COMPANY_NAME
 from utils.config import COMPANY_ADDRESS_LINE
+from utils.config import COMPANY_IEC
 
 from utils.colors import tableau20
 
@@ -61,6 +62,7 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
     stage['logo'] = COMPANY_LOGO_PATH
     stage['company'] = COMPANY_NAME
     stage['company_address_line'] = COMPANY_ADDRESS_LINE
+    stage['company_iec'] = COMPANY_IEC
     texpath = os.path.splitext(outpath)[0] + ".tex"
     with open(texpath, "wb") as f:
         f.write(template.render(stage=stage, **kwargs))

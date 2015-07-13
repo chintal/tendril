@@ -114,7 +114,11 @@ def gen_authorization(invoice, target_folder, serialno):
              'sno': serialno + '.1'
              }
 
-    return render.render_pdf(stage, 'customs/authorization.tex', outpath)
+    if invoice.given_data['cha'] == 'DHL':
+        template = 'customs/authorization.dhl.tex'
+    if invoice.given_data['cha'] == 'FedEx':
+        template = 'customs/authorization.fedex.tex'
+    return render.render_pdf(stage, template, outpath)
 
 
 def gen_tech_writeup(invoice, target_folder, serialno):
