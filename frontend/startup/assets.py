@@ -3,8 +3,12 @@ This file is part of koala
 See the COPYING, README, and INSTALL files for more information
 """
 
+import os
+
 from flask_assets import Bundle, Environment
 from frontend.app import app
+
+from utils.config import INSTANCE_CACHE
 
 
 bundles = {
@@ -12,6 +16,7 @@ bundles = {
         'css/normalize.css',
         'css/foundation.css',
         'css/foundation-icons.css',
+        'css/colors.css',
         'css/koala.css',
         output='gen/base.css',
         filters='cssmin'),
@@ -36,4 +41,6 @@ bundles = {
 
 
 assets = Environment(app)
+assets.cache = os.path.join(INSTANCE_CACHE, 'flaskassetcache')
 assets.register(bundles)
+

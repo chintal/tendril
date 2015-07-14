@@ -198,7 +198,10 @@ class CustomsInvoice(vendors.VendorInvoice):
 
     @property
     def insurance(self):
-        return self.extendedtotal * self.insurance_pc/100
+        if self.insurance_pc is not None:
+            return self.extendedtotal * self.insurance_pc/100
+        else:
+            return self.extendedtotal * 0
 
     @property
     def includes_freight(self):
@@ -214,11 +217,17 @@ class CustomsInvoice(vendors.VendorInvoice):
 
     @property
     def added_insurance(self):
-        return self._added_insurance
+        try:
+            return self._added_insurance
+        except AttributeError:
+            return False
 
     @property
     def added_handling(self):
-        return self._added_handling
+        try:
+            return self._added_handling
+        except AttributeError:
+            return False
 
     @property
     def source_folder(self):

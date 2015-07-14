@@ -78,7 +78,7 @@ class LabelBase(object):
 
     def _gen_qrcode(self, wfpath=None):
         if wfpath is None:
-            wfpath = TEMPDIR
+            wfpath = os.path.join(TEMPDIR, 'qrcache')
         qr = qrcode.make(self._ident + ' ' + self._sno)
         self._qr_path = os.path.join(wfpath, 'QR-' + self._ident + '-' + self._sno + '.png')
         qr.save(self._qr_path)
