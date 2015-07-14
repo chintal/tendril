@@ -90,11 +90,14 @@ class LabelBase(object):
 class LabelCW1(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
 
+
 class LabelP1(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
 
+
 class LabelP2(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
+
 
 class LabelD1(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
