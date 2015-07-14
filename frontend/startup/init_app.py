@@ -46,6 +46,9 @@ def init_app(app, db):
     from frontend.blueprints.doc import doc
     app.register_blueprint(doc, url_prefix='/doc')
 
+    from frontend.blueprints.gsymlib import gsymlib
+    app.register_blueprint(gsymlib, url_prefix='/gsymlib')
+
     return app
 
 
