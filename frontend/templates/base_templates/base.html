@@ -4,11 +4,12 @@
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title> {% if pagetitle %} {{ pagetitle }} | {% endif %} Koala </title>
-      <link rel="stylesheet" href="/static/css/normalize.css" />
-      <link rel="stylesheet" href="/static/css/foundation.css" />
-      <link rel="stylesheet" href="/static/css/foundation-icons.css">
-      <link rel="stylesheet" href="/static/css/koala.css">
-      <script src="/static/js/vendor/modernizr.js"></script>
+      {% assets "base_css" %}
+          <link rel="stylesheet" href="{{ ASSET_URL }}" />
+      {% endassets %}
+      {% assets "base_js" %}
+          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      {% endassets %}
   </head>
 <body>
     <div class="sticky">
@@ -86,7 +87,7 @@
         <div class="small-6 columns">
           <ul>
             <li class="first"><a href=" {{ url_for('home_page') }} ">Home</a></li>
-            <li><a href="#">Documentation</a></li>
+            <li><a href=" {{ url_for('doc.root') }} ">Documentation</a></li>
             <li><a href="#">Sources</a></li>
           </ul>
         </div>
@@ -94,14 +95,9 @@
     </div>
     </footer>
 
-    <script src="/static/js/vendor/jquery.js"></script>
-    <script src="/static/js/foundation/foundation.js"></script>
-    <script src="/static/js/foundation/foundation.topbar.js"></script>
-    <script src="/static/js/foundation/foundation.dropdown.js"></script>
-    <script src="/static/js/foundation/foundation.magellan.js"></script>
-    <script src="/static/js/foundation/foundation.equalizer.js"></script>
-    <script src="/static/js/foundation/foundation.alert.js"></script>
-    <script src="/static/js/vendor/stickyFooter.js"></script>
+    {% assets "foundation_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
     <script>
     $(document).foundation({
         equalizer : {

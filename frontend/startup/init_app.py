@@ -5,15 +5,18 @@ from logging.handlers import SMTPHandler
 from flask_mail import Mail
 from flask_user import UserManager, SQLAlchemyAdapter
 
+
 def init_app(app, db):
     """
     Initialize Flask applicaton
     """
-
     # Initialize app config settings
     app.config.from_object('frontend.startup.settings')
     if app.testing:
         app.config['WTF_CSRF_ENABLED'] = False              # Disable CSRF checks while testing
+
+    # Initialize Assets
+    from frontend.startup import assets
 
     # Setup Flask-Mail
     mail = Mail(app)
@@ -38,6 +41,10 @@ def init_app(app, db):
     # Load all views.py files to register @app.routes() with Flask
     from frontend.pages import views
     from frontend.users import views
+
+    # Register blueprints
+    from frontend.blueprints.doc import doc
+    app.register_blueprint(doc, url_prefix='/doc')
 
     return app
 
