@@ -19,6 +19,8 @@ from utils.fs import get_path_breadcrumbs
 from utils.config import GEDA_SYMLIB_ROOT
 
 
+
+
 def is_geda_symbol(path):
     return False
 
@@ -103,11 +105,13 @@ def get_geda_symbol_context(ident):
     symbol = [x for x in symbol if x.status != 'Generator']
 
     return {'ident': ident,
-            'symbol': symbol}
+            'symbol': symbol[0],
+            'sympaths': [os.path.relpath(sym.fpath, GEDA_SYMLIB_ROOT) for sym in symbol],
+            'imgpaths': [sym.img_repr_fname for sym in symbol]}
 
 
 @bp.route('/')
-@bp.route('/detail/<ident>')
+@bp.route('/detail/<path:ident>')
 @bp.route('/<path:path>')
 @login_required
 def main(path=None, ident=None):

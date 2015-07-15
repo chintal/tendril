@@ -126,6 +126,20 @@ class GedaSymbol(object):
     def is_modlen(self):
         return conventions.electronics.fpismodlen(self.device)
 
+    @property
+    def datasheet_url(self):
+        # TODO This can be cached
+        try:
+            from sourcing.electronics import vendor_list
+            from inventory.guidelines import electronics_qty
+            dkv = vendor_list[0]
+            vsinfo = dkv.get_optimal_pricing(self.ident, electronics_qty.get_compliant_qty(self.ident, 5))
+            dkvpno = vsinfo[1]
+            dkdsurl = dkv.get_vpart(dkvpno).datasheet
+            return dkdsurl
+        except Exception:
+            return None
+
     def __repr__(self):
         return '{0:40}'.format(self.ident)
 
