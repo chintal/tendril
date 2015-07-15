@@ -69,6 +69,9 @@ def init_app(app, db):
     from frontend.blueprints.gsymlib import gsymlib
     app.register_blueprint(gsymlib, url_prefix='/gsymlib')
 
+    from frontend.blueprints.entityhub import entityhub
+    app.register_blueprint(entityhub, url_prefix='/entityhub')
+
     return app
 
 

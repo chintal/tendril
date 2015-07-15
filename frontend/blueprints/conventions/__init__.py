@@ -5,7 +5,7 @@ See the COPYING, README, and INSTALL files for more information
 
 from flask import Blueprint
 
-entityhub = Blueprint('entityhub', __name__,
-                      template_folder='templates')
+conventions = Blueprint('conventions', __name__,
+                        template_folder='templates')
 
 import views

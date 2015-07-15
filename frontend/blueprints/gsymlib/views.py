@@ -13,15 +13,11 @@ from flask_user import login_required
 
 import gedaif.gsymlib
 
-from . import gsymlib as bp
+from . import gsymlib as blueprint
 
 from utils.fs import get_path_breadcrumbs
 from utils.fs import Crumb
 from utils.config import GEDA_SYMLIB_ROOT
-
-
-def is_geda_symbol(path):
-    return False
 
 
 def is_geda_folder(path):
@@ -130,10 +126,10 @@ def get_geda_generator_context(gen):
             'genpath': os.path.relpath(generator.genpath, GEDA_SYMLIB_ROOT)}
 
 
-@bp.route('/')
-@bp.route('/detail/<path:gen>.gen')
-@bp.route('/detail/<path:ident>')
-@bp.route('/<path:path>')
+@blueprint.route('/')
+@blueprint.route('/detail/<path:gen>.gen')
+@blueprint.route('/detail/<path:ident>')
+@blueprint.route('/<path:path>')
 @login_required
 def main(path=None, ident=None, gen=None):
     stage = {}
