@@ -264,15 +264,25 @@ def is_recognized(ident):
     return False
 
 
-def get_symbol(ident, case_insensitive=False):
+def get_symbol(ident, case_insensitive=False, get_all=False):
+    rval = []
     for symbol in gsymlib:
         if case_insensitive is False:
             if symbol.ident == ident:
-                return symbol
+                rval.append(symbol)
         else:
             if symbol.ident.upper() == ident.upper():
-                return symbol
-    raise ValueError(ident)
+                rval.append(symbol)
+    if not get_all:
+        try:
+            return rval[0]
+        except KeyError:
+            raise ValueError(ident)
+    else:
+        if len(rval) > 0:
+            return rval
+        else:
+            raise ValueError(ident)
 
 
 def get_symbol_folder(ident, case_insensitive=False):

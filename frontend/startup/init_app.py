@@ -2,6 +2,8 @@
 
 import logging
 from logging.handlers import SMTPHandler
+from urllib2 import quote, unquote
+
 from flask_mail import Mail
 from flask_user import UserManager, SQLAlchemyAdapter
 
@@ -23,6 +25,14 @@ def init_app(app, db):
     def unicode_filter(s):
         return unicode(s, 'utf-8')
     app.jinja_env.filters['unicode'] = unicode_filter
+
+    def quote_filter(s):
+        return quote(s)
+    app.jinja_env.filters['quote'] = quote_filter
+
+    def unquote_filter(s):
+        return unquote(s)
+    app.jinja_env.filters['unquote'] = unquote_filter
 
     # Setup Flask-Mail
     mail = Mail(app)

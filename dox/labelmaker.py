@@ -8,11 +8,15 @@ logger = log.get_logger(__name__, log.INFO)
 
 import os
 import qrcode
+import atexit
+import cPickle
 
 import render
 from utils.fs import TEMPDIR
 from utils.config import COMPANY_NAME
 from utils.config import COMPANY_LOGO_PATH
+from utils.config import INSTANCE_CACHE
+
 
 LABEL_TEMPLATES_ROOT = 'labels'
 
@@ -79,6 +83,8 @@ class LabelBase(object):
     def _gen_qrcode(self, wfpath=None):
         if wfpath is None:
             wfpath = os.path.join(TEMPDIR, 'qrcache')
+            if not os.path.exists(wfpath):
+                os.makedirs(wfpath)
         qr = qrcode.make(self._ident + ' ' + self._sno)
         self._qr_path = os.path.join(wfpath, 'QR-' + self._ident + '-' + self._sno + '.png')
         qr.save(self._qr_path)
@@ -89,18 +95,22 @@ class LabelBase(object):
 
 class LabelCW1(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
+    lpp = 88
 
 
 class LabelP1(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
+    lpp = 88
 
 
 class LabelP2(LabelBase):
-    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'P2_template.tex')
+    lpp = 120
 
 
 class LabelD1(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
+    lpp = 88
 
 
 def get_labelbase(code):
@@ -139,10 +149,34 @@ class LabelSheet(object):
     def add_label(self, label):
         self._labels.append(label)
 
-    def generate_pdf(self, targetfolder):
-        stage = {'labels': self._labels}
+    @property
+    def nl(self):
+        return len(self._labels)
+
+    def generate_pdf(self, targetfolder, force=True):
+        labels = [label for label in self._labels]
+        nl = len(labels)
+        sheets, remain = divmod(nl, self.base.lpp)
+        if remain > self.base.lpp * 0.8 or force is True:
+            stage = {'labels': labels}
+            self._labels = []
+            logger.info("Creating all labels for sheet : " + self._code)
+        elif sheets > 0:
+            stage = {'labels': labels[:self.base.lpp*sheets]}
+            self._labels = labels[self.base.lpp*sheets:]
+            logger.info("Holding back "+str(remain)+" labels for sheet : " + self._code)
+        else:
+            logger.info("Not generating labels for sheet : " + self._code + ' ' + str(remain))
+            return None
         return render.render_pdf(stage, self._base.templatefile,
                                  os.path.join(targetfolder, 'labels-' + self.code + '.pdf'))
+
+    def clear_sno_label(self, sno):
+        if self._labels is None:
+            self._labels = []
+        for label in self._labels:
+            if label.sno == sno:
+                self._labels.remove(label)
 
 
 class LabelMaker(object):
@@ -150,6 +184,7 @@ class LabelMaker(object):
         self._sheets = []
 
     def add_label(self, code, ident, sno):
+        self._clear_sno_label(sno)
         sheet = self._get_sheet(code)
         label = sheet.base(code, ident, sno)
         sheet.add_label(label)
@@ -163,10 +198,33 @@ class LabelMaker(object):
     def _sheetdict(self):
         return {x.code: x for x in self._sheets}
 
-    def generate_pdfs(self, targetfolder):
+    def generate_pdfs(self, targetfolder, force=False):
         rval = []
         for sheet in self._sheets:
-            rval.append(sheet.generate_pdf(targetfolder))
+            rval.append(sheet.generate_pdf(targetfolder, force))
         return rval
 
-manager = LabelMaker()
+    @property
+    def nl(self):
+        return sum([x.nl for x in self._sheets])
+
+    def _clear_sno_label(self, sno):
+        for sheet in self._sheets:
+            sheet.clear_sno_label(sno)
+
+
+def get_manager():
+    try:
+        with open(os.path.join(INSTANCE_CACHE, 'labelmaker.p'), 'rb') as f:
+            return cPickle.load(f)
+    except IOError:
+        return LabelMaker()
+
+manager = get_manager()
+
+
+def dump_manager():
+    with open(os.path.join(INSTANCE_CACHE, 'labelmaker.p'), 'wb') as f:
+        cPickle.dump(manager, f)
+
+atexit.register(dump_manager)

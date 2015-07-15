@@ -60,7 +60,7 @@
         {% for symbol in stage.symbols %}
         <li>
             <ul class="pricing-table active-tb shadow mrgn-20-top">
-                <a href = "">
+                <a href = "/gsymlib/detail/{{symbol.ident|quote}}">
                 <li class="price">{{symbol.value}}</li>
                 <li class="title">{{symbol.ident}}</li>
                 {% if symbol.footprint %}

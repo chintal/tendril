@@ -16,6 +16,7 @@ bundles = {
         'css/normalize.css',
         'css/foundation.css',
         'css/foundation-icons.css',
+        'js/vendor/responsive-tables.js',
         'css/colors.css',
         'css/koala.css',
         output='gen/base.css',
@@ -35,6 +36,7 @@ bundles = {
         'js/foundation/foundation.equalizer.js',
         'js/foundation/foundation.alert.js',
         'js/vendor/stickyFooter.js',
+        'js/vendor/responsive-tables.js',
         output='gen/foundation.js',
         filters='jsmin')
 }

@@ -5,6 +5,7 @@ See the COPYING, README, and INSTALL files for more information
 
 import os
 from urllib import urlencode
+from urllib2 import unquote
 from collections import namedtuple
 
 from flask import render_template, abort, request
@@ -97,26 +98,32 @@ def get_geda_browser_context(path):
     return context
 
 
-def get_geda_symbol_context(path):
-    pass
+def get_geda_symbol_context(ident):
+    symbol = gedaif.gsymlib.get_symbol(ident, get_all=True)
+    symbol = [x for x in symbol if x.status != 'Generator']
+
+    return {'ident': ident,
+            'symbol': symbol}
 
 
 @bp.route('/')
+@bp.route('/detail/<ident>')
 @bp.route('/<path:path>')
 @login_required
-def main(path=None):
+def main(path=None, ident=None):
     stage = {}
-    if path is None:
+    if path is None and ident is None:
         stage.update(get_geda_browser_context(None))
         return render_template('gsymlib_browse.html', stage=stage,
                                pagetitle='gEDA Library Browser')
-    if path is not None:
-        if is_geda_folder(path):
-            stage.update(get_geda_browser_context(path))
-            return render_template('gsymlib_browse.html', stage=stage,
+    if path is not None and is_geda_folder(path):
+        stage.update(get_geda_browser_context(path))
+        return render_template('gsymlib_browse.html', stage=stage,
                                    pagetitle='gEDA Library Browser')
-        elif is_geda_symbol(path):
-            stage.update(get_geda_symbol_context(path))
+    if ident is not None:
+        ident = unquote(ident)
+        if ident in gedaif.gsymlib.gsymlib_idents:
+            stage.update(get_geda_symbol_context(ident))
             return render_template('gsymlib_symbol.html', stage=stage,
                                    pagetitle='gEDA Symbol Detail')
     abort(404)

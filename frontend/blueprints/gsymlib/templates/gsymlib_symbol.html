@@ -2,6 +2,60 @@
 
 {% block main %}
 
-<h2> gEDA Symbol </h2>
+<h3> gEDA Symbol Details </h3>
+
+<!--Symbol Information-->
+<div class="row">
+    <div class="small-12 medium-6 large-4">
+        <ul class="pricing-table active-tb shadow mrgn-20-top">
+                <a href = "/gsymlib/detail/{{symbol.ident|quote}}">
+                <li class="price">{{stage.symbol.value}}</li>
+                <li class="title">{{stage.symbol.ident}}</li>
+                {% if stage.symbol.footprint %}
+                <li class="bullet-item">{{stage.symbol.footprint}}</li>
+                {% endif %}
+                <li class="description">{{stage.symbol.fname}}</li>
+                {% if symbol.description %}
+                <li class="description">{{stage.symbol.description|unicode}}</li>
+                </a>
+                {% endif %}
+                {% if not symbol.sym_ok %}
+                  <span class="right label radius alert">Bad Symbol</span>
+                {% endif %}
+                {% if symbol.is_generator %}
+                  <span class="right label radius warning">Generator</span>
+                {% endif %}
+                {% if symbol.is_virtual %}
+                  <span class="right label radius success">Virtual</span>
+                {% endif %}
+                {% if symbol.is_deprecated %}
+                  <span class="right label radius alert">Deprecated</span>
+                {% endif %}
+                {% if symbol.is_experimental %}
+                  <span class="right label radius warning">Experimental</span>
+                {% endif %}
+                {% if symbol.is_wire %}
+                  <span class="right label radius info">Wire</span>
+                {% endif %}
+                {% if symbol.is_modlen %}
+                  <span class="right label radius info">Modlen</span>
+                {% endif %}
+            </ul>
+        <li class="description"><img src="/gsymlib/gsymlib/{{symbol.img_repr_fname}}"></li>
+    </div>
+</div>
+
+<!--Sourcing Information-->
+
+<!--Sourcing History-->
+
+<!--Inventory Information-->
+
+<!--Inventory History-->
+
+<!--Utilization Information-->
+
+<!--Utilization History-->
+
 
 {% endblock %}
