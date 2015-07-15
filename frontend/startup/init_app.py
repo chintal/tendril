@@ -72,6 +72,9 @@ def init_app(app, db):
     from frontend.blueprints.entityhub import entityhub
     app.register_blueprint(entityhub, url_prefix='/entityhub')
 
+    from frontend.blueprints.conventions import conventions
+    app.register_blueprint(conventions, url_prefix='/conventions')
+
     return app
 
 
