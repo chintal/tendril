@@ -126,6 +126,13 @@ fpismodlen_strs = [
 ]
 
 
+def fpismodlen(device):
+    for st in fpismodlen_strs:
+        if device.startswith(st):
+            return True
+    return False
+
+
 def fpiswire(device):
     for st in fpiswire_strs:
         if device.startswith(st):

@@ -23,5 +23,14 @@ def conv_gsch2pdf(schpath, docfolder):
     return pdfpath
 
 
+def conv_gsch2png(schpath, outfolder):
+    schpath = os.path.normpath(schpath)
+    schfname = os.path.splitext(os.path.split(schpath)[1])[0]
+    outpath = os.path.join(outfolder, schfname+'.png')
+    gschem_pngcmd = "gschem -p -o" + outpath + " -s" + GEDA_SCHEME_DIR + '/image.scm ' + schpath
+    subprocess.call(gschem_pngcmd.split(' '))
+    return outpath
+
+
 if __name__ == "__main__":
     pass

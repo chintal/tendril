@@ -11,11 +11,13 @@ from frontend.app import app
 def home_page():
     return render_template('pages/home_page.html')
 
+
 # The Member page is accessible to authenticated users (users that have logged in)
 @app.route('/member')
 @login_required             # Limits access to authenticated users
 def member_page():
     return render_template('pages/member_page.html')
+
 
 # The Admin page is accessible to users with the 'admin' role
 @app.route('/admin')

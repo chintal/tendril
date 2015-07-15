@@ -18,6 +18,12 @@ def init_app(app, db):
     # Initialize Assets
     from frontend.startup import assets
 
+    # Create Filters
+
+    def unicode_filter(s):
+        return unicode(s, 'utf-8')
+    app.jinja_env.filters['unicode'] = unicode_filter
+
     # Setup Flask-Mail
     mail = Mail(app)
 

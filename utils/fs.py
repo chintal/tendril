@@ -12,12 +12,30 @@ import os
 import glob
 import string
 from datetime import datetime
+from collections import namedtuple
 
 
 if tempfile.tempdir is None:
     tempfile.tempdir = tempfile.mkdtemp()
 
 TEMPDIR = tempfile.gettempdir()
+
+
+Crumb = namedtuple('Crumb', 'name path')
+
+
+def get_path_breadcrumbs(path, base=None, rootst='Root'):
+    if base is not None:
+        path = os.path.relpath(path, base)
+    crumbs = []
+    while True:
+        head, tail = os.path.split(path)
+        if not tail:
+            break
+        crumbs = [Crumb(name=tail, path=path)] + crumbs
+        path = head
+    crumbs = [Crumb(name=rootst, path='')] + crumbs
+    return crumbs
 
 
 def get_folder_mtime(folder):

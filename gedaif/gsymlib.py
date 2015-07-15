@@ -13,10 +13,13 @@ import jinja2
 from utils.config import GEDA_SYMLIB_ROOT
 from utils.config import AUDIT_PATH
 from utils.config import KOALA_ROOT
+from utils.config import INSTANCE_CACHE
 
 import utils.fs
 import conventions.electronics
 import conventions.iec60063
+
+from gschem import conv_gsch2png
 
 
 class GedaSymbol(object):
@@ -30,7 +33,10 @@ class GedaSymbol(object):
         self.status = ''
         self.package = ''
         self._is_virtual = ''
+        self._img_repr_path = ''
+        self._img_repr_fname = ''
         self._acq_sym(fpath)
+        self._img_repr()
 
     def _acq_sym(self, fpath):
         with open(fpath, 'r') as f:
@@ -51,6 +57,21 @@ class GedaSymbol(object):
                     self.package = line.split('=')[1].strip()
             if self.status == '':
                 self.status = 'Active'
+
+    def _img_repr(self):
+        outfolder = os.path.join(INSTANCE_CACHE, 'gsymlib')
+        self._img_repr_fname = os.path.splitext(self.fname)[0]+'.png'
+        self._img_repr_path = os.path.join(outfolder, self._img_repr_fname)
+        if not os.path.exists(outfolder):
+            os.makedirs(outfolder)
+        if os.path.exists(self._img_repr_path):
+            if utils.fs.get_file_mtime(self._img_repr_path) > utils.fs.get_file_mtime(self.fpath):
+                return
+        conv_gsch2png(self.fpath, outfolder)
+
+    @property
+    def img_repr_fname(self):
+        return self._img_repr_fname
 
     @property
     def ident(self):
@@ -77,6 +98,18 @@ class GedaSymbol(object):
             return True
         return False
 
+    @property
+    def is_deprecated(self):
+        if self.status == 'Deprecated':
+            return True
+        return False
+
+    @property
+    def is_experimental(self):
+        if self.status == 'Experimental':
+            return True
+        return False
+
     @is_virtual.setter
     def is_virtual(self, value):
         if self.status == 'Generator':
@@ -84,6 +117,14 @@ class GedaSymbol(object):
                 self.status = 'Virtual'
         else:
             raise AttributeError
+
+    @property
+    def is_wire(self):
+        return conventions.electronics.fpiswire(self.device)
+
+    @property
+    def is_modlen(self):
+        return conventions.electronics.fpismodlen(self.device)
 
     def __repr__(self):
         return '{0:40}'.format(self.ident)
@@ -155,14 +196,18 @@ class GSymGeneratorFile(object):
         return None
 
 
-def gen_symlib():
+def get_folder_symbols(path, template=None, resolve_generators=True, include_generators=False):
+    if template is None:
+        template = _jinja_init()
     symbols = []
-    template = _jinja_init()
-    for root, dirs, files in os.walk(GEDA_SYMLIB_ROOT):
-        for f in files:
-            if f.endswith(".sym"):
-                symbol = GedaSymbol(os.path.join(root, f))
-                if symbol.is_generator:
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    for f in files:
+        if f.endswith(".sym"):
+            symbol = GedaSymbol(os.path.join(path, f))
+            if symbol.is_generator:
+                if include_generators is True:
+                    symbols.append(symbol)
+                if resolve_generators is True:
                     genpath = os.path.splitext(symbol.fpath)[0] + '.gen.yaml'
                     if os.path.exists(genpath):
                         genfile = GSymGeneratorFile(symbol.fpath)
@@ -180,8 +225,24 @@ def gen_symlib():
                                  'description': symbol.description}
                         with open(genpath, 'w') as gf:
                             gf.write(template.render(stage=stage))
-                else:
-                    symbols.append(symbol)
+            else:
+                symbols.append(symbol)
+    return symbols
+
+
+def gen_symlib(path, recursive=True,
+               resolve_generators=True, include_generators=False):
+    symbols = []
+    template = _jinja_init()
+    if recursive:
+        for root, dirs, files in os.walk(path):
+            symbols += get_folder_symbols(root, template,
+                                          resolve_generators=resolve_generators,
+                                          include_generators=include_generators)
+    else:
+        symbols = get_folder_symbols(path, template,
+                                     resolve_generators=resolve_generators,
+                                     include_generators=include_generators)
     return symbols
 
 
@@ -193,7 +254,7 @@ def _jinja_init():
     return template
 
 
-gsymlib = gen_symlib()
+gsymlib = gen_symlib(GEDA_SYMLIB_ROOT)
 gsymlib_idents = [x.ident for x in gsymlib]
 
 
@@ -213,11 +274,13 @@ def get_symbol(ident, case_insensitive=False):
                 return symbol
     raise ValueError(ident)
 
+
 def get_symbol_folder(ident, case_insensitive=False):
     symobj = get_symbol(ident, case_insensitive=case_insensitive)
     sympath = symobj.fpath
     symfolder = os.path.split(sympath)[0]
     return os.path.relpath(symfolder, GEDA_SYMLIB_ROOT)
+
 
 def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
     for symbol in gsymlib:
