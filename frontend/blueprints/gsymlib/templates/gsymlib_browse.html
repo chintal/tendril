@@ -2,12 +2,6 @@
 
 {% block main %}
 
-<ul class="breadcrumbs">
-    {% for crumb in stage.breadcrumbs %}
-    <li {% if loop.last %} class="current" {% endif %}><a href=" /gsymlib/{{ crumb.path }}?{{ stage.query_string }} ">{{ crumb.name }}</a></li>
-    {% endfor %}
-</ul>
-
 <div class="row">
     <form action=" {{ request.path }} " method="GET">
         <fieldset>
@@ -60,8 +54,14 @@
         {% for symbol in stage.symbols %}
         <li>
             <ul class="pricing-table active-tb shadow mrgn-20-top">
-                <a href = "/gsymlib/detail/{{symbol.ident|quote}}">
-                <li class="price">{{symbol.value}}</li>
+                {% if symbol.generator %}
+                <a href = " /gsymlib/detail/{{symbol.genident|quote}} ">
+                <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.genident}}</span></li>
+                {% else %}
+                <a href = " {% if symbol.ident|strip %} /gsymlib/detail/{{symbol.ident|quote}} {% endif %}">
+                <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.value}}</span></li>
+                {% endif %}
+
                 <li class="title">{{symbol.ident}}</li>
                 {% if symbol.footprint %}
                 <li class="bullet-item">{{symbol.footprint}}</li>

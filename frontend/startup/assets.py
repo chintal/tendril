@@ -37,6 +37,7 @@ bundles = {
         'js/foundation/foundation.alert.js',
         'js/vendor/stickyFooter.js',
         'js/vendor/responsive-tables.js',
+        'js/vendor/jquery.textfill.js',
         output='gen/foundation.js',
         filters='jsmin')
 }

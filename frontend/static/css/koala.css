@@ -53,34 +53,18 @@ footer {
  padding-bottom: 35%;
 }
 
-
-.active-tb {
-  position: relative;
-  box-shadow: 0px 2px 10px 0px rgba(50, 50, 50, 0.5);
-  transform: scale(1);
-  border: 0;
-  transition: 0.4s ease;
-  z-index: 13; }
-  .active-tb:hover {
-    position: relative;
-    box-shadow: 0px 2px 10px 0px rgba(50, 50, 50, 0.5);
-    transform: scale(1.25);
-    border: 0;
-    z-index: 15; }
-
-
-.switch-on {
-  position: absolute;
-  left: -55px;
-  top: 10px;
-  color: white;
-  font-weight: bold;
-  font-size: 9px; }
-
-.switch-off {
-  position: absolute;
-  left: -25px;
-  top: 10px;
-  color: white;
-  font-weight: bold;
-  font-size: 9px; }
+@media screen and (min-width:40.0625em){
+    .active-tb {
+      position: relative;
+      box-shadow: 0px 2px 10px 0px rgba(50, 50, 50, 0.5);
+      transform: scale(1);
+      border: 0;
+      transition: 0.4s ease;
+      z-index: 13; }
+      .active-tb:hover {
+        position: relative;
+        box-shadow: 0px 2px 10px 0px rgba(50, 50, 50, 0.5);
+        transform: scale(1.25);
+        border: 0;
+        z-index: 15; }
+}

@@ -34,6 +34,10 @@ def init_app(app, db):
         return unquote(s)
     app.jinja_env.filters['unquote'] = unquote_filter
 
+    def strip(s):
+        return s.strip()
+    app.jinja_env.filters['strip'] = strip
+
     # Setup Flask-Mail
     mail = Mail(app)
 

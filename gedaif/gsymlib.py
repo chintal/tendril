@@ -140,6 +140,32 @@ class GedaSymbol(object):
         except Exception:
             return None
 
+    @property
+    def genident(self):
+        return os.path.splitext(self.fname)[0] + '.gen'
+
+    @property
+    def genpath(self):
+        if self.is_generator:
+            return os.path.splitext(self.fpath)[0] + '.gen.yaml'
+        else:
+            raise AttributeError
+
+    @property
+    def generator(self):
+        if not self.is_generator:
+            raise AttributeError
+        return GSymGeneratorFile(self.fpath)
+
+    @property
+    def idents(self):
+        if not self.is_generator:
+            raise AttributeError
+        if not self.generator.values:
+            return None
+        return [conventions.electronics.ident_transform(self.device, v, self.footprint)
+                for v in self.generator.values]
+
     def __repr__(self):
         return '{0:40}'.format(self.ident)
 
@@ -219,6 +245,7 @@ def get_folder_symbols(path, template=None, resolve_generators=True, include_gen
         if f.endswith(".sym"):
             symbol = GedaSymbol(os.path.join(path, f))
             if symbol.is_generator:
+                generators.append(symbol)
                 if include_generators is True:
                     symbols.append(symbol)
                 if resolve_generators is True:
@@ -268,8 +295,16 @@ def _jinja_init():
     return template
 
 
+generators = []
 gsymlib = gen_symlib(GEDA_SYMLIB_ROOT)
+generator_names = [os.path.splitext(x.fname)[0] + '.gen' for x in generators]
 gsymlib_idents = [x.ident for x in gsymlib]
+
+
+def get_generator(gen):
+    for generator in generators:
+        if os.path.splitext(generator.fname)[0] + '.gen' == gen:
+            return generator
 
 
 def is_recognized(ident):

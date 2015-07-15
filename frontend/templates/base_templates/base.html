@@ -18,8 +18,9 @@
 	        <li class="name">
 	            <h1><a href="{{ url_for('home_page') }}">Koala</a></h1>
 	        </li>
-            <!-- Remove the class "menu-icon" to get rid of menu icon. Take out "Menu" to just have icon alone -->
-	        <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+	        <li class="toggle-topbar menu-icon">
+                <a href="#"><span>Menu</span></a>
+            </li>
         </ul>
         <section class="top-bar-section">
 	    <!-- Right Nav Section -->
@@ -51,6 +52,16 @@
         </ul>
         </section>
     </nav>
+    {% if stage and stage.breadcrumbs %}
+    <ul class="breadcrumbs">
+        {% for crumb in stage.breadcrumbs %}
+        <li {% if loop.last %} class="current" {% endif %}><a href=" /gsymlib/{{ crumb.path }}">{{ crumb.name }}</a></li>
+        {% endfor %}
+        {%  if pagetitle %}
+        <li class="right current show-for-medium-up"> {{ pagetitle }} </li>
+        {% endif %}
+    </ul>
+    {% endif %}
     </div>
 
     <div class="row">
@@ -106,6 +117,9 @@
             // Allow equalizer to resize hidden elements
             act_on_hidden_el: false
         }
+    });
+    $('.autoscale').textfill({
+        maxFontPixels: 28,
     });
     $(document).on('close.fndtn.alert', function(event) {
         $(document).foundation('reflow');

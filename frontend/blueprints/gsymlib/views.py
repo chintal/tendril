@@ -16,9 +16,8 @@ import gedaif.gsymlib
 from . import gsymlib as bp
 
 from utils.fs import get_path_breadcrumbs
+from utils.fs import Crumb
 from utils.config import GEDA_SYMLIB_ROOT
-
-
 
 
 def is_geda_symbol(path):
@@ -75,12 +74,14 @@ def get_geda_browser_context(path):
         subfolders = [Subfolder(name=x, path=os.path.relpath(os.path.join(path, x), GEDA_SYMLIB_ROOT))
                       for x in os.listdir(path) if os.path.isdir(os.path.join(path, x))]
     else:
-        subfolders = None
+        subfolders = []
 
     symbols = gedaif.gsymlib.gen_symlib(path,
                                         include_generators=show_generators,
                                         resolve_generators=resolve_generators,
                                         recursive=flatten_folders)
+    if symbols is None:
+        symbols = []
 
     queryst = urlencode({'showImages': show_images_st,
                          'hideGenerators': hide_generators_st,
@@ -88,9 +89,9 @@ def get_geda_browser_context(path):
                          'flattenFolders': flatten_folders_st})
 
     context = {'path': os.path.relpath(path, GEDA_SYMLIB_ROOT),
-               'subfolders': subfolders,
+               'subfolders': sorted(subfolders, key=lambda y: y.name),
                'breadcrumbs': get_path_breadcrumbs(path, GEDA_SYMLIB_ROOT, rootst="gEDA Symbol Library"),
-               'symbols': symbols,
+               'symbols': sorted(symbols, key=lambda y: y.ident),
                'show_images': show_images,
                'resolve_generators': resolve_generators,
                'hide_generators': hide_generators,
@@ -104,19 +105,39 @@ def get_geda_symbol_context(ident):
     symbol = gedaif.gsymlib.get_symbol(ident, get_all=True)
     symbol = [x for x in symbol if x.status != 'Generator']
 
+    navpath = os.path.relpath(symbol[0].fpath, GEDA_SYMLIB_ROOT)
+    breadcrumbs = get_path_breadcrumbs(navpath, rootst="gEDA Symbol Library")
+    if symbol[0].is_virtual:
+        breadcrumbs.insert(-1, Crumb(name=os.path.splitext(symbol[0].fname)[0] + '.gen',
+                                     path='detail/' + os.path.splitext(symbol[0].fname)[0] + '.gen'))
+
     return {'ident': ident,
             'symbol': symbol[0],
             'sympaths': [os.path.relpath(sym.fpath, GEDA_SYMLIB_ROOT) for sym in symbol],
-            'imgpaths': [sym.img_repr_fname for sym in symbol]}
+            'imgpaths': [sym.img_repr_fname for sym in symbol],
+            'breadcrumbs': breadcrumbs}
+
+
+def get_geda_generator_context(gen):
+    generator = gedaif.gsymlib.get_generator(gen)
+    navpath = os.path.relpath(generator.fpath, GEDA_SYMLIB_ROOT)
+    navpath = os.path.splitext(navpath)[0] + '.gen'
+
+    return {'genname': gen,
+            'generator': generator,
+            'breadcrumbs': get_path_breadcrumbs(navpath, rootst="gEDA Symbol Library"),
+            'sympaths': [os.path.relpath(generator.fpath, GEDA_SYMLIB_ROOT)],
+            'genpath': os.path.relpath(generator.genpath, GEDA_SYMLIB_ROOT)}
 
 
 @bp.route('/')
+@bp.route('/detail/<path:gen>.gen')
 @bp.route('/detail/<path:ident>')
 @bp.route('/<path:path>')
 @login_required
-def main(path=None, ident=None):
+def main(path=None, ident=None, gen=None):
     stage = {}
-    if path is None and ident is None:
+    if path is None and ident is None and gen is None:
         stage.update(get_geda_browser_context(None))
         return render_template('gsymlib_browse.html', stage=stage,
                                pagetitle='gEDA Library Browser')
@@ -130,4 +151,11 @@ def main(path=None, ident=None):
             stage.update(get_geda_symbol_context(ident))
             return render_template('gsymlib_symbol.html', stage=stage,
                                    pagetitle='gEDA Symbol Detail')
+    if gen is not None:
+        gen += '.gen'
+        gen = unquote(gen)
+        if gen in gedaif.gsymlib.generator_names:
+            stage.update(get_geda_generator_context(gen))
+            return render_template('gsymlib_generator.html', stage=stage,
+                                   pagetitle='gEDA Generator Detail')
     abort(404)
