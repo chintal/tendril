@@ -73,3 +73,6 @@ class EntityBomBase(EntityBase):
 
     def create_output_bom(self, *args, **kwargs):
         raise NotImplementedError
+
+    def define(self, *args, **kwargs):
+        raise NotImplementedError

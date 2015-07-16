@@ -9,7 +9,7 @@ import csv
 from entitybase import EntityBase
 from conventions.electronics import fpiswire
 from conventions.electronics import parse_ident
-from conventions.lengths import Length
+from utils.lengths import Length
 
 
 class OutputElnBomDescriptor(object):
