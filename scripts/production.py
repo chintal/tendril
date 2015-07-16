@@ -63,6 +63,11 @@ if data['include_refbom_for_no_am'] is True:
 else:
     INCLUDE_REFBOM_FOR_NO_AM = False
 
+if data['force_labels'] is True:
+    FORCE_LABELS = True
+else:
+    FORCE_LABELS = False
+
 
 if 'sourcing_orders' in data.keys():
     SOURCING_ORDERS = data['sourcing_orders']
@@ -153,15 +158,13 @@ else:
     indentsno = serialnos.get_serialno('IDT', 'FOR ' + PROD_ORD_SNO, REGISTER)
     snomap['indentsno'] = indentsno
 title = data['title']
-indentpath, labelpath, indentsno = dox.indent.gen_stock_idt_from_cobom(orderfolder,
+indentpath, indentsno = dox.indent.gen_stock_idt_from_cobom(orderfolder,
                                                                        indentsno, title,
                                                                        data['cards'], cobom)
 if REGISTER is True:
     dox.docstore.register_document(indentsno, indentpath, 'INVENTORY INDENT', efield=title)
-    dox.docstore.register_document(indentsno, labelpath, 'INVENTORY INDENT LABELS', efield=title)
 else:
     logger.info("Not Registering Document : INVENTORY INDENT - " + indentsno)
-    logger.info("Not Registering Document : INVENTORY INDENT LABELS - " + indentsno)
 
 # Generate Production Order
 logger.info("Generating Production Order")
@@ -261,7 +264,7 @@ production_order = dox.production.gen_production_order(orderfolder, PROD_ORD_SNO
                                                        data, snos,
                                                        sourcing_orders=SOURCING_ORDERS,
                                                        root_orders=ROOT_ORDERS)
-labelpaths = dox.labelmaker.manager.generate_pdfs(orderfolder)
+labelpaths = dox.labelmaker.manager.generate_pdfs(orderfolder, force=FORCE_LABELS)
 
 if len(labelpaths) > 0:
     merge_pdf(labelpaths, os.path.join(orderfolder, 'device-labels.pdf'))

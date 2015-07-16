@@ -35,7 +35,6 @@ class InventoryDBReader(InventoryReaderBase):
         super(InventoryDBReader, self).__init__(location, tfpath)
 
 
-
 class StockXlsReader(InventoryReaderBase):
     def __init__(self, xlf, sname, location, tfpath):
         """

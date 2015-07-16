@@ -25,7 +25,8 @@ class LabelBase(object):
 
     templatefile = None
 
-    def __init__(self, code, ident, sno, branding=None, logo=None):
+    def __init__(self, code, ident, sno, branding=None, logo=None,
+                 include_qr=True, include_logo=True):
         self._code = code
         self._sno = sno
         self._ident = ident
@@ -33,12 +34,12 @@ class LabelBase(object):
             self._branding = COMPANY_NAME
         else:
             self._branding = branding
-        if logo is None:
+        if logo is None and include_logo is True:
             self._logo = COMPANY_LOGO_PATH
         else:
             self._logo = logo
-        self._include_qr = True
-        self._include_logo = True
+        self._include_qr = include_qr
+        self._include_logo = include_logo
         self._qr_path = None
         if self._include_qr is True:
             self._gen_qrcode()
@@ -113,6 +114,24 @@ class LabelD1(LabelBase):
     lpp = 88
 
 
+class LabelIDT(LabelBase):
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'IDT_template.tex')
+    lpp = 88
+
+    def __init__(self, code, ident, sno, **kwargs):
+        super(LabelIDT, self).__init__(code, ident, sno,
+                                       include_logo=False, include_qr=False)
+        self._qty = kwargs['qty']
+
+    @property
+    def qty(self):
+        return self._qty
+
+    @property
+    def ident(self):
+        return self._ident
+
+
 def get_labelbase(code):
     # TODO change this dispatch to use introspection instead
     if code == 'CW1':
@@ -123,6 +142,8 @@ def get_labelbase(code):
         return LabelP1
     elif code == 'P2':
         return LabelP2
+    elif code == 'IDT':
+        return LabelIDT
     else:
         return LabelBase
 
@@ -157,6 +178,8 @@ class LabelSheet(object):
         labels = [label for label in self._labels]
         nl = len(labels)
         sheets, remain = divmod(nl, self.base.lpp)
+        if nl == 0:
+            return None
         if remain > self.base.lpp * 0.8 or force is True:
             stage = {'labels': labels}
             self._labels = []
@@ -183,10 +206,10 @@ class LabelMaker(object):
     def __init__(self):
         self._sheets = []
 
-    def add_label(self, code, ident, sno):
+    def add_label(self, code, ident, sno, **kwargs):
         self._clear_sno_label(sno)
         sheet = self._get_sheet(code)
-        label = sheet.base(code, ident, sno)
+        label = sheet.base(code, ident, sno, **kwargs)
         sheet.add_label(label)
 
     def _get_sheet(self, code):
@@ -201,7 +224,9 @@ class LabelMaker(object):
     def generate_pdfs(self, targetfolder, force=False):
         rval = []
         for sheet in self._sheets:
-            rval.append(sheet.generate_pdf(targetfolder, force))
+            opath = sheet.generate_pdf(targetfolder, force)
+            if opath is not None:
+                rval.append(opath)
         return rval
 
     @property
