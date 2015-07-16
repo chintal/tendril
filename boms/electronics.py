@@ -23,6 +23,7 @@ Module Members:
 """
 
 import os
+import copy
 
 import gedaif.bomparser
 import gedaif.conffile
@@ -100,6 +101,8 @@ class EntityElnComp(EntityBase):
             self._fillstatus = 'DNP'
         elif value in ['unknown', '']:
             self._fillstatus = ''
+        elif value == 'CONF':
+            self._fillstatus = 'CONF'
         else:
             logger.warning("Unsupported fillstatus: " + value)
 
@@ -199,6 +202,10 @@ class EntityElnBomConf(object):
             self.motiflist = configdata["motiflist"]
         else:
             self.motiflist = None
+        if "sjlist" in configdata.keys():
+            self.sjlist = configdata["sjlist"]
+        else:
+            self.sjlist = {}
         self.rawconfig = configdata
 
     def get_configurations(self):
@@ -265,10 +272,26 @@ class EntityElnBomConf(object):
                     return None
         raise ValueError
 
+    def get_configuration_sjs(self, configname):
+        if self.sjlist is not None:
+            sjlist = copy.copy(self.sjlist)
+        else:
+            sjlist = None
+        for configuration in self.configurations:
+            if configuration['configname'] == configname:
+                try:
+                    if configuration['sjlist'] is not None:
+                        sjlist.update(configuration['sjlist'])
+                        return sjlist
+                    return configuration['sjlist']
+                except KeyError:
+                    logger.debug("Configuration missing SJ list : " + configname)
+                    return sjlist
+        raise ValueError
+
 
 class EntityElnBom(EntityBomBase):
     def __init__(self, configfile):
-
         """
 
         :type configfile: gedaif.conffile.ConfigsFile
@@ -361,9 +384,13 @@ class EntityElnBom(EntityBomBase):
         genlist = self.configurations.get_configuration_gens(configname)
 
         gen_refdeslist = None
-
         if genlist is not None:
             gen_refdeslist = genlist.keys()
+
+        sjlist = self.configurations.get_configuration_sjs(configname)
+        sj_refdeslist = None
+        if sjlist is not None:
+            sj_refdeslist = sjlist.keys()
 
         for group in outgroups:
             grpobj = self.find_group(group)
@@ -376,6 +403,16 @@ class EntityElnBom(EntityBomBase):
                         comp.footprint = genlist[comp.refdes]
                     else:
                         comp.value = genlist[comp.refdes]
+                if sj_refdeslist is not None and comp.refdes in sj_refdeslist:
+                    if not comp.fillstatus == 'CONF':
+                        logger.error("sjlist attempts to change not configurable SJ : " + comp.refdes)
+                        raise AttributeError
+                    if sjlist[comp.refdes]:
+                        logger.debug("Setting Fillstatus : " + comp.refdes)
+                        comp.fillstatus = ''
+                    else:
+                        logger.debug("Clearing Fillstatus : " + comp.refdes)
+                        comp.fillstatus = 'DNP'
                 outbom.insert_component(comp)
 
         motifconfs = self.configurations.get_configuration_motifs(configname)

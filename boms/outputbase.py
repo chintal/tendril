@@ -31,6 +31,10 @@ class OutputBomLine(object):
 
     def add(self, comp):
         assert isinstance(comp, EntityBase)
+        if comp.fillstatus == "DNP":
+            return
+        if comp.fillstatus == "CONF":
+            logger.warning("Configurable Component not Configured by Conf File : " + comp.refdes)
         if comp.ident == self.ident:
             self.refdeslist.append(comp.refdes)
         else:

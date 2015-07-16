@@ -284,7 +284,6 @@ def generate_docs(projfolder):
             return
     gen_masterdoc(projfolder, namebase)
     gen_cobom_csv(projfolder, namebase)
-
     if configfile.configdata['pcbname'] is not None:
         gen_pcb_pdf(projfolder)
         gen_pcb_gbr(projfolder)
