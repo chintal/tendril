@@ -46,32 +46,34 @@
         <div class="small-12 large-3 columns">
         <label> Type
             <select id="type" name="type">
-              <option value="none">Numbers</option>
-              <option value="resistor">Resistors</option>
-              <option value="capacitor">Capacitors</option>
-              <option value="inductor">Inductors</option>
-              <option value="zener">Zener Diodes</option>
+              <option {% if stage.iec60063stype=='none' %} selected {% endif %} value="none">Numbers</option>
+              <option {% if stage.iec60063stype=='resistor' %} selected {% endif %} value="resistor">Resistors</option>
+              <option {% if stage.iec60063stype=='capacitor' %} selected {% endif %} value="capacitor">Capacitors</option>
+              <option {% if stage.iec60063stype=='inductor' %} selected {% endif %} value="inductor">Inductors</option>
+              <option {% if stage.iec60063stype=='zener' %} selected {% endif %} value="zener">Zener Diodes</option>
             </select>
         </label>
         </div>
         <div class="small-12 large-3 columns">
         <label> Series
             <select id="series" name="series">
-              <option value="E24">E24</option>
-              <option value="E12">E12</option>
-              <option value="E6">E6</option>
-              <option value="E3">E3</option>
+              <option {% if stage.iec60063series=='E24' %} selected {% endif %} value="E24">E24</option>
+              <option {% if stage.iec60063series=='E12' %} selected {% endif %}value="E12">E12</option>
+              <option {% if stage.iec60063series=='E6' %} selected {% endif %}value="E6">E6</option>
+              <option {% if stage.iec60063series=='E3' %} selected {% endif %}value="E3">E3</option>
             </select>
         </label>
         </div>
         <div class="small-12 large-3 columns">
         <label> Start
-            <input name="start" id="start" type="text" placeholder="Start" />
+            <input name="start" id="start" type="text" placeholder="Start"
+                   {% if stage.iec60063start %} value="{{ stage.iec60063start }}" {% endif %}/>
         </label>
         </div>
         <div class="small-12 large-3 columns">
         <label> End
-            <input name="end" id="end" type="text" placeholder="End" />
+            <input name="end" id="end" type="text" placeholder="End"
+                   {% if stage.iec60063end %} value="{{ stage.iec60063end }}" {% endif %} />
         </label>
         </div>
         <input type="submit" class="button small expand radius" value="Generate">
