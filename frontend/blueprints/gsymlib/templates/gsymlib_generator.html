@@ -46,6 +46,34 @@
               <span class="right label radius info">Modlen</span>
             {% endif %}
         </ul>
+        <ul class="pricing-table shadow">
+            <li class="title">Generator Rules</li>
+            <li class="price">{{ stage.genobj.type }}</li>
+            {% if stage.genobj.igenerators|length %}
+                <li class="title">Generators</li>
+                {% for gen in stage.genobj.igenerators %}
+                    <li class="bullet-item">
+                        <small><b> STANDARD : </b></small> {{ gen.std|upper }} {{ gen.series }}
+                    </li>
+                    <li class="description">
+                        <div class="small-6 columns"><small><b> START : </b></small> {{ gen.start }}</div>
+                        <div class="small-6 columns"><small><b> END : </b></small> {{ gen.end }}</div>
+                    </li>
+                {% endfor %}
+            {% endif %}
+            {% if stage.genobj.ivalues|length %}
+                <li class="title">Specific Part Numbers</li>
+                {% for value in stage.genobj.ivalues %}
+                    <li class="bullet-item"> {{ value }} </li>
+                {% endfor %}
+            {% endif %}
+            {% if stage.genobj.iunits|length %}
+                <li class="title">Special Values</li>
+                {% for value in stage.genobj.iunits %}
+                    <li class="bullet-item"> {{ value }} </li>
+                {% endfor %}
+            {% endif %}
+        </ul>
     </div>
     <!--<div class="small-12 medium-6 columns panel radius end">
         {% for imgpath in stage.imgpaths %}

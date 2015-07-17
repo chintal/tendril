@@ -23,9 +23,20 @@
             {% if stage.symbol.description %}
             <li class="description">{{stage.symbol.description|unicode}}</li>
             {% endif %}
-            {% if stage.symbol.datasheet_url %}
-            <li class="bullet-item"><a target="_blank" href="{{stage.symbol.datasheet_url}}"><img src="/static/img/pdf.png">  Datasheet</a></li>
-            {% endif %}
+
+            <li class="bullet-item">
+                {% if stage.symbol.is_virtual %}
+                <a href="/gsymlib/detail/{{ stage.symbol.fname[:-4] }}.gen">
+                    <img src="/static/img/icon_one_to_many.png" height="32">  Generator
+                </a>
+                {% endif %}
+                {% if stage.symbol.datasheet_url %}
+                <a target="_blank" href="{{stage.symbol.datasheet_url}}">
+                    <img src="/static/img/pdf.png">  Datasheet
+                </a>
+                {% endif %}
+            </li>
+
             {% if not stage.symbol.sym_ok %}
               <span class="right label radius alert">Bad Symbol</span>
             {% endif %}

@@ -118,12 +118,14 @@ def get_geda_generator_context(gen):
     generator = gedaif.gsymlib.get_generator(gen)
     navpath = os.path.relpath(generator.fpath, GEDA_SYMLIB_ROOT)
     navpath = os.path.splitext(navpath)[0] + '.gen'
+    genobj = gedaif.gsymlib.GSymGeneratorFile(generator.fpath)
 
     return {'genname': gen,
             'generator': generator,
             'breadcrumbs': get_path_breadcrumbs(navpath, rootst="gEDA Symbol Library"),
             'sympaths': [os.path.relpath(generator.fpath, GEDA_SYMLIB_ROOT)],
-            'genpath': os.path.relpath(generator.genpath, GEDA_SYMLIB_ROOT)}
+            'genpath': os.path.relpath(generator.genpath, GEDA_SYMLIB_ROOT),
+            'genobj': genobj}
 
 
 @blueprint.route('/')

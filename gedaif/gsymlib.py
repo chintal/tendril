@@ -173,11 +173,31 @@ class GedaSymbol(object):
 class GSymGeneratorFile(object):
     def __init__(self, sympath):
         self._genpath = os.path.splitext(sympath)[0] + '.gen.yaml'
+        self._type = None
+        self._ivalues = []
+        self._igen = []
+        self._iunits = []
         data = self._get_data()
         self._values = []
         for value in data:
             if value is not None:
                 self._values.append(value)
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def igenerators(self):
+        return self._igen
+
+    @property
+    def ivalues(self):
+        return self._ivalues
+
+    @property
+    def iunits(self):
+        return self._iunits
 
     def _get_data(self):
         with open(self._genpath) as genfile:
@@ -186,14 +206,20 @@ class GSymGeneratorFile(object):
            gendata["schema"]["version"] == 1.0:
 
             if gendata['type'] == 'simple':
+                self._type = 'Simple'
+                self._ivalues = [v for v in gendata['values'] if v is not None and v.strip() is not None]
                 return gendata['values']
             values = []
 
             if gendata['type'] == 'resistor':
+                self._type = 'Resistor'
                 for resistance in gendata['resistances']:
-                    values.append(resistance)
+                    if resistance is not None:
+                        values.append(resistance)
+                        self._iunits.append(resistance)
                 if 'generators' in gendata.keys():
                     for generator in gendata['generators']:
+                        self._igen.append(generator)
                         if generator['std'] == 'iec60063':
                             rvalues = conventions.iec60063.gen_vals(generator['series'],
                                                                     conventions.iec60063.res_ostrs,
@@ -206,13 +232,18 @@ class GSymGeneratorFile(object):
                 if 'values' in gendata.keys():
                     if gendata['values'][0].strip() != '':
                         values += gendata['values']
+                        self._ivalues.extend(gendata['values'])
                 return values
 
             if gendata['type'] == 'capacitor':
+                self._type = 'Capacitor'
                 for capacitance in gendata['capacitances']:
+                    if capacitance is not None:
                         values.append(capacitance)
+                        self._iunits.append(capacitance)
                 if 'generators' in gendata.keys():
                     for generator in gendata['generators']:
+                        self._igen.append(generator)
                         if generator['std'] == 'iec60063':
                             cvalues = conventions.iec60063.gen_vals(generator['series'],
                                                                     conventions.iec60063.cap_ostrs,
@@ -225,6 +256,7 @@ class GSymGeneratorFile(object):
                 if 'values' in gendata.keys():
                     if gendata['values'][0].strip() != '':
                         values += gendata['values']
+                        self._ivalues.append(gendata['values'])
                 return values
         else:
             logging.ERROR("Config file schema is not supported")
