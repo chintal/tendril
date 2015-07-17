@@ -15,6 +15,19 @@ cap_ostrs = ['fF', 'pF', 'nF', 'uF', 'mF']
 res_ostrs = ['m', 'E', 'K', 'M', 'G']
 zen_ostrs = ['V']
 ind_ostrs = ['nH', 'uH', 'mH']
+num_ostrs = ['']
+
+
+def get_ostr(stype):
+    if stype == 'resistor':
+        return res_ostrs
+    if stype == 'capacitor':
+        return cap_ostrs
+    if stype == 'zener':
+        return zen_ostrs
+    if stype == 'inductor':
+        return ind_ostrs
+    return num_ostrs
 
 
 def get_series(seriesst):
@@ -27,7 +40,7 @@ def get_series(seriesst):
     elif seriesst == 'E3':
         series = E3
     else:
-        raise ValueError
+        raise ValueError(seriesst)
     return series
 
 

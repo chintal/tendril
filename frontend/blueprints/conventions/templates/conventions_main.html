@@ -1,19 +1,96 @@
 {% extends "base_templates/page_base.html" %}  {# base_templates/page_base.html extends base_templates/base.html #}
 
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+  <dl class="sub-nav">
+    <dd data-magellan-arrival="devices"><a href="#devices">Device Classes</a></dd>
+    <dd data-magellan-arrival="invguidelines"><a href="#invguidelines">Inventory Guidelines</a></dd>
+    <dd data-magellan-arrival="iec60063"><a href="#iec60063">IEC60063</a></dd>
+  </dl>
+</div>
+{% endblock %}
+
 {% block main %}
 
 <h1>Conventions</h1>
 
-<!-- Magellan -->
-
 <!-- Devices -->
+<div class="row" data-magellan-destination="devices">
+<h3> Recognized Device Classes </h3>
+<a name="devices"></a>
+<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4 columns">
+    {% for device in stage.devices %}
+    <li> <div class="panel text-center radius">{{ device }}</div>  </li>
+    {% endfor %}
+</ul>
+</div>
 
 <!-- Inventory Guidelines -->
+<h3 data-magellan-destination="invguidelines"> Inventory Guidelines </h3>
+<a name="invguidelines"></a>
 
 <!-- iec60063 -->
+<div class="row" data-magellan-destination="iec60063">
+<h3> IEC60063 Preferred Numbers </h3>
+<a name="iec60063"></a>
 
-
-
-
+<!--Form-->
+<div class="small-12 columns">
+<form action=" {{ request.path }}#iec60063 " method="GET">
+    <fieldset>
+        <legend>
+            Series Parameters
+        </legend>
+        <div class="small-12 large-3 columns">
+        <label> Type
+            <select id="type" name="type">
+              <option value="none">Numbers</option>
+              <option value="resistor">Resistors</option>
+              <option value="capacitor">Capacitors</option>
+              <option value="inductor">Inductors</option>
+              <option value="zener">Zener Diodes</option>
+            </select>
+        </label>
+        </div>
+        <div class="small-12 large-3 columns">
+        <label> Series
+            <select id="series" name="series">
+              <option value="E24">E24</option>
+              <option value="E12">E12</option>
+              <option value="E6">E6</option>
+              <option value="E3">E3</option>
+            </select>
+        </label>
+        </div>
+        <div class="small-12 large-3 columns">
+        <label> Start
+            <input name="start" id="start" type="text" placeholder="Start" />
+        </label>
+        </div>
+        <div class="small-12 large-3 columns">
+        <label> End
+            <input name="end" id="end" type="text" placeholder="End" />
+        </label>
+        </div>
+        <input type="submit" class="button small expand radius" value="Generate">
+    </fieldset>
+</form>
+</div>
+<!--Results-->
+<div class="small-12 columns">
+    <h4> IEC60063 {{ stage.iec60063series }} Values
+        {% if stage.iec60063stype %} for {{ stage.iec60063stype }}{% endif %}
+        {% if stage.iec60063start %} from {{ stage.iec60063start }}{% endif %}
+        {% if stage.iec60063end %} upto {{ stage.iec60063end }}{% endif %}
+    </h4>
+    <ul class="splist" style="list-style-type: none;">
+        {% for val in stage.iec60063vals %}
+        <li class="splist panel radius text-center"> {{ val }} </li>
+        {% endfor %}
+    </ul>
+</div>
+</div>
 
 {% endblock %}
