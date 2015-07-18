@@ -11,6 +11,7 @@ from . import conventions as blueprint
 
 from conventions import electronics
 from conventions import iec60063
+from inventory import guidelines
 
 
 def get_iec60063_params():
@@ -58,9 +59,9 @@ def get_iec60063_contextpart(stype, series, start=None, end=None):
 @blueprint.route('/', methods=['GET'])
 @login_required
 def main():
-    stage = {'devices': electronics.DEVICE_CLASSES}
+    stage = {'devices': electronics.DEVICE_CLASSES,
+             'guidelines': guidelines.electronics_qty.get_guideline_table()}
     if request.method == 'GET':
         stage.update(get_iec60063_params())
     return render_template('conventions_main.html', stage=stage,
                            pagetitle='Conventions')
-

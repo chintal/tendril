@@ -12,6 +12,46 @@ from decimal import Decimal
 import conventions.electronics
 
 
+class QtyGuidelineTableRow(object):
+    def __init__(self, ide, (oqty_min, oqty_multiple, baseline_qty, excess_min_pc, excess_min_qty, excess_max_qty)):
+        self._id = ide
+        self._oqty_min = oqty_min
+        self._oqty_multiple = oqty_multiple
+        self._baseline_qty = baseline_qty
+        self._excess_min_pc = excess_min_pc
+        self._excess_min_qty = excess_min_qty
+        self._excess_max_qty = excess_max_qty
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def oqty_min(self):
+        return str(self._oqty_min)
+
+    @property
+    def oqty_multiple(self):
+        return str(self._oqty_multiple)
+
+    @property
+    def baseline_qty(self):
+        return str(self._baseline_qty)
+
+    @property
+    def excess_min_pc(self):
+        return str(self._excess_min_pc) + " %"
+
+    @property
+    def excess_min_qty(self):
+        return str(self._excess_min_qty)
+
+    @property
+    def excess_max_qty(self):
+        return str(self._excess_max_qty)
+
+
+
 class QtyGuidelines(object):
     def __init__(self, guidelinefile):
         self._idents = None
@@ -27,6 +67,14 @@ class QtyGuidelines(object):
             self._generators = data['generators']
             self._devices = data['devices']
             self._default = data['default']
+
+    def get_guideline_table(self):
+        return {'idents': [QtyGuidelineTableRow(x, self._get_full_guideline(self._idents[x]))
+                           for x in self._idents.keys()],
+                'devices': [QtyGuidelineTableRow(x, self._get_full_guideline(self._devices[x]))
+                            for x in self._devices.keys()],
+                'defaults': [QtyGuidelineTableRow('Default', self._get_full_guideline(self._default))]
+                }
 
     @staticmethod
     def _get_full_guideline(gldict):

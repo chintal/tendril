@@ -28,8 +28,43 @@
 </div>
 
 <!-- Inventory Guidelines -->
-<h3 data-magellan-destination="invguidelines"> Inventory Guidelines </h3>
+<div class="row" data-magellan-destination="invguidelines">
+<h3> Inventory Guidelines </h3>
 <a name="invguidelines"></a>
+    <div class="small-12 columns">
+        <table class="responsive">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Min Order Qty</th>
+                <th>Order Qty Multiple</th>
+                <th>Baseline Qty</th>
+                <th>Min Excess %</th>
+                <th>Mix Excess Qty</th>
+                <th>Max Excess Qty</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for name, rows in stage.guidelines.iteritems() %}
+
+            <tr><td><b>{{ name|upper }}</b></td> <td> </td><td> </td><td> </td><td> </td><td> </td><td class="text-right"> {{ name|upper }} </td> </tr>
+
+            {% for row in rows %}
+            <tr>
+                <td> {{ row.id }} </td>
+                <td class="text-center"> {{ row.oqty_min }} </td>
+                <td class="text-center"> {{ row.oqty_multiple }} </td>
+                <td class="text-center"> {{ row.baseline_qty }} </td>
+                <td class="text-center"> {{ row.excess_min_pc }} </td>
+                <td class="text-center"> {{ row.excess_min_qty }} </td>
+                <td class="text-center"> {{ row.excess_max_qty }} </td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <!-- iec60063 -->
 <div class="row" data-magellan-destination="iec60063">

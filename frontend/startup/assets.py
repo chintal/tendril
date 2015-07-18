@@ -16,7 +16,7 @@ bundles = {
         'css/normalize.css',
         'css/foundation.css',
         'css/foundation-icons.css',
-        'js/vendor/responsive-tables.js',
+        'css/responsive-tables.css',
         'css/colors.css',
         'css/koala.css',
         output='gen/base.css',
