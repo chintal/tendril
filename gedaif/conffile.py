@@ -51,3 +51,41 @@ class ConfigsFile(object):
                 if configuration['configname'] == configname:
                     return configuration['desc']
         raise ValueError
+
+    @property
+    def configurations(self):
+        return [x['configname'] for x in self.configdata['configurations']]
+
+    @property
+    def status(self):
+        try:
+            return self.configdata['pcbdetails']['status']
+        except KeyError:
+            raise KeyError(self._projectfolder)
+
+    @property
+    def pcbdescriptors(self):
+        rval = [str(self.configdata['pcbdetails']['params']['dX']) + 'mm x ' +
+                str(self.configdata['pcbdetails']['params']['dY']) + 'mm']
+        if self.configdata['pcbdetails']["params"]["layers"] == 2:
+            rval.append("Double Layer")
+        elif self.configdata['pcbdetails']["params"]["layers"] == 4:
+            rval.append("ML4")
+        # HAL, Sn, Au, PBFREE, H, NP, I, OC
+        if self.configdata['pcbdetails']["params"]["finish"] == 'Au':
+            rval.append("Immersion Gold/ENIG finish")
+        elif self.configdata['pcbdetails']["params"]["finish"] == 'Sn':
+            rval.append("Immersion Tin finish")
+        elif self.configdata['pcbdetails']["params"]["finish"] == 'PBFREE':
+            rval.append("Any Lead Free finish")
+        elif self.configdata['pcbdetails']["params"]["finish"] == 'H':
+            rval.append("Lead F ree HAL finish")
+        elif self.configdata['pcbdetails']["params"]["finish"] == 'NP':
+            rval.append("No Copper finish")
+        elif self.configdata['pcbdetails']["params"]["finish"] == 'I':
+            rval.append("OSP finish")
+        elif self.configdata['pcbdetails']["params"]["finish"] == 'OC':
+            rval.append("Only Copper finish")
+        else:
+            rval.append("UNKNOWN FINISH: " + self.configdata['pcbdetails']["params"]["finish"])
+        return rval

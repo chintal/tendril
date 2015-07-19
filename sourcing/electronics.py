@@ -223,3 +223,10 @@ def get_sourcing_information(ident, qty, avendors=vendor_list, allvendors=False)
         return sources
 
 order = orders.CompositeOrder(vendor_list)
+
+
+def get_vendor_by_name(name):
+    for vendor in vendor_list:
+        if vendor.vendor_name == name:
+            return vendor
+    return None

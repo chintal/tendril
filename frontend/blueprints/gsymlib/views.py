@@ -134,7 +134,7 @@ def get_geda_generator_context(gen):
 @blueprint.route('/<path:path>')
 @login_required
 def main(path=None, ident=None, gen=None):
-    stage = {}
+    stage = {'crumbroot': "/gsymlib"}
     if path is None and ident is None and gen is None:
         stage.update(get_geda_browser_context(None))
         return render_template('gsymlib_browse.html', stage=stage,
@@ -142,7 +142,7 @@ def main(path=None, ident=None, gen=None):
     if path is not None and is_geda_folder(path):
         stage.update(get_geda_browser_context(path))
         return render_template('gsymlib_browse.html', stage=stage,
-                                   pagetitle='gEDA Library Browser')
+                                pagetitle='gEDA Library Browser')
     if ident is not None:
         ident = unquote(ident)
         if ident in gedaif.gsymlib.gsymlib_idents:
