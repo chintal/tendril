@@ -112,4 +112,8 @@ class MotifLREGS1(MotifBase):
     def Il(self):
         return self.Vref / self.R2
 
+    @property
+    def listing(self):
+        return [('Vout', self.Vout)]
+
 

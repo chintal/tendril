@@ -50,3 +50,7 @@ class MotifBase(object):
 
     def __repr__(self):
         return "MOTIF OBJECT : " + self.refdes
+
+    @property
+    def listing(self):
+        raise NotImplementedError

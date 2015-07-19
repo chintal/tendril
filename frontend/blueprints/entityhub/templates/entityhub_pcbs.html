@@ -16,7 +16,7 @@
             {% endfor %}
             <li class="title"> Configurations </li>
             {% for configuration in pcb.configdata.configurations[:3] %}
-            <li class="bullet-item"> {{ configuration }} </li>
+            <li class="bullet-item"> {{ configuration.configname }} </li>
             {% endfor %}
             {% if pcb.configdata.configurations|length > 3 %}
             <li class="bullet-item"> And {{ pcb.configdata.configurations|length - 3 }} others.. </li>

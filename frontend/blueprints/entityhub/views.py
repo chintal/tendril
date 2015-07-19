@@ -48,10 +48,15 @@ def pcbs(pcbname=None):
                                  Crumb(name="Bare PCBs", path="pcbs/")]}
         return render_template('entityhub_pcbs.html', stage=stage,
                                pagetitle="Bare PCBs")
-
     else:
-        pass
-
+        stage = {'name': pcbname,
+                 'configdata': ConfigsFile(ehprojects.pcbs[pcbname]),
+                 'crumbroot': '/entityhub',
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Bare PCBs", path="pcbs/"),
+                                 Crumb(name=pcbname, path="pcbs/" + pcbname)]}
+        return render_template('entityhub_pcb_detail.html', stage=stage,
+                               pagetitle="PCB Details")
 
 
 @blueprint.route('/projects/')

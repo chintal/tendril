@@ -19,7 +19,7 @@ class ConfigsFile(object):
         try:
             self.configdata = self.get_configs_file()
         except IOError:
-            raise NoGedaProjectException
+            raise NoGedaProjectException(self._projectfolder)
         self.projectfile = self.configdata['projfile']
 
     def get_configs_file(self):
@@ -54,7 +54,7 @@ class ConfigsFile(object):
 
     @property
     def configurations(self):
-        return [x['configname'] for x in self.configdata['configurations']]
+        return [x for x in self.configdata['configurations']]
 
     @property
     def status(self):
