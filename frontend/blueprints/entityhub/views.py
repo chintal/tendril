@@ -12,7 +12,6 @@ from . import entityhub as blueprint
 from entityhub import projects as ehprojects
 from gedaif.conffile import ConfigsFile
 
-from utils.fs import get_path_breadcrumbs
 from utils.fs import Crumb
 
 

@@ -26,6 +26,15 @@
             <li class="bullet-item">
                 <b> {{ key }} : </b> {{ value.desc }}
             </li>
+            <li>
+            <ul class="small-block-grid-3 small-11 columns small-centered">
+                {% for p, s in value.iteritems() %}
+                    {% if p != 'desc' %}
+                        <li class="description"> {{ p|upper }} : {{ s }} </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            </li>
             {% endfor %}
             {% endif %}
             {% if stage.configdata.configdata.sjlist %}
