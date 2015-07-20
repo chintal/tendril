@@ -23,8 +23,8 @@ import vendors
 import utils.currency
 from utils.progressbar.progressbar import ProgressBar
 
-from utils.config import NETWORK_PROXY_IP
-from utils.config import NETWORK_PROXY_PORT
+# from utils.config import NETWORK_PROXY_IP
+# from utils.config import NETWORK_PROXY_PORT
 
 from utils.config import VENDORS_DATA
 
@@ -83,8 +83,8 @@ def get_csil_prices(params=exparams, rval=None):
         6: '2184',
     }
 
-    proxyIP = NETWORK_PROXY_IP
-    proxyPort = int(NETWORK_PROXY_PORT)
+    # proxyIP = NETWORK_PROXY_IP
+    # proxyPort = int(NETWORK_PROXY_PORT)
 
     # proxy_settings = {'network.proxy.type': 1,
     #                   'network.proxy.http': proxyIP,
@@ -145,8 +145,8 @@ def get_csil_prices(params=exparams, rval=None):
         oldt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text
     except AttributeError:
         oldt = ''
-    qty = str(params['qty'][1])
-    oldv = qty
+    # qty = str(params['qty'][1])
+    # oldv = qty
     time.sleep(2)
     button = browser.find_by_id('ctl00_ContentPlaceHolder1_btnCalculate')
 
@@ -192,10 +192,11 @@ def get_csil_prices(params=exparams, rval=None):
         percentage = (float(qty) / max(params['qty'])) * 100.00
         pb.render(int(percentage),
                   "\n{0:>7.4f}% {1:<40} Qty: {2:<10} DTS: {3:<4}\nGenerating PCB Pricing".format(
-                  percentage, params['pcbname'], qty, loi))
+                      percentage, params['pcbname'], qty, loi)
+                  )
         for dt_s in loi:
             dt_idx = delivery_times.index(dt_s)
-            dts = delivery_times[dt_idx:dt_idx+3]
+            dts = delivery_times[dt_idx:dt_idx + 3]
             browser.select('ctl00$ContentPlaceHolder1$ddlDelTerms', delivery_codes[dt_s])
             time.sleep(1)
             while True:
@@ -413,7 +414,7 @@ class CSILPart(vendors.VendorPartBase):
                     selprice = price
                     mintot = price.extended_price(price.moq).native_value
                     rationale = "TC Reduction"
-            return selprice, super(CSILPart, self).get_price(selprice.moq+1)[0], rationale, base_price
+            return selprice, super(CSILPart, self).get_price(selprice.moq + 1)[0], rationale, base_price
 
 
 def flush_pcb_pricing(projfolder):

@@ -68,4 +68,3 @@ class MapFile(object):
 
     def get_user_map(self):
         return self._umap
-

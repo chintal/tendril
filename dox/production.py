@@ -21,7 +21,7 @@ def gen_pcb_am(projfolder, configname, outfolder, sno=None, productionorderno=No
         # TODO Generate real S.No. here
         sno = 1
 
-    outpath = os.path.join(outfolder,  'am-' + configname + '-' + str(sno) + '.pdf')
+    outpath = os.path.join(outfolder, 'am-' + configname + '-' + str(sno) + '.pdf')
 
     bom = boms.electronics.import_pcb(projfolder)
     obom = bom.create_output_bom(configname)
@@ -88,7 +88,7 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos, sourcing_orders=
         'root_orders': lroot_orders,
     }
 
-    outpath = os.path.join(outfolder,  str(prod_sno) + '.pdf')
+    outpath = os.path.join(outfolder, str(prod_sno) + '.pdf')
     template = 'production-order-template.tex'
     render.render_pdf(stage, template, outpath)
     return outpath

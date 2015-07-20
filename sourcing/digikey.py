@@ -14,7 +14,6 @@ from decimal import Decimal
 import traceback
 import csv
 import codecs
-import yaml
 
 from bs4 import BeautifulSoup
 
@@ -84,7 +83,7 @@ class VendorDigiKey(vendors.VendorBase):
                 return self._get_search_vpnos(device, value, footprint)
             else:
                 return None, 'FILTER_NODEVICE'
-        except Exception, e:
+        except Exception:
             logger.error(traceback.format_exc())
             logger.error('Fatal Error searching for : ' + ident)
             return None, None
@@ -469,7 +468,7 @@ class VendorDigiKey(vendors.VendorBase):
                 elif header == 'Tolerance':
                     options = [(self._tf_tolerance_to_canonical(option[0]), option[1]) for option in options]
                 filters[header] = (fname, options)
-        except Exception, e:
+        except Exception:
             logger.error(traceback.format_exc())
             logger.error('idx :' + str(idx))
             return False, None
@@ -770,7 +769,7 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
         try:
             qtytext = n.text.strip().encode('ascii', 'replace')
             rex = re.compile(r'^Digi-Key Stock: (?P<qty>\d+(,*\d+)*)')
-            qtytext = rex.search(qtytext).groupdict()['qty'].replace(',','')
+            qtytext = rex.search(qtytext).groupdict()['qty'].replace(',', '')
             return int(qtytext)
         except:
             rex2 = re.compile(r'^Value Added Item')
@@ -816,7 +815,7 @@ class DigiKeyInvoice(customs.CustomsInvoice):
                     idx = line[header.index('Index')].strip()
                     qty = int(line[header.index('Quantity')].strip())
                     vpno = line[header.index('Part Number')].strip()
-                    mpno = line[header.index('Manufacturer Part Number')].strip()
+                    # mpno = line[header.index('Manufacturer Part Number')].strip()
                     desc = line[header.index('Description')].strip()
                     ident = line[header.index('Customer Reference')].strip()
                     boqty = line[header.index('Backorder')].strip()
@@ -828,7 +827,7 @@ class DigiKeyInvoice(customs.CustomsInvoice):
                         print line
 
                     unitp_str = line[header.index('Unit Price')].strip()
-                    extendedp_str = line[header.index('Extended Price')].strip()
+                    # extendedp_str = line[header.index('Extended Price')].strip()
 
                     unitp = utils.currency.CurrencyValue(float(unitp_str), self._vendor.currency)
                     lineobj = customs.CustomsInvoiceLine(self, ident, vpno, unitp, qty, idx=idx, desc=desc)

@@ -4,7 +4,7 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import logging
-from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
+from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL  # noqa
 
 DEFAULT = logging.INFO
 

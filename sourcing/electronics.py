@@ -59,7 +59,7 @@ def gen_vendor_mapfile(vendor_obj):
                         # TODO Fix this error (hack around progressbar issue)
                         if strategy not in ['NODEVICE', 'NOVALUE']:
                             logger.warning("Could not find matches for : " + symbol.ident +
-                                            '::' + str(strategy) +'\n\n\n')
+                                           '::' + str(strategy) + '\n\n\n')
                         vpnos = []
                     try:
                         outw.writerow([symbol.ident.strip(), strategy.strip()] + vpnos)
@@ -67,7 +67,7 @@ def gen_vendor_mapfile(vendor_obj):
                         print symbol.ident, strategy
                         raise AttributeError
                     counter += 1
-                    percentage = counter*100.00/nsymbols
+                    percentage = counter * 100.00 / nsymbols
                     pb.render(int(percentage), "\n%f%% %s\nGenerating Map File" % (percentage, symbol.ident))
         outf.close()
         logger.info("Written Electronics Vendor Map to File : " + vendor_obj.name)
@@ -86,17 +86,17 @@ def gen_vendor_mapfile(vendor_obj):
         counter = 0
 
         for pcb, folder in pcblib.iteritems():
-            conf = gedaif.conffile.ConfigsFile(folder)
-            dstatus = None
-            try:
-                dstatus = conf.configdata['pcbdetails']['status']
-            except KeyError:
-                logger.warning('PCB missing pcbdetails : ' + pcb)
+            # conf = gedaif.conffile.ConfigsFile(folder)
+            # dstatus = None
+            # try:
+            #     dstatus = conf.configdata['pcbdetails']['status']
+            # except KeyError:
+            #     logger.warning('PCB missing pcbdetails : ' + pcb)
 
             vpnos, strategy = [[pcb], 'CUSTOM']
             outw.writerow(['PCB ' + pcb.strip(), strategy.strip()] + vpnos)
             counter += 1
-            percentage = counter*100.00/nsymbols
+            percentage = counter * 100.00 / nsymbols
             pb.render(int(percentage), "\n%f%% %s\nGenerating Map File" % (percentage, pcb))
         outf.close()
         logger.info("Written PCB Vendor Map to File : " + vendor_obj.name)
@@ -184,7 +184,7 @@ def export_vendor_map_audit(vendor_obj):
                 outw.writerow([vp.ident, vp.vpno, vp.mpartno, None, vp.vpartdesc,
                                vp.manufacturer, vp.vqtyavail, vp.abs_moq])
 
-            percentage = (iidx + (1.00*pidx/nvpnos)) * 100.00 / nidents
+            percentage = (iidx + (1.00 * pidx / nvpnos)) * 100.00 / nidents
             pb.render(int(percentage), "\n%f%% %s;%s\nGenerating Vendor Map Audit" % (percentage, ident, vpno))
 
     outf.close()

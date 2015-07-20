@@ -4,17 +4,31 @@
 {% block magellan %}
 <!-- Magellan -->
 <div data-magellan-expedition="sticky">
-  <dl class="sub-nav">
-    <dd data-magellan-arrival="devices"><a href="#devices">Device Classes</a></dd>
-    <dd data-magellan-arrival="invguidelines"><a href="#invguidelines">Inventory Guidelines</a></dd>
-    <dd data-magellan-arrival="iec60063"><a href="#iec60063">IEC60063</a></dd>
-  </dl>
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="motifs"><a href="#motifs">Motifs</a></dd>
+        <dd data-magellan-arrival="devices"><a href="#devices">Device Classes</a></dd>
+        <dd data-magellan-arrival="invguidelines"><a href="#invguidelines">Inventory Guidelines</a></dd>
+        <dd data-magellan-arrival="iec60063"><a href="#iec60063">IEC60063</a></dd>
+    </dl>
 </div>
 {% endblock %}
 
 {% block main %}
 
 <h1>Conventions</h1>
+
+
+<!--Motifs-->
+<div class="row" data-magellan-destination="motifs">
+<h4> Motifs </h4>
+<a name="motifs"></a>
+    <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
+        <li><a href="/conventions/motifs/M1/" class="button square radius expand bg-t1" data-equalizer-watch>
+            <b> M1 </b></a>
+        </li>
+    </ul>
+</div>
+
 
 <!-- Devices -->
 <div class="row" data-magellan-destination="devices">

@@ -42,7 +42,7 @@ DEVICE_CLASSES = [
     'TRANSISTOR THRU',
     'TRANSISTOR SMD',
     'IC THRU',
-    'IC DIP', # Phase out
+    'IC DIP',  # Phase out
     'IC SMD',
     'IC PLCC',
     'IC POWER',

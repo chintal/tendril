@@ -169,7 +169,7 @@ def gen_pcb_pdf(projfolder):
     gpf = gedaif.projfile.GedaProjectFile(configfile.projectfolder)
     pcb_mtime = utils.fs.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
     docfolder = projects.get_project_doc_folder(projfolder)
-    pdffile = os.path.join(docfolder, configfile.configdata['pcbname']+'-pcb.pdf')
+    pdffile = os.path.join(docfolder, configfile.configdata['pcbname'] + '-pcb.pdf')
     outf_mtime = utils.fs.get_file_mtime(pdffile)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:

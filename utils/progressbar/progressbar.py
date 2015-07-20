@@ -10,10 +10,11 @@ Usage:
 import terminal
 import sys
 
+
 class ProgressBar(object):
     """Terminal progress bar class"""
     TEMPLATE = (
-     '%(percent)-2s%% %(color)s%(progress)s%(normal)s%(empty)s %(message)s\n'
+        '%(percent)-2s%% %(color)s%(progress)s%(normal)s%(empty)s %(message)s\n'
     )
     PADDING = 7
 
@@ -38,7 +39,7 @@ class ProgressBar(object):
         self.progress = None
         self.lines = 0
 
-    def render(self, percent, message = ''):
+    def render(self, percent, message=''):
         """Print the progress bar
         percent -- the progress percentage %
         message -- message string (optional)
@@ -50,12 +51,12 @@ class ProgressBar(object):
         if inline_msg_len + self.width + self.PADDING > terminal.COLUMNS:
             # The message is too long to fit in one line.
             # Adjust the bar width to fit.
-            bar_width = terminal.COLUMNS - inline_msg_len -self.PADDING
+            bar_width = terminal.COLUMNS - inline_msg_len - self.PADDING
         else:
             bar_width = self.width
 
         # Check if render is called for the first time
-        if self.progress != None:
+        if self.progress is not None:
             self.clear()
         self.progress = (bar_width * percent) / 100
         data = self.TEMPLATE % {

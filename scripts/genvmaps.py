@@ -8,4 +8,3 @@ import sourcing.electronics
 
 for vendor in sourcing.electronics.vendor_list:
     sourcing.electronics.gen_vendor_mapfile(vendor)
-

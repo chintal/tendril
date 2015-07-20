@@ -10,12 +10,12 @@ import utils.pdf
 
 def conv_pcb2pdf(pcbpath, docfolder, projname):
     pcb_folder, pcb_file = os.path.split(pcbpath)
-    psfile = os.path.join(docfolder, projname+'-pcb.ps')
+    psfile = os.path.join(docfolder, projname + '-pcb.ps')
     subprocess.call(['pcb', '-x', 'ps',
                      '--psfile', psfile,
                      '--outline', '--media', 'A4', '--show-legend',
                      pcb_file], cwd=pcb_folder)
-    pdffile = os.path.join(docfolder, projname+'-pcb.pdf')
+    pdffile = os.path.join(docfolder, projname + '-pcb.pdf')
     utils.pdf.conv_ps2pdf(psfile, pdffile)
     os.remove(psfile)
     return pdffile

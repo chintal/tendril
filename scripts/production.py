@@ -159,8 +159,8 @@ else:
     snomap['indentsno'] = indentsno
 title = data['title']
 indentpath, indentsno = dox.indent.gen_stock_idt_from_cobom(orderfolder,
-                                                                       indentsno, title,
-                                                                       data['cards'], cobom)
+                                                            indentsno, title,
+                                                            data['cards'], cobom)
 if REGISTER is True:
     dox.docstore.register_document(indentsno, indentpath, 'INVENTORY INDENT', efield=title)
 else:
@@ -209,7 +209,7 @@ for card, qty in sorted(data['cards'].iteritems()):
         # No Assembly manifest needed
         prodst = "@THIS"
         if INCLUDE_REFBOM_FOR_NO_AM is True:
-            addldocs.append(os.path.join(cardconf.doc_folder, 'confdocs', card+'-bom.pdf'))
+            addldocs.append(os.path.join(cardconf.doc_folder, 'confdocs', card + '-bom.pdf'))
     if cardconf.configdata['productionstrategy']['testing'] == 'normal':
         # Normal test procedure, Test when made
         testst = "@NOW"

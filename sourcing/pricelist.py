@@ -262,7 +262,7 @@ class AnalogDevicesInvoice(customs.CustomsInvoice):
                     idx = line[header.index('Index')].strip()
                     qty = int(line[header.index('Quantity')].strip())
                     vpno = line[header.index('Part Number')].strip()
-                    mpno = line[header.index('Manufacturer Part Number')].strip()
+                    # mpno = line[header.index('Manufacturer Part Number')].strip()
                     desc = line[header.index('Description')].strip()
                     ident = line[header.index('Customer Reference')].strip()
                     boqty = line[header.index('Backorder')].strip()
@@ -274,7 +274,7 @@ class AnalogDevicesInvoice(customs.CustomsInvoice):
                         print line
 
                     unitp_str = line[header.index('Unit Price')].strip()
-                    extendedp_str = line[header.index('Extended Price')].strip()
+                    # extendedp_str = line[header.index('Extended Price')].strip()
 
                     unitp = utils.currency.CurrencyValue(float(unitp_str), self._vendor.currency)
                     lineobj = customs.CustomsInvoiceLine(self, ident, vpno, unitp, qty, idx=idx, desc=desc)

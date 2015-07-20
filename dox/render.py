@@ -117,9 +117,9 @@ def render_lineplot(outf, plotdata, title, note):
     xmin = min([min(l) for l in xlists])
     xmax = max([max(l) for l in xlists])
 
-    pl.yticks(range(0, int(ymax), int(ymax/10)), [str(x) for x in range(0, int(ymax), int(ymax/10))])
+    pl.yticks(range(0, int(ymax), int(ymax / 10)), [str(x) for x in range(0, int(ymax), int(ymax / 10))])
 
-    for y in range(0, int(ymax), int(ymax/10)):
+    for y in range(0, int(ymax), int(ymax / 10)):
         ax.plot(range(xmin, xmax), [y] * len(range(xmin, xmax)), "--", lw=0.5, color="black", alpha=0.3)
 
     pl.tick_params(axis="both", which="both", bottom="off", top="off",

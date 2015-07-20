@@ -55,7 +55,7 @@ def gen_vals(series, ostrs, start=None, end=None):
     for ostr in ostrs:
         for decade in range(3):
             for value in series:
-                valstr = vfmt(value * (10**decade))+ostr
+                valstr = vfmt(value * (10 ** decade)) + ostr
                 if in_range is False:
                     if valstr == start:
                         in_range = True

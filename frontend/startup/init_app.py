@@ -18,7 +18,7 @@ def init_app(app, db):
         app.config['WTF_CSRF_ENABLED'] = False              # Disable CSRF checks while testing
 
     # Initialize Assets
-    from frontend.startup import assets
+    from frontend.startup import assets  # noqa
 
     # Create Filters
 
@@ -39,7 +39,7 @@ def init_app(app, db):
     app.jinja_env.filters['strip'] = strip
 
     # Setup Flask-Mail
-    mail = Mail(app)
+    mail = Mail(app)  # noqa
 
     # Setup an error-logger to send emails to app.config.ADMINS
     init_error_logger_with_email_handler(app)
@@ -50,17 +50,17 @@ def init_app(app, db):
     from frontend.users.views import user_profile_page
     db_adapter = SQLAlchemyAdapter(db, User,
                                    UserAuthClass=UserAuth)
-    user_manager = UserManager(db_adapter, app,
+    user_manager = UserManager(db_adapter, app,  # noqa
                                register_form=MyRegisterForm,
                                user_profile_view_function=user_profile_page,
                                )
 
     # Load all models.py files to register db.Models with SQLAlchemy
-    from frontend.users import models
+    from frontend.users import models  # noqa
 
     # Load all views.py files to register @app.routes() with Flask
-    from frontend.pages import views
-    from frontend.users import views
+    from frontend.pages import views  # noqa
+    from frontend.users import views  # noqa
 
     # Register blueprints
     from frontend.blueprints.doc import doc
@@ -83,14 +83,15 @@ def init_error_logger_with_email_handler(app):
     Initialize a logger to send emails on error-level messages.
     Unhandled exceptions will now send an email message to app.config.ADMINS.
     """
-    if app.debug: return                        # Do not send error emails while developing
+    if app.debug:
+        return                        # Do not send error emails while developing
 
     # Retrieve email settings from app.config
-    host      = app.config['MAIL_SERVER']
-    port      = app.config['MAIL_PORT']
+    host = app.config['MAIL_SERVER']
+    port = app.config['MAIL_PORT']
     from_addr = app.config['MAIL_DEFAULT_SENDER']
-    username  = app.config['MAIL_USERNAME']
-    password  = app.config['MAIL_PASSWORD']
+    username = app.config['MAIL_USERNAME']
+    password = app.config['MAIL_PASSWORD']
     secure = () if app.config.get('MAIL_USE_TLS') else None
 
     # Retrieve app settings from app.config

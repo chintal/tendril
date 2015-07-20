@@ -213,7 +213,7 @@ class VendorBase(object):
 
         if selcandidate.vqtyavail == -2:
             logger.warning("Vendor available quantity could not be confirmed. Verify manually : "
-                           + self.name + " " + selcandidate.vpno + os.linesep + os.linesep + os.linesep )
+                           + self.name + " " + selcandidate.vpno + os.linesep + os.linesep + os.linesep)
 
         ubprice, nbprice = selcandidate.get_price(oqty)
         effprice = self.get_effective_price(ubprice)
@@ -223,8 +223,7 @@ class VendorBase(object):
             nubprice, nnbprice = selcandidate.get_price(nbprice.moq)
             neffprice = self.get_effective_price(nubprice)
             ntcost = neffprice.extended_price(nbprice.moq).native_value
-
-            bump_excess_qty = nubprice.moq - rqty
+            # bump_excess_qty = nubprice.moq - rqty
 
             if ntcost < tcost * 1.4:
                 urationale = "TC Increase < 40%"
@@ -455,4 +454,3 @@ class VendorElnPartBase(VendorPartBase):
     @datasheet.setter
     def datasheet(self, value):
         self._datasheet = value
-

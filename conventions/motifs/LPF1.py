@@ -32,7 +32,7 @@ class MotifLPF1(MotifBase):
 
     @property
     def Fc(self):
-        return (10**9) / (2 * pi * float(self.R1) * float(self.C1))
+        return (10 ** 9) / (2 * pi * float(self.R1) * float(self.C1))
 
     @Fc.setter
     def Fc(self, value):
@@ -46,7 +46,7 @@ class MotifLPF1(MotifBase):
                                              self._configdict['Cmin'],
                                              self._configdict['Cmax'])
 
-        required_cap_val = (10**9) / (2 * pi * float(self.R1) * value)
+        required_cap_val = (10 ** 9) / (2 * pi * float(self.R1) * value)
 
         cval = None
         for val in allowed_cap_vals:
@@ -81,4 +81,3 @@ class MotifLPF1(MotifBase):
                 'Cseries': "E6", 'Cmin': "1pF", 'Cmax': "1uF",
                 }
         return stub
-

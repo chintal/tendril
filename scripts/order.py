@@ -374,4 +374,3 @@ if IS_INDICATIVE:
     summaryf.close()
     logger.info(
         'Indicative Pricing Summary Written to File : ' + os.linesep + os.path.join(orderfolder, 'costing-summary.csv'))
-

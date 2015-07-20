@@ -20,6 +20,7 @@ def get_sno_efield(sno):
     results = sno_table.find_one(sno=sno)
     return results['efield']
 
+
 def get_all_serialnos():
     results = sno_table.find()
     for result in results:

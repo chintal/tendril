@@ -20,7 +20,7 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, '/home/chintal/code/virtualenvs/koala/lib/python2.7/site-packages')
-autodoc_default_flags = ['members', 'undoc-members','private-members', 'show-inheritance']
+autodoc_default_flags = ['members', 'undoc-members', 'private-members', 'show-inheritance']
 autodoc_member_order = 'bysource'
 autoclass_content = 'init'
 # -- General configuration ------------------------------------------------
@@ -194,23 +194,23 @@ htmlhelp_basename = 'Koaladoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-'preamble': '\setcounter{tocdepth}{5}'
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    'preamble': '\setcounter{tocdepth}{5}'
+    #'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'Koala.tex', u'Koala Documentation',
-   u'Chintalagiri Shashank', 'manual'),
+    ('index', 'Koala.tex', u'Koala Documentation',
+     u'Chintalagiri Shashank', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -253,9 +253,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Koala', u'Koala Documentation',
-   u'Chintalagiri Shashank', 'Koala', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'Koala', u'Koala Documentation',
+     u'Chintalagiri Shashank', 'Koala', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

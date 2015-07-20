@@ -28,6 +28,7 @@ engine = init_db_engine()
 Session = sessionmaker()
 Session.configure(bind=engine)
 
+
 @contextmanager
 def get_session():
     session = Session()

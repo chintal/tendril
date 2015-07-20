@@ -123,7 +123,7 @@ def get_reader(elec_inven_data_idx):
         return reader
     else:
         logger.error("Could not find reader for: ELECTRONICS_INVENTORY_DATA."
-                      + str(elec_inven_data_idx))
+                     + str(elec_inven_data_idx))
 
 
 def gen_canonical_transform(elec_inven_data_idx, regen=True):

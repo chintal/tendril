@@ -55,11 +55,11 @@ class MotifDLPF1(MotifBase):
 
     @property
     def Fdiff(self):
-        return (10**9) / (2 * pi * float(self.R1) * float(2 * self.C1 + self.C2))
+        return (10 ** 9) / (2 * pi * float(self.R1) * float(2 * self.C1 + self.C2))
 
     @property
     def Fcm(self):
-        return (10**9) / (2 * pi * float(self.R1) * float(self.C2))
+        return (10 ** 9) / (2 * pi * float(self.R1) * float(self.C2))
 
     @Fdiff.setter
     def Fdiff(self, value):
@@ -74,7 +74,7 @@ class MotifDLPF1(MotifBase):
                                              self._configdict['Cmax'])
 
         fcm_est = value * 21
-        required_cap_val = (10**9) / (2 * pi * float(self.R1) * fcm_est)
+        required_cap_val = (10 ** 9) / (2 * pi * float(self.R1) * fcm_est)
 
         cval = None
         lastval = None
@@ -146,4 +146,3 @@ class MotifDLPF1(MotifBase):
                 'Cseries': "E6", 'Cmin': "1pF", 'Cmax': "1uF",
                 'pbias': '-1', 'nbias': '-1'}
         return stub
-

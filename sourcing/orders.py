@@ -85,7 +85,8 @@ class CompositeOrderElem(object):
             return []
 
     def excess(self, vsinfo):
-        return vsinfo[5].extended_price(vsinfo[2]).native_value - self._selsource[5].extended_price(self._selsource[2]).native_value
+        return vsinfo[5].extended_price(vsinfo[2]).native_value - \
+            self._selsource[5].extended_price(self._selsource[2]).native_value
 
     @property
     def is_sourceable(self):
@@ -159,12 +160,12 @@ class CompositeOrder(object):
         if row == 0:
             for section in self._columns:
                 rval.append(section[0])
-                rval.extend([None]*(len(section[1])-1))
+                rval.extend([None] * (len(section[1]) - 1))
             return rval
         else:
             for section in self._columns:
                 for item in section[1]:
-                    rval.append(item[row-1])
+                    rval.append(item[row - 1])
             return rval
 
     def _render_vsinfo(self, vsinfo, row, basereq=None):
@@ -200,7 +201,7 @@ class CompositeOrder(object):
         if effprice is not None:
             row[headers.index("Effective Unit Price")] = "%.2f" % effprice.unit_price.native_value
             row[headers.index("Effective Extended Price")] = "%.2f" % effprice.extended_price(oqty).native_value
-            row[headers.index("Effective Excess Price")] = "%.2f" % ((oqty-basereq) * effprice.unit_price.native_value)
+            row[headers.index("Effective Excess Price")] = "%.2f" % ((oqty - basereq) * effprice.unit_price.native_value)
 
         if olduprice is not None:
             row[headers.index("Lower Break Unit Price")] = "%.2f" % olduprice.unit_price.native_value
@@ -267,7 +268,7 @@ class CompositeOrder(object):
             passes -= 1
             rebalance_pass += 1
             logger.debug("Making Rebalance Pass " + str(rebalance_pass)
-                        + ": Remaining Lines : " + str(len(shadowlines)))
+                         + ": Remaining Lines : " + str(len(shadowlines)))
             for line in shadowlines:
                 try:
                     if line.selsource[0].name in accepted_vendors:
@@ -302,7 +303,7 @@ class CompositeOrder(object):
 
             if len(candidate_vendors) > 0:
                 cvendors = sorted(candidate_vendors.keys(),
-                                  key=lambda x: candidate_vendors[x][1]-candidate_vendors[x][0].native_value,
+                                  key=lambda x: candidate_vendors[x][1] - candidate_vendors[x][0].native_value,
                                   reverse=True)
                 if candidate_vendors[cvendors[0]][1] > candidate_vendors[cvendors[0]][0].native_value:
                     logger.info("Accepting Vendor " + cvendors[0]
@@ -317,7 +318,7 @@ class CompositeOrder(object):
                 passes -= 1
                 rebalance_pass += 1
                 logger.debug("Making Rebalance Pass " + str(rebalance_pass)
-                            + ": Remaining Lines : " + str(len(shadowlines)))
+                             + ": Remaining Lines : " + str(len(shadowlines)))
                 for line in shadowlines:
                     try:
                         if line.selsource[0].name in accepted_vendors:

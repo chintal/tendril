@@ -43,7 +43,7 @@ class XLFile(object):
     def _parse_sscout(self, string):
         fname = os.path.splitext(self.fname)[0]
         rlist = [x.strip() for x in string.split('\n')[1:-1]]
-        rlist = [(os.path.split(x)[1][len(fname)+1:-4], x) for x in rlist]
+        rlist = [(os.path.split(x)[1][len(fname) + 1:-4], x) for x in rlist]
         return rlist
 
     def close(self):

@@ -36,4 +36,3 @@ def user_profile_page():
                            current_user=current_user,
                            pagetitle="User Profile"
                            )
-

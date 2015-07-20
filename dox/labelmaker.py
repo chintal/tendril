@@ -185,9 +185,9 @@ class LabelSheet(object):
             self._labels = []
             logger.info("Creating all labels for sheet : " + self._code)
         elif sheets > 0:
-            stage = {'labels': labels[:self.base.lpp*sheets]}
-            self._labels = labels[self.base.lpp*sheets:]
-            logger.info("Holding back "+str(remain)+" labels for sheet : " + self._code)
+            stage = {'labels': labels[:self.base.lpp * sheets]}
+            self._labels = labels[self.base.lpp * sheets:]
+            logger.info("Holding back " + str(remain) + " labels for sheet : " + self._code)
         else:
             logger.info("Not generating labels for sheet : " + self._code + ' ' + str(remain))
             return None

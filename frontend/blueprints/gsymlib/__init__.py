@@ -12,4 +12,4 @@ gsymlib = Blueprint('gsymlib', __name__,
                     template_folder='templates',
                     static_folder=os.path.join(INSTANCE_CACHE, 'gsymlib'))
 
-import views
+import views  # noqa

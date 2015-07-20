@@ -60,7 +60,7 @@ class GedaSymbol(object):
 
     def _img_repr(self):
         outfolder = os.path.join(INSTANCE_CACHE, 'gsymlib')
-        self._img_repr_fname = os.path.splitext(self.fname)[0]+'.png'
+        self._img_repr_fname = os.path.splitext(self.fname)[0] + '.png'
         self._img_repr_path = os.path.join(outfolder, self._img_repr_fname)
         if not os.path.exists(outfolder):
             os.makedirs(outfolder)
@@ -303,7 +303,7 @@ def get_folder_symbols(path, template=None, resolve_generators=True, include_gen
     return symbols
 
 
-def gen_symlib(path, recursive=True,
+def gen_symlib(path=GEDA_SYMLIB_ROOT, recursive=True,
                resolve_generators=True, include_generators=False):
     symbols = []
     template = _jinja_init()

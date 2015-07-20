@@ -11,7 +11,7 @@ import labelmaker
 
 def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
 
-    outpath = os.path.join(outfolder,  str(sno) + '.pdf')
+    outpath = os.path.join(outfolder, str(sno) + '.pdf')
     cards = ""
     for card, qty in sorted(carddict.iteritems()):
         cards += card + ' x' + str(qty) + ', '
@@ -32,4 +32,3 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
     render.render_pdf(stage, template, outpath)
 
     return outpath, indentsno
-

@@ -46,4 +46,3 @@ bundles = {
 assets = Environment(app)
 assets.cache = os.path.join(INSTANCE_CACHE, 'flaskassetcache')
 assets.register(bundles)
-

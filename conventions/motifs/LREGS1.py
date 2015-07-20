@@ -115,5 +115,3 @@ class MotifLREGS1(MotifBase):
     @property
     def listing(self):
         return [('Vout', self.Vout)]
-
-

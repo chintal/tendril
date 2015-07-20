@@ -80,7 +80,7 @@ def copy_docs_to_workspace(sno, workspace=None, clearws=False, setwsno=True, iag
         docname = os.path.split(doc.docpath)[1]
         if docname.startswith(sno):
             if not os.path.splitext(docname)[0] == sno:
-                docname = docname[len(sno)+1:]
+                docname = docname[len(sno) + 1:]
         shutil.copy(os.path.join(DOCSTORE_ROOT, doc.docpath),
                     os.path.join(workspace, docname))
 

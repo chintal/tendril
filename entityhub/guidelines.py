@@ -51,7 +51,6 @@ class QtyGuidelineTableRow(object):
         return str(self._excess_max_qty)
 
 
-
 class QtyGuidelines(object):
     def __init__(self, guidelinefile):
         self._idents = None

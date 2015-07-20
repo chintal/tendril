@@ -163,7 +163,7 @@ def urlopen(url):
             try:
                 if ENABLE_REDIRECT_CACHING is True and page.status == 301:
                     logger.debug('Detected New Permanent Redirect:\n' +
-                                  url + '\n' + page.url)
+                                 url + '\n' + page.url)
                     redirect_cache[url] = page.url
             except AttributeError:
                 pass
@@ -185,7 +185,7 @@ def urlopen(url):
             try:
                 if ENABLE_REDIRECT_CACHING is True and page.status == 301:
                     logger.debug('Detected New Permanent Redirect:\n' +
-                                  url + '\n' + page.url)
+                                 url + '\n' + page.url)
                     redirect_cache[url] = page.url
             except AttributeError:
                 pass
@@ -209,4 +209,3 @@ def get_soup(url):
         return None
     soup = BeautifulSoup(page, 'lxml')
     return soup
-

@@ -8,4 +8,4 @@ from flask import Blueprint
 entityhub = Blueprint('entityhub', __name__,
                       template_folder='templates')
 
-import views
+import views  # noqa

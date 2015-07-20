@@ -199,7 +199,7 @@ class CustomsInvoice(vendors.VendorInvoice):
     @property
     def insurance(self):
         if self.insurance_pc is not None:
-            return self.extendedtotal * self.insurance_pc/100
+            return self.extendedtotal * self.insurance_pc / 100
         else:
             return self.extendedtotal * 0
 
@@ -209,7 +209,7 @@ class CustomsInvoice(vendors.VendorInvoice):
 
     @property
     def landing(self):
-        return self.cif * self.handling_pc/100
+        return self.cif * self.handling_pc / 100
 
     @property
     def cif(self):
@@ -361,7 +361,7 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
     @property
     def dutypayable(self):
         return self.bcd.value + self.cvd.value + self.cec.value + self.cshec.value + \
-               self.cvdec.value + self.cvdshec.value + self.acvd.value
+            self.cvdec.value + self.cvdshec.value + self.acvd.value
 
     @property
     def idx(self):
@@ -381,40 +381,40 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
     @property
     def bcd(self):
         return DutyComponent("BCD", self.hs_section.bcd, self.hs_section.bcd_notif,
-                             self.assessableprice * self.hs_section.bcd/100.0)
+                             self.assessableprice * self.hs_section.bcd / 100.0)
 
     @property
     def cvd(self):
         return DutyComponent("CVD", self.hs_section.cvd, self.hs_section.cvd_notif,
-                             (self.assessableprice + self.bcd.value) * self.hs_section.cvd/100.0)
+                             (self.assessableprice + self.bcd.value) * self.hs_section.cvd / 100.0)
 
     @property
     def cec(self):
         return DutyComponent("C EC", self.hs_section.cec, self.hs_section.cec_notif,
-                             (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cec/100.0)
+                             (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cec / 100.0)
 
     @property
     def cshec(self):
         return DutyComponent("C SHEC", self.hs_section.cshec,
                              self.hs_section.cshec_notif,
-                             (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cshec/100.0)
+                             (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cshec / 100.0)
 
     @property
     def cvdec(self):
         return DutyComponent("CVD EC", self.hs_section.cvdec, self.hs_section.cvdec_notif,
-                             self.cvd.value * self.hs_section.cvdec/100.0)
+                             self.cvd.value * self.hs_section.cvdec / 100.0)
 
     @property
     def cvdshec(self):
         return DutyComponent("CVD SHEC", self.hs_section.cvdshec,
                              self.hs_section.cvdshec_notif,
-                             self.cvd.value * self.hs_section.cvdshec/100.0)
+                             self.cvd.value * self.hs_section.cvdshec / 100.0)
 
     @property
     def acvd(self):
         return DutyComponent("SAD", self.hs_section.acvd,
                              self.hs_section.acvd_notif,
-                             (self.assessableprice + self.bcd.value + self.cvd.value + self.cec.value + self.cshec.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.acvd/100.0)
+                             (self.assessableprice + self.bcd.value + self.cvd.value + self.cec.value + self.cshec.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.acvd / 100.0)
 
     @property
     def invoice_fraction(self):
@@ -469,5 +469,3 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
             return "{0:<3} {1:<40} {2:<35} {3:>10} {4:>15}".format(self.idx, self._ident, self._desc, self.hs_section.code, self.hs_section.name)
         else:
             return "{0:<3} {1:<40} {2:<35} {3:>10} {4:>15}".format(self.idx, self._ident, self._desc, '----------', 'Unclassified')
-
-

@@ -142,7 +142,7 @@ def main(path=None, ident=None, gen=None):
     if path is not None and is_geda_folder(path):
         stage.update(get_geda_browser_context(path))
         return render_template('gsymlib_browse.html', stage=stage,
-                                pagetitle='gEDA Library Browser')
+                               pagetitle='gEDA Library Browser')
     if ident is not None:
         ident = unquote(ident)
         if ident in gedaif.gsymlib.gsymlib_idents:

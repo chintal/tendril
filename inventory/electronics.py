@@ -206,11 +206,11 @@ def export_reservations(folderpath):
                 row = [ident] + [0] * (len(earmarks) + 2)
                 total = 0
                 for reservation in emgen:
-                    row[earmarks.index(reservation[1])+1] += reservation[0]
+                    row[earmarks.index(reservation[1]) + 1] += reservation[0]
                     total += reservation[0]
                 for idx, hdr in enumerate(earmarks):
-                    if row[idx+1] == 0:
-                        row[idx+1] = ''
+                    if row[idx + 1] == 0:
+                        row[idx + 1] = ''
                 row[header.index('Total')] = total
                 row[header.index('Remaining')] = get_total_availability(ident)
                 w.writerow(row)

@@ -10,7 +10,6 @@ from sqlalchemy import Column, String
 
 from utils.db import DeclBase
 from utils.db import BaseMixin
-from utils.db import TimestampMixin
 
 
 class InventoryLocationCode(BaseMixin, DeclBase):
@@ -18,5 +17,3 @@ class InventoryLocationCode(BaseMixin, DeclBase):
 
     def __repr__(self):
         return "<InventoryLocationCode(id = %s, name='%s')>" % (self.id, self.name)
-
-

@@ -17,19 +17,20 @@ MODULE = sys.modules[__name__]
 COLORS = "BLUE GREEN CYAN RED MAGENTA YELLOW WHITE BLACK".split()
 # List of terminal controls, you can add more to the list.
 CONTROLS = {
-    'BOL':'cr', 'UP':'cuu1', 'DOWN':'cud1', 'LEFT':'cub1', 'RIGHT':'cuf1',
-    'CLEAR_SCREEN':'clear', 'CLEAR_EOL':'el', 'CLEAR_BOL':'el1',
-    'CLEAR_EOS':'ed', 'BOLD':'bold', 'BLINK':'blink', 'DIM':'dim',
-    'REVERSE':'rev', 'UNDERLINE':'smul', 'NORMAL':'sgr0',
-    'HIDE_CURSOR':'cinvis', 'SHOW_CURSOR':'cnorm'
+    'BOL': 'cr', 'UP': 'cuu1', 'DOWN': 'cud1', 'LEFT': 'cub1', 'RIGHT': 'cuf1',
+    'CLEAR_SCREEN': 'clear', 'CLEAR_EOL': 'el', 'CLEAR_BOL': 'el1',
+    'CLEAR_EOS': 'ed', 'BOLD': 'bold', 'BLINK': 'blink', 'DIM': 'dim',
+    'REVERSE': 'rev', 'UNDERLINE': 'smul', 'NORMAL': 'sgr0',
+    'HIDE_CURSOR': 'cinvis', 'SHOW_CURSOR': 'cnorm'
 }
 
 # List of numeric capabilities
 VALUES = {
-    'COLUMNS':'cols', # Width of the terminal (None for unknown)
-    'LINES':'lines',  # Height of the terminal (None for unknown)
+    'COLUMNS': 'cols',  # Width of the terminal (None for unknown)
+    'LINES': 'lines',  # Height of the terminal (None for unknown)
     'MAX_COLORS': 'colors',
 }
+
 
 def default():
     """Set the default attribute values"""
@@ -40,6 +41,7 @@ def default():
         setattr(MODULE, control, '')
     for value in VALUES:
         setattr(MODULE, value, None)
+
 
 def setup():
     """Set the terminal control strings"""
@@ -65,6 +67,7 @@ def setup():
     for value in VALUES:
         # Set terminal related values
         setattr(MODULE, value, curses.tigetnum(VALUES[value]))
+
 
 def render(text):
     """Helper function to apply controls easily

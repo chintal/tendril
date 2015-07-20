@@ -47,7 +47,7 @@ class OutputBomLine(object):
             logger.warning("Device not identified : " + self.ident)
         elif fpiswire(device):
             try:
-                elen = Length(footprint) * 10/100
+                elen = Length(footprint) * 10 / 100
                 if elen < Length('5mm'):
                     elen = Length('5mm')
                 elif elen > Length('1inch'):

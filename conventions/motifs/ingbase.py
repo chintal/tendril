@@ -3,8 +3,6 @@ This file is part of koala
 See the COPYING, README, and INSTALL files for more information
 """
 
-from math import fabs
-
 from conventions.motifs.motifbase import MotifBase
 from conventions import electronics
 from conventions import iec60063

@@ -3,8 +3,7 @@ This file is part of koala
 See the COPYING, README, and INSTALL files for more information
 """
 
-
-from flask import render_template, abort, request
+from flask import render_template
 from flask_user import login_required
 
 from . import entityhub as blueprint
@@ -38,9 +37,9 @@ def pcbs(pcbname=None):
                       for k, v in ehprojects.pcbs.iteritems()]
         stage = {'pcbs': sorted([x for x in stage_pcbs if x['configdata'].status == 'Experimental'],
                                 key=lambda y: y['name']) +
-                         sorted([x for x in stage_pcbs if x['configdata'].status == 'Active'],
+                         sorted([x for x in stage_pcbs if x['configdata'].status == 'Active'],  # noqa
                                 key=lambda y: y['name']) +
-                         sorted([x for x in stage_pcbs if x['configdata'].status == 'Deprecated'],
+                         sorted([x for x in stage_pcbs if x['configdata'].status == 'Deprecated'],  # noqa
                                 key=lambda y: y['name']),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
@@ -77,4 +76,3 @@ def main():
     stage = {}
     return render_template('entityhub_main.html', stage=stage,
                            pagetitle='Entity Hub')
-
