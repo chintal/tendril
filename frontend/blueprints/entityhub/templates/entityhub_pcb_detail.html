@@ -1,10 +1,21 @@
 {% extends "base_templates/page_base.html" %}  {# base_templates/page_base.html extends base_templates/base.html #}
 
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
+        <dd data-magellan-arrival="configurations"><a href="#configurations">Configurations</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+
 {% block main %}
 
-<div class="row">
+<div class="row" data-magellan-destination="details">
 <h3> PCB Details </h3>
-
+<a name="details"></a>
         <ul class="small-12 medium-6 pricing-table shadow mrgn-20-top">
             <li class="price autoscale "> {{ stage.name }} </li>
             <li class="description"> {{ stage.configdata.description() }} </li>
@@ -59,8 +70,9 @@
         </ul>
 </div>
 
-<div class="row">
+<div class="row" data-magellan-destination="configurations">
 <h4> Configurations </h4>
+<a name="configurations"></a>
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-2" data-equalizer>
     {% for configuration in stage.configdata.configurations %}
     <li><ul class="pricing-table">

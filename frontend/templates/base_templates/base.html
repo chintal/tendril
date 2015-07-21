@@ -52,7 +52,6 @@
         </ul>
         </section>
     </nav>
-    {% block magellan %}{% endblock %}
     {% if stage and stage.breadcrumbs %}
     <ul class="breadcrumbs">
         {% for crumb in stage.breadcrumbs %}
@@ -63,7 +62,9 @@
         {% endif %}
     </ul>
     {% endif %}
+    {% block magellan %}{% endblock %}
     </div>
+
 
     <div class="row">
       <div class="small-10 large-6 small-centered columns">

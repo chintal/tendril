@@ -87,3 +87,28 @@ footer {
 {
     margin-top:0px;
 }
+
+.breadcrumbs {
+    margin-bottom: 0;
+}
+
+[data-magellan-expedition], [data-magellan-expedition-clone] {
+    background-color: #FCFCFC;
+    border-bottom: 0.5px;
+    border-bottom-style: solid;
+    border-color: #DCDCDC;
+    padding: 6px;
+}
+
+[data-magellan-expedition] .sub-nav a,
+[data-magellan-expedition-clone] .sub-nav a {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    vertical-align: middle;
+    padding-bottom: 5px;
+}
+
+[data-magellan-expedition] .sub-nav dd,
+[data-magellan-expedition-clone] .sub-nav dd {
+    margin-bottom: 0.2rem;
+}
