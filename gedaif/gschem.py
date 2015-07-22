@@ -87,62 +87,68 @@ map_shownamevalue = {0: 'SHOW NAME VALUE',
 
 
 class GschElementBase(object):
-    def __init__(self, **kwargs):
+    def __init__(self, lines, **kwargs):
         for k, v in kwargs.items():
             try:
                 setattr(self, k, int(v))
             except ValueError:
                 setattr(self, k, v)
         self._elements = []
+        self._get_multiline(lines)
 
     def add_element(self, element):
         self._elements.append(element)
 
+    def _get_multiline(self, lines):
+        return
+
+    def write_out(self, f):
+        raise NotImplementedError
+
 
 class GschElementComponent(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementComponent, self).__init__(**kwargs)
+        super(GschElementComponent, self).__init__(lines, **kwargs)
 
 
 class GschElementNet(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementNet, self).__init__(**kwargs)
+        super(GschElementNet, self).__init__(lines, **kwargs)
 
 
 class GschElementBus(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementBus, self).__init__(**kwargs)
+        super(GschElementBus, self).__init__(lines, **kwargs)
 
 
 class GschElementPin(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementPin, self).__init__(**kwargs)
+        super(GschElementPin, self).__init__(lines, **kwargs)
 
 
 class GschElementLine(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementLine, self).__init__(**kwargs)
+        super(GschElementLine, self).__init__(lines, **kwargs)
 
 
 class GschElementBox(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementBox, self).__init__(**kwargs)
+        super(GschElementBox, self).__init__(lines, **kwargs)
 
 
 class GschElementCircle(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementCircle, self).__init__(**kwargs)
+        super(GschElementCircle, self).__init__(lines, **kwargs)
 
 
 class GschElementArc(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementArc, self).__init__(**kwargs)
+        super(GschElementArc, self).__init__(lines, **kwargs)
 
 
 class GschElementText(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementText, self).__init__(**kwargs)
-        self._get_multiline(lines)
+        super(GschElementText, self).__init__(lines, **kwargs)
 
     def _get_multiline(self, lines):
         self._lines = []
@@ -152,8 +158,7 @@ class GschElementText(GschElementBase):
 
 class GschElementPicture(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementPicture, self).__init__(**kwargs)
-        self._get_multiline(lines)
+        super(GschElementPicture, self).__init__(lines, **kwargs)
 
     def _get_multiline(self, lines):
         self.fpath = lines.popleft()
@@ -166,8 +171,7 @@ class GschElementPicture(GschElementBase):
 
 class GschElementPath(GschElementBase):
     def __init__(self, lines=None, **kwargs):
-        super(GschElementPath, self).__init__(**kwargs)
-        self._get_multiline(lines)
+        super(GschElementPath, self).__init__(lines, **kwargs)
 
     def _get_multiline(self, lines):
         self._segments = []
