@@ -7,8 +7,181 @@ gEDA gschem module documentation (:mod:`gedaif.gschem`)
 from utils.config import GEDA_SCHEME_DIR
 import utils.pdf
 
+import re
 import os
 import subprocess
+from collections import deque
+
+
+rex_vstring = re.compile(ur'^v (?P<gsch_ver>\d+) (?P<file_ver>\d+)$')
+
+rex_el_line = re.compile(ur'^L (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>\d+) (?P<dashstyle>-?\d+) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+)$')
+rex_el_picture = re.compile(ur'^G (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<width>\d+) (?P<height>\d+) (?P<angle>\d+) (?P<mirrored>[01]) (?P<embedded>[01])$')
+rex_el_box = re.compile(ur'^B (?P<x>-?\d+) (?P<y>-?\d+) (?P<boxwidth>-?\d+) (?P<boxheight>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[012]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+)$')
+rex_el_circle = re.compile(ur'^V (?P<x>-?\d+) (?P<y>-?\d+) (?P<radius>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[0]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+)$')
+rex_el_arc = re.compile(ur'^A (?P<x>-?\d+) (?P<y>-?\d+) (?P<radius>-?\d+) (?P<startangle>-?\d+) (?P<sweepangle>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[0]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+)$')
+rex_el_text = re.compile(ur'^T (?P<x>-?\d+) (?P<y>-?\d+) (?P<color>\d+) (?P<size>\d+) (?P<visibility>[01]) (?P<show_name_value>[012]) (?P<angle>\d+) (?P<alignment>[0-8]) (?P<num_lines>\d+)$')
+rex_el_net = re.compile(ur'^N (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+)$')
+rex_el_bus = re.compile(ur'^U (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<ripperdir>-?\d)$')
+rex_el_pin = re.compile(ur'^P (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<pintype>[01]) (?P<whichend>[01])$')
+rex_el_component = re.compile(ur'^C (?P<x>-?\d+) (?P<y>-?\d+) (?P<selectable>[01]) (?P<angle>\d+) (?P<mirror>[01]) (?P<basename>[\w.+ -]*)$')
+rex_el_path = re.compile(ur'^H (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[012]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+) (?P<num_lines>[\d]+)$')
+
+rex_block_start = re.compile(ur'^\s*{\s*$')
+rex_block_end = re.compile(ur'^\s*}\s*$')
+
+
+class GschElementBase(object):
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        self._elements = []
+
+    def add_element(self, element):
+        self._elements.append(element)
+
+
+class GschElementComponent(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementComponent, self).__init__(**kwargs)
+
+
+class GschElementNet(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementNet, self).__init__(**kwargs)
+
+
+class GschElementBus(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementBus, self).__init__(**kwargs)
+
+
+class GschElementPin(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementPin, self).__init__(**kwargs)
+
+
+class GschElementLine(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementLine, self).__init__(**kwargs)
+
+
+class GschElementBox(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementBox, self).__init__(**kwargs)
+
+
+class GschElementCircle(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementCircle, self).__init__(**kwargs)
+
+
+class GschElementArc(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementArc, self).__init__(**kwargs)
+
+
+class GschElementText(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementText, self).__init__(**kwargs)
+        self._get_multiline(lines)
+
+    def _get_multiline(self, lines):
+        self._lines = []
+        for i in range(int(self.num_lines)):
+            self._lines.append(lines.popleft())
+
+
+class GschElementPicture(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementPicture, self).__init__(**kwargs)
+        self._get_multiline(lines)
+
+    def _get_multiline(self, lines):
+        self.fpath = lines.popleft()
+        self._encoded = []
+        if self.embedded == 1:
+            line = None
+            while line.strip() != '.':
+                self._encoded.append(lines.popleft())
+
+
+class GschElementPath(GschElementBase):
+    def __init__(self, lines=None, **kwargs):
+        super(GschElementPath, self).__init__(**kwargs)
+        self._get_multiline(lines)
+
+    def _get_multiline(self, lines):
+        self._segments = []
+        for i in range(int(self.num_lines)):
+            self._segments.append(lines.popleft())
+
+
+class GschFile(object):
+    def __init__(self, fpath):
+        self.fpath = fpath
+        self._elements = []
+        self._load_file()
+
+    def add_element(self, element):
+        self._elements.append(element)
+
+    def _get_version(self, lines):
+        m = None
+        while not m:
+            m = rex_vstring.match(lines.popleft())
+        self._gschver = m.group('gsch_ver')
+        self._filever = m.group('file_ver')
+
+    @staticmethod
+    def _get_next_element(lines):
+        line = None
+        while not line:
+            line = lines.popleft()
+        if line.startswith('L'):
+            return GschElementLine(lines=lines, **rex_el_line.match(line).groupdict())
+        elif line.startswith('G'):
+            return GschElementPicture(lines=lines, **rex_el_picture.match(line).groupdict())
+        elif line.startswith('B'):
+            return GschElementBox(lines=lines, **rex_el_box.match(line).groupdict())
+        elif line.startswith('V'):
+            return GschElementCircle(lines=lines, **rex_el_circle.match(line).groupdict())
+        elif line.startswith('A'):
+            return GschElementArc(lines=lines, **rex_el_arc.match(line).groupdict())
+        elif line.startswith('T'):
+            return GschElementText(lines=lines, **rex_el_text.match(line).groupdict())
+        elif line.startswith('N'):
+            return GschElementNet(lines=lines, **rex_el_net.match(line).groupdict())
+        elif line.startswith('U'):
+            return GschElementBus(lines=lines, **rex_el_bus.match(line).groupdict())
+        elif line.startswith('P'):
+            return GschElementPin(lines=lines, **rex_el_pin.match(line).groupdict())
+        elif line.startswith('C'):
+            return GschElementComponent(lines=lines, **rex_el_component.match(line).groupdict())
+        elif line.startswith('H'):
+            return GschElementPath(lines=lines, **rex_el_path.match(line).groupdict())
+        else:
+            raise AttributeError(line)
+
+    def _load_file(self):
+        with open(self.fpath, 'r') as f:
+            lines = deque(f.readlines())
+        self._get_version(lines)
+        block_level = 0
+        targets = {0: self}
+        element = None
+        while len(lines):
+            if rex_block_start.match(lines[0]):
+                if not element:
+                    raise Exception
+                block_level += 1
+                targets[block_level] = element
+                lines.popleft()
+            elif rex_block_end.match(lines[0]):
+                block_level -= 1
+                lines.popleft()
+            element = self._get_next_element(lines)
+            targets[block_level].add_element(element)
 
 
 def conv_gsch2pdf(schpath, docfolder):
