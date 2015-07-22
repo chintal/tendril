@@ -27,14 +27,72 @@ rex_el_pin = re.compile(ur'^P (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-
 rex_el_component = re.compile(ur'^C (?P<x>-?\d+) (?P<y>-?\d+) (?P<selectable>[01]) (?P<angle>\d+) (?P<mirror>[01]) (?P<basename>[\w.+ -]*)$')
 rex_el_path = re.compile(ur'^H (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[012]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+) (?P<num_lines>[\d]+)$')
 
-rex_block_start = re.compile(ur'^\s*{\s*$')
-rex_block_end = re.compile(ur'^\s*}\s*$')
+rex_block_start = re.compile(ur'^\s*[{[]\s*$')
+rex_block_end = re.compile(ur'^\s*[]}]\s*$')
+
+
+map_color = {0: 'BACKGROUND_COLOR',
+             1: 'PIN_COLOR',
+             2: 'NET_ENDPOINT_COLOR',
+             3: 'GRAPHIC_COLOR',
+             4: 'NET_COLOR',
+             5: 'ATTRIBUTE_COLOR',
+             6: 'LOGIC_BUBBLE_COLOR',
+             7: 'DOTS_GRID_COLOR',
+             8: 'DETACHED_ATTRIBUTE_COLOR',
+             9: 'TEXT_COLOR',
+             10: 'BUS_COLOR',
+             11: 'SELECT_COLOR',
+             12: 'BOUNDINGBOX_COLOR',
+             13: 'ZOOM_BOX_COLOR',
+             14: 'STROKE_COLOR',
+             15: 'LOCK_COLOR',
+             16: 'OUTPUT_BACKGROUND_COLOR',
+             17: 'FREESTYLE1_COLOR',
+             18: 'FREESTYLE2_COLOR',
+             19: 'FREESTYLE3_COLOR',
+             20: 'FREESTYLE4_COLOR',
+             21: 'JUNCTION_COLOR',
+             22: 'MESH_GRID_MAJOR_COLOR',
+             23: 'MESH_GRID_MINOR_COLOR'
+             }
+
+map_capstyle = {0: 'END NONE',
+                1: 'END SQUARE',
+                2: 'END ROUND'
+                }
+
+map_dashstyle = {0: 'TYPE SOLID',
+                 1: 'TYPE DOTTED',
+                 2: 'TYPE DASHED',
+                 3: 'TYPE CENTER',
+                 4: 'TYPE PHANTOM'
+                 }
+
+map_filltype = {0: 'FILLING HOLLOW',
+                1: 'FILLING FILL',
+                2: 'FILLING MESH',
+                3: 'FILLING HATCH',
+                4: 'FILLING VOID'
+                }
+
+map_pintype = {0: 'NORMAL PIN',
+               1: 'BUS PIN'
+               }
+
+map_shownamevalue = {0: 'SHOW NAME VALUE',
+                     1: 'SHOW VALUE',
+                     2: 'SHOW NAME'
+                     }
 
 
 class GschElementBase(object):
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
-            setattr(self, k, v)
+            try:
+                setattr(self, k, int(v))
+            except ValueError:
+                setattr(self, k, v)
         self._elements = []
 
     def add_element(self, element):
