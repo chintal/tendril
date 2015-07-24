@@ -10,6 +10,7 @@ import utils.pdf
 import re
 import os
 import subprocess
+from decimal import Decimal
 from collections import deque
 
 
@@ -27,8 +28,8 @@ rex_el_pin = re.compile(ur'^P (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-
 rex_el_component = re.compile(ur'^C (?P<x>-?\d+) (?P<y>-?\d+) (?P<selectable>[01]) (?P<angle>\d+) (?P<mirror>[01]) (?P<basename>[\w.+ -]*)$')
 rex_el_path = re.compile(ur'^H (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[012]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+) (?P<num_lines>[\d]+)$')
 
-rex_block_start = re.compile(ur'^\s*[{[]\s*$')
-rex_block_end = re.compile(ur'^\s*[]}]\s*$')
+rex_block_start = re.compile(ur'^\s*[{]\s*$')
+rex_block_end = re.compile(ur'^\s*[}]\s*$')
 
 
 map_color = {0: 'BACKGROUND_COLOR',
@@ -86,13 +87,81 @@ map_shownamevalue = {0: 'SHOW NAME VALUE',
                      }
 
 
+class GschPoint(object):
+    def __init__(self, parent, x, y):
+        self._parent = parent
+        self.x = x
+        self.y = y
+
+    @property
+    def parent(self):
+        return self._parent
+
+    def __eq__(self, other):
+        if self.x == other.x and self.y == other.x:
+            return True
+        else:
+            return False
+
+
+class GschLine(object):
+    def __init__(self, parent, p1, p2):
+        self._parent = parent
+        self.p1 = p1
+        self.p2 = p2
+        if p1 == p2:
+            raise Exception("Line can't have zero length")
+
+    @property
+    def parent(self):
+        return self._parent
+
+    def x(self, t):
+        return self.p1.x + t * (self.p2.x - self.p1.x)
+
+    def y(self, t):
+        return self.p1.y + t * (self.p2.y - self.p1.y)
+
+    def t_x(self, x):
+        if self.p1.x != self.p2.x:
+            return (Decimal(x) - self.p1.x) / (self.p2.x - self.p1.x)
+        else:
+            raise ZeroDivisionError
+
+    def t_y(self, y):
+        if self.p1.y != self.p2.y:
+            return (Decimal(y) - self.p1.y) / (self.p2.y - self.p1.y)
+        else:
+            raise ZeroDivisionError
+
+    def __contains__(self, p):
+        try:
+            t = self.t_x(p.x)
+            if 0 <= t <= 1:
+                try:
+                    if t == self.t_y(p.y):
+                        return True
+                    else:
+                        return False
+                except ZeroDivisionError:
+                    if p.y == self.p1.y:
+                        return True
+        except ZeroDivisionError:
+            t = self.t_y(p.y)
+            if 0 <= t <= 1 and p.x == self.p1.x:
+                return True
+            else:
+                return False
+
+
 class GschElementBase(object):
-    def __init__(self, lines, **kwargs):
+    def __init__(self, parent, lines, **kwargs):
         for k, v in kwargs.items():
             try:
                 setattr(self, k, int(v))
             except ValueError:
                 setattr(self, k, v)
+        self._parent = parent
         self._elements = []
         self._get_multiline(lines)
 
@@ -102,53 +171,79 @@ class GschElementBase(object):
     def _get_multiline(self, lines):
         return
 
+    @property
+    def parent(self):
+        return self._parent
+
+    @property
+    def active_point(self):
+        return []
+
+    @property
+    def active_points(self):
+        rval = self.active_point
+        for element in self._elements:
+            rval += element.active_points
+        return rval
+
+    @property
+    def passive_line(self):
+        return []
+
+    @property
+    def passive_lines(self):
+        rval = self.passive_line
+        for element in self._elements:
+            rval += element.passive_lines
+        return rval
+
     def write_out(self, f):
         raise NotImplementedError
 
 
 class GschElementComponent(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementComponent, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementComponent, self).__init__(parent, lines, **kwargs)
 
 
 class GschElementNet(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementNet, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementNet, self).__init__(parent, lines, **kwargs)
 
 
 class GschElementBus(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementBus, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementBus, self).__init__(parent, lines, **kwargs)
 
 
 class GschElementPin(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementPin, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementPin, self).__init__(parent, lines, **kwargs)
 
 
 class GschElementLine(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementLine, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementLine, self).__init__(parent, lines, **kwargs)
 
 
 class GschElementBox(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementBox, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementBox, self).__init__(parent, lines, **kwargs)
 
 
 class GschElementCircle(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementCircle, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementCircle, self).__init__(parent, lines, **kwargs)
 
 
 class GschElementArc(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementArc, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementArc, self).__init__(parent, lines, **kwargs)
 
 
 class GschElementText(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementText, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementText, self).__init__(parent, lines, **kwargs)
 
     def _get_multiline(self, lines):
         self._lines = []
@@ -157,8 +252,8 @@ class GschElementText(GschElementBase):
 
 
 class GschElementPicture(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementPicture, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementPicture, self).__init__(parent, lines, **kwargs)
 
     def _get_multiline(self, lines):
         self.fpath = lines.popleft()
@@ -170,8 +265,8 @@ class GschElementPicture(GschElementBase):
 
 
 class GschElementPath(GschElementBase):
-    def __init__(self, lines=None, **kwargs):
-        super(GschElementPath, self).__init__(lines, **kwargs)
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(GschElementPath, self).__init__(parent, lines, **kwargs)
 
     def _get_multiline(self, lines):
         self._segments = []
@@ -196,32 +291,32 @@ class GschFile(object):
         self._filever = m.group('file_ver')
 
     @staticmethod
-    def _get_next_element(lines):
+    def _get_next_element(parent, lines):
         line = None
         while not line:
             line = lines.popleft()
         if line.startswith('L'):
-            return GschElementLine(lines=lines, **rex_el_line.match(line).groupdict())
+            return GschElementLine(parent, lines=lines, **rex_el_line.match(line).groupdict())
         elif line.startswith('G'):
-            return GschElementPicture(lines=lines, **rex_el_picture.match(line).groupdict())
+            return GschElementPicture(parent, lines=lines, **rex_el_picture.match(line).groupdict())
         elif line.startswith('B'):
-            return GschElementBox(lines=lines, **rex_el_box.match(line).groupdict())
+            return GschElementBox(parent, lines=lines, **rex_el_box.match(line).groupdict())
         elif line.startswith('V'):
-            return GschElementCircle(lines=lines, **rex_el_circle.match(line).groupdict())
+            return GschElementCircle(parent, lines=lines, **rex_el_circle.match(line).groupdict())
         elif line.startswith('A'):
-            return GschElementArc(lines=lines, **rex_el_arc.match(line).groupdict())
+            return GschElementArc(parent, lines=lines, **rex_el_arc.match(line).groupdict())
         elif line.startswith('T'):
-            return GschElementText(lines=lines, **rex_el_text.match(line).groupdict())
+            return GschElementText(parent, lines=lines, **rex_el_text.match(line).groupdict())
         elif line.startswith('N'):
-            return GschElementNet(lines=lines, **rex_el_net.match(line).groupdict())
+            return GschElementNet(parent, lines=lines, **rex_el_net.match(line).groupdict())
         elif line.startswith('U'):
-            return GschElementBus(lines=lines, **rex_el_bus.match(line).groupdict())
+            return GschElementBus(parent, lines=lines, **rex_el_bus.match(line).groupdict())
         elif line.startswith('P'):
-            return GschElementPin(lines=lines, **rex_el_pin.match(line).groupdict())
+            return GschElementPin(parent, lines=lines, **rex_el_pin.match(line).groupdict())
         elif line.startswith('C'):
-            return GschElementComponent(lines=lines, **rex_el_component.match(line).groupdict())
+            return GschElementComponent(parent, lines=lines, **rex_el_component.match(line).groupdict())
         elif line.startswith('H'):
-            return GschElementPath(lines=lines, **rex_el_path.match(line).groupdict())
+            return GschElementPath(parent, lines=lines, **rex_el_path.match(line).groupdict())
         else:
             raise AttributeError(line)
 
@@ -242,8 +337,11 @@ class GschFile(object):
             elif rex_block_end.match(lines[0]):
                 block_level -= 1
                 lines.popleft()
-            element = self._get_next_element(lines)
+            element = self._get_next_element(targets[block_level], lines)
             targets[block_level].add_element(element)
+
+    def write_out(self, f):
+        raise NotImplementedError
 
 
 def conv_gsch2pdf(schpath, docfolder):
