@@ -11,7 +11,7 @@ import os
 
 import vendors
 import gedaif.gsymlib
-import utils.currency
+from utils.types import currency
 from utils.config import CUSTOMSDEFAULTS_FOLDER
 
 
@@ -143,9 +143,9 @@ class CustomsInvoice(vendors.VendorInvoice):
             inv_data = yaml.load(f)
             self._data.update(inv_data)
         self._linetype = CustomsInvoiceLine
-        vendor.currency = utils.currency.CurrencyDefinition(vendor.currency.code,
-                                                            vendor.currency.symbol,
-                                                            exchval=self._data['exchrate'])
+        vendor.currency = currency.CurrencyDefinition(vendor.currency.code,
+                                                      vendor.currency.symbol,
+                                                      exchval=self._data['exchrate'])
         super(CustomsInvoice, self).__init__(vendor, self._data['invoice_no'], self._data['invoice_date'])
 
         self.freight = 0
@@ -174,13 +174,13 @@ class CustomsInvoice(vendors.VendorInvoice):
                 logger.warning("Unrecognized Other Costs definition for " + k + " : " + v)
 
         if self._data['costs_not_included']['FREIGHT'] == 'None, included in Invoice':
-            self.freight = utils.currency.CurrencyValue(float(self._data['shipping_cost_incl']),
-                                                        self._vendor.currency)
+            self.freight = currency.CurrencyValue(float(self._data['shipping_cost_incl']),
+                                                  self._vendor.currency)
             self._data['costs_not_included']['FREIGHT'] += " ({0})".format(self.freight.source_string)
             self._includes_freight = True
         if self._data['costs_not_included']['FREIGHT'] == 'Listed in Invoice':
-            self.freight = utils.currency.CurrencyValue(float(self._data['shipping_cost_listed']),
-                                                        self._vendor.currency)
+            self.freight = currency.CurrencyValue(float(self._data['shipping_cost_listed']),
+                                                  self._vendor.currency)
             self._data['costs_not_included']['FREIGHT'] = "{0} (as listed in the invoice)".format(self.freight.source_string)
             self._includes_freight = True
 
