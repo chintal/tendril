@@ -3,10 +3,6 @@ gEDA gschem module documentation (:mod:`gedaif.gschem`)
 =======================================================
 """
 
-
-from utils.config import GEDA_SCHEME_DIR
-import utils.pdf
-
 import re
 import os
 import subprocess
@@ -87,71 +83,33 @@ map_shownamevalue = {0: 'SHOW NAME VALUE',
                      }
 
 
-class GschPoint(object):
+import utils.pdf
+from utils.types.cartesian import CartesianPoint
+from utils.types.cartesian import CartesianLineSegment
+
+from utils.config import GEDA_SCHEME_DIR
+
+
+class GschPoint(CartesianPoint):
+    unit = 'mil'
+
     def __init__(self, parent, x, y):
+        super(GschPoint, self).__init__(x, y)
         self._parent = parent
-        self.x = x
-        self.y = y
 
     @property
     def parent(self):
         return self._parent
 
-    def __eq__(self, other):
-        if self.x == other.x and self.y == other.x:
-            return True
-        else:
-            return False
 
-
-class GschLine(object):
+class GschLine(CartesianLineSegment):
     def __init__(self, parent, p1, p2):
+        super(GschLine, self).__init__(p1, p2)
         self._parent = parent
-        self.p1 = p1
-        self.p2 = p2
-        if p1 == p2:
-            raise Exception("Line can't have zero length")
 
     @property
     def parent(self):
         return self._parent
-
-    def x(self, t):
-        return self.p1.x + t * (self.p2.x - self.p1.x)
-
-    def y(self, t):
-        return self.p1.y + t * (self.p2.y - self.p1.y)
-
-    def t_x(self, x):
-        if self.p1.x != self.p2.x:
-            return (Decimal(x) - self.p1.x) / (self.p2.x - self.p1.x)
-        else:
-            raise ZeroDivisionError
-
-    def t_y(self, y):
-        if self.p1.y != self.p2.y:
-            return (Decimal(y) - self.p1.y) / (self.p2.y - self.p1.y)
-        else:
-            raise ZeroDivisionError
-
-    def __contains__(self, p):
-        try:
-            t = self.t_x(p.x)
-            if 0 <= t <= 1:
-                try:
-                    if t == self.t_y(p.y):
-                        return True
-                    else:
-                        return False
-                except ZeroDivisionError:
-                    if p.y == self.p1.y:
-                        return True
-        except ZeroDivisionError:
-            t = self.t_y(p.y)
-            if 0 <= t <= 1 and p.x == self.p1.x:
-                return True
-            else:
-                return False
 
 
 class GschElementBase(object):
