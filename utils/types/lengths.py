@@ -5,58 +5,71 @@ See the COPYING, README, and INSTALL files for more information
 from utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
-import math
+from decimal import Decimal
 import numbers
 import re
 
-lrex = re.compile(ur'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|(((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$))',
+lrex = re.compile(ur'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|((?P<mil>[-+]?\d*\.*\d+) *mil *$)|((?P<cmil>[-+]?\d*\.*\d+) *cmil *$)|((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$)',
                   re.IGNORECASE)
 
 
 class Length(object):
-    def __init__(self, lstr=None, length=None):
+    def __init__(self, lstr=None, length=None, defunit='mm'):
         self._lstr = None
         self._length = None
         if lstr is not None:
+            try:
+                float(lstr)
+                lstr += defunit
+            except ValueError:
+                pass
             self._lstr = lstr
-            self._parse_length()
-        elif length is not None:
-            self._length = length
+        elif length is not None and defunit is not None:
+            self._lstr = str(length) + defunit
+        self._parse_length()
 
     def _parse_length(self):
         match = lrex.match(self._lstr)
         if match is None:
             logger.warning("Length not parsed : " + self._lstr)
             self._length = 0
-            raise ValueError
+            raise ValueError(self._lstr)
 
         mm = match.group('mm')
         if mm is not None:
-            self._length = float(mm)
+            self._length = Decimal(mm)
             return
 
         cm = match.group('cm')
         if cm is not None:
-            self._length = float(cm) * 10
+            self._length = Decimal(cm) * 10
 
         m = match.group('m')
         if m is not None:
-            self._length = float(m) * 1000
+            self._length = Decimal(m) * 1000
 
         inch = match.group('in')
         if inch is not None:
-            self._length = float(inch) * 25.4
+            self._length = Decimal(inch) * Decimal(25.4)
+
+        mil = match.group('mil')
+        if mil is not None:
+            self._length = Decimal(mil) * Decimal(25.4) / 1000
+
+        cmil = match.group('cmil')
+        if cmil is not None:
+            self._length = Decimal(cmil) * Decimal(25.4) / 100000
 
     def __repr__(self):
         if self.__float__() < 10:
-            return str(self.__float__()) + " mm"
+            return str(round(self.__float__(), 2)) + " mm"
         elif self.__float__() < 1000:
-            return str(round(self.__float__() / 10, 1)) + " cm"
+            return str(round(self.__float__() / 10, 2)) + " cm"
         else:
-            return str(round(self.__float__() / 1000, 1)) + " m"
+            return str(round(self.__float__() / 1000, 2)) + " m"
 
     def __float__(self):
-        return math.ceil(self._length)
+        return self._length
 
     def __add__(self, other):
         return Length(length=self._length + float(other))

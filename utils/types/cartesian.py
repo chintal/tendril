@@ -18,12 +18,7 @@ class CartesianPoint(object):
 
     @staticmethod
     def _norm_repr(v):
-        if isinstance(v, int):
-            return v
-        elif isinstance(v, float):
-            return Decimal(v)
-        else:
-            return v
+        return Decimal(v)
 
     def __eq__(self, other):
         if self.x == other.x and self.y == other.x:
