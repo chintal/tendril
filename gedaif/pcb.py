@@ -14,7 +14,7 @@ from utils.types.lengths import Length
 
 class StringFlags(object):
     """
-        Re-written from :
+        From :
         PCB file parser written by Lilith Byrant 2014
         http://pastebin.com/2TqbDfKf
         GPLv2
@@ -86,7 +86,7 @@ def length(s, loc, toks):
 
 def build_bnf(pp=pyparsing):
     """
-        Re-written from :
+        From :
         PCB file parser written by Lilith Byrant 2014
         http://pastebin.com/2TqbDfKf
         GPLv2
