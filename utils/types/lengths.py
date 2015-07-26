@@ -69,6 +69,10 @@ class Length(object):
             return str(round(self.__float__() / 1000, 2)) + " m"
 
     def __float__(self):
+        return float(self._length)
+
+    @property
+    def decimal(self):
         return self._length
 
     def __add__(self, other):

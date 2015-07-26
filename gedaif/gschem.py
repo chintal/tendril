@@ -6,8 +6,10 @@ gEDA gschem module documentation (:mod:`gedaif.gschem`)
 import re
 import os
 import subprocess
-from decimal import Decimal
 from collections import deque
+
+import utils.log
+logger = utils.log.get_logger(__name__, utils.log.INFO)
 
 
 rex_vstring = re.compile(ur'^v (?P<gsch_ver>\d+) (?P<file_ver>\d+)$')
@@ -316,10 +318,23 @@ def conv_gsch2pdf(schpath, docfolder):
 
 def conv_gsch2png(schpath, outfolder):
     schpath = os.path.normpath(schpath)
-    schfname = os.path.splitext(os.path.split(schpath)[1])[0]
+    schfname, ext = os.path.splitext(os.path.split(schpath)[1])
+
     outpath = os.path.join(outfolder, schfname + '.png')
-    gschem_pngcmd = "gschem -p -o" + outpath + " -s" + GEDA_SCHEME_DIR + '/image.scm ' + schpath
-    subprocess.call(gschem_pngcmd.split(' '))
+    epspath = os.path.join(outfolder, schfname + '.eps')
+
+    if ext == '.sym':
+        gschem_epscmd = ["sym2eps", schpath, epspath]
+        try:
+            subprocess.check_call(gschem_epscmd)
+            gschem_pngcmd = ["convert", epspath, "-transparent", "white", outpath]
+            subprocess.call(gschem_pngcmd)
+            os.remove(epspath)
+        except subprocess.CalledProcessError:
+            logger.error("SYM2EPS Segmentation Fault on symbol : " + schpath)
+    elif ext == '.sch':
+        gschem_pngcmd = "gschem -p -o" + outpath + " -s" + GEDA_SCHEME_DIR + '/image.scm ' + schpath
+        subprocess.call(gschem_pngcmd)
     return outpath
 
 

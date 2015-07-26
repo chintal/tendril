@@ -21,7 +21,7 @@ class CartesianPoint(object):
         return Decimal(v)
 
     def __eq__(self, other):
-        if self.x == other.x and self.y == other.x:
+        if self.x == other.x and self.y == other.y:
             return True
         else:
             return False
