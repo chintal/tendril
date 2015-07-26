@@ -9,14 +9,15 @@ from decimal import Decimal
 import numbers
 import re
 
-lrex = re.compile(ur'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|((?P<mil>[-+]?\d*\.*\d+) *mil *$)|((?P<cmil>[-+]?\d*\.*\d+) *cmil *$)|((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$)',
+lrex = re.compile(ur'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<um>[-+]?\d*\.*\d+) *um *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|((?P<mil>[-+]?\d*\.*\d+) *mil *$)|((?P<cmil>[-+]?\d*\.*\d+) *cmil *$)|((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$)',
                   re.IGNORECASE)
 
 
 class Length(object):
     def __init__(self, lstr=None, length=None, defunit='mm'):
         self._lstr = None
-        self._length = None
+        self._olength = None
+        self._ounit = None
         if lstr is not None:
             try:
                 float(lstr)
@@ -32,33 +33,46 @@ class Length(object):
         match = lrex.match(self._lstr)
         if match is None:
             logger.warning("Length not parsed : " + self._lstr)
-            self._length = 0
+            self._olength = 0
+            self._ounit = 'mm'
             raise ValueError(self._lstr)
+
+        mm = match.group('um')
+        if mm is not None:
+            self._olength = Decimal(mm)
+            self._ounit = 'um'
+            return
 
         mm = match.group('mm')
         if mm is not None:
-            self._length = Decimal(mm)
+            self._olength = Decimal(mm)
+            self._ounit = 'mm'
             return
 
         cm = match.group('cm')
         if cm is not None:
-            self._length = Decimal(cm) * 10
+            self._olength = Decimal(cm)
+            self._ounit = 'cm'
 
         m = match.group('m')
         if m is not None:
-            self._length = Decimal(m) * 1000
+            self._olength = Decimal(m)
+            self._ounit = 'm'
 
         inch = match.group('in')
         if inch is not None:
-            self._length = Decimal(inch) * Decimal(25.4)
+            self._olength = Decimal(inch)
+            self._ounit = 'in'
 
         mil = match.group('mil')
         if mil is not None:
-            self._length = Decimal(mil) * Decimal(25.4) / 1000
+            self._olength = Decimal(mil)
+            self._ounit = 'mil'
 
         cmil = match.group('cmil')
         if cmil is not None:
-            self._length = Decimal(cmil) * Decimal(25.4) / 100000
+            self._olength = Decimal(cmil)
+            self._ounit = 'cmil'
 
     def __repr__(self):
         if self.__float__() < 10:
@@ -74,6 +88,27 @@ class Length(object):
     @property
     def decimal(self):
         return self._length
+
+    @property
+    def _length(self):
+        if self._ounit == 'um':
+            return self._olength / 1000
+        elif self._ounit == 'mm':
+            return self._olength
+        elif self._ounit == 'cm':
+            return self._olength * 10
+        elif self._ounit == 'm':
+            return self._olength * 1000
+        elif self._ounit == 'in':
+            return self._olength * Decimal(25.4)
+        elif self._ounit == 'mil':
+            return self._olength * Decimal(25.4) / 1000
+        elif self._ounit == 'cmil':
+            return self._olength * Decimal(25.4) / 100000
+
+    @property
+    def lstr(self):
+        return self._lstr
 
     def __add__(self, other):
         return Length(length=self._length + float(other))

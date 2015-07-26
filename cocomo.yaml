@@ -1,10 +1,10 @@
 type: intermediate
 mode: SEMIDETACHED
-RELY: Nominal
+RELY: High
 DATA: Very High
 CPLX: High
 TIME: Very Low
-STOR: Very Low
+STOR: Low
 VIRT: Low
 TURN: Low
 ACAP: Nominal
@@ -14,5 +14,4 @@ VEXP: Nominal
 LEXP: Nominal
 MODP: Nominal
 TOOL: Low
-SCED: Very Low
-  
+SCED: Low

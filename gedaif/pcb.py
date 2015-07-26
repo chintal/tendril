@@ -90,8 +90,8 @@ class PCBLayerPolygonHole(PCBElementBase):
     def __init__(self, tokens):
         super(PCBLayerPolygonHole, self).__init__(tokens)
         if 'Content' in dir(self):
-            self.content = [l[0] for l in self.Content]
-            for line in self.content:
+            self.vertices = [l[0] for l in self.Content]
+            for line in self.vertices:
                 line.parent = self
 
 
@@ -99,8 +99,8 @@ class PCBLayerPolygon(PCBElementBase):
     def __init__(self, tokens):
         super(PCBLayerPolygon, self).__init__(tokens)
         if 'Content' in dir(self):
-            self.content = [l[0] for l in self.Content]
-            for line in self.content:
+            self.vertices = [l[0] for l in self.Content]
+            for line in self.vertices:
                 line.parent = self
 
 
@@ -172,7 +172,7 @@ class PCBElement(PCBElementBase):
     def __init__(self, tokens):
         super(PCBElement, self).__init__(tokens)
         # TODO Sort out relative locations
-        self.mark = PCBPoint(self, self.MX, self.MY)
+        self.origin = PCBPoint(self, self.MX, self.MY)
         self.text_origin = PCBPoint(self, self.TX, self.TY)
         if 'Content' in dir(self):
             self.content = [l[0] for l in self.Content]
@@ -195,11 +195,7 @@ class PCBNet(PCBElementBase):
         if 'Content' in dir(self):
             self.connects = [l[0] for l in self.Content]
             for line in self.connects:
-                try:
-                    line.parent = self
-                except AttributeError, e:
-                    print line
-                    raise e
+                line.parent = self
 
 
 class PCBNetList(PCBElementBase):
@@ -208,11 +204,7 @@ class PCBNetList(PCBElementBase):
         if 'Content' in dir(self):
             self.nets = [l[0] for l in self.Content]
             for line in self.nets:
-                try:
-                    line.parent = self
-                except AttributeError, e:
-                    print line
-                    raise e
+                line.parent = self
 
 
 class PCBVia(PCBElementBase):
@@ -343,6 +335,8 @@ class PCBFile(object):
                     logger.warning("UNEXPECTED :: Groups Redefined")
                 self._groups = line.Groups
             elif line[0] == "Styles":
+                if self._styles is not None:
+                    logger.warning("UNEXPECTED :: Styles Redefined")
                 self._styles = PCBStyles(line.Styles)
             elif line[0] == "Mark":
                 self.mark.append(line)
