@@ -40,3 +40,8 @@ class TestSuiteBase(RunnableTest):
     """ Object representing a full runnable Test Suite on a single entity """
     def __init__(self):
         super(TestSuiteBase, self).__init__()
+        self._tests = []
+
+    def add_test(self, test):
+        assert isinstance(test, TestBase)
+        self._tests.append(test)
