@@ -300,32 +300,8 @@ def parse_crystal(value):
         return None
 
 
-def parse_resistance(value):
-    num_val = Decimal(value[:-1])
-    ostr = value[-1:]
-    if ostr == 'm':
-        return num_val / 1000
-    elif ostr == 'E':
-        return num_val
-    elif ostr == 'K':
-        return num_val * 1000
-    elif ostr == 'M':
-        return num_val * 1000 * 1000
-
-
-def parse_capacitance(value):
-    num_val = Decimal(value[:-2])
-    ostr = value[-2:]
-    if ostr == 'pF':
-        return num_val / 1000
-    elif ostr == 'nF':
-        return num_val
-    elif ostr == 'uF':
-        return num_val * 1000
-    elif ostr == 'mF':
-        return num_val * 1000 * 1000
-
-
+from utils.types.electomagnetic import parse_resistance
+from utils.types.electomagnetic import parse_capacitance
 from utils.types.electomagnetic import parse_current
 from utils.types.electomagnetic import parse_voltage
 

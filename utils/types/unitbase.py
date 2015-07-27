@@ -3,18 +3,27 @@ This file is part of koala
 See the COPYING, README, and INSTALL files for more information
 """
 
+from decimal import Decimal
 import numbers
 
 
 class UnitBase(object):
-    def __init__(self, value):
+    def __init__(self, value, _ostrs, _dostr, _parse_func):
+        if isinstance(value, str):
+            value = _parse_func(value)
+        elif isinstance(value, numbers.Number):
+            if not isinstance(value, Decimal):
+                value = Decimal(value)
+
         self._value = value
+        self._ostrs = _ostrs
+        self._dostr = _dostr
 
-    def __float__(self):
-        return float(self._value)
-
-    def __int__(self):
-        return int(self._value)
+    # def __float__(self):
+    #     return float(self._value)
+    #
+    # def __int__(self):
+    #     return int(self._value)
 
     @property
     def value(self):
@@ -59,3 +68,25 @@ class UnitBase(object):
             return -1
         else:
             return 1
+
+    def __repr__(self):
+        ostr = self._dostr
+        value = self._value
+        done = False
+        while not done:
+            ostri = self._ostrs.index(ostr)
+            if 1 <= value < 1000:
+                done = True
+            elif value >= 1000:
+                if ostri < len(self._ostrs) - 1:
+                    ostr = self._ostrs[ostri + 1]
+                    value /= Decimal(1000)
+                else:
+                    done = True
+            elif value < 1:
+                if ostri > 0:
+                    ostr = self._ostrs[ostri - 1]
+                    value *= Decimal(1000)
+                else:
+                    done = True
+        return str(value) + ostr

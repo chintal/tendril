@@ -5,9 +5,34 @@ See the COPYING, README, and INSTALL files for more information
 
 from decimal import Decimal
 from decimal import InvalidOperation
-import numbers
 
 from unitbase import UnitBase
+
+
+def parse_resistance(value):
+    num_val = Decimal(value[:-1])
+    ostr = value[-1:]
+    if ostr == 'm':
+        return num_val / 1000
+    elif ostr == 'E':
+        return num_val
+    elif ostr == 'K':
+        return num_val * 1000
+    elif ostr == 'M':
+        return num_val * 1000 * 1000
+
+
+def parse_capacitance(value):
+    num_val = Decimal(value[:-2])
+    ostr = value[-2:]
+    if ostr == 'pF':
+        return num_val / 1000
+    elif ostr == 'nF':
+        return num_val
+    elif ostr == 'uF':
+        return num_val * 1000
+    elif ostr == 'mF':
+        return num_val * 1000 * 1000
 
 
 def parse_voltage(value):
@@ -60,47 +85,33 @@ def parse_current(value):
         raise ValueError
 
 
+class Resistance(UnitBase):
+    def __init__(self, value):
+        _ostrs = ['m', 'E', 'K', 'M']
+        _dostr = 'E'
+        _parse_func = parse_resistance
+        super(Resistance, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+
+class Capacitance(UnitBase):
+    def __init__(self, value):
+        _ostrs = ['pF', 'nF', 'uF', 'mF']
+        _dostr = 'nF'
+        _parse_func = parse_capacitance
+        super(Capacitance, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+
 class Voltage(UnitBase):
     def __init__(self, value):
-        if isinstance(value, str):
-            value = parse_voltage(value)
-        elif isinstance(value, numbers.Number):
-            value = Decimal(value)
-        super(Voltage, self).__init__(value)
-
-    def __repr__(self):
-        if self._value >= 1000:
-            return str(self._value / 1000) + 'kV'
-        elif self._value >= 1:
-            return str(self._value) + 'V'
-        elif self._value >= 0.001:
-            return str(self._value * 1000) + 'mV'
-        elif self._value >= 0.000001:
-            return str(self._value * 1000000) + 'uV'
-        elif self._value >= 0.000000001:
-            return str(self._value * 1000000000) + 'nV'
-        else:
-            return str(self._value * 1000000000000) + 'pV'
+        _ostrs = ['pV', 'nV', 'uV', 'mV', 'V', 'kV']
+        _dostr = 'V'
+        _parse_func = parse_voltage
+        super(Voltage, self).__init__(value, _ostrs, _dostr, _parse_func)
 
 
 class Current(UnitBase):
     def __init__(self, value):
-        if isinstance(value, str):
-            value = parse_current(value)
-        elif isinstance(value, numbers.Number):
-            value = Decimal(value)
-        super(Current, self).__init__(value)
-
-    def __repr__(self):
-        if self._value > 1000:
-            return str(self._value / 1000) + 'A'
-        elif self._value > 1:
-            return str(self._value) + 'mA'
-        elif self._value > 0.001:
-            return str(self._value * 1000) + 'uA'
-        elif self._value > 0.000001:
-            return str(self._value * 1000000) + 'nA'
-        elif self._value > 0.000000001:
-            return str(self._value * 1000000000) + 'pA'
-        else:
-            return str(self._value * 1000000000000) + 'fA'
+        _ostrs = ['fA', 'pA', 'nA', 'uA', 'mA', 'A']
+        _dostr = 'mA'
+        _parse_func = parse_current
+        super(Current, self).__init__(value, _ostrs, _dostr, _parse_func)
