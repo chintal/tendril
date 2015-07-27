@@ -326,40 +326,8 @@ def parse_capacitance(value):
         return num_val * 1000 * 1000
 
 
-def parse_voltage(value):
-    value = value.strip()
-    try:
-        num_val = Decimal(value[:-1])
-        ostr = value[-1:]
-    except InvalidOperation:
-        num_val = Decimal(value[:-2])
-        ostr = value[-2:]
-
-    if ostr == 'V':
-        return num_val
-    elif ostr == 'mV':
-        return num_val / 1000
-    elif ostr == 'uV':
-        return num_val / 10000000
-
-
-def parse_current(value):
-    value = value.strip()
-    try:
-        num_val = Decimal(value[:-1])
-        ostr = value[-1:]
-    except InvalidOperation:
-        num_val = Decimal(value[:-2])
-        ostr = value[-2:]
-
-    if ostr == 'A':
-        return num_val * 1000
-    elif ostr == 'mA':
-        return num_val
-    elif ostr == 'uA':
-        return num_val / 1000
-    elif ostr == 'nA':
-        return num_val / 1000000
+from utils.types.electomagnetic import parse_current
+from utils.types.electomagnetic import parse_voltage
 
 res_ostrs = ['m', 'E', 'K', 'M', 'G']
 
