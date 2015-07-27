@@ -300,10 +300,10 @@ def parse_crystal(value):
         return None
 
 
-from utils.types.electomagnetic import parse_resistance
-from utils.types.electomagnetic import parse_capacitance
-from utils.types.electomagnetic import parse_current
-from utils.types.electomagnetic import parse_voltage
+from utils.types.electromagnetic import parse_resistance
+from utils.types.electromagnetic import parse_capacitance
+from utils.types.electromagnetic import parse_current
+from utils.types.electromagnetic import parse_voltage
 
 res_ostrs = ['m', 'E', 'K', 'M', 'G']
 

@@ -16,7 +16,10 @@ class SignalBase(object):
 class SignalPoint(SignalBase):
     def __init__(self, unitclass, value, ts=None):
         super(SignalPoint, self).__init__(unitclass)
-        self.value = value
+        if not isinstance(value, unitclass):
+            self.value = unitclass(value)
+        else:
+            self.value = value
         if ts is None:
             self.timestamp = timestamp_factory.utcnow()
         else:
