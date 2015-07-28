@@ -8,14 +8,18 @@ class TestPrepBase(object):
     """ Object representing a preparatory step for a Test """
     def __init__(self, parent):
         self._parent = parent
-        self._apparatus = []
+        self._steps = []
 
 
 class TestMeasurementBase(object):
     """ Object representing a single measurement for a Test """
     def __init__(self, parent):
         self._parent = parent
+
+        self._inputchannel = None
         self._input = None
+
+        self._outputchannel = None
         self._output = None
 
 
@@ -35,6 +39,12 @@ class TestBase(RunnableTest):
         self._measurements = []
         self._runner = None
 
+    def run_test(self):
+        pass
+
+    def commit_results(self):
+        pass
+
 
 class TestSuiteBase(RunnableTest):
     """ Object representing a full runnable Test Suite on a single entity """
@@ -45,3 +55,10 @@ class TestSuiteBase(RunnableTest):
     def add_test(self, test):
         assert isinstance(test, TestBase)
         self._tests.append(test)
+
+    def run_test(self):
+        pass
+
+    def commit_results(self):
+        pass
+
