@@ -1,0 +1,55 @@
+
+LICENSE OVERVIEW
+----------------
+
+The Koala sources are distrubuted under the terms of various Open Source
+Licenses. Each source file contains within it the applicable license for 
+that file. 
+
+In case of any differences between the overview presented here and the actual
+license listing within a specific source file, the listing in the source file 
+will supercede anything written here. Any source files not containing an 
+explicit license listing are distibuted under the terms of the 
+"Dominant License" listed below. 
+
+The full text of the licenses used are included in the source distribution.
+
+LICENSES
+--------
+
+* GNU Affero General Public License v3 (LICENSE.AGPLv3.txt)
+	This is the "Dominant License" for Koala, and applies to most 
+	Python source files included in the distribution. 
+
+* MIT License (LICENSE.MIT.txt)
+	This license is applied to various Latex/jinja2 and HTML/jinja2 
+	templates and similar ancilliary sources
+
+
+LICENSING ROADMAP
+-----------------
+
+Koala sources are distributed under the terms of the "Dominant License", 
+i.e. AGPLv3+ (unless otherwise specified withing individual source files).
+This license is chosen so as to remain compliant with the licenses of the
+various open source dependencies of Koala. 
+
+Over time, it is intended to refactor and release selected sections of 
+Koala under a more permissive license. This refactoring and re-licensing 
+is proposed to be based on the following considerations, and tentatively 
+under the listed licenses (in decreasing order of priority) :
+
+* Sections of code necessary for customizing reports, branding, formatting, 
+and consequently enhancing integration with pre-existing Processes. (MIT)
+
+* Sections of code which are easily decoupled from the Koala core and have
+clear applications independent of Koala. (LGPL)
+ 
+* Sections of code forming an 'API' that can be used to better integrate
+Koala functionality with other Software or Infrastructure elements. (LGPL)
+
+* Sections of code forming an 'API' that can be used to extend Koala 
+functionality in ways which are not of interest to the Koala core. (LGPL)
+
+* Sections of code clearly unencumbered by upstream licensing concerns. (GPL)
+
