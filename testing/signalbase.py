@@ -23,14 +23,26 @@ class SignalErrorBar(object):
 class SignalPoint(SignalBase):
     def __init__(self, unitclass, value, ts=None):
         super(SignalPoint, self).__init__(unitclass)
+
         if not isinstance(value, unitclass):
             self.value = unitclass(value)
         else:
             self.value = value
+
         if ts is None:
             self.timestamp = timestamp_factory.utcnow()
         else:
             self.timestamp = ts
+
+        self._error_bar = None
+
+    @property
+    def error_bar(self):
+        return self._error_bar
+
+    @error_bar.setter
+    def error_bar(self, value):
+        self._error_bar = value
 
 
 class SignalWave(SignalBase):
