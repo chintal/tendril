@@ -1,0 +1,29 @@
+koala.testing package
+=====================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    koala.testing.instruments
+    koala.testing.tests
+
+Submodules
+----------
+
+.. toctree::
+
+   koala.testing.autotest
+   koala.testing.instrumentbase
+   koala.testing.signalbase
+   koala.testing.testbase
+   koala.testing.testrunner
+
+Module contents
+---------------
+
+.. automodule:: koala.testing
+    :members:
+    :undoc-members:
+    :show-inheritance:
