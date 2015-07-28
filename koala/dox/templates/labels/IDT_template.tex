@@ -1,0 +1,31 @@
+%{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+%#}
+\documentclass[8pt]{article}
+\usepackage[newdimens]{labels}
+\usepackage{PTSansNarrow} 
+\renewcommand*\familydefault{\sfdefault} %% Only if the base font of the document is to be sans serif
+\usepackage[T1]{fontenc}
+\LabelCols=5
+\LabelRows=22
+\LeftPageMargin=11mm
+\RightPageMargin=13mm
+\TopPageMargin=6mm
+\BottomPageMargin=6mm
+\InterLabelColumn=0mm
+\InterLabelRow=0mm
+\LeftLabelBorder=1mm
+\TopLabelBorder=1mm
+\BottomLabelBorder=1mm
+\RightLabelBorder=1mm
+
+\LabelGridtrue
+
+\begin{document}
+\begin{labels}
+%{ for label in stage.labels %}
+\parbox{3.6cm}{\raggedright{\tt\scriptsize %{{label.sno%}}} \hfill {\footnotesize Qty : \textbf{\small %{{label.qty%}}}} \\  {\footnotesize\bfseries %{{label.ident|escape_latex%}}}}
+%{ endfor %} 
+\end{labels}
+\end{document}

@@ -1,0 +1,102 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<h3> gEDA Generator Details </h3>
+
+<!--Symbol Information-->
+<div class="row">
+    <div class="small-12 medium-6 columns">
+        <ul class="pricing-table shadow">
+            <li class="price autoscale">{{stage.generator.genident}}</li>
+            <li class="title">{{stage.generator.ident}}</li>
+            {% if stage.generator.footprint %}
+            <li class="bullet-item">{{stage.generator.footprint}}</li>
+            {% endif %}
+            <li class="description">{{stage.generator.fname}}</li>
+            <li class="description">
+                {% for path in stage.sympaths%}
+                    {% if loop.first %} <b> {% endif %}{{path}}{% if loop.first %} </b> {% endif %}
+                    {% if not loop.last %} <br> {% endif %}
+                {% endfor %}
+            </li>
+            <li class="description">{{stage.genpath}}</li>
+            {% if stage.generator.description %}
+            <li class="description">{{stage.generator.description|unicode}}</li>
+            {% endif %}
+            {% if not stage.generator.sym_ok %}
+              <span class="right label radius alert">Bad Symbol</span>
+            {% endif %}
+            {% if stage.generator.is_generator %}
+              <span class="right label radius warning">Generator</span>
+            {% endif %}
+            {% if stage.generator.is_virtual %}
+              <span class="right label radius success">Virtual</span>
+            {% endif %}
+            {% if stage.generator.is_deprecated %}
+              <span class="right label radius alert">Deprecated</span>
+            {% endif %}
+            {% if stage.generator.is_experimental %}
+              <span class="right label radius warning">Experimental</span>
+            {% endif %}
+            {% if stage.generator.is_wire %}
+              <span class="right label radius info">Wire</span>
+            {% endif %}
+            {% if stage.generator.is_modlen %}
+              <span class="right label radius info">Modlen</span>
+            {% endif %}
+        </ul>
+        <ul class="pricing-table shadow">
+            <li class="title">Generator Rules</li>
+            <li class="price">{{ stage.genobj.type }}</li>
+            {% if stage.genobj.igenerators|length %}
+                <li class="title">Generators</li>
+                {% for gen in stage.genobj.igenerators %}
+                    <li class="bullet-item">
+                        <small><b> STANDARD : </b></small> {{ gen.std|upper }} {{ gen.series }}
+                    </li>
+                    <li class="description">
+                        <div class="small-6 columns"><small><b> START : </b></small> {{ gen.start }}</div>
+                        <div class="small-6 columns"><small><b> END : </b></small> {{ gen.end }}</div>
+                    </li>
+                {% endfor %}
+            {% endif %}
+            {% if stage.genobj.ivalues|length %}
+                <li class="title">Specific Part Numbers</li>
+                {% for value in stage.genobj.ivalues %}
+                    <li class="bullet-item"> {{ value }} </li>
+                {% endfor %}
+            {% endif %}
+            {% if stage.genobj.iunits|length %}
+                <li class="title">Special Values</li>
+                {% for value in stage.genobj.iunits %}
+                    <li class="bullet-item"> {{ value }} </li>
+                {% endfor %}
+            {% endif %}
+        </ul>
+    </div>
+    <!--<div class="small-12 medium-6 columns panel radius end">
+        {% for imgpath in stage.imgpaths %}
+            <img src="/gsymlib/gsymlib/{{imgpath}}">
+        {% endfor %}
+    </div>-->
+    <div class="small-12 medium-6 columns">
+        <ul class="pricing-table shadow">
+            <li class="title">Provides</li>
+            {% if stage.generator.idents %}
+                {% for ident in stage.generator.idents %}
+                <li class="bullet-item"><a href="/gsymlib/detail/{{ ident|quote }}">{{ ident }}</a></li>
+                {% endfor %}
+            {% else %}
+                <li class="description">None</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

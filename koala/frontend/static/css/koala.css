@@ -1,0 +1,114 @@
+.valign-middle {
+    display: table;
+}
+
+.valign-middle .columns {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.valign-middle .columns,
+.valign-middle [class*="column"] + [class*="column"]:last-child {
+    float: none;
+}
+
+footer {
+ background-color:#333;
+ color:#FFF;
+ padding-top:0.5em;
+}
+
+#footer ul {
+ list-style: none;
+ float: right;
+}
+
+#footer a {
+ color:#EEE;
+ font-size: smaller;
+ font-weight: lighter;
+}
+
+#footer li {
+ display: inline;
+ margin: 0;
+ padding-left: 0.4em;
+ padding-bottom: 0.3em;
+ border-left: 1px solid;
+}
+
+#footer .first {
+ padding-left: 0;
+ border: 0;
+}
+
+.copyright {
+ color:#EEE;
+ font-size: smaller;
+ font-weight: lighter;
+}
+
+.square {
+ padding-top: 35%;
+ padding-bottom: 35%;
+}
+
+@media screen and (min-width:40.0625em){
+    .active-tb {
+      position: relative;
+      box-shadow: 0px 2px 10px 0px rgba(50, 50, 50, 0.5);
+      transform: scale(1);
+      border: 0;
+      transition: 0.4s ease;
+      z-index: 13; }
+      .active-tb:hover {
+        position: relative;
+        box-shadow: 0px 2px 10px 0px rgba(50, 50, 50, 0.5);
+        transform: scale(1.25);
+        border: 0;
+        z-index: 15; }
+}
+
+.splist
+{
+    -moz-column-width: 11.5em; /* Firefox */
+    -webkit-column-width: 11.5em; /* webkit, Safari, Chrome */
+    column-width: 11.5em;
+}
+/*remove standard list and bullet formatting from ul*/
+.splist ul
+{
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+/* correct webkit/chrome uneven margin on the first column*/
+.splist ul li:first-child
+{
+    margin-top:0px;
+}
+
+.breadcrumbs {
+    margin-bottom: 0;
+}
+
+[data-magellan-expedition], [data-magellan-expedition-clone] {
+    background-color: #FCFCFC;
+    border-bottom: 0.5px;
+    border-bottom-style: solid;
+    border-color: #DCDCDC;
+    padding: 6px;
+}
+
+[data-magellan-expedition] .sub-nav a,
+[data-magellan-expedition-clone] .sub-nav a {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    vertical-align: middle;
+    padding-bottom: 5px;
+}
+
+[data-magellan-expedition] .sub-nav dd,
+[data-magellan-expedition-clone] .sub-nav dd {
+    margin-bottom: 0.2rem;
+}

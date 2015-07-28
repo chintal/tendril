@@ -1,0 +1,141 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
+        <dd data-magellan-arrival="configurations"><a href="#configurations">Configurations</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+
+{% block main %}
+
+<div class="row" data-magellan-destination="details">
+<h3> PCB Details </h3>
+<a name="details"></a>
+        <ul class="small-12 medium-6 pricing-table shadow mrgn-20-top">
+            <li class="price autoscale "> {{ stage.name }} </li>
+            <li class="description"> {{ stage.configdata.description() }} </li>
+            <li class="title"> PCB Details </li>
+            {% for descriptor in stage.configdata.pcbdescriptors %}
+            <li class="bullet-item"> {{ descriptor }} </li>
+            {% endfor %}
+            {% if stage.configdata.configdata.grouplist %}
+            <li class="title"> Groups </li>
+            {% for group in stage.configdata.configdata.grouplist %}
+            <li class="bullet-item">
+                <b> {{ group.name }} : </b> {{ group.desc }}
+            </li>
+            {% endfor %}
+            {% endif %}
+            {% if stage.configdata.configdata.motiflist %}
+            <li class="title"> Motifs </li>
+            {% for key, value in stage.configdata.configdata.motiflist|dictsort %}
+            <li class="bullet-item">
+                <b> {{ key }} : </b> {{ value.desc }}
+            </li>
+            <li>
+            <ul class="small-block-grid-3 small-11 columns small-centered">
+                {% for p, s in value.iteritems() %}
+                    {% if p != 'desc' %}
+                        <li class="description"> {{ p|upper }} : {{ s }} </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            </li>
+            {% endfor %}
+            {% endif %}
+            {% if stage.configdata.configdata.sjlist %}
+            <li class="title"> SJs </li>
+            <li class="bullet-item">
+                <ul class="small-block-grid-3">
+                {% for key, value in stage.configdata.configdata.sjlist|dictsort %}
+                <li><b> {{ key }} : </b> {{ value }}</li>
+                {% endfor %}
+                </ul>
+            </li>
+            {% endif %}
+            {% if stage.configdata.status == 'Experimental' %}
+              <span class="right label radius warning">Experimental</span>
+            {% endif %}
+            {% if stage.configdata.status == 'Active' %}
+              <span class="right label radius success">Active</span>
+            {% endif %}
+            {% if stage.configdata.status == 'Deprecated' %}
+              <span class="right label radius alert">Deprecated</span>
+            {% endif %}
+        </ul>
+</div>
+
+<div class="row" data-magellan-destination="configurations">
+<h4> Configurations </h4>
+<a name="configurations"></a>
+<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-2" data-equalizer>
+    {% for configuration in stage.configdata.configurations %}
+    <li><ul class="pricing-table">
+        <li class="price"> {{ configuration.configname }} </li>
+        <li class="description"> {{ configuration.desc }} </li>
+        {% if configuration.grouplist %}
+        <li class="title"> Groups </li>
+        <li>
+        <ul class="small-block-grid-3 small-11 columns small-centered">
+                {% for group in configuration.grouplist %}
+                <li class="bullet-item"> {{ group }} </li>
+                {% endfor %}
+        </ul>
+        </li>
+        {% endif %}
+        {% if configuration.motiflist %}
+        <li class="title"> Motifs </li>
+        {% for k, v in configuration.motiflist.iteritems() %}
+        {% if v|length >2 %}
+        <li class="bullet-item"> <b>{{ k }}</b> </li>
+        <li>
+        <ul class="small-block-grid-3 small-11 columns small-centered">
+            {% for p, s in v.iteritems() %}
+            <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
+            {% endfor %}
+        </ul>
+        </li>
+        {% else %}
+        <li>
+        <ul class="small-block-grid-3 small-11 columns small-centered">
+            <li class="bullet-item"> <b>{{ k }}</b> </li>
+            {% for p, s in v.iteritems() %}
+            <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
+            {% endfor %}
+        </ul>
+        </li>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+
+        {% if configuration.genlist %}
+        <li class="title"> Generators </li>
+        {% for k, v in configuration.genlist.iteritems() %}
+            <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
+        {% endfor %}
+        {% endif %}
+
+
+        {% if configuration.sjlist %}
+        <li class="title"> SJs </li>
+        <li><ul class="small-block-grid-3 small-11 columns small-centered">
+        {% for k, v in configuration.sjlist.iteritems() %}
+            <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
+        {% endfor %}
+        </ul></li>
+        {% endif %}
+    </ul></li>
+    {% endfor %}
+</ul>
+</div>
+{% endblock %}

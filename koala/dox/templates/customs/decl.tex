@@ -1,0 +1,116 @@
+%{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+%#}
+\documentclass[a4paper,9pt, DIV=14, headinclude=false,footinclude=false]{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage{typearea}
+\usepackage{times}
+\usepackage{tfrupee}
+\pdfmapfile{=tfrupee.map}
+%\usepackage[top=0.5in, bottom=0.5in, right=0.5in, left=0.5in]{geometry}
+%opening
+
+\renewcommand*{\titlepagestyle}{empty}
+\DeclareTextFontCommand{\emph}{\bfseries}
+
+\makeatletter
+\renewcommand{\@maketitle}{
+\begin{center}
+  \ifx\@subject\@empty \else
+    {\subject@font \@subject \par}
+  \fi
+  \titlefont\huge \@title\par
+  {\ifx\@subtitle\@empty\else\usekomafont{subtitle}\@subtitle\par\fi}%
+\end{center}
+\vskip 0.1em}
+\makeatother
+
+
+\title{CUSTOMS DECLARATION FORM\\\small{(See rule 10 of the Customs Validation Rules, 1988)}}
+\subtitle{\hfill\small{%{{stage.copyt%}}}\\ \hfill \textbf{\tiny INTERNAL REFERENCE} \\ \hfill \texttt{%{{stage.sno%}}} }
+\date{}
+
+\begin{document}
+
+\maketitle
+\hrulefill
+\\
+\small{
+\hspace*{0.5cm} Note : This declaration shall not be required for goods imported as passenger's baggage, goods imported for personal use upto value \\
+\hspace*{0.5cm} of Rs. 1,000/-, samples of no commercial value, or where the goods are subject to a specific rate of duty.
+}
+
+\hrulefill
+\\
+\small{
+\begin{enumerate}
+ \item Importers Name and Address: \emph{%{{stage.company%}}, %{{stage.company_address_line%}}}
+ \item Suppliers Name and Address: \emph{%{{stage.given_data.supplier_name%}}, %{{stage.given_data.supplier_address%}}}
+ \item Name \& Address of Agent : \emph{%{{stage.given_data.cha_name%}}, %{{stage.given_data.cha_address%}}}
+ \item Description of Goods : \emph{%{{stage.given_data.goods_description%}}}
+ \item Country of Origin: \emph{%{{stage.given_data.origin_country%}}}
+ \item Port of Shipment: \emph{%{{stage.given_data.shipment_port%}}}
+ \item AWB/BL Number and Date : \emph{%{{stage.given_data.shipper_awb_no%}}, dt. %{{stage.given_data.shipper_date%}}}
+ \item IGM Number and Date : 
+ \item Contract Number and Date : 
+ \item Nature of Transaction : \emph{%{{stage.given_data.transaction_type%}}}
+ \item Invoice Number and Date : \emph{%{{stage.given_data.invoice_no%}}, dt. %{{stage.given_data.invoice_date%}}}
+ \item Invoice value : \emph{%{{stage.extended_total_sc%}}}
+ \item Terms of Payment : \emph{%{{stage.given_data.payment_term%}}}
+ \item Currency of Payment : \emph{%{{stage.currency%}}}
+ \item Exchange Rate : \emph{\rupee~%{{stage.exchrate%}} / %{{stage.currency%}}1, vide Notification No.%{{stage.exchnotif%}}}
+ \item Terms of Delivery : \emph{%{{stage.given_data.delivery_term%}}}
+ \item Relationship between buyer and seller [Rule 4(2)] : \emph{%{{stage.given_data.relationship%}}}
+ \item If related what is the basis of decared value : \emph{%{{stage.given_data.basis_if_related%}}}
+ \item Condition or Restriction attached with the sale [Rule 4(2)] : \emph{%{{stage.given_data.restriction_with_sale%}}}
+ \item Valuation Method Applicable (See Rule 4 to 8) : \emph{%{{stage.given_data.valuation_method%}}}
+ \item Cost and services not included in the Invoice value (Rule 9):
+ \begin{enumerate}
+  \item Brokerage and Commission : \emph{%{{stage.given_data.costs_not_included.BROKERAGE%}}}
+  \item Cost of Containers : \emph{%{{stage.given_data.costs_not_included.CONTAINERS%}}}
+  \item Packing cost : \emph{%{{stage.given_data.costs_not_included.PACKING%}}}
+  \item Cost of goods and services supplied by the buyer : \emph{%{{stage.given_data.costs_not_included.SERVICES%}}}
+  \item Royalties and license fees : \emph{%{{stage.given_data.costs_not_included.ROYALTIES%}}}
+  \item Value of procees which accrue to seller : \emph{%{{stage.given_data.costs_not_included.PROCEEDS%}}}
+  \item Freight : \emph{%{{stage.given_data.costs_not_included.FREIGHT%}}}
+  \item Insurance : \emph{%{{stage.given_data.costs_not_included.INSURANCE%}}}
+  \item Loading, Unloading, Handling charges : \emph{%{{stage.given_data.costs_not_included.HANDLING%}}}
+  \item Landing charges : \emph{%{{stage.given_data.costs_not_included.LANDING%}}}
+  \item Other payments, if any : \emph{%{{stage.given_data.costs_not_included.OTHER%}}}
+ \end{enumerate}
+ \item Assessable Value : \emph{%{{stage.assessable_total_nc%}}}
+ \item Previous imports of identical/similar goods, if any :
+ \begin{enumerate}
+  \item Bill of Entry Number and Date : \emph{%{{stage.given_data.oldboe%}}, dt. %{{stage.given_data.oldboedt%}}}
+  \item IGM Number and Date : 
+ \end{enumerate}
+ \item Any other relevant information (attach separate sheet, if necessary) : \emph{%{{stage.given_data.other_information%}}}
+\end{enumerate}
+
+\vspace{1cm}
+
+Place : \emph{NEW DELHI}
+
+
+Date : \emph{%{{stage.date%}}}
+
+\hfill Signature of Importer
+
+\hrulefill
+\begin{center}
+ FOR CUSTOMS USE ONLY
+\end{center}
+\begin{enumerate}
+ \item Bill of Entry Number and Date : 
+ \item Valuation Method Applied (See Rules 4 to 8) :
+ \item If declared value not accepted, brief reason : 
+ \item Reference Number and date of any previous decisions / ruling : 
+ \item Value Assessed : 
+\end{enumerate}
+
+\hrulefill
+}
+
+
+\end{document}

@@ -1,0 +1,151 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="motifs"><a href="#motifs">Motifs</a></dd>
+        <dd data-magellan-arrival="devices"><a href="#devices">Device Classes</a></dd>
+        <dd data-magellan-arrival="invguidelines"><a href="#invguidelines">Inventory Guidelines</a></dd>
+        <dd data-magellan-arrival="iec60063"><a href="#iec60063">IEC60063</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+{% block main %}
+
+<h1>Conventions</h1>
+
+
+<!--Motifs-->
+<div class="row" data-magellan-destination="motifs">
+<h4> Motifs </h4>
+<a name="motifs"></a>
+    <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
+        <li><a href="/conventions/motifs/M1/" class="button square radius expand bg-t1" data-equalizer-watch>
+            <b> M1 </b></a>
+        </li>
+    </ul>
+</div>
+
+
+<!-- Devices -->
+<div class="row" data-magellan-destination="devices">
+<h3> Recognized Device Classes </h3>
+<a name="devices"></a>
+<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4 columns">
+    {% for device in stage.devices %}
+    <li> <div class="panel text-center radius">{{ device }}</div>  </li>
+    {% endfor %}
+</ul>
+</div>
+
+<!-- Inventory Guidelines -->
+<div class="row" data-magellan-destination="invguidelines">
+<h3> Inventory Guidelines </h3>
+<a name="invguidelines"></a>
+    <div class="small-12 columns">
+        <table class="responsive">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Min Order Qty</th>
+                <th>Order Qty Multiple</th>
+                <th>Baseline Qty</th>
+                <th>Min Excess %</th>
+                <th>Mix Excess Qty</th>
+                <th>Max Excess Qty</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for name, rows in stage.guidelines.iteritems() %}
+
+            <tr><td><b>{{ name|upper }}</b></td> <td> </td><td> </td><td> </td><td> </td><td> </td><td class="text-right"> {{ name|upper }} </td> </tr>
+
+            {% for row in rows %}
+            <tr>
+                <td> {{ row.id }} </td>
+                <td class="text-center"> {{ row.oqty_min }} </td>
+                <td class="text-center"> {{ row.oqty_multiple }} </td>
+                <td class="text-center"> {{ row.baseline_qty }} </td>
+                <td class="text-center"> {{ row.excess_min_pc }} </td>
+                <td class="text-center"> {{ row.excess_min_qty }} </td>
+                <td class="text-center"> {{ row.excess_max_qty }} </td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- iec60063 -->
+<div class="row" data-magellan-destination="iec60063">
+<h3> IEC60063 Preferred Numbers </h3>
+<a name="iec60063"></a>
+
+<!--Form-->
+<div class="small-12 columns">
+<form action=" {{ request.path }}#iec60063 " method="GET">
+    <fieldset>
+        <legend>
+            Series Parameters
+        </legend>
+        <div class="small-12 large-3 columns">
+        <label> Type
+            <select id="type" name="type">
+              <option {% if stage.iec60063stype=='none' %} selected {% endif %} value="none">Numbers</option>
+              <option {% if stage.iec60063stype=='resistor' %} selected {% endif %} value="resistor">Resistors</option>
+              <option {% if stage.iec60063stype=='capacitor' %} selected {% endif %} value="capacitor">Capacitors</option>
+              <option {% if stage.iec60063stype=='inductor' %} selected {% endif %} value="inductor">Inductors</option>
+              <option {% if stage.iec60063stype=='zener' %} selected {% endif %} value="zener">Zener Diodes</option>
+            </select>
+        </label>
+        </div>
+        <div class="small-12 large-3 columns">
+        <label> Series
+            <select id="series" name="series">
+              <option {% if stage.iec60063series=='E24' %} selected {% endif %} value="E24">E24</option>
+              <option {% if stage.iec60063series=='E12' %} selected {% endif %}value="E12">E12</option>
+              <option {% if stage.iec60063series=='E6' %} selected {% endif %}value="E6">E6</option>
+              <option {% if stage.iec60063series=='E3' %} selected {% endif %}value="E3">E3</option>
+            </select>
+        </label>
+        </div>
+        <div class="small-12 large-3 columns">
+        <label> Start
+            <input name="start" id="start" type="text" placeholder="Start"
+                   {% if stage.iec60063start %} value="{{ stage.iec60063start }}" {% endif %}/>
+        </label>
+        </div>
+        <div class="small-12 large-3 columns">
+        <label> End
+            <input name="end" id="end" type="text" placeholder="End"
+                   {% if stage.iec60063end %} value="{{ stage.iec60063end }}" {% endif %} />
+        </label>
+        </div>
+        <input type="submit" class="button small expand radius" value="Generate">
+    </fieldset>
+</form>
+</div>
+<!--Results-->
+<div class="small-12 columns">
+    <h4> IEC60063 {{ stage.iec60063series }} Values
+        {% if stage.iec60063stype %} for {{ stage.iec60063stype }}{% endif %}
+        {% if stage.iec60063start %} from {{ stage.iec60063start }}{% endif %}
+        {% if stage.iec60063end %} upto {{ stage.iec60063end }}{% endif %}
+    </h4>
+    <ul class="splist" style="list-style-type: none;">
+        {% for val in stage.iec60063vals %}
+        <li class="splist panel radius text-center"> {{ val }} </li>
+        {% endfor %}
+    </ul>
+</div>
+</div>
+
+{% endblock %}

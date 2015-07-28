@@ -1,0 +1,9 @@
+
+
+Conventions
+-----------
+
+.. toctree::
+
+   gedasymbols
+   gedaprojects

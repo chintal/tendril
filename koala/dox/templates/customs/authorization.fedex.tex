@@ -1,0 +1,38 @@
+%{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+%#}
+\documentclass[10pt, subject=centered, fromalign=right, foldmarks=false, fontsize=10pt]{scrlttr2}
+\usepackage[utf8]{inputenc}
+\usepackage[top=0in, bottom=0.5in, right=1in, left=1in]{geometry}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{tfrupee}
+\pdfmapfile{=tfrupee.map}
+
+\begin{document}
+\setkomavar{signature}{For %{{stage.company%}}\\%{{stage.signatory%}}}
+\setkomavar{location}{\sffamily\scriptsize \small \raggedleft \textbf{\tiny INTERNAL REFERENCE} \\ \texttt{%{{stage.sno%}}}}
+
+
+\setkomavar{subject}{Authorization Letter cum Declaration\\\small\textit{For Import of Electronic Components under %{{stage.given_data.shipper%}} AWB No. %{{stage.given_data.shipper_awb_no%}}}}
+
+\begin{letter}{ The Deputy / Assistant Commissioner of Customs,\\
+		Air Cargo Complex,\\
+		New Delhi, India}
+		
+		
+\opening{Dear Sir/Madam,}
+% \pagestyle{fancy}
+\small{
+  We, M/s. {\tt %{{stage.company%}}, %{{stage.company_address_line%}} } authorize {\tt %{{stage.given_data.cha_name%}} } for filing of Import Documents in our name for customs clearance of the shipment addressed to us via {\tt %{{stage.given_data.shipper%}} AWB No. %{{stage.given_data.shipper_awb_no%}}}, as per documentation and information provided to them by us. We hereby also declare that the information in {\tt Invoice No %{{stage.inv_no%}}}, dated {\tt %{{stage.inv_date%}}} is, as per our knowledge, true and correct and if during custom examination, any contradictory / objectionable information or materials are found in the shipment neither CHA nor the carrier would be held responsible.
+ }
+\small 
+\vspace{2em}
+\closing{Sincerely,\vspace{3em}}
+
+\end{letter}
+
+
+
+\end{document}

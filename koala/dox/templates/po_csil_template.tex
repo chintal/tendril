@@ -1,0 +1,86 @@
+%{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+%#}
+
+\documentclass[9pt]{scrlttr2}
+\usepackage[utf8]{inputenc}
+\usepackage[top=1.5in, bottom=1in, right=1in, left=1in]{geometry}
+%\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{tfrupee}
+\usepackage{ltablex}
+\pdfmapfile{=tfrupee.map}
+\usepackage{array}
+
+\begin{document}
+\begin{letter}{Circuit Systems (India) Ltd. \\
+	       B-24, GIDC Electronics Estate, \\ 
+	       Sector 25, Gandhinagar 382044 \\
+	       Gujarat, India \\
+	       
+	       Attn: Mr. Sandeep
+		}
+		
+		
+\LoadLetterOption{%{{stage.lcofile%}}}
+
+\makeatletter
+\@setplength{refvpos}{7cm}
+\makeatother
+
+\makeatletter
+\@setplength{toaddrvpos}{2cm}
+\makeatother
+
+\makeatletter
+\@setplength{sigbeforevskip}{2em}
+\makeatother
+
+\setkomavar{yourref}[Purchase Order Number]{%{{stage.no%}}}
+\setkomavar{customer}[Internal Reference]{%{{stage.intref%}}}
+\setkomavar{invoice}[Quazar Contact Person]{%{{stage.point%}}}
+\setkomavar{date}{%{{stage.date%}}}
+\opening{Dear Sir/Madam,}
+% \pagestyle{fancy}
+\keepXColumns
+As submitted on your web portal via the user name {\tt %{{stage.username%}}}, we would like to place an order in your {\tt Power Standard} service with the following specifications and options, at the prices quoted by the Price Calculator on your portal.
+
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{| c | >{\raggedright\arraybackslash}p{6.1cm} | c | >{\raggedleft\arraybackslash}p{1.7cm} | >{\raggedleft\arraybackslash}p{1.7cm} | >{\raggedright\arraybackslash}X |}
+   \hline
+   \textbf{SNo} & \textbf{Description} &  \textbf{Qty} & \textbf{Price(\rupee) Unit}& \textbf{Price(\rupee) Ext.} & \textbf{Remarks (Internal)} \\\hline
+   \endfirsthead
+   \hline
+   \multicolumn{6}{|r|}{Continued from previous page}\\\hline
+   \textbf{SNo} & \textbf{Description} &  \textbf{Qty} & \textbf{Price(\rupee) Unit}& \textbf{Price(\rupee) Ext.} & \textbf{Remarks (Internal)} \\\hline
+   \endhead
+   \multicolumn{6}{|r|}{Continued on next page}\\\hline
+   \endfoot
+   \endlastfoot
+   
+   {\tt 1.} & \parbox{7cm}{\small\ttfamily\vspace{0.1cm}{\normalsize %{{stage.name%}}}\\%{{stage.description%}}} & {\tt %{{stage.qty%}}} & {\tt\rupee%{{stage.unitp|format_currency%}}} & {\tt\rupee%{{stage.totalp|format_currency%}}} & \\\hline
+   
+   
+   %{for cost in stage.addl_costs%}
+   \multicolumn{4}{|r|}{\textbf{%{{cost.desc%}}:}} & {\tt\normalsize\rupee%{{cost.cost|format_currency%}}} & \\*\hline
+   %{endfor%}
+   \multicolumn{4}{|r|}{\textbf{Total:}} & {\tt\normalsize\rupee%{{stage.total|format_currency%}}} & \\*\hline
+\end{tabularx}
+
+
+\textbf{Terms and Conditions:} 
+\begin{itemize}
+ \item VAT/CST/Excise as applicable.
+ \item Payment by Cheque on Delivery.
+ \end{itemize}
+\vspace{1em}
+
+\closing{}
+
+\end{letter}
+
+
+
+\end{document}
