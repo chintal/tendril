@@ -2,7 +2,7 @@
 
 from flask import render_template
 
-from frontend.app import app
+from koala.frontend.app import app
 
 
 # The Home page is accessible to anyone

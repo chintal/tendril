@@ -18,7 +18,7 @@ def init_app(app, db):
         app.config['WTF_CSRF_ENABLED'] = False              # Disable CSRF checks while testing
 
     # Initialize Assets
-    from frontend.startup import assets  # noqa
+    from koala.frontend.startup import assets  # noqa
 
     # Create Filters
 
@@ -45,9 +45,9 @@ def init_app(app, db):
     init_error_logger_with_email_handler(app)
 
     # Setup Flask-User to handle user account related forms
-    from frontend.users.models import UserAuth, User
-    from frontend.users.forms import MyRegisterForm
-    from frontend.users.views import user_profile_page
+    from koala.frontend.users.models import UserAuth, User
+    from koala.frontend.users.forms import MyRegisterForm
+    from koala.frontend.users.views import user_profile_page
     db_adapter = SQLAlchemyAdapter(db, User,
                                    UserAuthClass=UserAuth)
     user_manager = UserManager(db_adapter, app,  # noqa
@@ -56,23 +56,23 @@ def init_app(app, db):
                                )
 
     # Load all models.py files to register db.Models with SQLAlchemy
-    from frontend.users import models  # noqa
+    from koala.frontend.users import models  # noqa
 
     # Load all views.py files to register @app.routes() with Flask
-    from frontend.pages import views  # noqa
-    from frontend.users import views  # noqa
+    from koala.frontend.pages import views  # noqa
+    from koala.frontend.users import views  # noqa
 
     # Register blueprints
-    from frontend.blueprints.doc import doc
+    from koala.frontend.blueprints.doc import doc
     app.register_blueprint(doc, url_prefix='/doc')
 
-    from frontend.blueprints.gsymlib import gsymlib
+    from koala.frontend.blueprints.gsymlib import gsymlib
     app.register_blueprint(gsymlib, url_prefix='/gsymlib')
 
-    from frontend.blueprints.entityhub import entityhub
+    from koala.frontend.blueprints.entityhub import entityhub
     app.register_blueprint(entityhub, url_prefix='/entityhub')
 
-    from frontend.blueprints.conventions import conventions
+    from koala.frontend.blueprints.conventions import conventions
     app.register_blueprint(conventions, url_prefix='/conventions')
 
     return app
