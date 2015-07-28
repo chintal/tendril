@@ -1,4 +1,0 @@
-
-
-.. automodule:: boms.electronics
-    :members:

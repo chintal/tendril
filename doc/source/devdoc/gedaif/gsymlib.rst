@@ -1,4 +1,0 @@
-
-
-.. automodule:: gedaif.gsymlib
-    :members:

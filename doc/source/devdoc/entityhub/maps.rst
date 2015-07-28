@@ -1,4 +1,0 @@
-
-
-.. automodule:: entityhub.maps
-    :members:

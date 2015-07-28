@@ -1,4 +1,0 @@
-
-
-.. automodule:: dox.render
-    :members:

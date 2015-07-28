@@ -1,4 +1,0 @@
-
-
-.. automodule:: conventions.iec60063
-    :members:

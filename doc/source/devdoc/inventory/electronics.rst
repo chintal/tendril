@@ -1,4 +1,0 @@
-
-
-.. automodule:: inventory.electronics
-    :members:

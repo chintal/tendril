@@ -1,4 +1,0 @@
-
-
-.. automodule:: dox.gedaproject
-    :members:

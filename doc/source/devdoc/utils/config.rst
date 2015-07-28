@@ -1,4 +1,0 @@
-
-
-.. automodule:: utils.config
-    :members:

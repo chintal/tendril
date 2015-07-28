@@ -1,4 +1,0 @@
-
-
-.. automodule:: sourcing.vendors
-    :members:

@@ -1,4 +1,0 @@
-
-
-.. automodule:: gedaif.conffile
-    :members:

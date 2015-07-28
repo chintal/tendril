@@ -1,4 +1,0 @@
-
-
-.. automodule:: gedaif.gschem
-    :members:

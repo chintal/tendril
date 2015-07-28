@@ -1,4 +1,0 @@
-
-
-.. automodule:: utils.currency
-    :members:

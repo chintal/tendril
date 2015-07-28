@@ -1,4 +1,0 @@
-
-
-.. automodule:: conventions.electronics
-    :members:

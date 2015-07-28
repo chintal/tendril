@@ -1,4 +1,0 @@
-
-
-.. automodule:: inventory.acquire
-    :members:
