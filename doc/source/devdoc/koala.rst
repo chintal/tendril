@@ -1,5 +1,5 @@
-koala package
-=============
+Code/API Documentation
+======================
 
 Subpackages
 -----------

@@ -385,7 +385,7 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
 
 def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
     if device == 'RES THRU':
-        if resistance in [koala.conventions.electronics.parse_resistance(x) for x in koala.conventions.iec60063.gen_vals(conventions.iec60063.get_series('E24'), conventions.iec60063.res_ostrs)]:
+        if resistance in [koala.conventions.electronics.parse_resistance(x) for x in koala.conventions.iec60063.gen_vals(koala.conventions.iec60063.get_series('E24'), koala.conventions.iec60063.res_ostrs)]:
             return koala.conventions.electronics.construct_resistor(koala.conventions.electronics.normalize_resistance(resistance), '0.25W')
         else:
             raise ValueError(resistance, device)

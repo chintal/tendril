@@ -13,7 +13,7 @@ def init_app(app, db):
     Initialize Flask applicaton
     """
     # Initialize app config settings
-    app.config.from_object('frontend.startup.settings')
+    app.config.from_object('koala.frontend.startup.settings')
     if app.testing:
         app.config['WTF_CSRF_ENABLED'] = False              # Disable CSRF checks while testing
 

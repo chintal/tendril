@@ -10,7 +10,7 @@ Koala documentation
 .. toctree::
 
    userdoc/userdoc
-   devdoc/devdoc
+   devdoc/koala
 
 
    `genindex`
