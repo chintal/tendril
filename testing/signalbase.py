@@ -13,6 +13,13 @@ class SignalBase(object):
         self._unitclass = unitclass
 
 
+class SignalErrorBar(object):
+    def __init__(self, quantization=None, noise_floor=None, error_pc=None):
+        self.quantization = quantization
+        self.noise_floor = noise_floor
+        self.error_pc = error_pc
+
+
 class SignalPoint(SignalBase):
     def __init__(self, unitclass, value, ts=None):
         super(SignalPoint, self).__init__(unitclass)
