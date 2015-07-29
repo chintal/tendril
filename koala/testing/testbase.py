@@ -1,17 +1,17 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -48,6 +48,7 @@ class TestMeasurementBase(object):
         # Measurement
         self._inputchannel = None
         self._input = None
+        self._inputtype = None
 
     def do_measurement(self):
         if self._output is not None:
@@ -58,10 +59,12 @@ class TestMeasurementBase(object):
         if self._stime is not None:
             time.sleep(self._stime)
 
-        if self._input is not None:
+        if self._inputtype is not None:
             if self._inputchannel is None:
                 raise IOError("Input channel is not defined")
             self._input = self._inputchannel.get()
+            if not isinstance(self._input, self._inputtype):
+                raise TypeError("Expected " + self._inputtype + ", got " + type(self._input))
 
 
 class RunnableTest(object):

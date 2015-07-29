@@ -25,3 +25,15 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+
+Inheritance Diagram
+-------------------
+
+.. inheritance-diagram::
+   koala.inventory
+   koala.inventory.acquire
+   koala.inventory.electronics
+   koala.inventory.modules
+   koala.inventory.db
+   koala.inventory.db.controller
+   koala.inventory.db.model

@@ -21,3 +21,16 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+
+Inheritance Diagram
+-------------------
+
+.. inheritance-diagram::
+   koala.gedaif
+   koala.gedaif.bomparser
+   koala.gedaif.conffile
+   koala.gedaif.gschem
+   koala.gedaif.gsymlib
+   koala.gedaif.pcb
+   koala.gedaif.projfile
+   koala.gedaif.validate

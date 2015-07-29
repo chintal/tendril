@@ -27,3 +27,16 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+
+Inheritance Diagram
+-------------------
+
+.. inheritance-diagram::
+   koala.testing
+   koala.testing.autotest
+   koala.testing.instrumentbase
+   koala.testing.signalbase
+   koala.testing.testbase
+   koala.testing.testrunner
+   koala.testing.instruments
+   koala.testing.tests

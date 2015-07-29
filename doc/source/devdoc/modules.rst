@@ -1,4 +1,4 @@
-koala
+Koala
 =====
 
 .. toctree::

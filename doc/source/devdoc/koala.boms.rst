@@ -18,3 +18,13 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+
+Inheritance Diagram
+-------------------
+
+.. inheritance-diagram::
+    koala.boms
+    koala.boms.electronics
+    koala.boms.entitybase
+    koala.boms.outputbase
+    koala.boms.products

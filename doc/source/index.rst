@@ -8,12 +8,12 @@ Koala documentation
 ===================
 
 .. toctree::
+   :maxdepth: 4
 
    userdoc/userdoc
-   devdoc/koala
+   devdoc/modules
+   devdoc/todo
 
-
-   `genindex`
-   `modindex`
-   `search`
-
+*  :ref:`genindex`
+*  :ref:`modindex`
+*  :ref:`search`

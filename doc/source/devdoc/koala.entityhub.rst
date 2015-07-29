@@ -20,3 +20,15 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+
+Inheritance Diagram
+-------------------
+
+.. inheritance-diagram::
+   koala.entityhub
+   koala.entityhub.guidelines
+   koala.entityhub.maps
+   koala.entityhub.products
+   koala.entityhub.projects
+   koala.entityhub.serialnos
+   koala.entityhub.transforms

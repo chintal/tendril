@@ -1,5 +1,5 @@
-Code/API Documentation
-======================
+koala package
+=============
 
 Subpackages
 -----------
@@ -33,3 +33,6 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+

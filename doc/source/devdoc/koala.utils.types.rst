@@ -20,3 +20,15 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+
+Inheritance Diagram
+-------------------
+
+.. inheritance-diagram::
+   koala.utils.types
+   koala.utils.types.cartesian
+   koala.utils.types.currency
+   koala.utils.types.electromagnetic
+   koala.utils.types.lengths
+   koala.utils.types.time
+   koala.utils.types.unitbase
