@@ -1,10 +1,15 @@
 koala.testing.instruments package
 =================================
 
-Module contents
----------------
-
 .. automodule:: koala.testing.instruments
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+.. rubric:: Submodules
+
+.. toctree::
+
+    koala.testing.instruments.RS2200087
+

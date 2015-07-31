@@ -15,6 +15,60 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+RadioShack 2200087 DMM Interface Module (:mod:`koala.testing.instruments.RS2200087`)
+====================================================================================
+
+This module provides the instrument object for RadioShack's 2200087 Digital
+Multimeter with PC interface. It uses the :mod:`driver2200087` module to
+handle the communication with the instrument, while subclassing the Twisted
+protocol of that module to provide one which produces
+:class:`koala.utils.types.signalbase.SignalPoint` and
+:class:`koala.utils.types.signalbase.SignalWave` objects instead, which contain
+Type objects from the :mod:`koala.utils.types` module. This allows seamless
+integration with Koala's :mod:`koala.testing` module.
+
+.. rubric:: Usage example
+
+>>> from crochet import setup
+>>> setup()
+>>> from koala.testing.instruments import get_instrument_object
+>>> o = get_instrument_object('RS2200087')
+>>> o.channel.get()
+>>> o.channel.reset_wave()
+>>> wave = o.channel.get_next_chunk()
+>>> wave += o.channel.get_next_chunk()
+
+.. rubric:: Module Contents
+
+.. rubric:: Classes
+
+.. autosummary::
+
+    InstrumentRS2200087
+    DMMInputChannel
+    KoalaProtocol2200087
+    KoalaFactory2200087
+    factory
+
+
+.. rubric:: Processors
+
+.. autosummary::
+
+    rex_list
+    voltage_processor
+    resistance_processor
+    capacitance_processor
+    frequency_processor
+    time_processor
+    current_processor
+    power_processor
+    duty_processor
+    hfe_processor
+    continuity_processor
+
+"""
 
 from koala.utils import log
 logger = log.get_logger(__name__, log.DEBUG)
@@ -46,6 +100,15 @@ from decimal import InvalidOperation
 
 
 def voltage_processor(m):
+    """
+    Processor that converts a regex match of a Voltage string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the Voltage regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.electromagnetic.Voltage` class and its subclasses
+    :rtype: str
+
+    """
     num = m.group('number')
     try:
         rng = m.group('range')
@@ -58,6 +121,15 @@ def voltage_processor(m):
 
 
 def resistance_processor(m):
+    """
+    Processor that converts a regex match of a Resistance string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the Resistance regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.electromagnetic.Resistance` class and its subclasses
+    :rtype: str
+
+    """
     num = m.group('number')
     try:
         rng = m.group('range')
@@ -72,6 +144,15 @@ def resistance_processor(m):
 
 
 def capacitance_processor(m):
+    """
+    Processor that converts a regex match of a Capacitance string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the Capacitance regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.electromagnetic.Capacitance` class and its subclasses
+    :rtype: str
+
+    """
     num = m.group('number')
     rng = m.group('range')
     if rng is None:
@@ -81,6 +162,15 @@ def capacitance_processor(m):
 
 
 def frequency_processor(m):
+    """
+    Processor that converts a regex match of a Frequency string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the Frequency regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.time.Frequency` class and its subclasses
+    :rtype: str
+
+    """
     num = m.group('number')
     try:
         rng = m.group('range')
@@ -93,6 +183,15 @@ def frequency_processor(m):
 
 
 def time_processor(m):
+    """
+    Processor that converts a regex match of a Time string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the Time regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.time.TimeSpan` class and its subclasses
+    :rtype: str
+
+    """
     num = Decimal(m.group('number'))
     try:
         rng = m.group('range')
@@ -111,6 +210,15 @@ def time_processor(m):
 
 
 def current_processor(m):
+    """
+    Processor that converts a regex match of a Current string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the Current regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.electromagnetic.Current` class and its subclasses
+    :rtype: str
+
+    """
     num = m.group('number')
     try:
         rng = m.group('range')
@@ -123,24 +231,69 @@ def current_processor(m):
 
 
 def power_processor(m):
+    """
+    Processor that converts a regex match of a PowerRatio string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the PowerRatio regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.electromagnetic.PowerRatio` class and its subclasses
+    :rtype: str
+
+    """
     return m.group('number') + 'dBm'
 
 
 def hfe_processor(m):
+    """
+    Processor that converts a regex match of a HFR string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the HFE regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.electromagnetic.HFE` class and its subclasses
+    :rtype: str
+
+    """
     return m.group('number') + 'HFE'
 
 
 def duty_processor(m):
+    """
+    Processor that converts a regex match of a DutyCycle string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the DutyCycle regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.electromagnetic.DutyCycle` class and its subclasses
+    :rtype: str
+
+    """
     return m.group('number') + '%'
 
 
 def continuity_processor(m):
+    """
+    Processor that converts a regex match of a Continuity string from :mod:`driver2200087.serialDecoder`
+    and returns a string compatible with Koala Unit Types
+
+    :param m: :class:`re.match` object from one of the Continuity regexs in :data:`rex_list`
+    :return: String compatible with the :class:`koala.utils.types.electromagnetic.Continuity` class and its subclasses
+    :rtype: str
+
+    """
     rval = 'CLOSED'
     if m.group('string') == '0PEN':
         rval = 'OPEN'
     return rval
 
-
+#: List of regular expressions, each of which matches the string for one type of data from
+#: :mod:`driver2200087.serialDecoder`. Each element of the list is a `tuple`, containing the
+#: following elements:
+#:
+#: 0. Koala type class from :mod:`koala.utils.types` which is applicable to the data point.
+#: 1. The compiled regular expression.
+#: 2. The applicable processor, which acts on the match object to produce a string. If the
+#:    processor is None, then the named match group 'string' is used to instantiate the
+#:    appropriate unit class.
+#:
 rex_list = [(thermodynamic.Temperature,
              re.compile(ur'^(?P<string>[-?[0-9\\.]+[CFK])(?P<HOLD> HOLD)?$'),
              None),
@@ -193,10 +346,39 @@ rex_list = [(thermodynamic.Temperature,
 
 
 class KoalaProtocol2200087(InstProtocol2200087):
+    """
+    This subclasses the twisted protocol from the :mod:`driver2200087.runner`
+    which handles serial communications with 2200087 multimeters. It produces
+    :class:`koala.utils.types.signalbase.SignalPoint` and
+    :class:`koala.utils.types.signalbase.SignalWave` objects instead of strings and
+    deque objects, which contain Type objects from the
+    :mod:`koala.utils.types` module.
+
+    This protocol exists and operates within the context of a twisted reactor.
+    Applications themselves built on twisted should be able to simply import this
+    protocol (or its factory).
+
+    Synchronous / non-twisted applications should directly use the
+    :class:`driver2200087.runner.InstInterface2200087` class instead, and pass this
+    protocol's factory to modify its behavior.
+
+    :param port: Port on which the device is connected. Default '/dev/ttyUSB0'.
+    :type port: str
+    :param buffer_size: Length of the point buffer in the protocol.
+    :type buffer_size: int
+    """
     def __init__(self, port, buffer_size):
         InstProtocol2200087.__init__(self, port=port, buffer_size=buffer_size)
 
     def reset_buffer(self, unitclass=DummyUnit):
+        """
+        Resets the point buffer to a new :class:`koala.utils.types.signalbase.SignalWave`
+        with the unitclass as specified by the parameter. Any data presently within it
+        will be lost.
+
+        :param unitclass: Class of Unit that the Wave points are composed of.
+
+        """
         logger.debug("Resetting buffer to type : " + repr(unitclass))
         self.point_buffer = SignalWave(unitclass,
                                        spacing=TimeDelta(microseconds=100000),
@@ -205,6 +387,12 @@ class KoalaProtocol2200087(InstProtocol2200087):
                                        use_point_ts=False)
 
     def next_chunk(self):
+        """
+
+        :returns: The next chunk of data points in the form of a SignalWave
+        :rtype: :class:`koala.utils.types.signalbase.SignalWave`
+
+        """
         rval = copy.copy(self.point_buffer)
         self.point_buffer = SignalWave(rval.unitclass,
                                        points=deque([rval.pop()], maxlen=rval._buffer_size),
@@ -216,6 +404,17 @@ class KoalaProtocol2200087(InstProtocol2200087):
 
     @staticmethod
     def _get_point(string):
+        """
+        Processes a string returned by :mod:`driver2200087.serialDecoder` and converts it into
+        a :class:`koala.utils.types.signalbase.SignalPoint` instance composed of the correct
+        Unit class.
+
+        :return:  SignalPoint composed of the correct type and value from the string
+        :rtype: :class:`koala.utils.types.signalbase.SignalPoint`
+
+        .. seealso:: :data:`rex_list`
+
+        """
         if string is None:
             return SignalPoint(DummyUnit, None)
         for rex in rex_list:
@@ -233,6 +432,14 @@ class KoalaProtocol2200087(InstProtocol2200087):
         raise ValueError("String not recognized : " + string)
 
     def frame_received(self, frame):
+        """
+        Re-implements the Base class's frame_received function, producing SignalPoints instead.
+        When a signal point of a different type as the point buffer is encountered, it resets
+        the point buffer and initializes it to the new type.
+
+        .. seealso:: :meth:`_get_point`
+
+        """
         frame = [byte.encode('hex') for byte in frame]
         chunk = ' '.join(frame)
         string = self._frame_processor(chunk)
@@ -244,12 +451,11 @@ class KoalaProtocol2200087(InstProtocol2200087):
 
 class KoalaFactory2200087(InstFactory2200087):
     """
-    This factory produces protocols integrated with Koala unit classes, and
-    it's instance in this module can be used to modify the Instrument
-    Interfaces to produce Koala SignalPoints and SignalWaves instead of
-    strings.
+    This factory produces protocols integrated with Koala unit classes,
+    producing SignalPoints and SignalWaves instead of strings.
 
-    See the InstFactory2200087 documentation for more detailed information.
+    See the :class:`driver2200087.runner.InstFactory2200087` documentation
+    for more detailed information.
     """
     def buildProtocol(self, port='/dev/ttyUSB0', buffer_size=100):
         """
@@ -258,11 +464,16 @@ class KoalaFactory2200087(InstFactory2200087):
 
         :param port: Serial port identifier to which the device is connected
         :type port: str
-
+        :param buffer_size: Length of the point buffer in the protocol. Default 100.
+        :type buffer_size: int
         """
         instance = KoalaProtocol2200087(port=port, buffer_size=buffer_size)
         return instance
 
+
+#: Module's instance of the Protocol Factory.
+#: This should be used whenever the Protocol class needs to be
+#: instantiated (as opposed to subclassed)
 factory = KoalaFactory2200087()
 
 

@@ -92,7 +92,7 @@ are as follows :
   something I'm likely to do alone.
 
 
-..rubric :: Submodules
+.. rubric:: Submodules
 
 .. toctree::
 

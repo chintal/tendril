@@ -43,8 +43,12 @@ extensions = [
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.graphviz',
     'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx'
     # 'sphinxcontrib.fulltoc'
 ]
+
+intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
+                       'driver2200087': ('http://driver2200087.readthedocs.org/en/latest', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

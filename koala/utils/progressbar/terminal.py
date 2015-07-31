@@ -1,11 +1,49 @@
-# Copyright: 2009 Nadia Alramli
-# License: BSD
+#!/usr/bin/env python
+# encoding: utf-8
 
-"""Terminal controller module
-Example of usage:
-    print BG_BLUE + 'Text on blue background' + NORMAL
-    print BLUE + UNDERLINE + 'Blue underlined text' + NORMAL
-    print BLUE + BG_YELLOW + BOLD + 'text' + NORMAL
+# Copyright (c) 2015, Chintalagiri Shashank
+# Copyright (c) 2009, Nadia Alramli
+# All rights reserved.
+#
+# BSD License:
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# * Neither the name of the project nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""
+:mod:`progressbar.terminal`
+---------------------------
+
+Terminal controller module
+
+.. rubric: Usage
+
+>>> print BG_BLUE + 'Text on blue background' + NORMAL
+>>> print BLUE + UNDERLINE + 'Blue underlined text' + NORMAL
+>>> print BLUE + BG_YELLOW + BOLD + 'text' + NORMAL
+
 """
 
 import sys
@@ -71,8 +109,11 @@ def setup():
 
 def render(text):
     """Helper function to apply controls easily
-    Example:
-    apply("%(GREEN)s%(BOLD)stext%(NORMAL)s") -> a bold green text
+
+    .. rubric: Example for a bold green text
+
+        apply("%(GREEN)s%(BOLD)stext%(NORMAL)s")
+
     """
     return text % MODULE.__dict__
 
