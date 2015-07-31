@@ -117,6 +117,8 @@ class SignalWave(SignalBase):
         return sorted(self._points, key=lambda x: x[0])
 
     def add_point(self, point, ts=None):
+        if point.unitclass != self.unitclass:
+            raise TypeError
         if ts is None:
             if self._use_point_ts is False:
                 if self.last_timestamp is None:
@@ -129,6 +131,28 @@ class SignalWave(SignalBase):
         if ts is None:
             raise ValueError
         self._points.append((ts, point))
+
+    def __add__(self, other):
+        if isinstance(other, SignalWave):
+            if self.unitclass != other.unitclass:
+                raise TypeError
+            self._points.extend(other._points)
+        elif isinstance(other, SignalPoint):
+            self.add_point(other)
+        else:
+            raise NotImplementedError
+
+    def __radd__(self, other):
+        if isinstance(other, SignalWave):
+            if self.unitclass != other.unitclass:
+                raise TypeError
+            self._points.extendleft(reversed(other._points))
+        elif isinstance(other, SignalPoint):
+            if self.unitclass != other.unitclass:
+                raise TypeError
+            self._points.appendleft(other)
+        else:
+            raise NotImplementedError
 
     def __len__(self):
         return len(self._points)
