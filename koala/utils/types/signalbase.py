@@ -21,6 +21,7 @@ from koala.utils.types.time import TimeStamp
 from koala.utils.types.time import TimeDelta
 
 from collections import deque
+import copy
 
 
 class SignalBase(object):
@@ -49,7 +50,7 @@ class SignalPoint(SignalBase):
             self.value = value
 
         if ts is None:
-            self.timestamp = timestamp_factory.utcnow()
+            self.timestamp = timestamp_factory.now()
         else:
             self.timestamp = ts
 
@@ -64,12 +65,12 @@ class SignalPoint(SignalBase):
         self._error_bar = value
 
     def __repr__(self):
-        return "<SignalPoint at " + self.timestamp + " :: " + repr(self.value) + " >"
+        return "<SignalPoint at " + repr(self.timestamp) + " :: " + repr(self.value) + " >"
 
 
 class SignalWave(SignalBase):
     def __init__(self, unitclass, points=None, spacing=None, ts0=None,
-                 interpolation="piecewise_linear", buffer_size=1000,
+                 interpolation="piecewise_linear", buffer_size=None,
                  use_point_ts=True):
         super(SignalWave, self).__init__(unitclass)
 
@@ -86,7 +87,7 @@ class SignalWave(SignalBase):
                 raise TypeError("ts0 must be an instance of TimeStamp")
             self._ts0 = ts0
         else:
-            self._ts0 = timestamp_factory.utcnow()
+            self._ts0 = timestamp_factory.now()
 
         if points and isinstance(points, deque):
             if isinstance(points[0], tuple):
@@ -136,9 +137,12 @@ class SignalWave(SignalBase):
         if isinstance(other, SignalWave):
             if self.unitclass != other.unitclass:
                 raise TypeError
-            self._points.extend(other._points)
+            rval = copy.copy(self)
+            rval.extend(other._points)
+            return rval
         elif isinstance(other, SignalPoint):
             self.add_point(other)
+            return self
         else:
             raise NotImplementedError
 
@@ -146,11 +150,11 @@ class SignalWave(SignalBase):
         if isinstance(other, SignalWave):
             if self.unitclass != other.unitclass:
                 raise TypeError
-            self._points.extendleft(reversed(other._points))
+            return self._points.extendleft(reversed(other._points))
         elif isinstance(other, SignalPoint):
             if self.unitclass != other.unitclass:
                 raise TypeError
-            self._points.appendleft(other)
+            return self._points.appendleft(other)
         else:
             raise NotImplementedError
 
@@ -189,3 +193,9 @@ class SignalWave(SignalBase):
 
     def appendleft(self, *args, **kwargs):
         return self._points.appendleft(*args, **kwargs)
+
+    def extend(self, *args, **kwargs):
+        return self._points.extend(*args, **kwargs)
+
+    def extendleft(self, *args, **kwargs):
+        return self._points.extendleft(*args, **kwargs)

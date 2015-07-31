@@ -16,7 +16,6 @@ Submodules
 
    koala.testing.autotest
    koala.testing.instrumentbase
-   koala.testing.signalbase
    koala.testing.testbase
    koala.testing.testrunner
 
@@ -35,7 +34,6 @@ Inheritance Diagram
    koala.testing
    koala.testing.autotest
    koala.testing.instrumentbase
-   koala.testing.signalbase
    koala.testing.testbase
    koala.testing.testrunner
    koala.testing.instruments

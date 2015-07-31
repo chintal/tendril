@@ -20,6 +20,8 @@ from koala.utils import log
 logger = log.get_logger(__name__, log.DEBUG)
 
 import re
+import copy
+from collections import deque
 
 from driver2200087.runner import InstProtocol2200087
 from driver2200087.runner import InstInterface2200087
@@ -33,8 +35,7 @@ from koala.utils.types.time import timestamp_factory
 
 from koala.utils.types import electromagnetic
 from koala.utils.types import thermodynamic
-from koala.utils.types.time import Frequency
-from koala.utils.types.time import TimeSpan
+from koala.utils.types import time
 from koala.utils.types.unitbase import DummyUnit
 
 from koala.testing.instrumentbase import InstrumentBase
@@ -167,7 +168,7 @@ rex_list = [(thermodynamic.Temperature,
             (electromagnetic.Capacitance,
              re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? FARADS$'),
              capacitance_processor),
-            (Frequency,
+            (time.Frequency,
              re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)? Hz$'),
              frequency_processor),
             (electromagnetic.PowerRatio,
@@ -176,9 +177,12 @@ rex_list = [(thermodynamic.Temperature,
             (electromagnetic.DutyCycle,
              re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)(?P<HOLD> HOLD)? Percent$'),
              duty_processor),
-            (TimeSpan,
+            (time.TimeSpan,
              re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)? SECONDS( (?P<range>[mun]) \(1e(?P<power>-?[\d]+)\))?$'),
              time_processor),
+            (electromagnetic.HFE,
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<HOLD> HOLD)? HFE$'),
+             hfe_processor),
             ]
 
 # TODO Handle closed continuty
@@ -191,16 +195,24 @@ rex_list = [(thermodynamic.Temperature,
 class KoalaProtocol2200087(InstProtocol2200087):
     def __init__(self, port, buffer_size):
         InstProtocol2200087.__init__(self, port=port, buffer_size=buffer_size)
-        self.reset_buffer(DummyUnit)
 
-    def reset_buffer(self, unitclass):
-        # logger.debug("Resetting buffer to type : " + repr(unitclass))
-        print "Resetting buffer to type : " + repr(unitclass)
+    def reset_buffer(self, unitclass=DummyUnit):
+        logger.debug("Resetting buffer to type : " + repr(unitclass))
         self.point_buffer = SignalWave(unitclass,
                                        spacing=TimeDelta(microseconds=100000),
                                        ts0=timestamp_factory.now(),
                                        buffer_size=1000,
                                        use_point_ts=False)
+
+    def next_chunk(self):
+        rval = copy.copy(self.point_buffer)
+        self.point_buffer = SignalWave(rval.unitclass,
+                                       points=deque([rval.pop()], maxlen=rval._buffer_size),
+                                       spacing=rval._spacing,
+                                       ts0=rval._ts0,
+                                       buffer_size=rval._buffer_size,
+                                       use_point_ts=rval._use_point_ts)
+        return rval
 
     @staticmethod
     def _get_point(string):
@@ -258,21 +270,24 @@ class DMMInputChannel(InstrumentInputChannelBase):
     def __init__(self, parent, interface):
         super(DMMInputChannel, self).__init__(parent)
         self._interface = interface
+        self._wave = None
 
-    def get(self, unitclass=None):
-        value = self._interface.latest_point()
-        if unitclass is not None:
-            if isinstance(value, unitclass):
-                return value
-            else:
-                raise TypeError
-        return value
+    def get(self, unitclass=None, flush=True):
+        value = self._interface.latest_point(flush=flush)
+        if unitclass is None or value.unitclass == unitclass:
+            return value
+        else:
+            raise TypeError
 
-    def get_wave(self, unitclass=None):
-        pass
+    def get_next_chunk(self, unitclass=None):
+        chunk = self._interface.next_chunk()
+        if unitclass is None or chunk.unitclass == unitclass:
+            return chunk
+        else:
+            raise TypeError
 
     def reset_wave(self):
-        pass
+        self._interface.reset_buffer()
 
 
 class InstrumentRS2200087(InstrumentBase):
@@ -283,10 +298,18 @@ class InstrumentRS2200087(InstrumentBase):
     def _detect(self):
         self._dmm = InstInterface2200087(pfactory=factory)
         self._dmm.connect()
-        self._channels = DMMInputChannel(self, self._dmm)
+        self._channels = [DMMInputChannel(self, self._dmm)]
 
     def configure(self, configuration):
         raise NotImplementedError
+
+    @property
+    def channel(self):
+        return self._channels[0]
+
+    def reset_waves(self):
+        for channel in self._channels:
+            channel.reset_wave()
 
 
 if __name__ == "__main__":
