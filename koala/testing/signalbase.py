@@ -1,32 +1,35 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-This file is part of koala
-See the COPYING, README, and INSTALL files for more information
-"""
+
 
 from koala.utils.types.time import timestamp_factory
 from koala.utils.types.time import TimeStamp
 from koala.utils.types.time import TimeDelta
 
+from collections import deque
+
 
 class SignalBase(object):
     def __init__(self, unitclass):
         self._unitclass = unitclass
+
+    @property
+    def unitclass(self):
+        return self._unitclass
 
 
 class SignalErrorBar(object):
@@ -60,10 +63,18 @@ class SignalPoint(SignalBase):
     def error_bar(self, value):
         self._error_bar = value
 
+    def __repr__(self):
+        return "<SignalPoint at " + self.timestamp + " :: " + repr(self.value) + " >"
+
 
 class SignalWave(SignalBase):
-    def __init__(self, unitclass, points=None, spacing=None, ts0=None, interpolation="piecewise_linear"):
+    def __init__(self, unitclass, points=None, spacing=None, ts0=None,
+                 interpolation="piecewise_linear", buffer_size=1000,
+                 use_point_ts=True):
         super(SignalWave, self).__init__(unitclass)
+
+        self._buffer_size = buffer_size
+        self._use_point_ts = use_point_ts
 
         if spacing is not None:
             if not isinstance(spacing, TimeDelta):
@@ -77,17 +88,29 @@ class SignalWave(SignalBase):
         else:
             self._ts0 = timestamp_factory.utcnow()
 
-        if points and isinstance(points, list):
+        if points and isinstance(points, deque):
             if isinstance(points[0], tuple):
                 self._points = points
             else:
-                self._points = [(ts0 + idx*spacing, point) for idx, point in enumerate(points)]
+                if not self._use_point_ts:
+                    self._points = deque([(ts0 + idx*spacing, point) for idx, point in enumerate(points)],
+                                         maxlen=buffer_size)
+                else:
+                    self._points = deque([(point.timestamp, point) for point in points],
+                                         maxlen=buffer_size)
+        else:
+            self._points = deque(maxlen=buffer_size)
 
         self._interpolation = interpolation
 
     @property
     def last_timestamp(self):
-        return self.points[-1][0]
+        if len(self._points) == 0:
+            if self._ts0 is not None:
+                return self._ts0 - self._spacing
+            else:
+                return None
+        return self._points[-1][0]
 
     @property
     def points(self):
@@ -95,7 +118,48 @@ class SignalWave(SignalBase):
 
     def add_point(self, point, ts=None):
         if ts is None:
-            ts = self.last_timestamp + self._spacing
-        elif point.timestamp is not None:
-            ts = point.timestamp
-        self.points.append((ts, point))
+            if self._use_point_ts is False:
+                if self.last_timestamp is None:
+                    self._ts0 = timestamp_factory.now()
+                ts = self.last_timestamp + self._spacing
+            elif point.timestamp is not None:
+                ts = point.timestamp
+        if ts is None:
+            raise ValueError
+        self._points.append((ts, point))
+
+    def __len__(self):
+        return len(self._points)
+
+    def __getitem__(self, item):
+        return self._points.__getitem__(item)
+
+    def __setitem__(self, key, value):
+        return self._points.__setitem__(key, value)
+
+    def __delitem__(self, key):
+        return self._points.__delitem__(key)
+
+    def __iter__(self):
+        return self._points.__iter__()
+
+    def __reversed__(self):
+        return self._points.__reversed__()
+
+    def __contains__(self, item):
+        return self._points.__contains__(item)
+
+    def clear(self):
+        return self._points.clear()
+
+    def popleft(self, *args, **kwargs):
+        return self._points.popleft(*args, **kwargs)
+
+    def pop(self, *args, **kwargs):
+        return self._points.pop(*args, **kwargs)
+
+    def append(self, *args, **kwargs):
+        return self._points.append(*args, **kwargs)
+
+    def appendleft(self, *args, **kwargs):
+        return self._points.appendleft(*args, **kwargs)
