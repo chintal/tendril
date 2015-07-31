@@ -1,17 +1,17 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -23,6 +23,8 @@ from decimal import Decimal
 from decimal import InvalidOperation
 
 from unitbase import UnitBase
+from unitbase import Percentage
+from unitbase import parse_none
 
 
 def parse_resistance(value):
@@ -53,6 +55,7 @@ def parse_capacitance(value):
 
 def parse_voltage(value):
     value = value.strip()
+
     try:
         num_val = Decimal(value[:-1])
         ostr = value[-1:]
@@ -101,6 +104,20 @@ def parse_current(value):
         raise ValueError
 
 
+def parse_dbm(value):
+    num_val = Decimal(value[:-3])
+    ostr = value[-3:]
+    if ostr == 'dBm':
+        return num_val
+
+
+def parse_hfe(value):
+    num_val = Decimal(value[:-3])
+    ostr = value[-3:]
+    if ostr == 'HFE':
+        return num_val
+
+
 class Resistance(UnitBase):
     def __init__(self, value):
         _ostrs = ['m', 'E', 'K', 'M']
@@ -125,9 +142,66 @@ class Voltage(UnitBase):
         super(Voltage, self).__init__(value, _ostrs, _dostr, _parse_func)
 
 
+class VoltageAC(Voltage):
+    pass
+
+
+class VoltageDC(Voltage):
+    pass
+
+
+class DiodeVoltageDC(VoltageDC):
+    pass
+
+
 class Current(UnitBase):
     def __init__(self, value):
         _ostrs = ['fA', 'pA', 'nA', 'uA', 'mA', 'A']
         _dostr = 'mA'
         _parse_func = parse_current
         super(Current, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+
+class CurrentAC(Current):
+    pass
+
+
+class CurrentDC(Current):
+    pass
+
+
+class PowerRatio(UnitBase):
+    def __init__(self, value):
+        _ostrs = ['dBm']
+        _dostr = 'dBm'
+        _parse_func = parse_dbm
+        super(PowerRatio, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+    def __repr__(self):
+        return str(self._value) + self._dostr
+
+
+class HFE(UnitBase):
+    def __init__(self, value):
+        _ostrs = ['HFE']
+        _dostr = 'HFE'
+        _parse_func = parse_hfe
+        super(HFE, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+    def __repr__(self):
+        return str(self._value) + self._dostr
+
+
+class Continuity(UnitBase):
+    def __init__(self, value):
+        _ostrs = None
+        _dostr = None
+        _parse_func = parse_none
+        super(Continuity, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+    def __repr__(self):
+        return str(self._value)
+
+
+class DutyCycle(Percentage):
+    pass

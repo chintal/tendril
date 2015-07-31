@@ -1,17 +1,17 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -91,18 +91,45 @@ class UnitBase(object):
         done = False
         while not done:
             ostri = self._ostrs.index(ostr)
-            if 1 <= value < 1000:
+            if 1 <= abs(value) < 1000:
                 done = True
-            elif value >= 1000:
+            elif abs(value) >= 1000:
                 if ostri < len(self._ostrs) - 1:
                     ostr = self._ostrs[ostri + 1]
                     value /= Decimal(1000)
                 else:
                     done = True
-            elif value < 1:
+            elif abs(value) < 1:
                 if ostri > 0:
                     ostr = self._ostrs[ostri - 1]
                     value *= Decimal(1000)
                 else:
                     done = True
         return str(value) + ostr
+
+
+class DummyUnit(UnitBase):
+    def __init__(self, value):
+        super(DummyUnit, self).__init__(value, None, None, None)
+
+    def __repr__(self):
+        return "Dummy Unit"
+
+
+def parse_none(value):
+    return value
+
+
+def parse_percent(value):
+    value = value.strip()
+    if value.endswith('%'):
+        return Decimal(value[:-1])
+    return Decimal(value)
+
+
+class Percentage(UnitBase):
+    def __init__(self, value):
+        _ostrs = ['%']
+        _dostr = '%'
+        _parse_func = parse_percent
+        super(Percentage, self).__init__(value, _ostrs, _dostr, _parse_func)

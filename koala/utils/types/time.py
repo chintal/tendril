@@ -1,17 +1,17 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -20,6 +20,61 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import arrow.arrow
+
+from unitbase import UnitBase
+from unitbase import parse_none
+
+from decimal import Decimal
+from numbers import Number
+import re
+
+
+def parse_frequency(string):
+    rex = re.compile(r'^((?P<number>\d+(.\d+)*)(?P<order>[mkMG])?Hz)$')
+    try:
+        rdict = rex.search(string).groupdict()
+        num = Decimal(rdict['number'])
+        try:
+            order = rdict['order']
+            if order == 'm':
+                return num / 1000
+            elif order == 'k':
+                return num * 1000
+            elif order == 'M':
+                return num * 1000000
+            elif order == 'G':
+                return num * 1000000000
+        except IndexError:
+            return num
+    except:
+        raise ValueError
+
+
+class Frequency(UnitBase):
+    def __init__(self, value):
+        _ostrs = ['mHz', 'Hz', 'kHz', 'MHz', 'GHz']
+        _dostr = 'Hz'
+        _parse_func = parse_frequency
+        super(Frequency, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+
+class TimeSpan(UnitBase):
+    def __init__(self, value):
+        _ostrs = None
+        _dostr = None
+        _parse_func = parse_none
+        if not isinstance(value, Number):
+            raise TypeError("Only numerical time spans (in seconds) are supported at this time")
+        super(TimeSpan, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+    def __repr__(self):
+        return repr(self.timedelta)
+
+    @property
+    def timedelta(self):
+        seconds = int(self._value)
+        microseconds = int((self._value-seconds) * 1000000)
+        return TimeDelta(seconds=seconds, microseconds=microseconds)
 
 
 class TimeStamp(arrow.arrow.Arrow):
