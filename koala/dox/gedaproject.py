@@ -1,17 +1,17 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -33,7 +33,6 @@ from koala.gedaif import projfile
 from koala.gedaif import pcb
 
 from koala.utils import pdf
-from koala.utils import zip
 from koala.utils import fs
 
 from koala.entityhub import projects
@@ -223,7 +222,7 @@ def gen_pcb_gbr(projfolder):
         os.remove(f)
     gbrfolder = pcb.conv_pcb2gbr(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
     zfile = os.path.join(projfolder, gpf.pcbfile + '-gerber.zip')
-    zip.zipdir(gbrfolder, zfile)
+    fs.zipdir(gbrfolder, zfile)
     return gbrfolder
 
 

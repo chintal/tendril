@@ -28,6 +28,7 @@ or python libraries.
 
     TEMPDIR
     fsutils_cleanup
+    zipdir
 
     Crumb
     get_path_breadcrumbs
@@ -43,6 +44,7 @@ from koala.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 import tempfile
+import zipfile
 import atexit
 import os
 import glob
@@ -67,6 +69,24 @@ if tempfile.tempdir is None:
 #: .. seealso:: :func:`fsutils_cleanup`
 #:
 TEMPDIR = tempfile.gettempdir()
+
+
+def zipdir(path, zfpath):
+    """
+    Creates a zip file at ``zfpath`` containing all the files in ``path``.
+    This function is simple wrapper around python's :mod:`zipfile` module.
+
+    :param path: Path of the source folder, which is to be added to the zip file.
+    :param zfpath: Path of the zip file to create.
+    :return: The path of the created zip file.
+
+    """
+    zfile = zipfile.ZipFile(zfpath, 'w')
+    for root, dirs, files in os.walk(path):
+        for f in files:
+            zfile.write(os.path.join(root, f), os.path.relpath(os.path.join(root, f), os.path.join(path, '..')))
+    zfile.close()
+    return zfpath
 
 
 #: A named tuple definition for a Crumb of a Breadcrumb.
@@ -266,8 +286,7 @@ def fsutils_cleanup():
     module.
 
     Performs the following tasks:
-
-    - Removes the :data:`TEMPDIR`
+        - Removes the :data:`TEMPDIR`
 
     """
     try:

@@ -23,7 +23,6 @@ Submodules
    koala.utils.pdf
    koala.utils.state
    koala.utils.www
-   koala.utils.zip
 
 Module contents
 ---------------

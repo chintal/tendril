@@ -1,22 +1,68 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-WWW Utils Module Documentation (:mod:`utils.wwwutils`)
-======================================================
+The WWW Utils Module (:mod:`koala.utils.www`)
+=============================================
+
+This module provides utilities to deal with the internet. All application code
+should access the internet through this module, since this where support for
+proxies and caching is implemented.
+
+.. rubric:: Main Provided Methods
+
+.. autosummary::
+
+    strencode
+    urlopen
+    get_soup
+
+
+This module uses the following configuration values from :mod:`koala.utils.config`:
+
+.. rubric:: Basic Settings
+
+- :data:`koala.utils.config.ENABLE_REDIRECT_CACHING` Whether or not redirect caching should be used.
+- :data:`koala.utils.config.TRY_REPLICATOR_CACHE_FIRST` Whether or not a replicator cache should be used.
+
+Redirect caching speeds up network accesses by saving ``301`` and ``302`` redirects,
+and not needing to get the correct URL on a second access. This redirect cache is stored
+as a pickled object in the ``INSTANCE_CACHE`` folder. The effect of this caching is far
+more apparent when a replicator cache is also used.
+
+.. rubric:: Network Proxy Settings
+
+- :data:`koala.utils.config.NETWORK_PROXY_TYPE`
+- :data:`koala.utils.config.NETWORK_PROXY_IP`
+- :data:`koala.utils.config.NETWORK_PROXY_PORT`
+- :data:`koala.utils.config.NETWORK_PROXY_USER`
+- :data:`koala.utils.config.NETWORK_PROXY_PASS`
+
+.. rubric:: Replicator Cache Settings
+
+The replicator cache is intended to be a ``http-replicator`` instance, to be used to
+cache the web pages that are accessed locally. If ``TRY_REPLICATOR_CACHE_FIRST`` is False,
+the replicator isn't actually going to be hit.
+
+- :data:`koala.utils.config.REPLICATOR_PROXY_TYPE`
+- :data:`koala.utils.config.REPLICATOR_PROXY_IP`
+- :data:`koala.utils.config.REPLICATOR_PROXY_PORT`
+- :data:`koala.utils.config.REPLICATOR_PROXY_USER`
+- :data:`koala.utils.config.REPLICATOR_PROXY_PASS`
+
 """
 
 from koala.utils import log
@@ -49,6 +95,17 @@ import os
 
 
 def strencode(string):
+    """
+    This function converts unicode strings to ASCII, using python's
+    :func:`str.encode`, replacing any unicode characters present in the
+    string. Unicode characters which Koala expects to see in web content
+    related to it are specifically replaced first with ASCII characters
+    or character sequences which reasonably reproduce the original meanings.
+
+    :param string: unicode string to be encoded.
+    :return: ASCII version of the string.
+
+    """
     nstring = ''
     for char in string:
         if char == u'\u00b5':
@@ -71,6 +128,10 @@ except IOError:
 
 
 def dump_redirect_cache():
+    """
+    Called during python interpreter shutdown, this function dumps the
+    redirect cache to the file system.
+    """
     with open(REDIR_CACHE_FILE, 'wb') as f:
         pickle.dump(redirect_cache, f)
     logger.info('Dumping Redirect Cache to file')
@@ -80,14 +141,30 @@ if ENABLE_REDIRECT_CACHING is True:
 
 
 class CachingRedirectHandler(urllib2.HTTPRedirectHandler):
+    """
+    This handler modifies the behavior of :class:`urllib2.HTTPRedirectHandler`,
+    resulting in a HTTP ``301`` or ``302`` status to be included in the ``result``.
 
+    When this handler is attached to a ``urllib2`` opener, if the opening of
+    the URL resulted in a redirect via HTTP ``301`` or ``302``, this is reported
+    along with the result. This information can be used by the opener to
+    maintain a redirect cache.
+    """
     def http_error_301(self, req, fp, code, msg, headers):
+        """
+        Wraps the :func:`urllib2.HTTPRedirectHandler.http_error_301` handler, setting
+        the ``result.status`` to ``301`` in case a http ``301`` error is encountered.
+        """
         result = urllib2.HTTPRedirectHandler.http_error_301(
             self, req, fp, code, msg, headers)
         result.status = code
         return result
 
     def http_error_302(self, req, fp, code, msg, headers):
+        """
+        Wraps the :func:`urllib2.HTTPRedirectHandler.http_error_302` handler, setting
+        the ``result.status`` to ``302`` in case a http ``302`` error is encountered.
+        """
         result = urllib2.HTTPRedirectHandler.http_error_302(
             self, req, fp, code, msg, headers)
         result.status = code
@@ -95,6 +172,10 @@ class CachingRedirectHandler(urllib2.HTTPRedirectHandler):
 
 
 def _test_opener(openr):
+    """
+    Tests an opener obtained using :func:`urllib2.build_opener` by attempting to
+    open Google's homepage. This is used to test internet connectivity.
+    """
     try:
         openr.open('http://www.google.com', timeout=5)
         return True
@@ -103,6 +184,19 @@ def _test_opener(openr):
 
 
 def _create_opener():
+    """
+    Creates an opener for the internet.
+
+    It also attaches the :class:`CachingRedirectHandler` to the opener and sets its
+    User-agent to ``Mozilla/5.0``.
+
+    If the Network Proxy settings are set and recognized, it creates the opener and
+    attaches the proxy_handler to it. The opener is tested and returned if the test
+    passes.
+
+    If the test fails an opener without the proxy settings is created instead and
+    is returned instead.
+    """
     use_proxy = False
     use_proxy_auth = False
     proxy_handler = None
@@ -137,6 +231,16 @@ opener = _create_opener()
 
 
 def _create_replicator_opener():
+    """
+    Creates an opener for the replicator.
+
+    It also attaches the :class:`CachingRedirectHandler` to the opener and sets its
+    User-agent to ``Mozilla/5.0``.
+
+    If the Network Proxy settings are set and recognized, it creates the opener and
+    attaches the proxy_handler to it, and is returned.
+    """
+
     use_proxy = False
     use_proxy_auth = False
     proxy_handler = None
@@ -169,6 +273,15 @@ if TRY_REPLICATOR_CACHE_FIRST is True:
 
 
 def urlopen(url):
+    """
+    Opens a url specified by the ``url`` parameter.
+
+    This function handles :
+        - Redirect caching, if enabled.
+        - Trying the replicator first, if enabled.
+        - Retries upto 5 times if it encounters a http ``500`` error.
+
+    """
     retries = 5
     if ENABLE_REDIRECT_CACHING is True:
         while url in redirect_cache.keys():
@@ -220,6 +333,10 @@ def urlopen(url):
 
 
 def get_soup(url):
+    """
+    Gets a :mod:`bs4` parsed soup for the ``url`` specified by the parameter.
+    The :mod:`lxml` parser is used.
+    """
     page = urlopen(url)
     if page is None:
         return None

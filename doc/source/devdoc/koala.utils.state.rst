@@ -1,5 +1,3 @@
-koala.utils.state module
-========================
 
 .. automodule:: koala.utils.state
     :members:

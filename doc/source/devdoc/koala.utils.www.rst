@@ -1,5 +1,3 @@
-koala.utils.www module
-======================
 
 .. automodule:: koala.utils.www
     :members:

@@ -1,5 +1,3 @@
-koala.utils.log module
-======================
 
 .. automodule:: koala.utils.log
     :members:
