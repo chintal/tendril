@@ -42,6 +42,8 @@ defined in :mod:`koala.utils.config`.
 
 .. seealso:: :mod:`koala.utils.types`, for an overview applicable to most types defined in Koala.
 
+.. todo:: The core numbers in this module need to switched to :class:`decimal.Decimal`.
+
 """
 
 from koala.utils.config import BASE_CURRENCY
@@ -56,7 +58,24 @@ import numbers
 
 class CurrencyDefinition(object):
     """
-    Test
+    Instances of this class define a currency.
+
+    The minimal requirement to define a currency is a :attr:`code`, which
+    would usually be a standard internationally recognized currency code.
+
+    In addition to the :attr:`code`, a currency definition also includes
+    an optional :attr:`symbol`, which is used to create string representations
+    of currency values in that currency. In the absence of a :attr:`symbol`,
+    the :attr:`code` is used in it's place.
+
+    Unless otherwise specified during the instantiation of the class,
+    the exchange rate is obtained from internet services by the
+    :meth:`_get_exchval` method.
+
+    :param code: Standard currency code.
+    :param symbol: Symbol to use to represent the currency. Optional.
+    :param exchval: Exchange rate to use, if not automatic. Optional.
+
     """
     def __init__(self, code, symbol=None, exchval=None):
         self._code = code
@@ -68,10 +87,22 @@ class CurrencyDefinition(object):
 
     @property
     def code(self):
+        """
+
+        :return: The currency code.
+        :rtype: str
+
+        """
         return self._code
 
     @property
     def symbol(self):
+        """
+
+        :return: The currency symbol, or code if no symbol.
+        :rtype: str
+
+        """
         if self._symbol is not None:
             return self._symbol
         else:
@@ -79,10 +110,29 @@ class CurrencyDefinition(object):
 
     @property
     def exchval(self):
+        """
+        :return: The exchange rate
+        :rtype: float
+
+        """
         return self._exchval
 
     @staticmethod
     def _get_exchval(code):
+        """
+        Obtains the exchange rate of the currency definition's :attr:`code`
+        using the `<http://jsonrates.com>`_ JSON API. The native currency
+        is used as the reference.
+
+        :param code: The currency code for which the exchange rate is needed.
+        :type code: str
+        :return: The exchange rate of currency specified by code vs the native currency.
+        :rtype: float
+
+        .. todo:: Switch to currencyrates API instead.
+
+        """
+
         apiurl = 'http://jsonrates.com/get/?'
         params = {'from': code,
                   'to': BASE_CURRENCY,
@@ -97,6 +147,10 @@ class CurrencyDefinition(object):
         return rate
 
     def __eq__(self, other):
+        """
+        Two instances of :class:`CurrencyDefinition` will evaluate to be equal
+        only when all three parameters of the instances are equal.
+        """
         if self.code != other.code:
             return False
         if self.symbol != other.symbol:
@@ -117,7 +171,34 @@ native_currency_defn = CurrencyDefinition(BASE_CURRENCY, BASE_CURRENCY_SYMBOL)
 
 class CurrencyValue(object):
     """
-    Test
+    Instances of this class define a specific currency value, or a certain
+    sum of money.
+
+    The `currency_def` can either be a :class:`CurrencyDefinition` instance
+    (recommended), or a string containing the code for the currency.
+
+    :param val: The numerical value.
+    :param currency_def: The currency definition within which the value is defined.
+    :type currency_def: :class:`CurrencyDefinition` or str
+
+    .. note:: Since the exchange rate is obtained at the instantiation of the
+              :class:`CurrencyDefinition`, using a string instead of a
+              predefined :class:`CurrencyDefinition` instance may result in
+              instances of the same currency, but with different exchange rates.
+
+    :ivar _currency_def: The currency definition of the source value of the instance.
+    :ivar _val: The numerical value in the source currency of the instance.
+
+    .. rubric:: Arithmetic Operations
+
+    .. autosummary::
+
+        __add__
+        __sub__
+        __mul__
+        __div__
+        __cmp__
+
     """
     def __init__(self, val, currency_def):
         if isinstance(currency_def, CurrencyDefinition):
@@ -128,22 +209,57 @@ class CurrencyValue(object):
 
     @property
     def native_value(self):
+        """
+        The numerical value of the currency value in the native currency,
+        i.e., that defined by :data:`native_currency_defn`.
+
+        :rtype: float
+
+        """
         return self._val * self._currency_def.exchval
 
     @property
     def native_string(self):
+        """
+        The string representation of the currency value in the native currency,
+        i.e., that defined by :data:`native_currency_defn`.
+
+        :rtype: str
+
+        """
         return BASE_CURRENCY_SYMBOL + "{0:,.2f}".format(self.native_value)
 
     @property
     def source_value(self):
+        """
+        The numerical value of the currency value in the source currency,
+        i.e., that defined by :attr:`source_currency`.
+
+        :rtype: float
+
+        """
         return self._val
 
     @property
     def source_string(self):
+        """
+        The string representation of the currency value in the source
+        currency, i.e., that defined by :attr:`source_currency`.
+
+        :rtype: str
+
+        """
         return self._currency_def.symbol + "{0:,.2f}".format(self._val)
 
     @property
     def source_currency(self):
+        """
+        The currency definition of the source currency, i.e, the instance
+        variable :data:`_currency_def`.
+
+        :rtype: :class:`CurrencyDefinition`
+
+        """
         return self._currency_def
 
     def __repr__(self):
@@ -153,6 +269,27 @@ class CurrencyValue(object):
         return self.native_value
 
     def __add__(self, other):
+        """
+        Addition of two :class:`CurrencyValue` instances returns a
+        :class:`CurrencyValue` instance with the sum of the two operands,
+        with currency conversion applied if necessary.
+
+        If the :attr:`source_currency` of the two operands are equal,
+        the result uses the the same :attr:`source_currency`. If not,
+        the result is uses the :data:`native_currency_defn` as it's
+        :attr:`source_currency`.
+
+        If the other operand is a numerical type and evaluates to 0, this
+        object is simply returned unchanged.
+
+        Addition with all other Types / Classes is not supported.
+
+        :rtype: :class:`CurrencyValue`
+        """
+        if other == 0:
+            return self
+        if not isinstance(other, CurrencyValue):
+            raise NotImplementedError
         if self._currency_def.symbol == other.source_currency.symbol:
             return CurrencyValue(self.source_value + other.source_value, self.source_currency)
         else:
@@ -165,31 +302,85 @@ class CurrencyValue(object):
             return self.__add__(other)
 
     def __mul__(self, other):
+        """
+        Multiplication of one :class:`CurrencyValue` instance with a
+        numerical type results in a :class:`CurrencyValue` instance,
+        whose value is is the currency type operand's value multiplied
+        by the numerical operand's value.
+
+        The :attr:`source_currency` of the returned :class:`CurrencyValue`
+        is the same as that of the currency type operand.
+
+        Multiplication with all other Types / Classes is not supported.
+
+        :rtype: :class:`CurrencyValue`
+        """
         if isinstance(other, numbers.Number):
             return CurrencyValue(self.source_value * other, self.source_currency)
         else:
-            raise TypeError
+            raise NotImplementedError
 
     def __div__(self, other):
+        """
+        Division of one :class:`CurrencyValue` instance with a numerical type
+        results in a :class:`CurrencyValue` instance, whose value is is the
+        currency type operand's value divided by the numerical operand's value.
+
+        The :attr:`source_currency` of the returned :class:`CurrencyValue`
+        is the same as that of the currency type operand. In this case, the
+        first operand must be a :class:`CurrencyValue`, and not the reverse.
+
+        Division of one :class:`CurrencyValue` instance by another returns a
+        numerical value, which is obtained by performing the division with the
+        operands' :attr:`native_value`.
+
+        Division with all other Types / Classes is not supported.
+
+        :rtype: :class:`CurrencyValue`
+        """
         if isinstance(other, numbers.Number):
             return CurrencyValue(self.source_value / other, self.source_currency)
         elif isinstance(other, CurrencyValue):
             return self.native_value / other.native_value
         else:
-            raise TypeError
+            raise NotImplementedError
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __sub__(self, other):
+        """
+        Subtraction of two :class:`CurrencyValue` instances returns a
+        :class:`CurrencyValue` instance with the difference of the two
+        operands, with currency conversion applied if necessary.
+
+        If :attr:`source_currency` of the two operands are equal,
+        the result uses the the same :attr:`source_currency`. If not,
+        the result is in the :data:`native_currency_defn`.
+
+        If the other operand is a numerical type and evaluates to 0, this
+        object is simply returned unchanged.
+
+        Subtraction with all other Types / Classes is not supported.
+
+        :rtype: :class:`CurrencyValue`
+        """
         if other == 0:
             return self
+        elif not isinstance(other, CurrencyValue):
+            raise NotImplementedError
         else:
             return self.__add__(other.__mul__(-1))
 
     def __cmp__(self, other):
+        """
+        The comparison of two :class:`CurrencyValue` instances behaves
+        identically to the comparison of the operands' :attr:`native_value`.
+
+        Comparison with all other Types / Classes is not supported.
+        """
         if not isinstance(other, CurrencyValue):
-            raise TypeError
+            raise NotImplementedError
         if self.native_value == other.native_value:
             return 0
         elif self.native_value < other.native_value:
