@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-PDF Utils Module documentation (:mod:`koala.utils.pdfutils`)
-============================================================
+The PDF Utils Module (:mod:`koala.utils.pdfutils`)
+==================================================
 
 This module contains small helper functions to handle PDF files. These
 functions are independent of the rest of the software and can be reused
