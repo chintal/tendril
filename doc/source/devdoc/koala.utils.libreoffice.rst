@@ -1,5 +1,3 @@
-koala.utils.libreoffice module
-==============================
 
 .. automodule:: koala.utils.libreoffice
     :members:

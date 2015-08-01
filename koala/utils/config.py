@@ -1,27 +1,43 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-Config Module Documentation (:mod:`utils.config`)
-=================================================
+The Config Module (:mod:`koala.utils.config`)
+=============================================
+
+This module provides the core configuration for Koala.
+
+The Koala configuration file is itself a Python file, and is imported from it's
+default location.
+
+This module performs the import using the :func:`koala.utils.fs.import_`
+function and the :mod:`imp` module, following which all the recognized *and*
+expected configuration options are imported from the instance configuration
+module into this namespace.
+
+.. todo:: The present implementation is fairly silly and tedious. A better
+          implementation is necessary.
+
+.. todo:: The actual configuration options themselves need to be documented.
+
 """
 
 import os
 import inspect
-import imp
+from fs import import_
 
 
 CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -29,13 +45,6 @@ KOALA_ROOT = os.path.normpath(os.path.join(CONFIG_PATH, os.pardir, os.pardir))
 INSTANCE_ROOT = os.path.join(os.path.expanduser('~chintal'), '.koala')
 INSTANCE_CONFIG_FILE = os.path.join(INSTANCE_ROOT, 'instance_config.py')
 DOX_TEMPLATE_FOLDER = os.path.join(KOALA_ROOT, 'dox/templates')
-
-
-def import_(filename):
-    (path, name) = os.path.split(filename)
-    (name, ext) = os.path.splitext(name)
-    (f, filename, data) = imp.find_module(name, [path])
-    return imp.load_module(name, f, filename, data)
 
 INSTANCE_CONFIG = import_(INSTANCE_CONFIG_FILE)
 

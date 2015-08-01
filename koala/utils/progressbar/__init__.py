@@ -34,8 +34,8 @@
 
 """
 
-Progressbar package (:mod:`koala.utils.progressbar`)
-====================================================
+The Progressbar Package (:mod:`koala.utils.progressbar`)
+========================================================
 
 This package produces animated progress bars on the terminal. It is based on the
 one written by Nadia Alramli in 2009, made available under the BSD License. This

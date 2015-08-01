@@ -51,6 +51,7 @@ intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
                        'driver2200087': ('http://driver2200087.readthedocs.org/en/latest', None),
                        'dataset': ('https://dataset.readthedocs.org/en/latest', None),
                        'bs4': ('http://www.crummy.com/software/BeautifulSoup/bs4/doc/', None),
+                       'sqlalchemy': ('http://docs.sqlalchemy.org/en/rel_1_0/', None),
                        }
 
 # Add any paths that contain templates here, relative to this directory.

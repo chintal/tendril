@@ -15,15 +15,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-The Types Module (:mod:`koala.utils.types`)
-===========================================
+The Types Package (:mod:`koala.utils.types`)
+============================================
 
-The :mod:`koala.utils.types` module, like all the :mod:`koala.utils` modules,
+The :mod:`koala.utils.types` package, like all the :mod:`koala.utils` modules,
 includes code that ideally resides outside of Koala itself, perhaps using some
 standard or third-party package. In the case of :mod:`koala.utils.types`, this
-module provides various submodules and consequently classes to handle special
+package provides various modules and consequently classes to handle special
 data types - usually data structures and units. These use cases are more
-thoroughly and effectively handled by various third-party modules, and it's
+thoroughly and effectively handled by various third-party packages, and its
 existence in Koala is largely due to a combination of the *Not Invented Here*
 syndrome, as well as the overwhelming number of possible options available,
 none of which seem to be ideal drop in replacements for Koala core's
@@ -42,7 +42,7 @@ straightforward to write, and over time some these converters and/or
 re-implementations using an established types/units package will hopefully
 find their way into the classes defined within :mod:`koala.utils.types`.
 
-The general principles of design used for the units defined within this module
+The general principles of design used for the units defined within this package
 are as follows :
 
 - If there is an obvious good-fit python package available to provide the units

@@ -1,5 +1,3 @@
-koala.utils.config module
-=========================
 
 .. automodule:: koala.utils.config
     :members:

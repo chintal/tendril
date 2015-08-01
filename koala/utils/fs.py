@@ -37,12 +37,15 @@ or python libraries.
     get_file_mtime
     VersionedOutputFile
 
+    import_
+
 
 """
 
 from koala.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
+import imp
 import tempfile
 import zipfile
 import atexit
@@ -293,5 +296,20 @@ def fsutils_cleanup():
         os.rmdir(tempfile.gettempdir())
     except OSError:
         pass
+
+
+def import_(fpath):
+    """
+    Imports the file specified by the ``fpath`` parameter using the
+    :mod:`imp` python module and returns the loaded module.
+
+    :param fpath: Path of the python module to import.
+    :return: Module object of the imported python module.
+    """
+    (path, name) = os.path.split(fpath)
+    (name, ext) = os.path.splitext(name)
+    (f, filename, data) = imp.find_module(name, [path])
+    return imp.load_module(name, f, filename, data)
+
 
 atexit.register(fsutils_cleanup)
