@@ -1,5 +1,3 @@
-koala.utils.pdf module
-======================
 
 .. automodule:: koala.utils.pdf
     :members:

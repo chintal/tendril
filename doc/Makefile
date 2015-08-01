@@ -49,6 +49,10 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 
+coverage:
+	$(SPHINXBUILD) -b coverage $(ALLSPHINXOPTS) $(BUILDDIR)/coverage
+	@echo
+	@echo "Build finished. The coverage files are in $(BUILDDIR)/coverage."
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
