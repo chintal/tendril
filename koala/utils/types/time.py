@@ -21,7 +21,7 @@ See the COPYING, README, and INSTALL files for more information
 
 import arrow.arrow
 
-from unitbase import UnitBase
+from unitbase import NumericalUnitBase
 from unitbase import parse_none
 
 from decimal import Decimal
@@ -50,7 +50,7 @@ def parse_frequency(string):
         raise ValueError
 
 
-class Frequency(UnitBase):
+class Frequency(NumericalUnitBase):
     def __init__(self, value):
         _ostrs = ['mHz', 'Hz', 'kHz', 'MHz', 'GHz']
         _dostr = 'Hz'
@@ -58,7 +58,7 @@ class Frequency(UnitBase):
         super(Frequency, self).__init__(value, _ostrs, _dostr, _parse_func)
 
 
-class TimeSpan(UnitBase):
+class TimeSpan(NumericalUnitBase):
     def __init__(self, value):
         _ostrs = None
         _dostr = None

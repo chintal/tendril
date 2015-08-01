@@ -23,6 +23,7 @@ from decimal import Decimal
 from decimal import InvalidOperation
 
 from unitbase import UnitBase
+from unitbase import NumericalUnitBase
 from unitbase import Percentage
 from unitbase import parse_none
 
@@ -118,7 +119,7 @@ def parse_hfe(value):
         return num_val
 
 
-class Resistance(UnitBase):
+class Resistance(NumericalUnitBase):
     def __init__(self, value):
         _ostrs = ['m', 'E', 'K', 'M']
         _dostr = 'E'
@@ -126,7 +127,7 @@ class Resistance(UnitBase):
         super(Resistance, self).__init__(value, _ostrs, _dostr, _parse_func)
 
 
-class Capacitance(UnitBase):
+class Capacitance(NumericalUnitBase):
     def __init__(self, value):
         _ostrs = ['pF', 'nF', 'uF', 'mF']
         _dostr = 'nF'
@@ -134,7 +135,7 @@ class Capacitance(UnitBase):
         super(Capacitance, self).__init__(value, _ostrs, _dostr, _parse_func)
 
 
-class Voltage(UnitBase):
+class Voltage(NumericalUnitBase):
     def __init__(self, value):
         _ostrs = ['pV', 'nV', 'uV', 'mV', 'V', 'kV']
         _dostr = 'V'
@@ -142,7 +143,7 @@ class Voltage(UnitBase):
         super(Voltage, self).__init__(value, _ostrs, _dostr, _parse_func)
 
 
-class VoltageAC(Voltage):
+class VoltageAC(NumericalUnitBase):
     pass
 
 
@@ -154,7 +155,7 @@ class DiodeVoltageDC(VoltageDC):
     pass
 
 
-class Current(UnitBase):
+class Current(NumericalUnitBase):
     def __init__(self, value):
         _ostrs = ['fA', 'pA', 'nA', 'uA', 'mA', 'A']
         _dostr = 'mA'
@@ -170,7 +171,7 @@ class CurrentDC(Current):
     pass
 
 
-class PowerRatio(UnitBase):
+class PowerRatio(NumericalUnitBase):
     def __init__(self, value):
         _ostrs = ['dBm']
         _dostr = 'dBm'
@@ -183,10 +184,9 @@ class PowerRatio(UnitBase):
 
 class HFE(UnitBase):
     def __init__(self, value):
-        _ostrs = ['HFE']
         _dostr = 'HFE'
         _parse_func = parse_hfe
-        super(HFE, self).__init__(value, _ostrs, _dostr, _parse_func)
+        super(HFE, self).__init__(value, _dostr, _parse_func)
 
     def __repr__(self):
         return str(self._value) + self._dostr
@@ -194,10 +194,9 @@ class HFE(UnitBase):
 
 class Continuity(UnitBase):
     def __init__(self, value):
-        _ostrs = None
         _dostr = None
         _parse_func = parse_none
-        super(Continuity, self).__init__(value, _ostrs, _dostr, _parse_func)
+        super(Continuity, self).__init__(value, _dostr, _parse_func)
 
     def __repr__(self):
         return str(self._value)

@@ -51,6 +51,8 @@ are as follows :
   so the remaining principles don't apply to them. They follow more of a *use your
   best judgement* type of development principle.
 
+- Unit Type classes should, as far as possible, derive from :class:`unitbase.UnitBase`.
+
 - The fundamental nature of unit instantiation must remain stable and consistent
   within the various units defined. The underlying implementation isn't
   important as long as it provides the functionality required via the accessors
@@ -91,19 +93,25 @@ are as follows :
   pulled out of Koala into it's own units library, and maintaining that isn't
   something I'm likely to do alone.
 
-
-.. rubric:: Submodules
+Types
+-----
 
 .. toctree::
 
    koala.utils.types.currency
-   koala.utils.types.time
    koala.utils.types.lengths
-   koala.utils.types.cartesian
    koala.utils.types.unitbase
    koala.utils.types.electromagnetic
    koala.utils.types.thermodynamic
+   koala.utils.types.time
+
+Data Structures / Composite Types
+---------------------------------
+
+.. toctree::
+
    koala.utils.types.signalbase
+   koala.utils.types.cartesian
 
 .. rubric:: Inheritance Diagram
 

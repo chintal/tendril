@@ -17,7 +17,7 @@
 
 
 from decimal import Decimal
-from unitbase import UnitBase
+from unitbase import NumericalUnitBase
 
 
 def parse_temperature(value):
@@ -31,7 +31,7 @@ def parse_temperature(value):
         return ((num_val - 32) * 5) / 9
 
 
-class Temperature(UnitBase):
+class Temperature(NumericalUnitBase):
     def __init__(self, value):
         _ostrs = ['C', 'F', 'K']
         _dostr = 'K'
