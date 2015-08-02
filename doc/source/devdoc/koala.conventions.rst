@@ -14,7 +14,6 @@ Submodules
 .. toctree::
 
    koala.conventions.electronics
-   koala.conventions.iec60063
 
 Module contents
 ---------------

@@ -1,17 +1,17 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -26,6 +26,8 @@ import logging
 import yaml
 import jinja2
 
+import iec60063
+
 from koala.utils.config import GEDA_SYMLIB_ROOT
 from koala.utils.config import AUDIT_PATH
 from koala.utils.config import KOALA_ROOT
@@ -33,7 +35,6 @@ from koala.utils.config import INSTANCE_CACHE
 
 import koala.utils.fs
 import koala.conventions.electronics
-import koala.conventions.iec60063
 
 from gschem import conv_gsch2png
 
@@ -237,8 +238,8 @@ class GSymGeneratorFile(object):
                     for generator in gendata['generators']:
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
-                            rvalues = koala.conventions.iec60063.gen_vals(generator['series'],
-                                                                          koala.conventions.iec60063.res_ostrs,
+                            rvalues = iec60063.gen_vals(generator['series'],
+                                                                          iec60063.res_ostrs,
                                                                           start=generator['start'],
                                                                           end=generator['end'])
                             for rvalue in rvalues:
@@ -261,8 +262,8 @@ class GSymGeneratorFile(object):
                     for generator in gendata['generators']:
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
-                            cvalues = koala.conventions.iec60063.gen_vals(generator['series'],
-                                                                          koala.conventions.iec60063.cap_ostrs,
+                            cvalues = iec60063.gen_vals(generator['series'],
+                                                                          iec60063.cap_ostrs,
                                                                           start=generator['start'],
                                                                           end=generator['end'])
                             for cvalue in cvalues:
@@ -401,7 +402,7 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
 
 def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
     if device == 'RES THRU':
-        if resistance in [koala.conventions.electronics.parse_resistance(x) for x in koala.conventions.iec60063.gen_vals(koala.conventions.iec60063.get_series('E24'), koala.conventions.iec60063.res_ostrs)]:
+        if resistance in [koala.conventions.electronics.parse_resistance(x) for x in iec60063.gen_vals(iec60063.get_series('E24'), iec60063.res_ostrs)]:
             return koala.conventions.electronics.construct_resistor(koala.conventions.electronics.normalize_resistance(resistance), '0.25W')
         else:
             raise ValueError(resistance, device)
