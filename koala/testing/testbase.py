@@ -51,6 +51,14 @@ class TestMeasurementBase(object):
         self._inputtype = None
 
     def do_measurement(self):
+        """
+        This is an example measurement function. This should be overridden
+        by the actual Test classes to perform the actual measurement, and
+        this code can be used as a starting point.
+
+        The result of the measurement would typically be some composition of
+        instances of :class:`koala.utils.type.signalbase.SignalBase`.
+        """
         if self._output is not None:
             if self._outputchannel is None:
                 raise IOError("Output channel is not defined")
@@ -63,8 +71,18 @@ class TestMeasurementBase(object):
             if self._inputchannel is None:
                 raise IOError("Input channel is not defined")
             self._input = self._inputchannel.get()
-            if not isinstance(self._input, self._inputtype):
-                raise TypeError("Expected " + self._inputtype + ", got " + type(self._input))
+            if not self._input.unitclass == self._inputtype:
+                raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
+
+    def render(self):
+        """
+        This is an example render function. This should be overridden by the
+        actual Test classes to render the actual result.
+
+        Rendering means encoding the test result into a JSON representation,
+        which can later be dumped into a postgres database.
+        """
+        raise NotImplementedError
 
 
 class RunnableTest(object):
@@ -81,7 +99,7 @@ class TestBase(RunnableTest):
         self._parent = parent
         self._prep = []
         self._measurements = []
-        self._runner = None
+        self._result = None
 
     def run_test(self):
         for prep in self._prep:
@@ -110,4 +128,3 @@ class TestSuiteBase(RunnableTest):
     def commit_results(self):
         for test in self._tests:
             test.commit_results()
-

@@ -36,6 +36,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import Column, Integer, DateTime
 
+
 log.logging.getLogger('sqlalchemy.engine').setLevel(log.WARNING)
 
 from contextlib import contextmanager
@@ -59,7 +60,7 @@ def init_db_engine():
 engine = init_db_engine()
 
 #: The :class:`sqlalchemy.sessionmaker` bound to the database engine
-Session = sessionmaker()
+Session = sessionmaker(expire_on_commit=False)
 Session.configure(bind=engine)
 
 
@@ -82,6 +83,16 @@ def get_session():
         session.close()
 
 
+def with_db(func):
+    def inner(session=None, **kwargs):
+        if session is None:
+            with get_session() as s:
+                return func(session=s, **kwargs)
+        else:
+            return func(session=session, **kwargs)
+    return inner
+
+
 class BaseMixin(object):
     """
     This Mixin can / should be used (by inheriting from) by all Model classes
@@ -91,7 +102,7 @@ class BaseMixin(object):
     """
     @declared_attr
     def __tablename__(self):
-        return self.__name__.lower()
+        return self.__name__
 
     # __table_args__ = {'mysql_engine': 'InnoDB'}
     # __mapper_args__= {'always_refresh': True}
@@ -118,4 +129,7 @@ def commit_metadata():
     run after importing **all** the Model classes, and it will create the
     tables in the database.
     """
+    from koala.entityhub.db import model
+    from koala.inventory.db import model
+
     DeclBase.metadata.create_all(engine)
