@@ -25,14 +25,17 @@ Docstring for controller.py
 from koala.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
-from sqlalchemy.sql import exists
-from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 
 from koala.utils.db import with_db
 
 from model import SerialNumber
 from model import SerialNumberAssociation
+
+
+@with_db
+def get_all_serialnos(session=None):
+    return session.query(SerialNumber).all()
 
 
 @with_db
@@ -48,6 +51,16 @@ def register_serialno(sno=None, efield=None, session=None):
     session.add(sobj)
     session.flush()
     return sobj
+
+
+@with_db
+def delete_serialno(sno=None, session=None):
+    if sno is None:
+        raise AttributeError("sno cannot be None")
+    if not isinstance(sno, SerialNumber):
+        sno = get_serialno_object(sno=sno, session=session)
+    session.delete(sno)
+    session.flush()
 
 
 @with_db

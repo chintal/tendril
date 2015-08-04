@@ -40,6 +40,11 @@ def get_series(sno):
 
 
 @with_db
+def get_serialno_object(sno=None, session=None):
+    return controller.get_serialno_object(sno=sno, session=session)
+
+
+@with_db
 def get_serialno_efield(sno=None, session=None):
     return controller.get_serialno_object(sno=sno, session=session).efield
 
@@ -85,15 +90,12 @@ def get_child_serialnos(sno=None, session=None):
     return controller.get_serialno_object(sno=sno, session=session).children
 
 
-# def delete_serialno(sno, recurse=False, docs=False):
-#     if recurse is True:
-#         for sno in get_child_serialnos(sno):
-#             delete_serialno(sno, True, docs)
-#     if docs is True:
-#         import dox.docstore
-#         for document in dox.docstore.get_sno_documents(sno):
-#             dox.docstore.delete_document(document)
-#     sno_table.delete(sno=sno)
+@with_db
+def delete_serialno(sno, recurse=False, session=None):
+    if recurse is True:
+        for snoi in get_child_serialnos(sno):
+            controller.delete_serialno(snoi, recurse, session)
+    controller.delete_serialno(sno, recurse, session)
 
 
 # def delete_series(series):

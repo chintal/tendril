@@ -24,6 +24,7 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import UniqueConstraint
 
@@ -52,11 +53,22 @@ class SerialNumberAssociation(TimestampMixin, BaseMixin, DeclBase):
     )
 
 
-class SerialNumberMixin(object):
-    @declared_attr
-    def serialno_id(self):
-        return Column(Integer, ForeignKey('SerialNumber.id'))
-
-    @declared_attr
-    def serialno(self):
-        return relationship("SerialNumber", backref=lambda: self._provides)
+# These don't work :
+# class BoundToSerialNumberMixin(object):
+#     @declared_attr
+#     def serialno_id(self):
+#         return Column(Integer, ForeignKey('SerialNumber.id'))
+#
+#     @declared_attr
+#     def serialno(self):
+#         return relationship("SerialNumber", backref=lambda: backref(self._provides, cascade="all, delete"))
+#
+#
+# class LinkedToSerialNumberMixin(object):
+#     @declared_attr
+#     def serialno_id(self):
+#         return Column(Integer, ForeignKey('SerialNumber.id'))
+#
+#     @declared_attr
+#     def serialno(self):
+#         return relationship("SerialNumber", backref=lambda: self._provides)
