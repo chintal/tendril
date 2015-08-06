@@ -239,9 +239,9 @@ class GSymGeneratorFile(object):
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
                             rvalues = iec60063.gen_vals(generator['series'],
-                                                                          iec60063.res_ostrs,
-                                                                          start=generator['start'],
-                                                                          end=generator['end'])
+                                                        iec60063.res_ostrs,
+                                                        start=generator['start'],
+                                                        end=generator['end'])
                             for rvalue in rvalues:
                                 values.append(koala.conventions.electronics.construct_resistor(rvalue, generator['wattage']))
                         else:
@@ -263,9 +263,9 @@ class GSymGeneratorFile(object):
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
                             cvalues = iec60063.gen_vals(generator['series'],
-                                                                          iec60063.cap_ostrs,
-                                                                          start=generator['start'],
-                                                                          end=generator['end'])
+                                                        iec60063.cap_ostrs,
+                                                        start=generator['start'],
+                                                        end=generator['end'])
                             for cvalue in cvalues:
                                 values.append(koala.conventions.electronics.construct_capacitor(cvalue, generator['voltage']))
                         else:

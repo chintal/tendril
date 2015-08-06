@@ -143,7 +143,7 @@ class Voltage(NumericalUnitBase):
         super(Voltage, self).__init__(value, _ostrs, _dostr, _parse_func)
 
 
-class VoltageAC(NumericalUnitBase):
+class VoltageAC(Voltage):
     pass
 
 

@@ -171,6 +171,9 @@ class NumericalUnitBase(UnitBase):
                 self._orders = _orders
                 self._ostrs = [order[0] for order in _orders]
 
+    def __float__(self):
+        return float(self._value)
+
     def __add__(self, other):
         """
         Addition of two Unit class instances of the same type returns a
@@ -342,6 +345,8 @@ def parse_percent(value):
     value = value.strip()
     if value.endswith('%'):
         return Decimal(value[:-1])
+    if value.endswith('pc'):
+        return Decimal(value[:-2])
     return Decimal(value)
 
 

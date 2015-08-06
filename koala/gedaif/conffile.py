@@ -1,17 +1,17 @@
 # Copyright (C) 2015 Chintalagiri Shashank
-# 
+#
 # This file is part of Koala.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -67,6 +67,35 @@ class ConfigsFile(object):
                 if configuration['configname'] == configname:
                     return configuration['desc']
         raise ValueError
+
+    def testvars(self, configname):
+        rval = {}
+        for motif in self.configdata['motiflist']:
+            for k, v in self.configdata['motiflist'][motif].iteritems():
+                rval[':'.join([motif, k])] = v
+        for configuration in self.configdata['configurations']:
+            if configuration['configname'] == configname:
+                try:
+                    rval.update(configuration['testvars'])
+                except KeyError:
+                    pass
+                for motif in configuration['motiflist']:
+                    for k, v in configuration['motiflist'][motif].iteritems():
+                        rval[':'.join([motif, k])] = v
+        return rval
+
+    def grouplist(self, configname):
+        for configuration in self.configdata['configurations']:
+            if configuration['configname'] == configname:
+                if 'grouplist' in configuration:
+                    rval = configuration['grouplist']
+                    if 'default' not in rval:
+                        rval.append('default')
+                    return rval
+        raise AttributeError('Configuration grouplist not found')
+
+    def tests(self):
+        return self.configdata['tests']
 
     @property
     def configurations(self):

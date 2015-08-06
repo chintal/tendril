@@ -30,9 +30,13 @@ INSTANCE_TESTS = import_(INSTANCE_TESTS_ROOT)
 
 
 def get_test_object(testst):
-    modname = testst
+    try:
+        modname, clsname = testst.split(':')
+        clsname = 'Test' + clsname
+    except ValueError:
+        modname = testst
+        clsname = 'Test' + testst
     modstr = 'koala.testing.tests.' + modname
-    clsname = 'Test' + testst
     try:
         return INSTANCE_TESTS.get_test_object(testst)
     except ValueError:

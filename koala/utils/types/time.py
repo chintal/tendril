@@ -34,17 +34,16 @@ def parse_frequency(string):
     try:
         rdict = rex.search(string).groupdict()
         num = Decimal(rdict['number'])
-        try:
-            order = rdict['order']
-            if order == 'm':
-                return num / 1000
-            elif order == 'k':
-                return num * 1000
-            elif order == 'M':
-                return num * 1000000
-            elif order == 'G':
-                return num * 1000000000
-        except IndexError:
+        order = rdict['order']
+        if order == 'm':
+            return num / 1000
+        elif order == 'k':
+            return num * 1000
+        elif order == 'M':
+            return num * 1000000
+        elif order == 'G':
+            return num * 1000000000
+        elif order is None:
             return num
     except:
         raise ValueError
@@ -56,6 +55,10 @@ class Frequency(NumericalUnitBase):
         _dostr = 'Hz'
         _parse_func = parse_frequency
         super(Frequency, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+    def __rdiv__(self, other):
+        if isinstance(other, Number):
+            return TimeSpan(other / self._value)
 
 
 class TimeSpan(NumericalUnitBase):

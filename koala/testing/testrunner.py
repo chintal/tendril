@@ -16,6 +16,105 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from koala.utils import log
+logger = log.get_logger(__name__, log.DEBUG)
+
+import sys
+import copy
+
+from koala.entityhub import serialnos
+from koala.entityhub import projects
+
+from koala.gedaif.conffile import ConfigsFile
+from koala.gedaif.conffile import NoGedaProjectException
+
+from testbase import TestSuiteBase
+from testbase import TestPrepUser
+
+from tests import get_test_object
 
 
+def get_electronics_test_suites(serialno, devicetype, projectfolder):
+    try:
+        gcf = ConfigsFile(projectfolder)
+        logger.info("Using gEDA configs file from : " + projects.cards[devicetype])
+    except NoGedaProjectException:
+        raise AttributeError("gEDA project for " + devicetype + " not found.")
+    suites = []
+    testvars = gcf.testvars(devicetype)
+    cnf_suites = gcf.tests()
+    for cnf_suite in cnf_suites:
+        if len(cnf_suite.keys()) != 1:
+            raise ValueError("Suite configurations are expected to have exactly one key at the top level")
+        cnf_suite_name = cnf_suite.keys()[0]
+        if cnf_suite_name == "TestSuiteBase":
+            suite = TestSuiteBase()
+            suite_detail = cnf_suite[cnf_suite_name]
+            if 'prep' in suite_detail.keys():
+                prep_steps = suite_detail['prep']
+                for step in prep_steps:
+                    if 'user' in step.keys():
+                        stepobj = TestPrepUser(step['user'])
+                        suite.add_prep(stepobj)
+            if 'group-tests' in suite_detail.keys():
+                cnf_groups = suite_detail['group-tests']
+                cnf_grouplist = gcf.grouplist(devicetype)
+                for cnf_group in cnf_groups:
+                    if len(cnf_suite.keys()) != 1:
+                        raise ValueError("Group test configurations are "
+                                         "expected to have exactly one "
+                                         "key at the top level")
+                    if cnf_group.keys()[0] in cnf_grouplist:
+                        cnf_test_list = cnf_group[cnf_group.keys()[0]]
+                        for cnf_test in cnf_test_list:
+                            if len(cnf_test.keys()) != 1:
+                                raise ValueError("Test configurations are "
+                                                 "expected to have exactly "
+                                                 "one key at the top level")
+                            testobj = get_test_object(cnf_test.keys()[0])
+                            additionalvars = cnf_test[cnf_test.keys()[0]]
+                            vardict = copy.copy(testvars)
+                            if additionalvars is not None:
+                                vardict.update(additionalvars)
+                            testobj.configure(**vardict)
+                            suite.add_test(testobj)
+        else:
+            suite = get_test_object(cnf_suite)
+        suite.serialno = serialno
+        suites.append(suite)
+    return suites
 
+
+def run_electronics_test(serialno, devicetype, projectfolder):
+    suites = get_electronics_test_suites(serialno, devicetype, projectfolder)
+    for suite in suites:
+        suite.run_test()
+    return suites
+
+
+def commit_test_results(suites):
+    for suite in suites:
+        suite.commit_results()
+
+
+def run_test(serialno=None):
+    if serialno is None:
+        raise AttributeError("serialno cannot be None")
+    logger.info("Staring test for serial no : " + serialno)
+
+    devicetype = serialnos.get_serialno_efield(sno=serialno)
+    logger.info(serialno + " is device : " + devicetype)
+
+    try:
+        projectfolder = projects.cards[devicetype]
+    except KeyError:
+        raise AttributeError("Project for " + devicetype + " not found.")
+
+    suites = run_electronics_test(serialno, devicetype, projectfolder)
+    commit_test_results(suites)
+
+    return suites
+
+
+if __name__ == '__main__':
+    run_test(sys.argv[1])
