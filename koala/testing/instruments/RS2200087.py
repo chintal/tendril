@@ -552,6 +552,7 @@ class InstrumentRS2200087(InstrumentBase):
     def __init__(self):
         super(InstrumentRS2200087, self).__init__(None)
         self._detect()
+        self._ident = "RadioShack 2200087 Digital Multimeter"
 
     def _detect(self):
         """

@@ -43,6 +43,7 @@ class InstrumentOutputChannelBase(InstrumentChannelBase):
 
 class InstrumentBase(object):
     def __init__(self, channels=None):
+        self._ident = None
         self._channels = channels
         self._configurations = []
 
@@ -59,3 +60,7 @@ class InstrumentBase(object):
     @property
     def channels(self):
         return self._channels
+
+    @property
+    def ident(self):
+        return self._ident

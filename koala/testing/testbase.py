@@ -114,7 +114,7 @@ class TestUserMeasurement(TestMeasurementBase):
             return False
 
     def render(self):
-        print self._string + str(self.yesorno)
+        return self._string + str(self.yesorno)
 
 
 class TestSimpleMeasurement(TestMeasurementBase):
@@ -126,6 +126,7 @@ class TestSimpleMeasurement(TestMeasurementBase):
         self._inputchannel = None
         self._input = None
         self._inputtype = None
+        self._instrument = None
 
     def do_measurement(self):
         """
@@ -161,7 +162,9 @@ class TestSimpleMeasurement(TestMeasurementBase):
         raise NotImplementedError
 
     def render(self):
-        pass
+        return {'instrument': (self._instrument.ident if self._instrument is not None else None),
+                'output': self._output,
+                'input': self._input}
 
 
 class RunnableTest(object):
@@ -239,7 +242,7 @@ class TestBase(RunnableTest):
 
     @property
     def render(self):
-        raise NotImplementedError
+        pass
 
 
 class TestSuiteBase(RunnableTest):
