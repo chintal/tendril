@@ -44,8 +44,12 @@ class InstrumentOutputChannelBase(InstrumentChannelBase):
 class InstrumentBase(object):
     def __init__(self, channels=None):
         self._ident = None
+        self._sno = None
         self._channels = channels
         self._configurations = []
+
+    def connect(self):
+        raise NotImplementedError
 
     def _detect(self):
         raise NotImplementedError
@@ -63,4 +67,7 @@ class InstrumentBase(object):
 
     @property
     def ident(self):
-        return self._ident
+        if self._sno is not None:
+            return self._ident + ' ' + self._sno
+        else:
+            return self._ident

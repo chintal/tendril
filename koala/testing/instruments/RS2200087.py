@@ -71,7 +71,7 @@ integration with Koala's :mod:`koala.testing` module.
 """
 
 from koala.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 import re
 import copy
@@ -551,8 +551,10 @@ class InstrumentRS2200087(InstrumentBase):
     """
     def __init__(self):
         super(InstrumentRS2200087, self).__init__(None)
-        self._detect()
         self._ident = "RadioShack 2200087 Digital Multimeter"
+
+    def connect(self):
+        self._detect()
 
     def _detect(self):
         """

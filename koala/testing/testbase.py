@@ -204,6 +204,9 @@ class RunnableTest(object):
     def render(self):
         raise NotImplementedError
 
+    def finish(self):
+        pass
+
 
 class TestBase(RunnableTest):
     """ Object representing a full runnable Test of the same Measurement type"""
@@ -217,6 +220,7 @@ class TestBase(RunnableTest):
     def add_measurement(self, measurement):
         measurement.parent = self
         self._measurements.append(measurement)
+        return measurement
 
     def run_test(self):
         logger.debug("Running Test : " + repr(self))
@@ -284,3 +288,7 @@ class TestSuiteBase(RunnableTest):
 
     def render(self):
         raise NotImplementedError
+
+    def finish(self):
+        for test in self._tests:
+            test.finish()

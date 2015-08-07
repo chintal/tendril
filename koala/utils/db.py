@@ -132,5 +132,6 @@ def commit_metadata():
     from koala.entityhub.db import model
     from koala.inventory.db import model
     from koala.dox.db import model
+    from koala.testing.db import model
 
     DeclBase.metadata.create_all(engine)
