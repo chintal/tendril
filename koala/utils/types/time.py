@@ -58,7 +58,7 @@ class Frequency(NumericalUnitBase):
 
     def __rdiv__(self, other):
         if isinstance(other, Number):
-            return TimeSpan(other / self._value)
+            return TimeSpan(Decimal(other) / self._value)
 
 
 class TimeSpan(NumericalUnitBase):

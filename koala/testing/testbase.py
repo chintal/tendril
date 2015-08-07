@@ -20,7 +20,7 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 from koala.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.INFO)
 
 import time
 
@@ -150,7 +150,7 @@ class TestSimpleMeasurement(TestMeasurementBase):
             if self._inputchannel is None:
                 raise IOError("Input channel is not defined")
             self._input = self._inputchannel.get()
-            if not self._input.unitclass == self._inputtype:
+            if self._input.unitclass and not self._input.unitclass == self._inputtype:
                 raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
 
     @property

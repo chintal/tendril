@@ -185,7 +185,7 @@ class NumericalUnitBase(UnitBase):
 
         Addition with all other Types / Classes is not supported.
         """
-        if other == 0:
+        if isinstance(other, numbers.Number) and other == 0:
             return self
         elif self.__class__ == other.__class__:
             return self.__class__(self.value + other.value)
@@ -208,7 +208,11 @@ class NumericalUnitBase(UnitBase):
         Multiplication with all other Types / Classes is not supported.
         """
         if isinstance(other, numbers.Number):
+            if isinstance(self, Percentage):
+                return other * self.value / 100
             return self.__class__(self.value * other)
+        if isinstance(other, Percentage):
+            return self.__class__(self.value * other.value / 100)
         else:
             raise NotImplementedError
 
@@ -228,7 +232,10 @@ class NumericalUnitBase(UnitBase):
         Division with all other Types / Classes is not supported.
         """
         if isinstance(other, numbers.Number):
-            return self.__class__(self.value / other)
+            if isinstance(other, Decimal):
+                return self.__class__(self.value / other)
+            else:
+                return self.__class__(self.value / Decimal(other))
         elif isinstance(other, self.__class__):
             return self.value / other.value
         else:
@@ -248,10 +255,16 @@ class NumericalUnitBase(UnitBase):
 
         Subtraction with all other Types / Classes is not supported.
         """
-        if other == 0:
+        if isinstance(other, numbers.Number) and other == 0:
             return self
         else:
             return self.__add__(other.__mul__(-1))
+
+    def __abs__(self):
+        if self._value < 0:
+            return self.__class__(self.__mul__(-1)._value)
+        else:
+            return self
 
     def __cmp__(self, other):
         """
@@ -269,6 +282,7 @@ class NumericalUnitBase(UnitBase):
             else:
                 return 1
         else:
+            print self, other
             raise NotImplementedError
 
     def __repr__(self):

@@ -51,6 +51,9 @@ class InstrumentBase(object):
     def connect(self):
         raise NotImplementedError
 
+    def disconnect(self):
+        raise NotImplementedError
+
     def _detect(self):
         raise NotImplementedError
 
@@ -68,6 +71,6 @@ class InstrumentBase(object):
     @property
     def ident(self):
         if self._sno is not None:
-            return self._ident + ' ' + self._sno
+            return str(self._ident) + ' ' + str(self._sno)
         else:
             return self._ident
