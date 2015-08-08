@@ -17,7 +17,7 @@
 
 
 from koala.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 import sys
 import copy
@@ -48,7 +48,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder):
         if len(cnf_suite.keys()) != 1:
             raise ValueError("Suite configurations are expected to have exactly one key at the top level")
         cnf_suite_name = cnf_suite.keys()[0]
-        logger.info("Creating test suite : " + cnf_suite_name)
+        logger.debug("Creating test suite : " + cnf_suite_name)
         if cnf_suite_name == "TestSuiteBase":
             suite = TestSuiteBase()
             suite_detail = cnf_suite[cnf_suite_name]
@@ -66,7 +66,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder):
                         raise ValueError("Group test configurations are "
                                          "expected to have exactly one "
                                          "key at the top level")
-                    logger.info("Creating group tests : " + cnf_group.keys()[0])
+                    logger.debug("Creating group tests : " + cnf_group.keys()[0])
                     if cnf_group.keys()[0] in cnf_grouplist:
                         cnf_test_list = cnf_group[cnf_group.keys()[0]]
                         for cnf_test in cnf_test_list:
@@ -74,13 +74,19 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder):
                                 raise ValueError("Test configurations are "
                                                  "expected to have exactly "
                                                  "one key at the top level")
-                            logger.info("Creating test object : " + cnf_test.keys()[0])
+                            logger.debug("Creating test object : " + cnf_test.keys()[0])
                             testobj = get_test_object(cnf_test.keys()[0])
                             additionalvars = cnf_test[cnf_test.keys()[0]]
+                            if 'prep' in additionalvars.keys():
+                                prep_steps = additionalvars.pop('prep')
+                                for step in prep_steps:
+                                    if 'user' in step.keys():
+                                        stepobj = TestPrepUser(step['user'])
+                                        testobj.add_prep(stepobj)
                             vardict = copy.copy(testvars)
                             if additionalvars is not None:
                                 vardict.update(additionalvars)
-                            logger.info("Configuring test object : " + cnf_test.keys()[0])
+                            logger.debug("Configuring test object : " + cnf_test.keys()[0])
                             testobj.configure(**vardict)
                             logger.info("Adding test object to suite : " + repr(testobj))
                             suite.add_test(testobj)

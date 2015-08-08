@@ -24,6 +24,13 @@ class InstrumentChannelBase(object):
     def __init__(self, parent):
         self._parent = parent
 
+    @property
+    def is_enabled(self):
+        if self in self._parent.channels:
+            return True
+        else:
+            return False
+
 
 class InstrumentInputChannelBase(InstrumentChannelBase):
     def __init__(self, parent):

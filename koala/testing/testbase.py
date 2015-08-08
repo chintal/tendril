@@ -24,6 +24,7 @@ logger = log.get_logger(__name__, log.INFO)
 
 import time
 from datetime import datetime
+import arrow
 from db import controller
 
 
@@ -119,7 +120,7 @@ class TestUserMeasurement(TestMeasurementBase):
 
     def render(self):
         return {'question': self._string + str(self.yesorno),
-                'timestamp': self._ts}
+                'timestamp': self._ts.isoformat()}
 
 
 class TestSimpleMeasurement(TestMeasurementBase):
@@ -158,7 +159,7 @@ class TestSimpleMeasurement(TestMeasurementBase):
             if self._input.unitclass and not self._input.unitclass == self._inputtype:
                 raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
 
-        self._ts = datetime.now()
+        self._ts = arrow.utcnow()
 
     @property
     def stime(self):
@@ -212,7 +213,7 @@ class RunnableTest(object):
         raise NotImplementedError
 
     def finish(self):
-        pass
+        logger.info(repr(self) + " :: Result : " + str(self.passed()))
 
 
 class TestBase(RunnableTest):
