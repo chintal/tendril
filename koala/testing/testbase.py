@@ -23,6 +23,8 @@ from koala.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 import time
+from datetime import datetime
+from db import controller
 
 
 class TestPrepBase(object):
@@ -56,6 +58,7 @@ class TestMeasurementBase(object):
     """ Object representing a single measurement for a Test """
     def __init__(self):
         self._parent = None
+        self._ts = None
 
     def do_measurement(self):
         """
@@ -96,6 +99,7 @@ class TestUserMeasurement(TestMeasurementBase):
     def do_measurement(self):
         while self.input_valid is False:
             self._user_input = raw_input(self._string).strip()
+        self._ts = datetime.now()
 
     @property
     def input_valid(self):
@@ -114,7 +118,8 @@ class TestUserMeasurement(TestMeasurementBase):
             return False
 
     def render(self):
-        return self._string + str(self.yesorno)
+        return {'question': self._string + str(self.yesorno),
+                'timestamp': self._ts}
 
 
 class TestSimpleMeasurement(TestMeasurementBase):
@@ -152,6 +157,8 @@ class TestSimpleMeasurement(TestMeasurementBase):
             self._input = self._inputchannel.get()
             if self._input.unitclass and not self._input.unitclass == self._inputtype:
                 raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
+
+        self._ts = datetime.now()
 
     @property
     def stime(self):
@@ -230,8 +237,7 @@ class TestBase(RunnableTest):
             measurement.do_measurement()
 
     def commit_results(self):
-        logger.debug("Committing results against SNo : " + self.serialno + " " + repr(self))
-        pass
+        raise NotImplementedError
 
     def configure(self, **kwargs):
         self.variables.update(kwargs)
@@ -246,7 +252,7 @@ class TestBase(RunnableTest):
 
     @property
     def render(self):
-        pass
+        raise NotImplementedError
 
 
 class TestSuiteBase(RunnableTest):
@@ -275,8 +281,7 @@ class TestSuiteBase(RunnableTest):
 
     def commit_results(self):
         logger.debug("Committing results against SNo : " + self.serialno + " " + repr(self))
-        for test in self._tests:
-            test.commit_results()
+        controller.commit_test_suite(suiteobj=self)
 
     @property
     def passed(self):
@@ -292,3 +297,7 @@ class TestSuiteBase(RunnableTest):
     def finish(self):
         for test in self._tests:
             test.finish()
+
+    @property
+    def tests(self):
+        return self._tests

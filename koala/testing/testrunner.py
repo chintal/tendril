@@ -118,7 +118,10 @@ def run_test(serialno=None):
         raise AttributeError("Project for " + devicetype + " not found.")
 
     suites = run_electronics_test(serialno, devicetype, projectfolder)
-    commit_test_results(suites)
+
+    user_input = raw_input("Commit Results [y/n] ?: ").strip()
+    if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
+        commit_test_results(suites)
     for suite in suites:
         suite.finish()
 

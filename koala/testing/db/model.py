@@ -43,7 +43,7 @@ class TestSuiteResult(TimestampMixin, BaseMixin, DeclBase):
     passed = Column(Boolean, unique=False, nullable=False)
 
     def __repr__(self):
-        return '<TestSuiteResult {0:<20} {2:<25} {1:<40}>'.format(str(self.timestamp),
+        return '<TestSuiteResult {0:<20} {2:<25} {1:<40}>'.format(str(self.created_at),
                                                                   str(self.serialno),
                                                                   str(self.suite_class))
 
@@ -58,6 +58,6 @@ class TestResult(TimestampMixin, BaseMixin, DeclBase):
     passed = Column(Boolean, unique=False, nullable=False)
 
     def __repr__(self):
-        return '<TestResult {0:<20} {2:<25} {1:<40}>'.format(str(self.timestamp),
+        return '<TestResult {0:<20} {2:<25} {1:<40}>'.format(str(self.created_at),
                                                              str(self.testsuite.serialno),
                                                              str(self.test_class))

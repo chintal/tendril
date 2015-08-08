@@ -21,3 +21,39 @@
 """
 Docstring for controller.py
 """
+
+from koala.utils.db import with_db
+
+from model import TestResult
+from model import TestSuiteResult
+
+from koala.entityhub import serialnos
+
+
+@with_db
+def create_test_model_obj(testobj=None, suite=None, session=None):
+    if testobj.passed is True:
+        passed = True
+    else:
+        passed = False
+    tro = TestResult(test_class=repr(testobj.__class__),
+                     passed=passed,
+                     result=testobj.render())
+    tro.testsuite = suite
+
+    session.add(tro)
+    return tro
+
+
+@with_db
+def commit_test_suite(suiteobj=None, session=None):
+    sno = serialnos.get_serialno_object(sno=suiteobj.serialno, session=session)
+    passed = suiteobj.passed
+
+    sro = TestSuiteResult(suite_class=repr(suiteobj.__class__),
+                          passed=passed)
+    sro.serialno = sno
+
+    session.add(sro)
+    for test in suiteobj.tests:
+        sro.tests.append(create_test_model_obj(testobj=test, suite=sro, session=session))
