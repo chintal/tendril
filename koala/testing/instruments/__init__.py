@@ -29,19 +29,32 @@ from koala.utils.fs import import_
 INSTANCE_INSTRUMENTS_ROOT = os.path.join(INSTANCE_ROOT, 'instruments')
 INSTANCE_INSTRUMENTS = import_(INSTANCE_INSTRUMENTS_ROOT)
 
+instument_pool = {}
 
-def get_instrument_object(instst):
+
+def get_instrument_object(instst, idx=0, dedicated=False):
     modname = instst
     modstr = 'koala.testing.instruments.' + modname
     clsname = 'Instrument' + instst
+
+    if dedicated is False:
+        if modname in instument_pool.keys():
+            if len(instument_pool[modname]) > idx:
+                return instument_pool[modname][idx]
+
     try:
-        return INSTANCE_INSTRUMENTS.get_test_object(instst)
+        instance = INSTANCE_INSTRUMENTS.get_test_object(instst)
     except ValueError:
-        pass
-    try:
-        mod = __import__(modstr, fromlist=[clsname])
-        cls = getattr(mod, clsname)
-        instance = cls()
-        return instance
-    except ImportError:
-        raise ValueError("Instrument Unrecognized :" + instst)
+        try:
+            mod = __import__(modstr, fromlist=[clsname])
+            cls = getattr(mod, clsname)
+            instance = cls()
+        except ImportError:
+            raise ValueError("Instrument Unrecognized :" + instst)
+
+    if modname in instument_pool.keys():
+        instument_pool[modname].append(instance)
+    else:
+        instument_pool[modname] = [instance]
+
+    return instance

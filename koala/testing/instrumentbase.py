@@ -55,6 +55,29 @@ class InstrumentBase(object):
         self._channels = channels
         self._configurations = []
 
+        self._connected = None
+        self._consumers = []
+
+    def consumer_register(self, consumer):
+        if self._connected is not True:
+            try:
+                self.connect()
+            except NotImplementedError:
+                pass
+        self._consumers.append(consumer)
+
+    def consumer_done(self, consumer):
+        self._consumers.remove(consumer)
+        if len(self._consumers) == 0:
+            try:
+                self.disconnect()
+            except NotImplementedError:
+                pass
+
+    @property
+    def connected(self):
+        return self._connected
+
     def connect(self):
         raise NotImplementedError
 
