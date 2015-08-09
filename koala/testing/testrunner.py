@@ -36,68 +36,76 @@ from tests import get_test_object
 from db import controller
 
 
+def add_prep_steps_from_cnf_prep(testobj, cnf_prep):
+    for step in cnf_prep:
+        if 'user' in step.keys():
+            stepobj = TestPrepUser(step['user'])
+            testobj.add_prep(stepobj)
+
+
+def get_testobj_from_cnf_test(cnf_test, testvars):
+    if len(cnf_test.keys()) != 1:
+        raise ValueError("Test configurations are "
+                         "expected to have exactly "
+                         "one key at the top level")
+    logger.debug("Creating test object : " + cnf_test.keys()[0])
+    testobj = get_test_object(cnf_test.keys()[0])
+    additionalvars = cnf_test[cnf_test.keys()[0]]
+    if 'prep' in additionalvars.keys():
+        add_prep_steps_from_cnf_prep(testobj, additionalvars.pop('prep'))
+    vardict = copy.copy(testvars)
+    if additionalvars is not None:
+        vardict.update(additionalvars)
+    logger.debug("Configuring test object : " + cnf_test.keys()[0])
+    if 'desc' in vardict.keys():
+        testobj.desc = vardict.pop('desc')
+    testobj.configure(**vardict)
+    logger.info("Adding test object to suite : " + repr(testobj))
+    return testobj
+
+
+def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype):
+    if len(cnf_suite.keys()) != 1:
+        raise ValueError("Suite configurations are expected "
+                         "to have exactly one key at the top level")
+    cnf_suite_name = cnf_suite.keys()[0]
+    testvars = gcf.testvars(devicetype)
+    logger.debug("Creating test suite : " + cnf_suite_name)
+    if cnf_suite_name == "TestSuiteBase":
+        suite = TestSuiteBase()
+        suite_detail = cnf_suite[cnf_suite_name]
+        if 'prep' in suite_detail.keys():
+            add_prep_steps_from_cnf_prep(suite, suite_detail['prep'])
+        if 'group-tests' in suite_detail.keys():
+            cnf_groups = suite_detail['group-tests']
+            cnf_grouplist = gcf.grouplist(devicetype)
+            for cnf_group in cnf_groups:
+                if len(cnf_suite.keys()) != 1:
+                    raise ValueError("Group test configurations are "
+                                     "expected to have exactly one "
+                                     "key at the top level")
+                logger.debug("Creating group tests : " + cnf_group.keys()[0])
+                if cnf_group.keys()[0] in cnf_grouplist:
+                    cnf_test_list = cnf_group[cnf_group.keys()[0]]
+                    for cnf_test in cnf_test_list:
+                        suite.add_test(get_testobj_from_cnf_test(cnf_test, testvars))
+    else:
+        suite = get_test_object(cnf_suite)
+    if 'desc' in cnf_suite.keys():
+        suite.desc = cnf_suite['desc']
+    return suite
+
+
 def get_electronics_test_suites(serialno, devicetype, projectfolder):
-    # TODO refactor into separate functions
     try:
         gcf = ConfigsFile(projectfolder)
         logger.info("Using gEDA configs file from : " + projects.cards[devicetype])
     except NoGedaProjectException:
         raise AttributeError("gEDA project for " + devicetype + " not found.")
     suites = []
-    testvars = gcf.testvars(devicetype)
     cnf_suites = gcf.tests()
     for cnf_suite in cnf_suites:
-        if len(cnf_suite.keys()) != 1:
-            raise ValueError("Suite configurations are expected to have exactly one key at the top level")
-        cnf_suite_name = cnf_suite.keys()[0]
-        logger.debug("Creating test suite : " + cnf_suite_name)
-        if cnf_suite_name == "TestSuiteBase":
-            suite = TestSuiteBase()
-            suite_detail = cnf_suite[cnf_suite_name]
-            if 'prep' in suite_detail.keys():
-                prep_steps = suite_detail['prep']
-                for step in prep_steps:
-                    if 'user' in step.keys():
-                        stepobj = TestPrepUser(step['user'])
-                        suite.add_prep(stepobj)
-            if 'group-tests' in suite_detail.keys():
-                cnf_groups = suite_detail['group-tests']
-                cnf_grouplist = gcf.grouplist(devicetype)
-                for cnf_group in cnf_groups:
-                    if len(cnf_suite.keys()) != 1:
-                        raise ValueError("Group test configurations are "
-                                         "expected to have exactly one "
-                                         "key at the top level")
-                    logger.debug("Creating group tests : " + cnf_group.keys()[0])
-                    if cnf_group.keys()[0] in cnf_grouplist:
-                        cnf_test_list = cnf_group[cnf_group.keys()[0]]
-                        for cnf_test in cnf_test_list:
-                            if len(cnf_test.keys()) != 1:
-                                raise ValueError("Test configurations are "
-                                                 "expected to have exactly "
-                                                 "one key at the top level")
-                            logger.debug("Creating test object : " + cnf_test.keys()[0])
-                            testobj = get_test_object(cnf_test.keys()[0])
-                            additionalvars = cnf_test[cnf_test.keys()[0]]
-                            if 'prep' in additionalvars.keys():
-                                prep_steps = additionalvars.pop('prep')
-                                for step in prep_steps:
-                                    if 'user' in step.keys():
-                                        stepobj = TestPrepUser(step['user'])
-                                        testobj.add_prep(stepobj)
-                            vardict = copy.copy(testvars)
-                            if additionalvars is not None:
-                                vardict.update(additionalvars)
-                            logger.debug("Configuring test object : " + cnf_test.keys()[0])
-                            if 'desc' in vardict.keys():
-                                testobj.desc = vardict['desc']
-                            testobj.configure(**vardict)
-                            logger.info("Adding test object to suite : " + repr(testobj))
-                            suite.add_test(testobj)
-        else:
-            suite = get_test_object(cnf_suite)
-        if 'desc' in cnf_suite.keys():
-            suite.desc = cnf_suite['desc']
+        suite = get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype)
         suite.serialno = serialno
         logger.info("Created test suite : " + repr(suite))
         suites.append(suite)
@@ -126,7 +134,7 @@ def run_test(serialno=None):
 
     try:
         projectfolder = projects.cards[devicetype]
-    except   KeyError:
+    except KeyError:
         raise AttributeError("Project for " + devicetype + " not found.")
 
     suites = run_electronics_test(serialno, devicetype, projectfolder)
