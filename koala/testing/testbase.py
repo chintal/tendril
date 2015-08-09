@@ -90,38 +90,6 @@ class TestMeasurementBase(object):
         raise NotImplementedError
 
 
-class TestUserMeasurement(TestMeasurementBase):
-    def __init__(self, string):
-        super(TestUserMeasurement, self).__init__()
-        self._string = string
-        self._user_input = None
-
-    def do_measurement(self):
-        while self.input_valid is False:
-            self._user_input = raw_input(self._string + ' [y/n] : ').strip()
-        self._ts = datetime.now()
-
-    @property
-    def input_valid(self):
-        if self._user_input is None:
-            return False
-        if self._user_input.lower() in ['y', 'yes', 'ok', 'pass', 'n', 'no', 'fail']:
-            return True
-        else:
-            return False
-
-    @property
-    def yesorno(self):
-        if self._user_input.lower() in ['y', 'yes', 'ok', 'pass']:
-            return True
-        else:
-            return False
-
-    def render(self):
-        return {'question': self._string + ' [y/n] : ' + str(self.yesorno),
-                'timestamp': self._ts.isoformat()}
-
-
 class TestSimpleMeasurement(TestMeasurementBase):
     def __init__(self):
         super(TestSimpleMeasurement, self).__init__()
