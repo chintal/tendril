@@ -98,7 +98,7 @@ class TestUserMeasurement(TestMeasurementBase):
 
     def do_measurement(self):
         while self.input_valid is False:
-            self._user_input = raw_input(self._string).strip()
+            self._user_input = raw_input(self._string + ' [y/n] : ').strip()
         self._ts = datetime.now()
 
     @property
@@ -118,7 +118,7 @@ class TestUserMeasurement(TestMeasurementBase):
             return False
 
     def render(self):
-        return {'question': self._string + str(self.yesorno),
+        return {'question': self._string + ' [y/n] : ' + str(self.yesorno),
                 'timestamp': self._ts.isoformat()}
 
 
