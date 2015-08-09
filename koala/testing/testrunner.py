@@ -33,6 +33,8 @@ from testbase import TestPrepUser
 
 from tests import get_test_object
 
+from db import controller
+
 
 def get_electronics_test_suites(serialno, devicetype, projectfolder):
     # TODO refactor into separate functions
@@ -87,11 +89,15 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder):
                             if additionalvars is not None:
                                 vardict.update(additionalvars)
                             logger.debug("Configuring test object : " + cnf_test.keys()[0])
+                            if 'desc' in vardict.keys():
+                                testobj.desc = vardict['desc']
                             testobj.configure(**vardict)
                             logger.info("Adding test object to suite : " + repr(testobj))
                             suite.add_test(testobj)
         else:
             suite = get_test_object(cnf_suite)
+        if 'desc' in cnf_suite.keys():
+            suite.desc = cnf_suite['desc']
         suite.serialno = serialno
         logger.info("Created test suite : " + repr(suite))
         suites.append(suite)
@@ -107,7 +113,7 @@ def run_electronics_test(serialno, devicetype, projectfolder):
 
 def commit_test_results(suites):
     for suite in suites:
-        suite.commit_results()
+        controller.commit_test_suite(suiteobj=suite)
 
 
 def run_test(serialno=None):
@@ -120,7 +126,7 @@ def run_test(serialno=None):
 
     try:
         projectfolder = projects.cards[devicetype]
-    except KeyError:
+    except   KeyError:
         raise AttributeError("Project for " + devicetype + " not found.")
 
     suites = run_electronics_test(serialno, devicetype, projectfolder)

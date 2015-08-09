@@ -25,7 +25,6 @@ logger = log.get_logger(__name__, log.INFO)
 import time
 from datetime import datetime
 import arrow
-from db import controller
 
 
 class TestPrepBase(object):
@@ -179,6 +178,7 @@ class RunnableTest(object):
     def __init__(self):
         self._serialno = None
         self._parent = None
+        self._desc = None
 
     @property
     def parent(self):
@@ -202,9 +202,6 @@ class RunnableTest(object):
     def run_test(self):
         raise NotImplementedError
 
-    def commit_results(self):
-        raise NotImplementedError
-
     @property
     def passed(self):
         raise NotImplementedError
@@ -214,6 +211,14 @@ class RunnableTest(object):
 
     def finish(self):
         logger.info(repr(self) + " :: Result : " + str(self.passed()))
+
+    @property
+    def desc(self):
+        return self._desc
+
+    @desc.setter
+    def desc(self, value):
+        self._desc = value
 
 
 class TestBase(RunnableTest):
@@ -236,9 +241,6 @@ class TestBase(RunnableTest):
             prep.run_prep()
         for measurement in self._measurements:
             measurement.do_measurement()
-
-    def commit_results(self):
-        raise NotImplementedError
 
     def configure(self, **kwargs):
         self.variables.update(kwargs)
@@ -269,7 +271,6 @@ class TestSuiteBase(RunnableTest):
         self._prep.append(prep)
 
     def add_test(self, test):
-        assert isinstance(test, TestBase)
         test.parent = self
         self._tests.append(test)
 
@@ -279,10 +280,6 @@ class TestSuiteBase(RunnableTest):
             prep.run_prep()
         for test in self._tests:
             test.run_test()
-
-    def commit_results(self):
-        logger.debug("Committing results against SNo : " + self.serialno + " " + repr(self))
-        controller.commit_test_suite(suiteobj=self)
 
     @property
     def passed(self):

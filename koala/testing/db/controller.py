@@ -28,6 +28,9 @@ from model import TestResult
 from model import TestSuiteResult
 
 from koala.entityhub import serialnos
+from koala.entityhub.db.model import SerialNumber
+
+from sqlalchemy import desc
 
 
 @with_db
@@ -38,7 +41,8 @@ def create_test_model_obj(testobj=None, suite=None, session=None):
         passed = False
     tro = TestResult(test_class=repr(testobj.__class__),
                      passed=passed,
-                     result=testobj.render())
+                     result=testobj.render(),
+                     desc=testobj.desc)
     tro.testsuite = suite
 
     session.add(tro)
@@ -51,9 +55,17 @@ def commit_test_suite(suiteobj=None, session=None):
     passed = suiteobj.passed
 
     sro = TestSuiteResult(suite_class=repr(suiteobj.__class__),
-                          passed=passed)
+                          passed=passed,
+                          desc=suiteobj.desc)
     sro.serialno = sno
 
     session.add(sro)
     for test in suiteobj.tests:
         sro.tests.append(create_test_model_obj(testobj=test, suite=sro, session=session))
+
+
+@with_db
+def get_test_suites(serialno=None, session=None):
+    if not isinstance(serialno, SerialNumber):
+        serialno = serialnos.get_serialno_object(sno=serialno, session=session)
+    return session.query(TestSuiteResult).filter_by(serialno=serialno).order_by(desc(TestSuiteResult.created_at)).all()
