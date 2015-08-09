@@ -29,8 +29,94 @@ import time
 import arrow
 
 from koala.utils.types.electromagnetic import Voltage
-from koala.testing.testbase import TestMeasurementBase
-from koala.testing.testbase import TestSimpleMeasurement
+
+
+class TestMeasurementBase(object):
+    """ Object representing a single measurement for a Test """
+    def __init__(self):
+        self._parent = None
+        self._ts = None
+
+    def do_measurement(self):
+        """
+        This is the measurement function. This should be overridden
+        by the actual Test classes to perform the actual measurement.
+        """
+        raise NotImplementedError
+
+    def render(self):
+        """
+        This is an example render function. This should be overridden by the
+        actual Test classes to render the actual result.
+
+        Rendering means encoding the test result into a JSON representation,
+        which can later be dumped into a postgres database.
+        """
+        raise NotImplementedError
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, value):
+        self._parent = value
+
+    @property
+    def yesorno(self):
+        raise NotImplementedError
+
+
+class TestSimpleMeasurement(TestMeasurementBase):
+    def __init__(self):
+        super(TestSimpleMeasurement, self).__init__()
+        self._outputchannel = None
+        self._output = None
+        self._stime = None
+        self._inputchannel = None
+        self._input = None
+        self._inputtype = None
+        self._instrument = None
+
+    def do_measurement(self):
+        """
+        This is an example measurement function. This should be overridden
+        by the actual Test classes to perform the actual measurement, and
+        this code can be used as a starting point.
+
+        The result of the measurement would typically be some composition of
+        instances of :class:`koala.utils.type.signalbase.SignalBase`.
+        """
+        logger.debug("Making measurement : " + repr(self))
+        if self._output is not None:
+            if self._outputchannel is None:
+                raise IOError("Output channel is not defined")
+            self._outputchannel.set(self._output)
+
+        if self.stime is not None:
+            time.sleep(self.stime)
+
+        if self._inputtype is not None:
+            if self._inputchannel is None:
+                raise IOError("Input channel is not defined")
+            self._input = self._inputchannel.get()
+            if self._input.unitclass and not self._input.unitclass == self._inputtype:
+                raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
+
+        self._ts = arrow.utcnow()
+
+    @property
+    def stime(self):
+        return self._stime
+
+    @property
+    def yesorno(self):
+        raise NotImplementedError
+
+    def render(self):
+        return {'instrument': (self._instrument.ident if self._instrument is not None else None),
+                'output': self._output,
+                'input': self._input}
 
 
 class DCVoltageMeasurement(TestSimpleMeasurement):
