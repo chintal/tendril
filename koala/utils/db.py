@@ -40,7 +40,7 @@ from sqlalchemy import Column, Integer, DateTime
 log.logging.getLogger('sqlalchemy.engine').setLevel(log.WARNING)
 
 from contextlib import contextmanager
-from datetime import datetime
+import arrow
 
 from koala.utils.config import DB_URI
 
@@ -52,7 +52,7 @@ def init_db_engine():
 
     This function is called within the module and an engine is readily
     available in the module variable :data:`koala.utils.db.engine`. Application
-    code should not have to create a new engine for the normal use cases.
+    code should not have to create a new engine for normal use cases.
     """
     return create_engine(DB_URI)
 
@@ -68,9 +68,16 @@ Session.configure(bind=engine)
 def get_session():
     """
     Application executable code will typically only have to interact with this
-    ``contextmanager``. It should use this to create a database session,
-    perform its tasks, whatever they may be, within this contex, and then
-    exit the context.
+    ``contextmanager`` or the :func:`with_db` decorator. It should use this to
+    create a database session, perform its tasks, whatever they may be, within
+    this context, and then exit the context.
+
+    If any Exception is thrown, the session is rolled back completely. If no
+    Exception is thrown or Exceptions are handled by the application code within
+    the context, the session is committed when the context exits.
+
+    .. seealso:: :func:`with_db`
+
     """
     session = Session()
     try:
@@ -84,6 +91,26 @@ def get_session():
 
 
 def with_db(func):
+    """
+    Application executable code will typically only have to interact with this
+    function or the :func:`get_session` ``contextmanager``. The :func:`with_db`
+    decorator is intended to decorate functions which interact primarily with
+    the db.
+
+    Such a function would accept only keyword arguments, one of which is
+    ``session``, which can be a database session (created by
+    :func:`get_session`) provided by the caller. If ``session`` is ``None``,
+    this decorator creates a new session and calls the decorated function
+    using it.
+
+    Any function which returns objects that still need to be bound to a db
+    session should be called with a valid session, if you intend to do anything
+    with the returned objects. They will still execute without exception if
+    no session is provided, but the returned value may not be useful.
+
+    .. seealso:: :func:`get_session`
+
+    """
     def inner(session=None, **kwargs):
         if session is None:
             with get_session() as s:
@@ -91,6 +118,10 @@ def with_db(func):
         else:
             return func(session=session, **kwargs)
     return inner
+
+
+#: The :mod:`sqlalchemy` declarative base for all Model defined by / in Koala
+DeclBase = declarative_base()
 
 
 class BaseMixin(object):
@@ -110,17 +141,13 @@ class BaseMixin(object):
     id = Column(Integer, primary_key=True)
 
 
-#: The :mod:`sqlalchemy` declarative base for all Model defined by / in Koala
-DeclBase = declarative_base()
-
-
 class TimestampMixin(object):
     """
     This Mixin can be used by any Models which require a timestamp to be
     created. It adds a column named ``created_at``, which defauts to the
     time at which the object is instantiated.
     """
-    created_at = Column(DateTime, default=datetime.now())
+    created_at = Column(DateTime, default=arrow.utcnow())
 
 
 def commit_metadata():

@@ -186,4 +186,4 @@ apidoc:
 
 .PHONY: publish
 publish:
-	rsync -avzP --delete $(BUILDDIR)/html/ koala@braavos:~/html
+	rsync -azP --delete $(BUILDDIR)/html/ koala@braavos:~/html
