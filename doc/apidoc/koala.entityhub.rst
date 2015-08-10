@@ -6,7 +6,9 @@ Submodules
 
 .. toctree::
 
+   koala.entityhub.db
    koala.entityhub.guidelines
+   koala.entityhub.macs
    koala.entityhub.maps
    koala.entityhub.products
    koala.entityhub.projects

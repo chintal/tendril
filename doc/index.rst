@@ -11,8 +11,9 @@ Koala documentation
    :maxdepth: 4
 
    userdoc/userdoc
-   devdoc/modules
    devdoc/todo
+   apidoc/modules
+
 
 *  :ref:`genindex`
 *  :ref:`modindex`

@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+    koala.testing.db
     koala.testing.instruments
     koala.testing.tests
 
@@ -16,6 +17,7 @@ Submodules
 
    koala.testing.autotest
    koala.testing.instrumentbase
+   koala.testing.measurements
    koala.testing.testbase
    koala.testing.testrunner
 
