@@ -1,5 +1,5 @@
-Koala
-=====
+API & Modules Documentation
+===========================
 
 .. toctree::
    :maxdepth: 4

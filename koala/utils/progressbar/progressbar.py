@@ -56,7 +56,7 @@ class ProgressBar(object):
         :type color: str
         :param width: Bar width (optional)
         :type width: numbers.Number
-        :param block: Progress display character (default '█')
+        :param block: Progress display character
         :type block: char
         :param empty: Bar display character (default ' ')
         :type empty: char
