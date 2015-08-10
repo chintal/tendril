@@ -1,0 +1,6 @@
+include *.txt
+include alembic.ini
+include cocomo.yaml
+recursive-include alembic *
+recursive-include test *.py
+

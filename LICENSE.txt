@@ -8,7 +8,7 @@ that file.
 
 In case of any differences between the overview presented here and the actual
 license listing within a specific source file, the listing in the source file
-will supercede anything written here. Any source files not containing an
+will supercede the contents of this file. Any source files not containing an
 explicit license listing are distibuted under the terms of the "Dominant
 License" listed below.
 
