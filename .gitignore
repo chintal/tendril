@@ -52,7 +52,7 @@ crashlytics-build.properties
 
 
 
-doc/build
+doc/_build
 
 *.pyc
 *~

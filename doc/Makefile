@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = build
+BUILDDIR      = _build
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -186,4 +186,4 @@ apidoc:
 
 .PHONY: publish
 publish:
-	rsync -avzP --delete build/html/ koala@braavos:~/html
+	rsync -avzP --delete $(BUILDDIR)/html/ koala@braavos:~/html
