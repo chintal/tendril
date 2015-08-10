@@ -59,6 +59,13 @@ class ConfigsFile(object):
     def projectfolder(self):
         return self._projectfolder
 
+    @property
+    def mactype(self):
+        if 'mactype' in self.configdata:
+            return self.configdata['mactype']
+        else:
+            raise AttributeError("No MACTYPE defined for this project")
+
     def description(self, configname=None):
         if configname is None:
             return self.configdata['desc']

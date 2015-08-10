@@ -89,7 +89,7 @@ class RunnableTest(object):
         raise NotImplementedError
 
     def finish(self):
-        logger.info(repr(self) + " :: Result : " + str(self.passed()))
+        logger.info(repr(self) + " :: Result : " + str(self.passed))
 
     @property
     def desc(self):
