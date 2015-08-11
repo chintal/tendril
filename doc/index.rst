@@ -7,14 +7,17 @@
 Koala documentation
 ===================
 
+.. include:: ../README.rst
+
 .. toctree::
    :maxdepth: 4
 
    userdoc/userdoc
    devdoc/todo
    apidoc/modules
-
+   license
 
 *  :ref:`genindex`
 *  :ref:`modindex`
 *  :ref:`search`
+

@@ -28,7 +28,7 @@ Symbol Attributes
    :status: ``(Optional)`` Defines the status of the symbol. The absence of the attribute entirely is interpreted as ``Active``. See `Symbol Status`_ for more information.
    :fillstatus: ``(Optional)`` Defines if a component is soldered or not. The symbol should not contain this attribute. The attribute should be added as needed in the schematic. ``DNP`` means Do Not Populate. Absence of the attribute altogether indicate normal usage.
    :group: ``(Optional)`` Defines the group of components in the schematic in which the component is included. The symbol should not contain this attribute. The attribute should be added as needed in the schematic. The absence of the attribute entirely is interpreted as the component being in the ``default`` group. See `Component Groups`_ for an introduction to component groups.
-   :motif: ``(Optional)`` Identifier for the motif the component is part of (`Motif`_).
+   :motif: ``(Optional)`` Identifier for the motif the component is part of (`Motifs`_).
    :package: ``(Optional)`` Defines the package of the component. This should be the JEDEC package nomenclature for the component. This is intended to be used for 3D model generation.
 
 Device Classes
@@ -155,9 +155,13 @@ Examples for Capacitor Values :
 
 Standard Voltages :
 
-     :CAP CER SMD 0805: : 100V
-     :CAP TANT SMD TANT B: : 25V
-     :CAP TANT SMD TANT D: : 25V
+        +---------------------+-----+
+        | CAP CER SMD 0805    | 50V |
+        +---------------------+-----+
+        | CAP TANT SMD TANT B | 25V |
+        +---------------------+-----+
+        | CAP TANT SMD TANT D | 25V |
+        +---------------------+-----+
 
 Diodes
 ~~~~~~
@@ -276,6 +280,7 @@ dependent functions.
 
     If the device string starts with any of the following, it's ident constructor leaves
     out the footprint.
+
         - ``CONN``
         - ``MODULE``
         - ``CRYSTAL 4PIN``
