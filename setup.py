@@ -50,6 +50,7 @@ setup(
         'idstring',
         'jinja2',
         'SQLAlchemy',
+        'sqlalchemy_utils',
         'alembic',
 
         # Flask Dependencies (to be pruned?)

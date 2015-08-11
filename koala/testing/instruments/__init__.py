@@ -32,15 +32,15 @@ INSTANCE_INSTRUMENTS = import_(INSTANCE_INSTRUMENTS_ROOT)
 instument_pool = {}
 
 
-def get_instrument_object(instst, idx=0, dedicated=False):
+def get_instrument_object(instst, dedicated=False):
     modname = instst
     modstr = 'koala.testing.instruments.' + modname
     clsname = 'Instrument' + instst
 
     if dedicated is False:
         if modname in instument_pool.keys():
-            if len(instument_pool[modname]) > idx:
-                return instument_pool[modname][idx]
+            if len(instument_pool[modname]) > 0:
+                return instument_pool[modname][0]
 
     try:
         instance = INSTANCE_INSTRUMENTS.get_test_object(instst)

@@ -35,6 +35,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import Column, Integer, DateTime
+from sqlalchemy_utils import ArrowType
 
 
 log.logging.getLogger('sqlalchemy.engine').setLevel(log.WARNING)
@@ -144,10 +145,10 @@ class BaseMixin(object):
 class TimestampMixin(object):
     """
     This Mixin can be used by any Models which require a timestamp to be
-    created. It adds a column named ``created_at``, which defauts to the
+    created. It adds a column named ``created_at``, which defaults to the
     time at which the object is instantiated.
     """
-    created_at = Column(DateTime, default=arrow.utcnow())
+    created_at = Column(ArrowType, default=arrow.utcnow())
 
 
 def commit_metadata():
