@@ -27,6 +27,7 @@ from koala.entityhub import projects
 
 from koala.gedaif.conffile import ConfigsFile
 from koala.gedaif.conffile import NoGedaProjectException
+from koala.boms.electronics import import_pcb
 
 from testbase import TestSuiteBase
 from testbase import TestPrepUser
@@ -43,7 +44,7 @@ def add_prep_steps_from_cnf_prep(testobj, cnf_prep):
             testobj.add_prep(stepobj)
 
 
-def get_testobj_from_cnf_test(cnf_test, testvars):
+def get_testobj_from_cnf_test(cnf_test, testvars, bomobj):
     if len(cnf_test.keys()) != 1:
         raise ValueError("Test configurations are "
                          "expected to have exactly "
@@ -70,6 +71,7 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype):
                          "to have exactly one key at the top level")
     cnf_suite_name = cnf_suite.keys()[0]
     testvars = gcf.testvars(devicetype)
+    bomobj = import_pcb(gcf.projectfolder)
     logger.debug("Creating test suite : " + cnf_suite_name)
     if cnf_suite_name == "TestSuiteBase":
         suite = TestSuiteBase()
@@ -88,7 +90,7 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype):
                 if cnf_group.keys()[0] in cnf_grouplist:
                     cnf_test_list = cnf_group[cnf_group.keys()[0]]
                     for cnf_test in cnf_test_list:
-                        suite.add_test(get_testobj_from_cnf_test(cnf_test, testvars))
+                        suite.add_test(get_testobj_from_cnf_test(cnf_test, testvars, bomobj))
     else:
         suite = get_test_object(cnf_suite)
     if 'desc' in cnf_suite.keys():

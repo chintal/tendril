@@ -20,6 +20,7 @@ import sphinx_rtd_theme
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, '/home/chintal/code/workspaces/pycharm/documentedlist')
 sys.path.insert(0, '/home/chintal/code/virtualenvs/koala/lib/python2.7/site-packages')
 autodoc_default_flags = ['members', 'undoc-members', 'private-members', 'show-inheritance']
 autodoc_member_order = 'bysource'
@@ -44,6 +45,7 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'documentedlist'
     # 'sphinxcontrib.fulltoc'
 ]
 

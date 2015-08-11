@@ -36,67 +36,8 @@ Device Classes
 
 The following are the allowed values for the Device Attributes. More should be added as needed.
 
-    :RES SMD: : SMD Resistors.
-    :RES THRU: : THRU Resistors.
-    :RES POWER: : Off-PCB power resistors for direct mounting onto heatsinks.
-    :RES ARRAY THRU: : THRU Resistor Arrays.
-    :RES ARRAY SMD: : SMD Resistor Arrays.
-    :POT TRIM: : Trimpots.
-    :VARISTOR: : Varistors and MOVs.
-    :CAP CER SMD: : SMD Ceramic Capacitors.
-    :CAP TANT SMD: : SMD Tantalum Capacitors.
-    :CAP CER THRU: : THRU Ceramic Capacitors.
-    :CAP ELEC THRU: : THRU Electrolytic Capacitors.
-    :CAP POLY THRU: : THRU Poly Capacitors.
-    :CAP PAPER THRU: : THRU Paper Capacitors.
-    :INDUCTOR SMD: : SMD Inductors.
-    :INDUCTOR THRU: : THRU Inductors.
-    :FERRITE BEAD SMD: : SMD Ferrite Beads.
-    :TRANSFORMER HEAVY: : Transformers.
-    :TRANSFORMER SMD: : SMD Transformers.
-    :DIODE SMD: : SMD Diodes.
-    :DIODE THRU: : THRU Diodes.
-    :ZENER SMD: : SMD Zener Diodes.
-    :ZENER THRU: : THRU Zener Diodes.
-    :TRIAC: : Triacs.
-    :LED SMD: : SMD LEDs.
-    :LED THRU: : THRU LEDs.
-    :LED MODULE: : LED Modules.
-    :BRIDGE RECTIFIER: : Bridge Rectifiers.
-    :CRYSTAL AT: : AT cut Crystals.
-    :CRYSTAL TF: : Tuning Fork Crystals.
-    :CRYSTAL OSC: : Integrated Crystal Oscillators.
-    :TRANSISTOR THRU: : THRU Transistors including MOSFETs.
-    :TRANSISTOR SMD: : SMD Transistors including MOSFETs.
-    :IC THRU: : THRU Hole ICs.
-    :IC SMD: : SMD ICs.
-    :IC PLCC: : PLCC ICs, separated because of their need for a socket.
-    :IC POWER: : Off-PCB power ICs for direct mounting onto heatsinks.
-    :SOCKET STRIP: : SIP sockets.
-    :SOCKET DIP: : IC sockets and bases.
-    :RELAY: : Relays.
-    :MODULE: : Modules.
-    :PCB: : Printed Circuit Board.
-    :BUZZER: : Buzzers.
-    :CONN BANANA: : Banana Connectors.
-    :CONN BERG STRIP: : Berg Strips.
-    :CONN TERMINAL BLOCK: : Terminal Blocks. Usually single-part.
-    :CONN TERMINAL: : Terminal Connectors. Usually two-part.
-    :CONN DTYPE: : DTYPE Connectors.
-    :CONN INTERBOARD: : Stackthrough Headers.
-    :CONN FRC: : FRC Connectors.
-    :CONN MINIDIN: : MiniDIN Connectors.
-    :CONN MOLEX: : Molex Connector.
-    :CONN MOLEX MINIFIT: : Molex Minifit Male (PCB Mount) connectors.
-    :CONN BARREL: : DC Power Jacks and similar barrel connectors.
-    :CONN SIP: : SIP connectors Male (PCB Mount).
-    :CONN STEREO: : Stereo Connectors.
-    :CONN DF13: : Hirose DF13 Connectors.
-    :CONN MODULAR: : Modular Connectors.
-    :SWITCH TACT: : Tactile Switches.
-    :SWITCH PUSHBUTTON: : Pushbutton Switches.
-    :TESTPOINT: : Testpoints.
-    :SOLDER DOT: : Solder Dots.
+.. documentedlist::
+    :listobject: koala.conventions.electronics.DEVICE_CLASSES_DOC
 
 
 Values
