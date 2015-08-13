@@ -60,8 +60,8 @@ def get_testobj_from_cnf_test(cnf_test, testvars, bomobj):
     logger.debug("Configuring test object : " + cnf_test.keys()[0])
     if 'desc' in vardict.keys():
         testobj.desc = vardict.pop('desc')
-    testobj.configure(**vardict)
     testobj.use_bom(bomobj)
+    testobj.configure(**vardict)
     logger.info("Adding test object to suite : " + repr(testobj))
     return testobj
 

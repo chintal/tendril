@@ -119,6 +119,18 @@ class TestBase(RunnableTest):
         for measurement in self._measurements:
             measurement.do_measurement()
 
+    def _load_variable(self, name, typeclass):
+        try:
+            return typeclass(self.variables[name])
+        except ValueError:
+            value = self.variables[name]
+            if ':' in value:
+                motif_refdes, elem = value.split(':')
+                motif = self._bom_object.get_motif_by_refdes(motif_refdes)
+                value = getattr(motif, elem)
+            value = typeclass(value)
+        return value
+
     def configure(self, **kwargs):
         self.variables.update(kwargs)
 
@@ -136,6 +148,10 @@ class TestBase(RunnableTest):
     @property
     def render(self):
         raise NotImplementedError
+
+    def finish(self):
+        print "---------------------------------------------------------------"
+        print self.desc, repr(self), str(self.passed)
 
 
 class TestSuiteBase(RunnableTest):
@@ -175,6 +191,7 @@ class TestSuiteBase(RunnableTest):
     def finish(self):
         for test in self._tests:
             test.finish()
+        print "---------------------------------------------------------------"
 
     @property
     def tests(self):

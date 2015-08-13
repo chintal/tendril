@@ -68,7 +68,7 @@ class InstrumentBase(object):
 
     def consumer_done(self, consumer):
         self._consumers.remove(consumer)
-        if len(self._consumers) == 0:
+        if len(self._consumers) == 0 and self._connected is True:
             try:
                 self.disconnect()
             except NotImplementedError:

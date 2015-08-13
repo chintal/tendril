@@ -41,6 +41,7 @@ ones still need to be migrated to this form.
 
 """
 
+from math import log10
 from decimal import Decimal
 import numbers
 
@@ -190,7 +191,7 @@ class NumericalUnitBase(UnitBase):
         elif self.__class__ == other.__class__:
             return self.__class__(self.value + other.value)
         else:
-            raise NotImplementedError
+            raise NotImplementedError("Addition of : " + repr(self) + " + " + repr(other))
 
     def __radd__(self, other):
         if other == 0:
@@ -210,11 +211,20 @@ class NumericalUnitBase(UnitBase):
         if isinstance(other, numbers.Number):
             if isinstance(self, Percentage):
                 return other * self.value / 100
-            return self.__class__(self.value * other)
+            if isinstance(self, GainBase):
+                return self.__class__(other * self.value)
         if isinstance(other, Percentage):
             return self.__class__(self.value * other.value / 100)
+        if isinstance(other, GainBase):
+            if isinstance(self, GainBase):
+                if self._gtype != other._gtype:
+                    raise TypeError("Gain is of a different type.")
+                return self.__class__(self.value * other.value)
+            if other._gtype is not None and not isinstance(self, other._gtype):
+                raise TypeError("Gain is of a different type.")
+            return self.__class__(self.value * other.value)
         else:
-            raise NotImplementedError
+            raise NotImplementedError("Multiplication of : " + repr(self) + " x " + repr(other))
 
     def __div__(self, other):
         """
@@ -239,7 +249,7 @@ class NumericalUnitBase(UnitBase):
         elif isinstance(other, self.__class__):
             return self.value / other.value
         else:
-            raise NotImplementedError
+            raise NotImplementedError("Division of : " + repr(self) + " / " + repr(other))
 
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -262,7 +272,7 @@ class NumericalUnitBase(UnitBase):
 
     def __abs__(self):
         if self._value < 0:
-            return self.__class__(self.__mul__(-1)._value)
+            return self.__class__(self._value * -1)
         else:
             return self
 
@@ -283,7 +293,7 @@ class NumericalUnitBase(UnitBase):
                 return 1
         else:
             print self, other
-            raise NotImplementedError
+            raise NotImplementedError("Comparison of : " + repr(self) + ", " + repr(other))
 
     def __repr__(self):
         ostr = self._dostr
@@ -380,3 +390,12 @@ class Percentage(NumericalUnitBase):
         _dostr = '%'
         _parse_func = parse_percent
         super(Percentage, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+
+class GainBase(NumericalUnitBase):
+    def __init__(self, value, _orders, _dostr, _parse_func, gtype=None):
+        super(GainBase, self).__init__(value, _orders, _dostr, _parse_func)
+        self._gtype = gtype
+
+    def in_db(self):
+        return 20 * log10(self._value)

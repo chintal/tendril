@@ -25,6 +25,7 @@ from decimal import InvalidOperation
 from unitbase import UnitBase
 from unitbase import NumericalUnitBase
 from unitbase import Percentage
+from unitbase import GainBase
 from unitbase import parse_none
 
 
@@ -169,6 +170,26 @@ class CurrentAC(Current):
 
 class CurrentDC(Current):
     pass
+
+
+def parse_voltage_gain(value):
+    try:
+        return Decimal(value)
+    except InvalidOperation:
+        if value.endswith('V/V'):
+            return Decimal(value[:-3])
+        elif value.endswith('dB'):
+            v = Decimal(value[:-2])
+            return 10 ** (v/20)
+
+
+class VoltageGain(GainBase):
+    def __init__(self, value):
+        _gtype = Voltage
+        _ostrs = ['V/V']
+        _dostr = 'V/V'
+        _parse_func = parse_voltage_gain
+        super(VoltageGain, self).__init__(value, _ostrs, _dostr, _parse_func, _gtype)
 
 
 class PowerRatio(NumericalUnitBase):
