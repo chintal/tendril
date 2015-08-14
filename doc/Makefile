@@ -45,6 +45,8 @@ help:
 	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@echo "  apidoc     to create any missing .rst files"
+	@echo "  publish    to publish already generated html to the default target"
 
 clean:
 	rm -rf $(BUILDDIR)/*

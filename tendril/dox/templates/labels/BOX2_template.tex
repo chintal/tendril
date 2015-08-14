@@ -9,7 +9,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
 \usepackage{tabularx}
-\LabelCols=3
+\LabelCols=4
 \LabelRows=17
 \LeftPageMargin=11mm
 \RightPageMargin=13mm
@@ -27,7 +27,7 @@
 \begin{document}
 \begin{labels}
  %{ for label in stage.labels %}
- \parbox{5.5cm}{\begin{tabularx}{\textwidth}{ l r } \parbox{2.7cm}{\includegraphics[height=14mm,keepaspectratio=true]{%{{label.qrcode%}}} \includegraphics[height=14mm,keepaspectratio=true]{%{{label.logo%}}}}  & \parbox{2.9cm}{\raggedleft\small %{{label.ident%}} \\\footnotesize SNO: \textbf{%{{label.sno%}}} \\ MAC: \textbf{%{{label.mac%}}} \\ {\smaller %{{label.branding%}}} }\end{tabularx}}
+ \parbox{4.4cm}{\begin{tabularx}{\textwidth}{ l r } \parbox{1.2cm}{\includegraphics[height=14mm,keepaspectratio=true]{%{{label.qrcode%}}} }  & \parbox{2.8cm}{\raggedleft\small %{{label.ident%}} \\\footnotesize SNO: \textbf{%{{label.sno%}}} \\ MAC: \textbf{%{{label.mac%}}} \\ {\smaller %{{label.branding%}}} }\end{tabularx}}
  %{ endfor %}
 \end{labels}
 \end{document}
