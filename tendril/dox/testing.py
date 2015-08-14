@@ -18,3 +18,15 @@
 This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
+
+import os
+
+from tendril.utils.config import INSTANCE_ROOT
+default_target = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
+
+
+def render_test_report(serialno=None, outfolder=None, session=None):
+    pass

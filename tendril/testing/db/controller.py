@@ -31,6 +31,7 @@ from tendril.entityhub import serialnos
 from tendril.entityhub.db.model import SerialNumber
 
 from sqlalchemy import desc
+from sqlalchemy import distinct
 
 
 @with_db
@@ -84,3 +85,14 @@ def get_latest_test_result(serialno=None, test_class=None, session=None):
     if not isinstance(test_class, str):
         test_class = repr(test_class.__class__)
     return session.query(TestResult).filter_by(test_class=test_class).join(TestSuiteResult).filter(TestSuiteResult.serialno == serialno).order_by(desc(TestResult.created_at)).first()
+
+
+@with_db
+def get_latest_test_suite(serialno=None, suite_class=None, session=None):
+    if serialno is None:
+        raise AttributeError("serialno cannot be None")
+    if not isinstance(serialno, SerialNumber):
+        serialno = serialnos.get_serialno_object(sno=serialno, session=session)
+    q = session.query(TestSuiteResult).filter_by(serialno=serialno, suite_class=suite_class)
+    q = q.order_by(desc(TestSuiteResult.created_at))
+    return q.first()

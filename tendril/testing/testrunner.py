@@ -60,6 +60,8 @@ def get_testobj_from_cnf_test(cnf_test, testvars, bomobj):
     logger.debug("Configuring test object : " + cnf_test.keys()[0])
     if 'desc' in vardict.keys():
         testobj.desc = vardict.pop('desc')
+    if 'title' in vardict.keys():
+        testobj.title = vardict.pop('title')
     testobj.use_bom(bomobj)
     testobj.configure(**vardict)
     logger.info("Adding test object to suite : " + repr(testobj))
@@ -97,6 +99,8 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype):
         suite = get_test_object(cnf_suite)
     if 'desc' in cnf_suite.keys():
         suite.desc = cnf_suite['desc']
+    if 'title' in cnf_suite.keys():
+        suite.title = cnf_suite['title']
     return suite
 
 

@@ -58,6 +58,7 @@ class RunnableTest(object):
         self._serialno = None
         self._parent = None
         self._desc = None
+        self._title = None
 
     @property
     def parent(self):
@@ -98,6 +99,14 @@ class RunnableTest(object):
     @desc.setter
     def desc(self, value):
         self._desc = value
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, value):
+        self._title = value
 
 
 class TestBase(RunnableTest):
@@ -161,7 +170,8 @@ class TestBase(RunnableTest):
             result = terminal.RED + '[FAILED]' + terminal.NORMAL
         hline = '-' * 80
         print terminal.YELLOW + hline + terminal.NORMAL
-        print "{0:<70} {1:<10}".format(self.desc, result)
+        print "{0:<70} {1:<10}".format(terminal.YELLOW + self.desc + terminal.NORMAL, result)
+        print "{0}".format(self.title)
         print "{0}".format(repr(self))
 
 
