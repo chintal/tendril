@@ -181,6 +181,9 @@ def parse_voltage_gain(value):
         elif value.endswith('dB'):
             v = Decimal(value[:-2])
             return 10 ** (v/20)
+        else:
+            raise ValueError("Unrecognized string for VoltageGain : "
+                             + value)
 
 
 class VoltageGain(GainBase):

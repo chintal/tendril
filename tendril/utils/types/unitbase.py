@@ -162,7 +162,6 @@ class NumericalUnitBase(UnitBase):
     """
     def __init__(self, value, _orders, _dostr, _parse_func):
         super(NumericalUnitBase, self).__init__(value, _dostr, _parse_func)
-
         if _orders is not None and isinstance(_orders, list):
             if isinstance(_orders[0], str):
                 doidx = _orders.index(_dostr)
@@ -213,6 +212,7 @@ class NumericalUnitBase(UnitBase):
                 return other * self.value / 100
             if isinstance(self, GainBase):
                 return self.__class__(other * self.value)
+            return self.__class__(other * self.value)
         if isinstance(other, Percentage):
             return self.__class__(self.value * other.value / 100)
         if isinstance(other, GainBase):

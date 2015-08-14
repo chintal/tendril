@@ -28,6 +28,7 @@ logger = log.get_logger(__name__, log.INFO)
 import time
 import arrow
 
+from tendril.utils.progressbar import terminal
 from tendril.utils.types.electromagnetic import Voltage
 
 
@@ -182,7 +183,7 @@ class TestUserMeasurement(TestMeasurementBase):
 
     def do_measurement(self):
         while self.input_valid is False:
-            self._user_input = raw_input(self._string + ' [y/n] : ').strip()
+            self._user_input = raw_input(terminal.CYAN + self._string + ' [y/n] : ' + terminal.NORMAL).strip()
         self._ts = arrow.utcnow()
 
     @property

@@ -22,6 +22,9 @@ See the COPYING, README, and INSTALL files for more information
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
+# TODO  Replace with colorama or so for both
+from tendril.utils.progressbar import terminal
+
 
 class TestPrepBase(object):
     """ Object representing a preparatory step for a Test """
@@ -46,8 +49,8 @@ class TestPrepUser(TestPrepBase):
         self._string = string
 
     def run_prep(self):
-        print self._string
-        raw_input("Press Enter to continue...")
+        print terminal.YELLOW + self._string + terminal.NORMAL
+        raw_input(terminal.YELLOW + "Press Enter to continue..." + terminal.NORMAL)
 
 
 class RunnableTest(object):
@@ -121,12 +124,14 @@ class TestBase(RunnableTest):
 
     def _load_variable(self, name, typeclass):
         try:
-            return typeclass(self.variables[name])
+            rv = typeclass(self.variables[name])
+            return rv
         except ValueError:
             value = self.variables[name]
             if ':' in value:
                 motif_refdes, elem = value.split(':')
                 motif = self._bom_object.get_motif_by_refdes(motif_refdes)
+                print motif_refdes, elem
                 value = getattr(motif, elem)
             value = typeclass(value)
         return value
@@ -150,8 +155,14 @@ class TestBase(RunnableTest):
         raise NotImplementedError
 
     def finish(self):
-        print "---------------------------------------------------------------"
-        print self.desc, repr(self), str(self.passed)
+        if self.passed is True:
+            result = terminal.GREEN + '[PASSED]' + terminal.NORMAL
+        else:
+            result = terminal.RED + '[FAILED]' + terminal.NORMAL
+        hline = '-' * 80
+        print terminal.YELLOW + hline + terminal.NORMAL
+        print "{0:<70} {1:<10}".format(self.desc, result)
+        print "{0}".format(repr(self))
 
 
 class TestSuiteBase(RunnableTest):
@@ -191,7 +202,15 @@ class TestSuiteBase(RunnableTest):
     def finish(self):
         for test in self._tests:
             test.finish()
-        print "---------------------------------------------------------------"
+        hline = '-' * 80
+        print terminal.YELLOW + hline + terminal.NORMAL
+        if self.passed is True:
+            result = terminal.GREEN + '[PASSED]' + terminal.NORMAL
+        else:
+            result = terminal.RED + '[FAILED]' + terminal.NORMAL
+        print "{0:<70} {1:<10}".format(self.desc, result)
+        print "{0}".format(repr(self))
+        print terminal.YELLOW + hline + terminal.NORMAL
 
     @property
     def tests(self):
