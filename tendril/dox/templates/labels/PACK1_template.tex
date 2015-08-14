@@ -1,0 +1,33 @@
+%{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+%#}
+\documentclass[10pt]{article}
+\usepackage[newdimens]{labels}
+\usepackage{PTSansNarrow} 
+\renewcommand*\familydefault{\sfdefault} %% Only if the base font of the document is to be sans serif
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\LabelCols=2
+\LabelRows=10
+\LeftPageMargin=11mm
+\RightPageMargin=13mm
+\TopPageMargin=6mm
+\BottomPageMargin=6mm
+\InterLabelColumn=0mm
+\InterLabelRow=0mm
+\LeftLabelBorder=0mm
+\TopLabelBorder=0mm
+\BottomLabelBorder=0mm
+\RightLabelBorder=0mm
+% \LabelInfotrue
+\LabelGridtrue
+
+\begin{document}
+\begin{labels}
+ %{ for label in stage.labels %}
+ \parbox{8.4cm}{\begin{tabularx}{\textwidth}{ l r } \parbox{3.8cm}{\includegraphics[height=20mm,keepaspectratio=true]{%{{label.qrcode%}}} \includegraphics[height=20mm,keepaspectratio=true]{%{{label.logo%}}}}  & \parbox{4.9cm}{\raggedleft \footnotesize %{{label.desc%}} \\ \large %{{label.ident%}} \\ SNO: \textbf{%{{label.sno%}}} \\ {\smaller %{{label.branding%}}} }\end{tabularx}}
+ %{ endfor %}
+\end{labels}
+\end{document}
