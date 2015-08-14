@@ -24,6 +24,7 @@ logger = log.get_logger(__name__, log.INFO)
 
 # TODO  Replace with colorama or so for both
 from tendril.utils.progressbar import terminal
+import arrow
 
 
 class TestPrepBase(object):
@@ -59,6 +60,7 @@ class RunnableTest(object):
         self._parent = None
         self._desc = None
         self._title = None
+        self._ts = None
 
     @property
     def parent(self):
@@ -108,16 +110,28 @@ class RunnableTest(object):
     def title(self, value):
         self._title = value
 
+    @property
+    def ts(self):
+        return self._ts
+
+    @ts.setter
+    def ts(self, value):
+        if isinstance(value, arrow.Arrow):
+            self._ts = value
+        else:
+            self._ts = arrow.get(value)
+
 
 class TestBase(RunnableTest):
     """ Object representing a full runnable Test of the same Measurement type"""
-    def __init__(self):
+    def __init__(self, offline=False):
         super(TestBase, self).__init__()
         self._prep = []
         self._measurements = []
         self._result = None
         self.variables = {}
         self._bom_object = None
+        self._offline = offline
 
     def add_measurement(self, measurement):
         measurement.parent = self
@@ -126,6 +140,8 @@ class TestBase(RunnableTest):
 
     def run_test(self):
         logger.debug("Running Test : " + repr(self))
+        if self._offline is True:
+            raise IOError("Cannot run an offline test")
         for prep in self._prep:
             prep.run_prep()
         for measurement in self._measurements:
@@ -161,6 +177,9 @@ class TestBase(RunnableTest):
 
     @property
     def render(self):
+        raise NotImplementedError
+
+    def load_result_from_obj(self, result_db_obj):
         raise NotImplementedError
 
     def finish(self):

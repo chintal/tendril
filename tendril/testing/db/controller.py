@@ -31,7 +31,6 @@ from tendril.entityhub import serialnos
 from tendril.entityhub.db.model import SerialNumber
 
 from sqlalchemy import desc
-from sqlalchemy import distinct
 
 
 @with_db
@@ -43,7 +42,8 @@ def create_test_model_obj(testobj=None, suite=None, session=None):
     tro = TestResult(test_class=repr(testobj.__class__),
                      passed=passed,
                      result=testobj.render(),
-                     desc=testobj.desc)
+                     desc=testobj.desc,
+                     title=testobj.title)
     tro.testsuite = suite
 
     session.add(tro)
@@ -57,7 +57,8 @@ def commit_test_suite(suiteobj=None, session=None):
 
     sro = TestSuiteResult(suite_class=repr(suiteobj.__class__),
                           passed=passed,
-                          desc=suiteobj.desc)
+                          desc=suiteobj.desc,
+                          title=suiteobj.title)
     sro.serialno = sno
 
     session.add(sro)
@@ -96,3 +97,12 @@ def get_latest_test_suite(serialno=None, suite_class=None, session=None):
     q = session.query(TestSuiteResult).filter_by(serialno=serialno, suite_class=suite_class)
     q = q.order_by(desc(TestSuiteResult.created_at))
     return q.first()
+
+
+@with_db
+def get_test_suite_names(serialno=None, session=None):
+    if serialno is None:
+        raise AttributeError("serialno cannot be None")
+    if not isinstance(serialno, SerialNumber):
+        serialno = serialnos.get_serialno_object(sno=serialno, session=session)
+    return [x[0] for x in session.query(TestSuiteResult.suite_class).filter_by(serialno=serialno).distinct().all()]

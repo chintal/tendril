@@ -29,22 +29,28 @@ INSTANCE_TESTS_ROOT = os.path.join(INSTANCE_ROOT, 'tests')
 INSTANCE_TESTS = import_(INSTANCE_TESTS_ROOT)
 
 
-def get_test_object(testst):
+def get_test_object(testst, offline=False):
+
     try:
-        modname, clsname = testst.split(':')
-        clsname = 'Test' + clsname
-    except ValueError:
-        modname = testst
-        clsname = 'Test' + testst
-    modstr = 'tendril.testing.tests.' + modname
-    try:
-        return INSTANCE_TESTS.get_test_object(testst)
+        return INSTANCE_TESTS.get_test_object(testst, offline=offline)
     except ValueError:
         pass
+
+    if '.' in testst:
+        modstr, clsname = testst.rsplit('.', 1)
+    elif ':' in testst:
+        modname, clsname = testst.split(':')
+        clsname = 'Test' + clsname
+        modstr = 'tendril.testing.tests.' + modname
+    else:
+        modname = testst
+        clsname = 'Test' + testst
+        modstr = 'tendril.testing.tests.' + modname
+
     try:
         mod = __import__(modstr, fromlist=[clsname])
         cls = getattr(mod, clsname)
-        instance = cls()
+        instance = cls(offline=offline)
         return instance
     except ImportError:
         raise ValueError("Test Unrecognized :" + testst)

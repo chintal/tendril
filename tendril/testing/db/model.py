@@ -35,8 +35,13 @@ from tendril.utils.db import TimestampMixin
 
 
 class TestSuiteResult(TimestampMixin, BaseMixin, DeclBase):
+
+    # suite_class, desc, and title should probably go into their
+    # own table, perhaps along with a column specifying which devicetype
+    # they are applicable to.
     suite_class = Column(String, unique=False, nullable=False)
     desc = Column(String, unique=False, nullable=True)
+    title = Column(String, unique=False, nullable=True)
 
     serialno_id = Column(Integer, ForeignKey('SerialNumber.id'), nullable=False)
     serialno = relationship("SerialNumber", backref="test_suites")
@@ -50,8 +55,12 @@ class TestSuiteResult(TimestampMixin, BaseMixin, DeclBase):
 
 
 class TestResult(TimestampMixin, BaseMixin, DeclBase):
+    # test_class, desc, and title should probably go into their
+    # own table, perhaps along with a column specifying which devicetype
+    # they are applicable to.
     test_class = Column(String, unique=False, nullable=False)
     desc = Column(String, unique=False, nullable=True)
+    title = Column(String, unique=False, nullable=True)
 
     testsuite_id = Column(Integer, ForeignKey('TestSuiteResult.id'), nullable=False)
     testsuite = relationship("TestSuiteResult", backref="tests")
