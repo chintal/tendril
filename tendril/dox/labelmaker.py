@@ -130,6 +130,84 @@ class LabelD1(LabelBase):
     lpp = 88
 
 
+class LabelBox1(LabelBase):
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'BOX1_template.tex')
+    lpp = 51
+
+    def __init__(self, code, ident, sno, **kwargs):
+        super(LabelBox1, self).__init__(code, ident, sno)
+        self._desc = kwargs['desc']
+
+    @property
+    def desc(self):
+        return self._desc
+
+    @property
+    def ident(self):
+        return self._ident
+
+
+class LabelPack1(LabelBase):
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'PACK1_template.tex')
+    lpp = 20
+
+    def __init__(self, code, ident, sno, **kwargs):
+        super(LabelPack1, self).__init__(code, ident, sno)
+        self._desc = kwargs['desc']
+
+    @property
+    def desc(self):
+        return self._desc
+
+    @property
+    def ident(self):
+        return self._ident
+
+
+class LabelBox2(LabelBase):
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'BOX2_template.tex')
+    lpp = 51
+
+    def __init__(self, code, ident, sno, **kwargs):
+        super(LabelBox2, self).__init__(code, ident, sno)
+        self._mac = kwargs['mac']
+        self._desc = kwargs['desc']
+
+    @property
+    def desc(self):
+        return self._desc
+
+    @property
+    def mac(self):
+        return self._mac
+
+    @property
+    def ident(self):
+        return self._ident
+
+
+class LabelPack2(LabelBase):
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'PACK2_template.tex')
+    lpp = 45
+
+    def __init__(self, code, ident, sno, **kwargs):
+        super(LabelPack2, self).__init__(code, ident, sno)
+        self._mac = kwargs['mac']
+        self._desc = kwargs['desc']
+
+    @property
+    def desc(self):
+        return self._desc
+
+    @property
+    def mac(self):
+        return self._mac
+
+    @property
+    def ident(self):
+        return self._ident
+
+
 class LabelIDT(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'IDT_template.tex')
     lpp = 88
@@ -160,6 +238,14 @@ def get_labelbase(code):
         return LabelP2
     elif code == 'IDT':
         return LabelIDT
+    elif code == 'LBOX1':
+        return LabelBox1
+    elif code == 'LPACK1':
+        return LabelPack1
+    elif code == 'LBOX2':
+        return LabelBox2
+    elif code == 'LPACK2':
+        return LabelPack2
     else:
         return LabelBase
 
@@ -223,7 +309,7 @@ class LabelMaker(object):
         self._sheets = []
 
     def add_label(self, code, ident, sno, **kwargs):
-        self._clear_sno_label(sno)
+        # self._clear_sno_label(sno)
         sheet = self._get_sheet(code)
         label = sheet.base(code, ident, sno, **kwargs)
         sheet.add_label(label)

@@ -43,6 +43,7 @@ setup(
         'psycopg2',
         'wsgiref',
         'arrow',
+        'pillow',
         'qrcode',
         'beautifulsoup4',
         'PyPDF2',

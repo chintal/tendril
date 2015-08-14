@@ -19,6 +19,8 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 import os
 import yaml
@@ -59,6 +61,7 @@ class ProductBase(object):
         self._cards = self._raw_data['cards']
         self._cables = self._raw_data['cables']
         self._labels = self._raw_data['labels']
+        self._core = self._raw_data['derive_sno_from']
         try:
             self._product_info = INSTANCE_PRODUCT_CLASSES.get_product_info_class(
                 self._raw_data['productinfo']['line'],
@@ -70,6 +73,10 @@ class ProductBase(object):
     @property
     def name(self):
         return self._name
+
+    @property
+    def core(self):
+        return self._core
 
     @property
     def cards(self):
@@ -111,6 +118,22 @@ def gen_productlib(path=PRODUCTS_ROOT, recursive=True):
 productlib = gen_productlib()
 
 
+def get_product_by_ident(ident):
+    for product in productlib:
+        if product.name == ident:
+            return product
+    logger.error("Could not find product for ident : " + ident)
+
+
+def get_product_by_core(core):
+    for product in productlib:
+        if product.core == core:
+            return product
+    logger.error("Could not find product for core : " + core)
+
+
 def generate_labels(product, sno):
-    for l in product.labels:
-        print "Generate label : ", l['type'], product.name, product.labelinfo(sno)
+    labelinfo = product.labelinfo(sno)
+    if labelinfo is not None:
+        for l in product.labels:
+            manager.add_label(l['type'], product.name, labelinfo[0], **labelinfo[1])
