@@ -7,6 +7,11 @@ from logging.config import fileConfig
 # access to the values within the .ini file in use.
 config = context.config
 
+# Get the DB connection string from the tendril
+# config file instead.
+from tendril.utils.config import DB_URI
+config.set_main_option('sqlalchemy.url', DB_URI)
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
