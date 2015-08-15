@@ -156,7 +156,6 @@ class TestBase(RunnableTest):
             if ':' in value:
                 motif_refdes, elem = value.split(':')
                 motif = self._bom_object.get_motif_by_refdes(motif_refdes)
-                print motif_refdes, elem
                 value = getattr(motif, elem)
             value = typeclass(value)
         return value
@@ -178,6 +177,13 @@ class TestBase(RunnableTest):
     @property
     def render(self):
         raise NotImplementedError
+
+    @staticmethod
+    def _pr_repr(string):
+        if string[0] == string[-1] == "'":
+            return string[1:-1]
+        else:
+            return string
 
     def load_result_from_obj(self, result_db_obj):
         raise NotImplementedError
