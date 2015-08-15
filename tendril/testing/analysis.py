@@ -14,7 +14,6 @@ from tendril.entityhub import serialnos
 from tendril.entityhub import projects
 from tendril.boms.electronics import import_pcb
 
-from tendril.dox.testing import render_test_report
 from tendril.dox.docstore import register_document
 from tendril.entityhub.serialnos import get_series
 
@@ -79,7 +78,8 @@ def get_test_suite_objects(serialno=None, session=None):
 
 
 def publish_and_print(serialno, devicetype, print_to_paper=False):
-    pdfpath = render_test_report(serialno=serialno)
+    from tendril.dox import testing
+    pdfpath = testing.render_test_report(serialno=serialno)
     register_document(serialno, docpath=pdfpath, doctype='TEST-RESULT',
                       efield=devicetype, series='TEST/' + get_series(sno=serialno))
     if print_to_paper:
