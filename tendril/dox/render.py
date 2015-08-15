@@ -32,6 +32,7 @@ matplotlib.use('PDF')
 from tendril.utils.config import DOX_TEMPLATE_FOLDER
 from tendril.utils.config import COMPANY_LOGO_PATH
 from tendril.utils.config import COMPANY_NAME
+from tendril.utils.config import COMPANY_EMAIL
 from tendril.utils.config import COMPANY_ADDRESS_LINE
 from tendril.utils.config import COMPANY_IEC
 
@@ -79,6 +80,7 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
 
     stage['logo'] = COMPANY_LOGO_PATH
     stage['company'] = COMPANY_NAME
+    stage['company_email'] = COMPANY_EMAIL
     stage['company_address_line'] = COMPANY_ADDRESS_LINE
     stage['company_iec'] = COMPANY_IEC
     texpath = os.path.splitext(outpath)[0] + ".tex"

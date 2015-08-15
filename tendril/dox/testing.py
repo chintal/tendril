@@ -71,6 +71,6 @@ def render_test_report(serialno=None, outfolder=None, session=None):
              'graphs': graphs
              }
 
-    return render_pdf(stage, template, outpath)
+    return render_pdf(stage, template, outpath, remove_sources=False)
 
 
