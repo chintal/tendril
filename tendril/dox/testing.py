@@ -24,9 +24,15 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 import os
 
+from tendril.testing import analysis
+from tendril.utils.db import with_db
+
 from tendril.utils.config import INSTANCE_ROOT
 default_target = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
 
 
+@with_db
 def render_test_report(serialno=None, outfolder=None, session=None):
-    pass
+    suites = analysis.get_test_suite_objects(serialno=serialno, session=session)
+    for suite in suites:
+        suite.finish()

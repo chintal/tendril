@@ -195,8 +195,8 @@ class TestBase(RunnableTest):
             result = terminal.RED + '[FAILED]' + terminal.NORMAL
         hline = '-' * 80
         print terminal.YELLOW + hline + terminal.NORMAL
-        desc = self.desc or ''
-        print "{0:<70} {1:<10}".format(terminal.YELLOW + desc + terminal.NORMAL, result)
+        print "{0}{1:<70}{2} {3:>9}".format(terminal.YELLOW, (self.desc or 'None'),
+                                            terminal.NORMAL,  result)
         print "{0}".format(self.title)
         print "{0}".format(repr(self))
 
@@ -244,8 +244,9 @@ class TestSuiteBase(RunnableTest):
             result = terminal.GREEN + '[PASSED]' + terminal.NORMAL
         else:
             result = terminal.RED + '[FAILED]' + terminal.NORMAL
-        print "{0:<70} {1:<10}".format(self.desc, result)
-        print "{0}".format(repr(self))
+        print "{0}{1:<70}{2} {3:>9}".format(terminal.YELLOW, (self.desc or 'None'),
+                                            terminal.NORMAL,  result)
+        print "{0}{1}{2}".format(terminal.YELLOW, repr(self), terminal.NORMAL)
         print terminal.YELLOW + hline + terminal.NORMAL
 
     @property
