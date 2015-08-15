@@ -9,6 +9,9 @@ logger = log.get_logger(__name__, log.INFO)
 import re
 
 from tendril.utils.db import with_db
+from tendril.entityhub import serialnos
+from tendril.entityhub import projects
+from tendril.boms.electronics import import_pcb
 
 from db import controller
 from testbase import TestSuiteBase
@@ -27,6 +30,12 @@ def get_test_suite_objects(serialno=None, session=None):
     # future when there is time.
     suite_names = controller.get_test_suite_names(serialno=serialno,
                                                   session=session)
+    devicetype = serialnos.get_serialno_efield(sno=serialno, session=session)
+    projectfolder = projects.cards[devicetype]
+    bomobj = import_pcb(cardfolder=projectfolder)
+    # Perhaps this bomobject should not be recreated on the fly.
+    bomobj.configure_motifs(devicetype)
+
     suites = []
 
     for suite_name in suite_names:
@@ -48,7 +57,9 @@ def get_test_suite_objects(serialno=None, session=None):
             test_obj.desc = test_db_obj.desc
             test_obj.title = test_db_obj.title
             test_obj.ts = test_db_obj.created_at
+            test_obj.use_bom(bomobj)
             test_obj.load_result_from_obj(test_db_obj.result)
+            suite_obj.add_test(test_obj)
             # Crosscheck test passed?
 
         # Crosscheck suite passed?

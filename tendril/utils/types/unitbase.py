@@ -66,7 +66,7 @@ class UnitBase(object):
 
     """
     def __init__(self, value, _dostr, _parse_func):
-        if isinstance(value, str):
+        if isinstance(value, (str, unicode)):
             value = _parse_func(value)
         elif isinstance(value, numbers.Number):
             if not isinstance(value, Decimal):

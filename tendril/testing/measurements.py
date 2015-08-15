@@ -55,6 +55,9 @@ class TestMeasurementBase(object):
         """
         raise NotImplementedError
 
+    def load_result_from_obj(self, result_db_obj):
+        raise NotImplementedError
+
     @property
     def parent(self):
         return self._parent
@@ -119,6 +122,9 @@ class TestSimpleMeasurement(TestMeasurementBase):
                 'output': self._output,
                 'input': self._input}
 
+    def load_result_from_obj(self, result_db_obj):
+        raise NotImplementedError
+
 
 class DCVoltageMeasurement(TestSimpleMeasurement):
     def __init__(self):
@@ -174,6 +180,10 @@ class DCVoltageMeasurement(TestSimpleMeasurement):
             'timestamp': self._ts.isoformat()
             }
 
+    def load_result_from_obj(self, result_db_obj):
+        self._input = Voltage(result_db_obj['input']['v'])
+        self._ts = arrow.get(result_db_obj['timestamp'])
+
 
 class TestUserMeasurement(TestMeasurementBase):
     def __init__(self, string):
@@ -183,21 +193,23 @@ class TestUserMeasurement(TestMeasurementBase):
 
     def do_measurement(self):
         while self.input_valid is False:
-            self._user_input = raw_input(terminal.CYAN + self._string + ' [y/n] : ' + terminal.NORMAL).strip()
+            self._user_input = raw_input(terminal.CYAN + self._string +
+                                         ' [y/n] : ' + terminal.NORMAL).strip()
         self._ts = arrow.utcnow()
 
     @property
     def input_valid(self):
         if self._user_input is None:
             return False
-        if self._user_input.lower() in ['y', 'yes', 'ok', 'pass', 'n', 'no', 'fail']:
+        if self._user_input.lower() in ['y', 'yes', 'ok', 'pass', 'n',
+                                        'no', 'fail', 'true', 'false']:
             return True
         else:
             return False
 
     @property
     def yesorno(self):
-        if self._user_input.lower() in ['y', 'yes', 'ok', 'pass']:
+        if self._user_input.lower() in ['y', 'yes', 'ok', 'pass', 'true']:
             return True
         else:
             return False
@@ -205,3 +217,7 @@ class TestUserMeasurement(TestMeasurementBase):
     def render(self):
         return {'question': self._string + ' [y/n] : ' + str(self.yesorno),
                 'timestamp': self._ts.isoformat()}
+
+    def load_result_from_obj(self, result_db_obj):
+        self._ts = arrow.get(result_db_obj['timestamp'])
+        self._user_input = result_db_obj['question'].split(' ')[-1]
