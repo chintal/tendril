@@ -21,7 +21,6 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 import sys
 import copy
-import os
 
 from tendril.entityhub import serialnos
 from tendril.entityhub import projects
@@ -29,12 +28,11 @@ from tendril.entityhub import projects
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.gedaif.conffile import NoGedaProjectException
 from tendril.boms.electronics import import_pcb
-from tendril.dox.testing import render_test_report
-
-from tendril.utils.config import PRINTER_NAME
 
 from testbase import TestSuiteBase
 from testbase import TestPrepUser
+
+from analysis import publish_and_print
 
 from tests import get_test_object
 
@@ -136,12 +134,6 @@ def commit_test_results(suites):
         controller.commit_test_suite(suiteobj=suite)
 
 
-def publish_and_print(serialno, print_to_paper=False):
-    pdfpath = render_test_report(serialno=serialno)
-    if print_to_paper:
-        os.system('lp -d {1} -o media=a4 {0}'.format(pdfpath, PRINTER_NAME))
-
-
 def run_test(serialno=None):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
@@ -164,9 +156,11 @@ def run_test(serialno=None):
     for suite in suites:
         suite.finish()
 
-    user_input = raw_input("Publish and Print [y/n] ?: ").strip()
+    user_input = raw_input("Print to Paper [y/n] ?: ").strip()
     if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
-        publish_and_print(serialno, print_to_paper=True)
+        publish_and_print(serialno, devicetype, print_to_paper=True)
+    else:
+        publish_and_print(serialno, devicetype, print_to_paper=False)
 
     return suites
 
