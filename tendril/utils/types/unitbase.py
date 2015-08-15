@@ -324,7 +324,15 @@ class NumericalUnitBase(UnitBase):
     @property
     def quantized_repr(self):
         num, unit = self.natural_repr
-        return str(num.quantize(Decimal('0.001'))) + ' ' + unit
+
+        neg = False
+        if num < 0:
+            neg = True
+        num = str(round_to_n(float(abs(num)), 6))
+        if neg is True:
+            num = '-' + num
+
+        return num + ' ' + unit
 
     @property
     def integral_repr(self):
