@@ -195,7 +195,8 @@ class TestBase(RunnableTest):
             result = terminal.RED + '[FAILED]' + terminal.NORMAL
         hline = '-' * 80
         print terminal.YELLOW + hline + terminal.NORMAL
-        print "{0:<70} {1:<10}".format(terminal.YELLOW + self.desc + terminal.NORMAL, result)
+        desc = self.desc or ''
+        print "{0:<70} {1:<10}".format(terminal.YELLOW + desc + terminal.NORMAL, result)
         print "{0}".format(self.title)
         print "{0}".format(repr(self))
 

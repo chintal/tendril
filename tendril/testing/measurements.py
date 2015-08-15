@@ -165,7 +165,8 @@ class DCVoltageMeasurement(TestSimpleMeasurement):
     def parent(self, value):
         self._parent = value
         self._inputtype = Voltage
-        self._inputchannel = self._parent.instrument.voltage_input
+        if self._parent._offline is not True:
+            self._inputchannel = self._parent.instrument.voltage_input
 
     @property
     def input_voltage(self):
