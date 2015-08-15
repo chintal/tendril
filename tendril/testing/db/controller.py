@@ -46,6 +46,9 @@ def create_test_model_obj(testobj=None, suite=None, session=None):
                      title=testobj.title)
     tro.testsuite = suite
 
+    if testobj.ts is not None:
+        tro.ts = testobj.ts
+
     session.add(tro)
     return tro
 
@@ -60,6 +63,9 @@ def commit_test_suite(suiteobj=None, session=None):
                           desc=suiteobj.desc,
                           title=suiteobj.title)
     sro.serialno = sno
+
+    if suiteobj.ts is not None:
+        sro.ts = suiteobj.ts
 
     session.add(sro)
     for test in suiteobj.tests:

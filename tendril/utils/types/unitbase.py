@@ -42,8 +42,11 @@ ones still need to be migrated to this form.
 """
 
 from math import log10
+from math import floor
 from decimal import Decimal
 import numbers
+
+round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
 
 
 class UnitBase(object):
@@ -295,7 +298,8 @@ class NumericalUnitBase(UnitBase):
             print self, other
             raise NotImplementedError("Comparison of : " + repr(self) + ", " + repr(other))
 
-    def __repr__(self):
+    @property
+    def natural_repr(self):
         ostr = self._dostr
         value = self._value
         done = False
@@ -315,7 +319,28 @@ class NumericalUnitBase(UnitBase):
                     value *= Decimal(1000)
                 else:
                     done = True
-        return str(value) + ostr
+        return value, ostr
+
+    @property
+    def quantized_repr(self):
+        num, unit = self.natural_repr
+        return str(num.quantize(Decimal('0.001'))) + ' ' + unit
+
+    @property
+    def integral_repr(self):
+        num, unit = self.natural_repr
+
+        neg = False
+        if num < 0:
+            neg = True
+        num = str(round_to_n(float(abs(num)), 2))
+        if neg is True:
+            num = '-' + num
+        return num + ' ' + unit
+
+    def __repr__(self):
+        num, unit = self.natural_repr
+        return str(num) + unit
 
 
 class DummyUnit(UnitBase):

@@ -50,6 +50,7 @@ def get_test_suite_objects(serialno=None, session=None):
         suite_obj.desc = suite_db_obj.desc
         suite_obj.title = suite_db_obj.title
         suite_obj.ts = suite_db_obj.created_at
+        suite_obj.serialno = serialno
 
         for test_db_obj in suite_db_obj.tests:
             cls_name = rex_cls.match(test_db_obj.test_class).group('cl')

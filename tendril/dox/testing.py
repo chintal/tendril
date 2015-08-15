@@ -26,6 +26,14 @@ import os
 
 from tendril.testing import analysis
 from tendril.utils.db import with_db
+from tendril.entityhub import serialnos
+from tendril.entityhub import projects
+from tendril.gedaif.conffile import ConfigsFile
+from tendril.utils import vcs
+from tendril.entityhub.db.model import SerialNumber
+from tendril.entityhub.db import controller as sno_controller
+
+from render import render_pdf
 
 from tendril.utils.config import INSTANCE_ROOT
 default_target = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
@@ -33,6 +41,36 @@ default_target = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
 
 @with_db
 def render_test_report(serialno=None, outfolder=None, session=None):
-    suites = analysis.get_test_suite_objects(serialno=serialno, session=session)
+    if serialno is None:
+        raise ValueError("serialno cannot be None")
+    if not isinstance(serialno, SerialNumber):
+        serialno = sno_controller.get_serialno_object(sno=serialno, session=session)
+    if outfolder is None:
+        outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
+
+    template = os.path.join('testing', 'test_report_template.tex')
+    outpath = os.path.join(outfolder, 'test_report_' + serialno.sno + '.pdf')
+
+    devicetype = serialnos.get_serialno_efield(sno=serialno.sno, session=session)
+    projectfolder = projects.cards[devicetype]
+    gcf = ConfigsFile(projectfolder)
+
+    suites = analysis.get_test_suite_objects(serialno=serialno.sno, session=session)
+    graphs = []
     for suite in suites:
-        suite.finish()
+        for test in suite._tests:
+            graphs.extend(test.graphs)
+
+    stage = {'suites': [x.render_dox() for x in suites],
+             'sno': serialno.sno,
+             'testdate': max([x.ts for x in suites]).format(),
+             'devicetype': devicetype,
+             'desc': gcf.description(devicetype),
+             'svnrevision': vcs.get_path_revision(projectfolder),
+             'svnrepo': vcs.get_path_repository(projectfolder),
+             'graphs': graphs
+             }
+
+    return render_pdf(stage, template, outpath)
+
+

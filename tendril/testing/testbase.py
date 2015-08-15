@@ -25,6 +25,9 @@ logger = log.get_logger(__name__, log.INFO)
 # TODO  Replace with colorama or so for both
 from tendril.utils.progressbar import terminal
 import arrow
+from collections import namedtuple
+
+TestLine = namedtuple('TestLine', ['desc', 'expected', 'measured'])
 
 
 class TestPrepBase(object):
@@ -51,7 +54,9 @@ class TestPrepUser(TestPrepBase):
 
     def run_prep(self):
         print terminal.YELLOW + self._string + terminal.NORMAL
-        raw_input(terminal.YELLOW + "Press Enter to continue..." + terminal.NORMAL)
+        raw_input(terminal.YELLOW +
+                  "Press Enter to continue..." +
+                  terminal.NORMAL)
 
 
 class RunnableTest(object):
@@ -132,6 +137,7 @@ class TestBase(RunnableTest):
         self.variables = {}
         self._bom_object = None
         self._offline = offline
+        self._inststr = None
 
     def add_measurement(self, measurement):
         measurement.parent = self
@@ -146,6 +152,7 @@ class TestBase(RunnableTest):
             prep.run_prep()
         for measurement in self._measurements:
             measurement.do_measurement()
+        self.ts = arrow.utcnow()
 
     def _load_variable(self, name, typeclass):
         try:
@@ -178,6 +185,25 @@ class TestBase(RunnableTest):
     def render(self):
         raise NotImplementedError
 
+    def render_dox(self):
+        test_dict = {'desc': self.desc,
+                     'title': self.title,
+                     'ts': self.ts.format(),
+                     'passed': ('PASSED' if self.passed is True else 'FAILED'),
+                     'measurements': [x.render_dox() for x in self._measurements],
+                     'instrument': self._inststr,
+                     'lines': self.lines,
+                     }
+        return test_dict
+
+    @property
+    def lines(self):
+        return []
+
+    @property
+    def graphs(self):
+        return []
+
     @staticmethod
     def _pr_repr(string):
         if string[0] == string[-1] == "'":
@@ -195,7 +221,8 @@ class TestBase(RunnableTest):
             result = terminal.RED + '[FAILED]' + terminal.NORMAL
         hline = '-' * 80
         print terminal.YELLOW + hline + terminal.NORMAL
-        print "{0}{1:<70}{2} {3:>9}".format(terminal.YELLOW, (self.desc or 'None'),
+        print "{0}{1:<70}{2} {3:>9}".format(terminal.YELLOW,
+                                            (self.desc or 'None'),
                                             terminal.NORMAL,  result)
         print "{0}".format(self.title)
         print "{0}".format(repr(self))
@@ -235,6 +262,15 @@ class TestSuiteBase(RunnableTest):
     def render(self):
         raise NotImplementedError
 
+    def render_dox(self):
+        suite_dict = {'desc': self.desc,
+                      'title': self.title,
+                      'ts': self.ts.format(),
+                      'passed': ('PASSED' if self.passed is True else 'FAILED'),
+                      'tests': [x.render_dox() for x in self._tests]
+                      }
+        return suite_dict
+
     def finish(self):
         for test in self._tests:
             test.finish()
@@ -244,7 +280,8 @@ class TestSuiteBase(RunnableTest):
             result = terminal.GREEN + '[PASSED]' + terminal.NORMAL
         else:
             result = terminal.RED + '[FAILED]' + terminal.NORMAL
-        print "{0}{1:<70}{2} {3:>9}".format(terminal.YELLOW, (self.desc or 'None'),
+        print "{0}{1:<70}{2} {3:>9}".format(terminal.YELLOW,
+                                            (self.desc or 'None'),
                                             terminal.NORMAL,  result)
         print "{0}{1}{2}".format(terminal.YELLOW, repr(self), terminal.NORMAL)
         print terminal.YELLOW + hline + terminal.NORMAL

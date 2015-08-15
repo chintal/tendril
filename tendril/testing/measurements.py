@@ -55,6 +55,10 @@ class TestMeasurementBase(object):
         """
         raise NotImplementedError
 
+    def render_dox(self):
+        meas_dict = {'ts': self._ts.format()}
+        return meas_dict
+
     def load_result_from_obj(self, result_db_obj):
         raise NotImplementedError
 
