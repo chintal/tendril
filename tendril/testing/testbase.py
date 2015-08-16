@@ -67,6 +67,7 @@ class RunnableTest(object):
         self._desc = None
         self._title = None
         self._ts = None
+        self._dummy = None
 
     @property
     def parent(self):
@@ -75,6 +76,20 @@ class RunnableTest(object):
     @parent.setter
     def parent(self, value):
         self._parent = value
+
+    @property
+    def dummy(self):
+        if self._dummy is not None:
+            return self._dummy
+        else:
+            if self._parent is not None:
+                return self._parent.dummy
+            else:
+                return False
+
+    @dummy.setter
+    def dummy(self, value):
+        self._dummy = value
 
     @property
     def serialno(self):

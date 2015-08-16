@@ -6,25 +6,26 @@ See the COPYING, README, and INSTALL files for more information
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
-import re
 import os
+import re
+import numpy
 
 from tendril.utils.db import with_db
 from tendril.entityhub import serialnos
 from tendril.entityhub import projects
+from tendril.entityhub.db import controller as sno_controller
 from tendril.boms.electronics import import_pcb
-
-from tendril.dox.docstore import register_document
-from tendril.entityhub.serialnos import get_series
-
-from tendril.utils.config import PRINTER_NAME
-
+from tendril.dox.render import make_histogram
+from tendril.utils.fs import TEMPDIR
+from tendril.utils.fs import get_tempname
 
 from db import controller
 from testbase import TestSuiteBase
 from tests import get_test_object
+from testrunner import get_electronics_test_suites
 
-rex_cls = re.compile(ur'^<class \'(?P<cl>[a-zA-Z0-9.]+)\'>$')
+
+rex_class = re.compile(ur'^<class \'(?P<cl>[a-zA-Z0-9.]+)\'>$')
 
 
 @with_db
@@ -60,8 +61,8 @@ def get_test_suite_objects(serialno=None, session=None):
         suite_obj.serialno = serialno
 
         for test_db_obj in suite_db_obj.tests:
-            cls_name = rex_cls.match(test_db_obj.test_class).group('cl')
-            test_obj = get_test_object(cls_name, offline=True)
+            class_name = rex_class.match(test_db_obj.test_class).group('cl')
+            test_obj = get_test_object(class_name, offline=True)
             test_obj.desc = test_db_obj.desc
             test_obj.title = test_db_obj.title
             test_obj.ts = test_db_obj.created_at
@@ -77,10 +78,241 @@ def get_test_suite_objects(serialno=None, session=None):
     return suites
 
 
-def publish_and_print(serialno, devicetype, print_to_paper=False):
-    from tendril.dox import testing
-    pdfpath = testing.render_test_report(serialno=serialno)
-    register_document(serialno, docpath=pdfpath, doctype='TEST-RESULT',
-                      efield=devicetype, series='TEST/' + get_series(sno=serialno))
-    if print_to_paper:
-        os.system('lp -d {1} -o media=a4 {0}'.format(pdfpath, PRINTER_NAME))
+class ResultLineCollector(object):
+    def __init__(self, dummy_line, parent):
+        self._parent = parent
+        self._dummy_line = dummy_line
+        self._parser = dummy_line.measured
+        self._collected = []
+
+    def add_line(self, line):
+        if self._parser is not None:
+            self._collected.append(self._parser(line.measured))
+        else:
+            self._collected.append(line.measured)
+
+    def get_range(self):
+        if self._dummy_line.expected is None:
+            return None
+        center, op, merror = self._dummy_line.expected.split(' ')
+        center = self._parser(center)
+        merror = self._parser(merror)
+        return float(center - merror), float(center + merror)
+
+    @property
+    def graphs(self):
+        if self._parser is not None:
+            # rng = self.get_range()
+            rng = None
+            path = os.path.join(TEMPDIR, 'hist_' + get_tempname() + '.png')
+            hist = make_histogram(path, [float(x) for x in self._collected],
+                                  xlabel=self.desc, x_range=rng)
+            return [(hist, self._parent.desc)]
+        return []
+
+    @property
+    def desc(self):
+        return self._dummy_line.desc
+
+    @property
+    def expected(self):
+        return self._dummy_line.expected
+
+    @property
+    def measured(self):
+        if self._parser is not None:
+            return (sum(self._collected) / len(self._collected)).quantized_repr
+        else:
+            return 'VARIOUS'
+
+    @property
+    def maxp(self):
+        if self._parser is not None:
+            return max(self._collected).quantized_repr
+        return None
+
+    @property
+    def minp(self):
+        if self._parser is not None:
+            return min(self._collected).quantized_repr
+        return None
+
+    @property
+    def spread(self):
+        if self._parser is not None:
+            spread = self.maxp - self.minp
+            return spread.integral_repr
+        else:
+            return None
+
+    @property
+    def std_dev(self):
+        if self._parser is not None:
+            return self._parser(numpy.std([float(x) for x in self._collected])).integral_repr
+        return None
+
+
+class ResultTestCollector(object):
+    def __init__(self, dummy_test):
+        self._line_collectors = []
+        self._dummy_test = dummy_test
+        self._total_count = 0
+        self._passed_count = 0
+        for line in dummy_test.lines:
+            self._line_collectors.append(ResultLineCollector(line, self))
+
+    @property
+    def classname(self):
+        return str(self._dummy_test.__class__)
+
+    @property
+    def desc(self):
+        return self._dummy_test.desc
+
+    @property
+    def title(self):
+        return self._dummy_test.title
+
+    def add_test(self, test):
+        if str(test.__class__) != str(self._dummy_test.__class__):
+            raise TypeError("Test Class does not match : " + str(test.__class__) +
+                            ", expected " + str(self._dummy_test.__class__))
+        self._total_count += 1
+        if test.passed is True:
+            self._passed_count += 1
+            for idx, line in enumerate(test.lines):
+                self._line_collectors[idx].add_line(line)
+
+    @property
+    def graphs(self):
+        rval = []
+        # add averaged test graphs here
+        for collectors in self._line_collectors:
+            rval.extend(collectors.graphs)
+        return rval
+
+    @property
+    def lines(self):
+        return self._line_collectors
+
+    @property
+    def total_count(self):
+        return self._total_count
+
+    @property
+    def passed_count(self):
+        return self._passed_count
+
+
+class ResultSuiteCollector(object):
+    def __init__(self, dummy_suite):
+        self._test_collectors = []
+        self._dummy_suite = dummy_suite
+        self._total_count = 0
+        self._passed_count = 0
+        for test in dummy_suite.tests:
+            self._test_collectors.append(ResultTestCollector(test))
+
+    def get_collector(self, name, desc):
+        rval = []
+        for collector in self._test_collectors:
+            if collector.classname == name:
+                rval.append(collector)
+        if len(rval) == 1:
+            return rval[0]
+        else:
+            for collector in rval:
+                if collector.desc == desc:
+                    return collector
+            raise ValueError("Can't find collector : " + name + " " + desc)
+
+    def add_suite(self, suite):
+        if str(suite.__class__) != str(self._dummy_suite.__class__):
+            raise TypeError("Suite Class does not match : " + str(suite.__class__) +
+                            ", expected " + str(self._dummy_suite.__class__))
+        self._total_count += 1
+        if suite.passed is True:
+            self._passed_count += 1
+        for idx, test in enumerate(suite.tests):
+            collector = self.get_collector(str(test.__class__), test.desc)
+            collector.add_test(test)
+
+    @property
+    def graphs(self):
+        rval = []
+        for collectors in self._test_collectors:
+            rval.extend(collectors.graphs)
+        return rval
+
+    @property
+    def classname(self):
+        return str(self._dummy_suite.__class__)
+
+    @property
+    def desc(self):
+        return self._dummy_suite.desc
+
+    @property
+    def title(self):
+        return self._dummy_suite.title
+
+    @property
+    def tests(self):
+        return self._test_collectors
+
+    @property
+    def total_count(self):
+        return self._total_count
+
+    @property
+    def passed_count(self):
+        return self._passed_count
+
+
+class ResultCollector(object):
+    def __init__(self, dummy_suites):
+        self._suite_collectors = []
+        for suite in dummy_suites:
+            self._suite_collectors.append(ResultSuiteCollector(suite))
+
+    def add_suites_set(self, suites):
+        for idx, suite in enumerate(suites):
+            self._suite_collectors[idx].add_suite(suite)
+
+    @property
+    def graphs(self):
+        rval = []
+        for collectors in self._suite_collectors:
+            rval.extend(collectors.graphs)
+        return rval
+
+    @property
+    def suites(self):
+        return self._suite_collectors
+
+
+@with_db
+def get_device_test_summary(devicetype=None, session=None):
+    projectfolder = projects.cards[devicetype]
+    bomobj = import_pcb(cardfolder=projectfolder)
+    bomobj.configure_motifs(devicetype)
+
+    logger.info("Creating dummy test suites")
+    dummy_suites = get_electronics_test_suites(None, devicetype,
+                                               projectfolder,
+                                               offline=True)
+    for suite in dummy_suites:
+        suite.dummy = True
+
+    collector = ResultCollector(dummy_suites)
+
+    snos = sno_controller.get_serialnos_by_efield(efield=devicetype,
+                                                  session=session)
+
+    for sno in snos:
+        suites = get_test_suite_objects(serialno=sno.sno, session=session)
+        if len(suites) > 0:
+            collector.add_suites_set(suites)
+
+    return collector
+

@@ -21,6 +21,7 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 import sys
 import copy
+import os
 
 from tendril.entityhub import serialnos
 from tendril.entityhub import projects
@@ -30,10 +31,11 @@ from tendril.gedaif.conffile import ConfigsFile
 from tendril.gedaif.conffile import NoGedaProjectException
 from tendril.boms.electronics import import_pcb
 
+from tendril.dox.docstore import register_document
+from tendril.utils.config import PRINTER_NAME
+
 from testbase import TestSuiteBase
 from testbase import TestPrepUser
-
-from analysis import publish_and_print
 
 from tests import get_test_object
 
@@ -47,13 +49,13 @@ def add_prep_steps_from_cnf_prep(testobj, cnf_prep):
             testobj.add_prep(stepobj)
 
 
-def get_testobj_from_cnf_test(cnf_test, testvars, bomobj):
+def get_testobj_from_cnf_test(cnf_test, testvars, bomobj, offline=False):
     if len(cnf_test.keys()) != 1:
         raise ValueError("Test configurations are "
                          "expected to have exactly "
                          "one key at the top level")
     logger.debug("Creating test object : " + cnf_test.keys()[0])
-    testobj = get_test_object(cnf_test.keys()[0])
+    testobj = get_test_object(cnf_test.keys()[0], offline=offline)
     additionalvars = cnf_test[cnf_test.keys()[0]]
     if 'prep' in additionalvars.keys():
         add_prep_steps_from_cnf_prep(testobj, additionalvars.pop('prep'))
@@ -71,7 +73,7 @@ def get_testobj_from_cnf_test(cnf_test, testvars, bomobj):
     return testobj
 
 
-def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype):
+def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
     if len(cnf_suite.keys()) != 1:
         raise ValueError("Suite configurations are expected "
                          "to have exactly one key at the top level")
@@ -97,7 +99,8 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype):
                 if cnf_group.keys()[0] in cnf_grouplist:
                     cnf_test_list = cnf_group[cnf_group.keys()[0]]
                     for cnf_test in cnf_test_list:
-                        suite.add_test(get_testobj_from_cnf_test(cnf_test, testvars, bomobj))
+                        suite.add_test(get_testobj_from_cnf_test(cnf_test, testvars,
+                                                                 bomobj, offline=offline))
     else:
         suite = get_test_object(cnf_suite)
     if 'desc' in cnf_suite.keys():
@@ -107,7 +110,7 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype):
     return suite
 
 
-def get_electronics_test_suites(serialno, devicetype, projectfolder):
+def get_electronics_test_suites(serialno, devicetype, projectfolder, offline=False):
     try:
         gcf = ConfigsFile(projectfolder)
         logger.info("Using gEDA configs file from : " + projects.cards[devicetype])
@@ -116,7 +119,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder):
     suites = []
     cnf_suites = gcf.tests()
     for cnf_suite in cnf_suites:
-        suite = get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype)
+        suite = get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=offline)
         suite.serialno = serialno
         logger.info("Created test suite : " + repr(suite))
         suites.append(suite)
@@ -133,6 +136,16 @@ def run_electronics_test(serialno, devicetype, projectfolder):
 def commit_test_results(suites):
     for suite in suites:
         controller.commit_test_suite(suiteobj=suite)
+
+
+def publish_and_print(serialno, devicetype, print_to_paper=False):
+    from tendril.dox import testing
+    pdfpath = testing.render_test_report(serialno=serialno)
+    register_document(serialno, docpath=pdfpath,
+                      doctype='TEST-RESULT', efield=devicetype,
+                      series='TEST/' + serialnos.get_series(sno=serialno))
+    if print_to_paper:
+        os.system('lp -d {1} -o media=a4 {0}'.format(pdfpath, PRINTER_NAME))
 
 
 def run_test(serialno=None):
@@ -169,7 +182,7 @@ def run_test(serialno=None):
 if __name__ == '__main__':
     if sys.argv[1] == 'detect':
         mactype = sys.argv[2]
-        serialno = macs.get_device_mac(mactype)
+        sno = macs.get_device_mac(mactype)
     else:
-        serialno = sys.argv[1]
-    run_test(serialno)
+        sno = sys.argv[1]
+    run_test(sno)

@@ -179,3 +179,21 @@ def make_graph(outpath, plotdata_y, plotdata_x=None,
     pyplot.savefig(outpath)
     pyplot.close()
     return outpath
+
+
+def make_histogram(outpath, plotdata_y,
+                   bins=30, color='red',
+                   xlabel='', ylabel='',
+                   x_range=None):
+    pyplot.hist(plotdata_y, bins=bins, color=color, range=x_range)
+    pyplot.grid(True, which='major', color='0.3', linestyle='-')
+    pyplot.grid(True, which='minor', color='0.3')
+    pyplot.xlabel(xlabel, fontsize=20)
+    pyplot.ylabel(ylabel, fontsize=20)
+    pyplot.tick_params(axis='both', which='major', labelsize=16)
+    pyplot.tick_params(axis='both', which='minor', labelsize=8)
+    pyplot.tight_layout()
+    pyplot.savefig(outpath)
+    pyplot.close()
+    return outpath
+

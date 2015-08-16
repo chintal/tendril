@@ -39,6 +39,11 @@ def get_all_serialnos(session=None):
 
 
 @with_db
+def get_serialnos_by_efield(efield=None, session=None):
+    return session.query(SerialNumber).filter_by(efield=efield).all()
+
+
+@with_db
 def get_serialno_object(sno=None, session=None):
     if sno is None:
         raise AttributeError("sno cannot be None")

@@ -332,7 +332,7 @@ class NumericalUnitBase(UnitBase):
         if neg is True:
             num = '-' + num
 
-        return num + ' ' + unit
+        return num + unit
 
     @property
     def integral_repr(self):
@@ -341,10 +341,12 @@ class NumericalUnitBase(UnitBase):
         neg = False
         if num < 0:
             neg = True
+        if num == 0:
+            return str(num) + unit
         num = str(round_to_n(float(abs(num)), 2))
         if neg is True:
             num = '-' + num
-        return num + ' ' + unit
+        return num + unit
 
     def __repr__(self):
         num, unit = self.natural_repr

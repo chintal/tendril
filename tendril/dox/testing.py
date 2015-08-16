@@ -76,3 +76,27 @@ def render_test_report(serialno=None, outfolder=None, session=None):
              }
 
     return render_pdf(stage, template, outpath)
+
+
+def render_device_summary(devicetype, outfolder=None):
+    if outfolder is None:
+        outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
+    template = os.path.join('testing', 'test_device_summary_template.tex')
+    outpath = os.path.join(outfolder, 'TEST-DEVICE-SUMMARY-' + devicetype + '.pdf')
+
+    projectfolder = projects.cards[devicetype]
+    gcf = ConfigsFile(projectfolder)
+
+    summary = analysis.get_device_test_summary(devicetype=devicetype)
+    graphs = summary.graphs
+
+    stage = {
+             'devicetype': devicetype,
+             'desc': gcf.description(devicetype),
+             'svnrevision': vcs.get_path_revision(projectfolder),
+             'svnrepo': vcs.get_path_repository(projectfolder),
+             'graphs': graphs,
+             'collector': summary
+             }
+
+    return render_pdf(stage, template, outpath)

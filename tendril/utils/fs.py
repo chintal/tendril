@@ -74,6 +74,10 @@ if tempfile.tempdir is None:
 TEMPDIR = tempfile.gettempdir()
 
 
+def get_tempname():
+    return next(tempfile._get_candidate_names())
+
+
 def zipdir(path, zfpath):
     """
     Creates a zip file at ``zfpath`` containing all the files in ``path``.
