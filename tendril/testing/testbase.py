@@ -22,10 +22,11 @@ See the COPYING, README, and INSTALL files for more information
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
-# TODO  Replace with colorama or so for both
-from tendril.utils.progressbar import terminal
 import arrow
 from collections import namedtuple
+
+# TODO  Replace with colorama or so
+from tendril.utils.progressbar import terminal
 
 TestLine = namedtuple('TestLine', ['desc', 'expected', 'measured'])
 
@@ -203,6 +204,11 @@ class TestBase(RunnableTest):
     @property
     def graphs(self):
         return []
+
+    @staticmethod
+    def _make_graph(*args, **kwargs):
+        from tendril.dox.render import make_graph
+        return make_graph(*args, **kwargs)
 
     @staticmethod
     def _pr_repr(string):

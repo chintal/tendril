@@ -328,7 +328,7 @@ class NumericalUnitBase(UnitBase):
         neg = False
         if num < 0:
             neg = True
-        num = str(round_to_n(float(abs(num)), 6))
+        num = str(round_to_n(float(abs(num)), 5))
         if neg is True:
             num = '-' + num
 

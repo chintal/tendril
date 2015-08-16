@@ -24,10 +24,11 @@ logger = log.get_logger(__name__, log.INFO)
 
 import os
 import subprocess
-
 import jinja2
+
 import matplotlib
-matplotlib.use('PDF')
+matplotlib.use('Agg')
+from matplotlib import pyplot
 
 from tendril.utils.config import DOX_TEMPLATE_FOLDER
 from tendril.utils.config import COMPANY_LOGO_PATH
@@ -106,6 +107,7 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
 
 
 def render_lineplot(outf, plotdata, title, note):
+    # Deprecated ?
     curvenames = []
     ylists = []
     xlists = []
@@ -158,3 +160,22 @@ def render_lineplot(outf, plotdata, title, note):
     pl.savefig(outf, format='pdf')
     pl.clf()
     return outf
+
+
+def make_graph(outpath, plotdata_y, plotdata_x=None,
+               color='black', lw=2, marker=None,
+               xscale='linear', yscale='linear',
+               xlabel='', ylabel=''):
+    pyplot.plot(plotdata_x, plotdata_y, color=color, lw=lw, marker=marker)
+    pyplot.xscale(xscale)
+    pyplot.yscale(yscale)
+    pyplot.grid(True, which='major', color='0.3', linestyle='-')
+    pyplot.grid(True, which='minor', color='0.3')
+    pyplot.xlabel(xlabel, fontsize=20)
+    pyplot.ylabel(ylabel, fontsize=20)
+    pyplot.tick_params(axis='both', which='major', labelsize=16)
+    pyplot.tick_params(axis='both', which='minor', labelsize=8)
+    pyplot.tight_layout()
+    pyplot.savefig(outpath)
+    pyplot.close()
+    return outpath

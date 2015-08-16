@@ -49,7 +49,7 @@ def render_test_report(serialno=None, outfolder=None, session=None):
         outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
 
     template = os.path.join('testing', 'test_report_template.tex')
-    outpath = os.path.join(outfolder, 'test_report_' + serialno.sno + '.pdf')
+    outpath = os.path.join(outfolder, 'TEST-REPORT-' + serialno.sno + '.pdf')
 
     devicetype = serialnos.get_serialno_efield(sno=serialno.sno, session=session)
     projectfolder = projects.cards[devicetype]
@@ -57,9 +57,12 @@ def render_test_report(serialno=None, outfolder=None, session=None):
 
     suites = analysis.get_test_suite_objects(serialno=serialno.sno, session=session)
     graphs = []
+    instruments = {}
     for suite in suites:
         for test in suite._tests:
             graphs.extend(test.graphs)
+            if test._inststr is not None and test._inststr not in instruments.keys():
+                instruments[test._inststr] = len(instruments.keys()) + 1
 
     stage = {'suites': [x.render_dox() for x in suites],
              'sno': serialno.sno,
@@ -68,9 +71,8 @@ def render_test_report(serialno=None, outfolder=None, session=None):
              'desc': gcf.description(devicetype),
              'svnrevision': vcs.get_path_revision(projectfolder),
              'svnrepo': vcs.get_path_repository(projectfolder),
-             'graphs': graphs
+             'graphs': graphs,
+             'instruments': instruments
              }
 
     return render_pdf(stage, template, outpath)
-
-

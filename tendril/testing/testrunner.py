@@ -24,6 +24,7 @@ import copy
 
 from tendril.entityhub import serialnos
 from tendril.entityhub import projects
+from tendril.entityhub import macs
 
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.gedaif.conffile import NoGedaProjectException
@@ -166,4 +167,9 @@ def run_test(serialno=None):
 
 
 if __name__ == '__main__':
-    run_test(sys.argv[1])
+    if sys.argv[1] == 'detect':
+        mactype = sys.argv[2]
+        serialno = macs.get_device_mac(mactype)
+    else:
+        serialno = sys.argv[1]
+    run_test(serialno)

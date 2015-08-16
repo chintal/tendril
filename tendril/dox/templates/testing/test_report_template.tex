@@ -102,10 +102,8 @@
 \rowcolor[gray]{0.9} & \normalsize\textbf{%{{ suite.desc %}}} & \textbf{%{{ suite.title %}}} & {\footnotesize %{{ suite.ts %}}} & \textbf{%{{ suite.passed %}}} \tabularnewline\hline
 
   %{ for test in suite.tests %}
-    %{{ loop.index %}} & %{{ test.desc %}} & %{{ test.title %}} & {\footnotesize %{{ test.ts %}}} & %{{ test.passed %}} \tabularnewline
-    %{ if test.instrument %}
-    &&{\footnotesize Instrument: %{{ test.instrument %}}}&&\tabularnewline  
-    %{ endif %}
+    %{{ loop.index %}} & %{{ test.desc %}} & %{{ test.title %}}\hfill %{ if test.instrument %}{\footnotesize Instrument: %{{ stage.instruments.get(test.instrument) %}}}%{ endif %} & {\footnotesize %{{ test.ts %}}} & %{{ test.passed %}} \tabularnewline
+    
     %{ if test.lines|length > 0 %}
     &  &  \begin{tabular}{>{\centering\arraybackslash}p{0.25\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}}
       %{ for l in test.lines %}
@@ -119,16 +117,20 @@
   %{ endfor %}
 
 %{ endfor %}
+\rowcolor[gray]{0.95} & \multicolumn{4}{l|}{\normalsize\textbf{Test Instruments}} \tabularnewline\hline
+%{ for instrument in stage.instruments|dictsort(False, 'value') %}
+  %{{ instrument.1 %}} & \multicolumn{4}{l|}{%{{ instrument.0 %}}} \tabularnewline
+%{ endfor %}
+\hline
 \end{tabularx}
 \end{center}
 
 %{ if stage.graphs|length > 0 %}
 \begin{figure}[h!]
-  %{ for graph in stage.graphs %}\begin{subfigure}[b]{0.31\textwidth}
+  %{ for graph in stage.graphs %}\begin{subfigure}[b]{0.33\textwidth}
       \includegraphics[width=\linewidth]{%{{ graph.0 %}}}
       \caption{%{{ graph.1 %}}}
-    \end{subfigure}%
-    \qquad %{ endfor %}
+    \end{subfigure}\hspace{0.005\textwidth}%{ endfor %}%
 \end{figure}
 %{ endif %}
 
