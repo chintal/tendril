@@ -22,8 +22,12 @@ See the COPYING, README, and INSTALL files for more information
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
+import os
 import arrow
 from collections import namedtuple
+
+from tendril.utils.fs import TEMPDIR
+from tendril.utils.fs import get_tempname
 
 # TODO  Replace with colorama or so
 from tendril.utils.progressbar import terminal
@@ -218,12 +222,31 @@ class TestBase(RunnableTest):
 
     @property
     def graphs(self):
-        return []
+        return self._make_graphs()
+
+    @staticmethod
+    def get_new_graph_path():
+        return os.path.join(TEMPDIR, 'graph' + get_tempname() + '.png')
 
     @staticmethod
     def _make_graph(*args, **kwargs):
         from tendril.dox.render import make_graph
         return make_graph(*args, **kwargs)
+
+    def _get_graphs_data(self):
+        return []
+
+    @property
+    def graphs_data(self):
+        return self._get_graphs_data()
+
+    def _make_graphs(self):
+        rval = []
+        for plotdata_x, plotdata_y, params, title in self._get_graphs_data():
+            plt_path = self.get_new_graph_path()
+            self._make_graph(plt_path, plotdata_y, plotdata_x, **params)
+            rval.append((plt_path, title))
+        return rval
 
     @staticmethod
     def _pr_repr(string):

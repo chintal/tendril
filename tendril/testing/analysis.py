@@ -24,6 +24,7 @@ from testbase import TestSuiteBase
 from tests import get_test_object
 from testrunner import get_electronics_test_suites
 
+from matplotlib import pyplot
 
 rex_class = re.compile(ur'^<class \'(?P<cl>[a-zA-Z0-9.]+)\'>$')
 
@@ -76,6 +77,43 @@ def get_test_suite_objects(serialno=None, session=None):
         suites.append(suite_obj)
 
     return suites
+
+
+class ResultGraphCollector(object):
+    def __init__(self, dummy_graph, parent):
+        self._parent = parent
+        a, b, self._dummy_graph_params, self._dummy_graph_title = dummy_graph
+        self._collected = []
+
+    def add_graph(self, graph):
+        self._collected.append(graph)
+
+    def _make_graph(self, color='black', lw=2, marker=None,
+                    xscale='linear', yscale='linear',
+                    xlabel='', ylabel=''):
+        outpath = os.path.join(TEMPDIR, 'GRAPH_GROUP_' + get_tempname() + '.png')
+        for graph in self._collected:
+            pyplot.plot(graph[0], graph[1], color=color, lw=lw, marker=marker)
+        pyplot.xscale(xscale)
+        pyplot.yscale(yscale)
+        pyplot.grid(True, which='major', color='0.3', linestyle='-')
+        pyplot.grid(True, which='minor', color='0.3')
+        pyplot.xlabel(xlabel, fontsize=20)
+        pyplot.ylabel(ylabel, fontsize=20)
+        pyplot.tick_params(axis='both', which='major', labelsize=16)
+        pyplot.tick_params(axis='both', which='minor', labelsize=8)
+        pyplot.tight_layout()
+        pyplot.savefig(outpath)
+        pyplot.close()
+        return outpath
+
+    def _make_graphs(self):
+        outpath = self._make_graph(**self._dummy_graph_params)
+        return outpath, self._dummy_graph_title
+
+    @property
+    def graphs(self):
+        return [self._make_graphs()]
 
 
 class ResultLineCollector(object):
@@ -155,11 +193,14 @@ class ResultLineCollector(object):
 class ResultTestCollector(object):
     def __init__(self, dummy_test):
         self._line_collectors = []
+        self._graph_collectors = []
         self._dummy_test = dummy_test
         self._total_count = 0
         self._passed_count = 0
         for line in dummy_test.lines:
             self._line_collectors.append(ResultLineCollector(line, self))
+        for graph in dummy_test.graphs_data:
+            self._graph_collectors.append(ResultGraphCollector(graph, self))
 
     @property
     def classname(self):
@@ -182,11 +223,14 @@ class ResultTestCollector(object):
             self._passed_count += 1
             for idx, line in enumerate(test.lines):
                 self._line_collectors[idx].add_line(line)
+            for idx, graph in enumerate(test.graphs_data):
+                self._graph_collectors[idx].add_graph(graph)
 
     @property
     def graphs(self):
         rval = []
-        # add averaged test graphs here
+        for collectors in self._graph_collectors:
+            rval.extend(collectors.graphs)
         for collectors in self._line_collectors:
             rval.extend(collectors.graphs)
         return rval
