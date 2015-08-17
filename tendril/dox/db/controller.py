@@ -41,7 +41,8 @@ def get_sno_documents(serialno=None, session=None):
 
 
 @with_db
-def register_document(serialno=None, docpath=None, doctype=None, efield=None, session=None):
+def register_document(serialno=None, docpath=None, doctype=None,
+                      efield=None, clobber=True, session=None):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
     if docpath is None:
@@ -52,10 +53,22 @@ def register_document(serialno=None, docpath=None, doctype=None, efield=None, se
     if not isinstance(serialno, SerialNumber):
         serialno = serialnos.get_serialno_object(sno=serialno, session=session)
 
-    dobj = DocStoreDocument(docpath=docpath, doctype=doctype, efield=efield,
-                            serialno_id=serialno.id, serialno=serialno)
-    session.add(dobj)
-    session.flush()
+    try:
+        q = session.query(DocStoreDocument).filter_by(serialno=serialno, docpath=docpath)
+        existing = q.one()
+    except NoResultFound:
+        # default does not exist yet, so add it...
+        session.add(DocStoreDocument(docpath=docpath, doctype=doctype, efield=efield,
+                                     serialno_id=serialno.id, serialno=serialno))
+    else:
+        if clobber is True:
+            existing.serialno = serialno
+            existing.doctype = doctype
+            existing.docpath = docpath
+            existing.efield = efield
+            session.add(existing)
+        else:
+            raise ValueError("Document already exists, and clobber is False")
 
 
 @with_db

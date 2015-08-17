@@ -68,6 +68,7 @@ setup(
         'matplotlib',  # Pulls in numpy!
         'dataset',     # Replace with db instead?
         'splinter',    # Replace with direct selenium usage
+        'scipy',       # Is linspace really worth this?
 
         # Extracted Modules
         'driver2200087',

@@ -1,3 +1,4 @@
+# coding=utf-8
 # Copyright (C) 2015 Chintalagiri Shashank
 #
 # This file is part of Tendril.
@@ -25,6 +26,10 @@ logger = log.get_logger(__name__, log.INFO)
 import os
 import subprocess
 import jinja2
+
+import numpy
+from scipy import linspace
+import array
 
 import matplotlib
 matplotlib.use('Agg')
@@ -181,13 +186,61 @@ def make_graph(outpath, plotdata_y, plotdata_x=None,
     return outpath
 
 
-def make_histogram(outpath, plotdata_y,
-                   bins=30, color='red',
-                   xlabel='', ylabel='',
-                   x_range=None):
+def get_optimum_bins(plotdata_y):
+    """
+    Histogram Binwidth Optimization Method
+
+    ::
+
+        Shimazaki and Shinomoto, Neural Comput 19 1503-1527, 2007
+        2006 Author Hideaki Shimazaki, Matlab
+        Department of Physics, Kyoto University
+        shimazaki at ton.scphys.kyoto-u.ac.jp
+
+    This implementation based on the version in python
+    written by Érbet Almeida Costa
+
+    :param plotdata_y: The data for which a histogram is to be made
+    :return: The optimal number of bins
+    """
+
+    max_p = max(plotdata_y)
+    min_p = min(plotdata_y)
+    n_min = 4
+    n_max = 50
+    n = range(n_min, n_max)
+
+    # Number of Bins array
+    n = numpy.array(n)
+    # Bin Size Vector
+    d = (max_p - min_p) / n
+
+    c = numpy.zeros(shape=(numpy.size(d), 1))
+
+    # Computation of the cost function
+    for i in xrange(numpy.size(n)):
+        edges = linspace(min_p, max_p, n[i]+1)  # Bin edges
+        ki = pyplot.hist(plotdata_y, edges)     # Count # of events in bins
+        ki = ki[0]
+        k = numpy.mean(ki)                      # Mean of event count
+        v = sum((ki - k) ** 2) / n[i]           # Variance of event count
+        c[i] = (2 * k - v) / ((d[i]) ** 2)      # The cost Function
+
+    # Optimal Bin Size Selection
+    cmin = min(c)
+    idx = numpy.where(c == cmin)
+    idx = int(idx[0])
+    pyplot.close()
+    return n[idx]
+
+
+def make_histogram(outpath, plotdata_y, bins=None, color='red',
+                   xlabel='', ylabel='', x_range=None):
+    if bins is None:
+        bins = get_optimum_bins(plotdata_y)
     pyplot.hist(plotdata_y, bins=bins, color=color, range=x_range)
-    pyplot.grid(True, which='major', color='0.3', linestyle='-')
-    pyplot.grid(True, which='minor', color='0.3')
+    pyplot.grid(True, which='major', linestyle='-')
+    pyplot.grid(True, which='minor')
     pyplot.xlabel(xlabel, fontsize=20)
     pyplot.ylabel(ylabel, fontsize=20)
     pyplot.tick_params(axis='both', which='major', labelsize=16)

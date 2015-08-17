@@ -99,4 +99,4 @@ def render_device_summary(devicetype, outfolder=None):
              'collector': summary
              }
 
-    return render_pdf(stage, template, outpath)
+    return render_pdf(stage, template, outpath, remove_sources=False)

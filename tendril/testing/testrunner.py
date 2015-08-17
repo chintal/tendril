@@ -141,7 +141,7 @@ def commit_test_results(suites):
 def publish_and_print(serialno, devicetype, print_to_paper=False):
     from tendril.dox import testing
     pdfpath = testing.render_test_report(serialno=serialno)
-    register_document(serialno, docpath=pdfpath,
+    register_document(serialno=serialno, docpath=pdfpath,
                       doctype='TEST-RESULT', efield=devicetype,
                       series='TEST/' + serialnos.get_series(sno=serialno))
     if print_to_paper:
@@ -163,14 +163,16 @@ def run_test(serialno=None):
 
     suites = run_electronics_test(serialno, devicetype, projectfolder)
 
-    user_input = raw_input("Commit Results [y/n] ?: ").strip()
+    user_input = raw_input("Discard Results [y/N] ?: ").strip()
     if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
+        return suites
+    else:
         commit_test_results(suites)
 
     for suite in suites:
         suite.finish()
 
-    user_input = raw_input("Print to Paper [y/n] ?: ").strip()
+    user_input = raw_input("Print to Paper [y/N] ?: ").strip()
     if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
         publish_and_print(serialno, devicetype, print_to_paper=True)
     else:
@@ -182,7 +184,7 @@ def run_test(serialno=None):
 if __name__ == '__main__':
     if sys.argv[1] == 'detect':
         mactype = sys.argv[2]
-        sno = macs.get_device_mac(mactype)
+        sno = macs.get_sno_from_device(mactype)
     else:
         sno = sys.argv[1]
     run_test(sno)
