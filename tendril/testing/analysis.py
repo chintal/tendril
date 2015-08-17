@@ -191,12 +191,13 @@ class ResultLineCollector(object):
 
 
 class ResultTestCollector(object):
-    def __init__(self, dummy_test):
+    def __init__(self, dummy_test, include_failed=False):
         self._line_collectors = []
         self._graph_collectors = []
         self._dummy_test = dummy_test
         self._total_count = 0
         self._passed_count = 0
+        self._include_failed = include_failed
         for line in dummy_test.lines:
             self._line_collectors.append(ResultLineCollector(line, self))
         for graph in dummy_test.graphs_data:
@@ -221,6 +222,7 @@ class ResultTestCollector(object):
         self._total_count += 1
         if test.passed is True:
             self._passed_count += 1
+        if self._include_failed is True or test.passed is True:
             for idx, line in enumerate(test.lines):
                 self._line_collectors[idx].add_line(line)
             for idx, graph in enumerate(test.graphs_data):
@@ -249,13 +251,14 @@ class ResultTestCollector(object):
 
 
 class ResultSuiteCollector(object):
-    def __init__(self, dummy_suite):
+    def __init__(self, dummy_suite, include_failed=False):
         self._test_collectors = []
         self._dummy_suite = dummy_suite
         self._total_count = 0
         self._passed_count = 0
         for test in dummy_suite.tests:
-            self._test_collectors.append(ResultTestCollector(test))
+            self._test_collectors.append(ResultTestCollector(test,
+                                                             include_failed=include_failed))
 
     def get_collector(self, name, desc):
         rval = []
@@ -314,10 +317,11 @@ class ResultSuiteCollector(object):
 
 
 class ResultCollector(object):
-    def __init__(self, dummy_suites):
+    def __init__(self, dummy_suites, include_failed=False):
         self._suite_collectors = []
         for suite in dummy_suites:
-            self._suite_collectors.append(ResultSuiteCollector(suite))
+            self._suite_collectors.append(ResultSuiteCollector(suite,
+                                                               include_failed=include_failed))
 
     def add_suites_set(self, suites):
         for idx, suite in enumerate(suites):
@@ -336,7 +340,7 @@ class ResultCollector(object):
 
 
 @with_db
-def get_device_test_summary(devicetype=None, session=None):
+def get_device_test_summary(devicetype=None, include_failed=False, session=None):
     projectfolder = projects.cards[devicetype]
     bomobj = import_pcb(cardfolder=projectfolder)
     bomobj.configure_motifs(devicetype)
@@ -348,7 +352,7 @@ def get_device_test_summary(devicetype=None, session=None):
     for suite in dummy_suites:
         suite.dummy = True
 
-    collector = ResultCollector(dummy_suites)
+    collector = ResultCollector(dummy_suites, include_failed=include_failed)
 
     snos = sno_controller.get_serialnos_by_efield(efield=devicetype,
                                                   session=session)

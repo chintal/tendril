@@ -29,7 +29,6 @@ import jinja2
 
 import numpy
 from scipy import linspace
-import array
 
 import matplotlib
 matplotlib.use('Agg')

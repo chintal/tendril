@@ -78,7 +78,7 @@ def render_test_report(serialno=None, outfolder=None, session=None):
     return render_pdf(stage, template, outpath)
 
 
-def render_device_summary(devicetype, outfolder=None):
+def render_device_summary(devicetype, include_failed=False, outfolder=None):
     if outfolder is None:
         outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
     template = os.path.join('testing', 'test_device_summary_template.tex')
@@ -87,7 +87,8 @@ def render_device_summary(devicetype, outfolder=None):
     projectfolder = projects.cards[devicetype]
     gcf = ConfigsFile(projectfolder)
 
-    summary = analysis.get_device_test_summary(devicetype=devicetype)
+    summary = analysis.get_device_test_summary(devicetype=devicetype,
+                                               include_failed=include_failed)
     graphs = summary.graphs
 
     stage = {
