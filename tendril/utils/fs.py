@@ -52,6 +52,7 @@ import atexit
 import os
 import glob
 import string
+import hashlib
 from datetime import datetime
 from collections import namedtuple
 
@@ -178,6 +179,17 @@ def get_file_mtime(f):
         return datetime.fromtimestamp(os.path.getmtime(f))
     except OSError:
         return None
+
+
+def get_file_hash(filepath, hasher=None, blocksize=65536):
+    if hasher is None:
+        hasher = hashlib.sha256()
+    with open(filepath, 'rb') as afile:
+        buf = afile.read(blocksize)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = afile.read(blocksize)
+    return hasher.hexdigest()
 
 
 class VersionedOutputFile:
