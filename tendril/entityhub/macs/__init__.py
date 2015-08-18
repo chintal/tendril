@@ -90,18 +90,23 @@ def get_sno_from_mac(mac=None, mactype=None, devicetype=None, session=None):
     return func(mac=mac, session=session)
 
 
-def get_device_mac(mactype='QASCv1'):
+def get_device_mac(mactype='QASCv1', **kwargs):
     if mactype == 'QASCv1':
         funcname = 'get_device_mac'
         modname = mactype
+        params = {}
+    elif mactype == 'FT232DEVICEv1':
+        funcname = 'get_device_mac'
+        modname = mactype
+        params = {'description': kwargs['description']}
     else:
         raise ValueError("Unrecognized MACTYPE")
 
     mod = import_(os.path.join(macs_folder, modname))
     func = getattr(mod, funcname)
-    return func()
+    return func(**params)
 
 
-def get_sno_from_device(mactype='QASCv1'):
-    mac = get_device_mac(mactype)
+def get_sno_from_device(mactype='QASCv1', **kwargs):
+    mac = get_device_mac(mactype, **kwargs)
     return get_sno_from_mac(mac=mac, mactype=mactype)
