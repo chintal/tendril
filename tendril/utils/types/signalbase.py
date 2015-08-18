@@ -20,6 +20,8 @@ from tendril.utils.types.time import timestamp_factory
 from tendril.utils.types.time import TimeStamp
 from tendril.utils.types.time import TimeDelta
 
+from tendril.utils.types.unitbase import Percentage
+
 from collections import deque
 import copy
 
@@ -71,9 +73,14 @@ class SignalPoint(SignalBase):
 class SignalWave(SignalBase):
     def __init__(self, unitclass, points=None, spacing=None, ts0=None,
                  interpolation="piecewise_linear", buffer_size=None,
-                 use_point_ts=True):
+                 use_point_ts=True, stabilization_length=10, stabilization_pc='1pc'):
         super(SignalWave, self).__init__(unitclass)
 
+        self._stabilization_length = stabilization_length
+        if isinstance(stabilization_pc, Percentage):
+            self._stabilization_pc = stabilization_pc
+        else:
+            self._stabilization_pc = Percentage(stabilization_pc)
         self._buffer_size = buffer_size
         self._use_point_ts = use_point_ts
 
@@ -112,6 +119,14 @@ class SignalWave(SignalBase):
             else:
                 return None
         return self._points[-1][0]
+
+    @property
+    def is_stable(self):
+        lval = self._points[-1][1].value
+        for i in range(self._stabilization_length):
+            if abs(self._points[-2-i][1].value - lval) > lval * self._stabilization_pc:
+                return False
+        return True
 
     @property
     def points(self):

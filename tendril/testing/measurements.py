@@ -108,7 +108,7 @@ class TestSimpleMeasurement(TestMeasurementBase):
             if self._inputchannel is None:
                 raise IOError("Input channel is not defined")
             self._input = self._inputchannel.get()
-            if self._input.unitclass and not self._input.unitclass == self._inputtype:
+            if self._input.unitclass is not None and not self._input.unitclass == self._inputtype:
                 raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
 
         self._ts = arrow.utcnow()
@@ -137,29 +137,29 @@ class DCVoltageMeasurement(TestSimpleMeasurement):
         self._inputtype = None
         self._inputchannel = None
 
-    def do_measurement(self):
-        """
-        This function is present only because the instrument return value is not of a
-        SignalPoint Type. Instrument classes should be changed to use Signal Point type
-        instead and this class should fall back to the parent's implementation.
-        """
-        logger.debug("Making measurement : " + repr(self))
-        if self._output is not None:
-            if self._outputchannel is None:
-                raise IOError("Output channel is not defined")
-            self._outputchannel.set(self._output)
-
-        if self.stime is not None:
-            time.sleep(self.stime)
-
-        if self._inputtype is not None:
-            if self._inputchannel is None:
-                raise IOError("Input channel is not defined")
-            self._input = self._inputchannel.get()
-            # if self._input.unitclass and not self._input.unitclass == self._inputtype:
-            #     raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
-        logger.info("Measured Voltage: " + repr(self._input))
-        self._ts = arrow.utcnow()
+    # def do_measurement(self):
+    #     """
+    #     This function is present only because the instrument return value is not of a
+    #     SignalPoint Type. Instrument classes should be changed to use Signal Point type
+    #     instead and this class should fall back to the parent's implementation.
+    #     """
+    #     logger.debug("Making measurement : " + repr(self))
+    #     if self._output is not None:
+    #         if self._outputchannel is None:
+    #             raise IOError("Output channel is not defined")
+    #         self._outputchannel.set(self._output)
+    #
+    #     if self.stime is not None:
+    #         time.sleep(self.stime)
+    #
+    #     if self._inputtype is not None:
+    #         if self._inputchannel is None:
+    #             raise IOError("Input channel is not defined")
+    #         self._input = self._inputchannel.get()
+    #         # if self._input.unitclass and not self._input.unitclass == self._inputtype:
+    #         #     raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
+    #     logger.info("Measured Voltage: " + repr(self._input))
+    #     self._ts = arrow.utcnow()
 
     @property
     def parent(self):
