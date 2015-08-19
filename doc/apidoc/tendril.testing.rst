@@ -1,5 +1,5 @@
 tendril.testing package
-=====================
+=======================
 
 Subpackages
 -----------
@@ -20,6 +20,7 @@ Submodules
    tendril.testing.measurements
    tendril.testing.testbase
    tendril.testing.testrunner
+   tendril.testing.analysis
 
 Module contents
 ---------------

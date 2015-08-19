@@ -1,5 +1,5 @@
 tendril.scripts package
-=====================
+=======================
 
 Submodules
 ----------
@@ -14,6 +14,8 @@ Submodules
    tendril.scripts.order
    tendril.scripts.production
    tendril.scripts.validate
+   tendril.scripts.makelabels
+   tendril.scripts.testresult
 
 Module contents
 ---------------

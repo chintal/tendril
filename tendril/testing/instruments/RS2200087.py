@@ -17,7 +17,7 @@
 
 """
 RadioShack 2200087 DMM Interface Module (:mod:`tendril.testing.instruments.RS2200087`)
-====================================================================================
+======================================================================================
 
 This module provides the instrument object for RadioShack's 2200087 Digital
 Multimeter with PC interface. It uses the :mod:`driver2200087` module to
