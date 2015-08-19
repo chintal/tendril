@@ -360,8 +360,8 @@ class DummyUnit(UnitBase):
 
     Does not support any arithmetic operations.
     """
-    def __init__(self):
-        super(DummyUnit, self).__init__(None, None, None)
+    def __init__(self, value=None):
+        super(DummyUnit, self).__init__(value, None, None)
 
     def __add__(self, other):
         raise NotImplementedError

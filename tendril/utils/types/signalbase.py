@@ -73,7 +73,7 @@ class SignalPoint(SignalBase):
 class SignalWave(SignalBase):
     def __init__(self, unitclass, points=None, spacing=None, ts0=None,
                  interpolation="piecewise_linear", buffer_size=None,
-                 use_point_ts=True, stabilization_length=10, stabilization_pc='1pc'):
+                 use_point_ts=True, stabilization_length=5, stabilization_pc='1pc'):
         super(SignalWave, self).__init__(unitclass)
 
         self._stabilization_length = stabilization_length
@@ -121,12 +121,27 @@ class SignalWave(SignalBase):
         return self._points[-1][0]
 
     @property
+    def stabilization_length(self):
+        return self._stabilization_length
+
+    @property
     def is_stable(self):
         lval = self._points[-1][1].value
-        for i in range(self._stabilization_length):
-            if abs(self._points[-2-i][1].value - lval) > lval * self._stabilization_pc:
+        for i in range(self.stabilization_length):
+            if abs(self._points[-1-i][1].value - lval) > abs(lval * self._stabilization_pc):
                 return False
         return True
+
+    @property
+    def stabilized_value(self):
+        acc = 0
+        for i in range(self.stabilization_length):
+            acc += self._points[-1-i][1].value
+        return acc / self.stabilization_length
+
+    @property
+    def latest_point(self):
+        return self._points[-1][1].value
 
     @property
     def points(self):

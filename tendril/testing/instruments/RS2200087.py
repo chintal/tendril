@@ -34,6 +34,7 @@ integration with Tendril's :mod:`tendril.testing` module.
 >>> setup()
 >>> from tendril.testing.instruments import get_instrument_object
 >>> o = get_instrument_object('RS2200087')
+>>> o.connect()
 >>> o.channel.get()
 >>> o.channel.reset_wave()
 >>> wave = o.channel.get_next_chunk()
@@ -97,6 +98,8 @@ from tendril.testing.instrumentbase import InstrumentInputChannelBase
 
 from decimal import Decimal
 from decimal import InvalidOperation
+
+from twisted.internet.protocol import connectionDone
 
 
 def voltage_processor(m):
@@ -379,12 +382,23 @@ class TendrilProtocol2200087(InstProtocol2200087):
         :param unitclass: Class of Unit that the Wave points are composed of.
 
         """
-        logger.debug("Resetting buffer to type : " + repr(unitclass))
+        # logger.debug("Resetting buffer to type : " + repr(unitclass))
         self.point_buffer = SignalWave(unitclass,
                                        spacing=TimeDelta(microseconds=100000),
                                        ts0=timestamp_factory.now(),
                                        buffer_size=1000,
                                        use_point_ts=False)
+
+    def connectionLost(self, reason=connectionDone):
+        """
+        This function is called by twisted when the connection to the
+        serial transport is lost.
+        """
+        if reason == connectionDone:
+            return
+        else:
+            print "Lost Connection to Device"
+            print reason
 
     def next_chunk(self):
         """
@@ -402,8 +416,7 @@ class TendrilProtocol2200087(InstProtocol2200087):
                                        use_point_ts=rval._use_point_ts)
         return rval
 
-    @staticmethod
-    def _get_point(string):
+    def _get_point(self, string):
         """
         Processes a string returned by :mod:`driver2200087.serialDecoder` and converts it into
         a :class:`tendril.utils.types.signalbase.SignalPoint` instance composed of the correct
@@ -427,7 +440,7 @@ class TendrilProtocol2200087(InstProtocol2200087):
                 try:
                     return SignalPoint(rex[0], rstring)
                 except (InvalidOperation, ValueError):
-                    logger.error("Unable to make unit from string : " + rstring + " : " + repr(rex[0]))
+                    # logger.error("Unable to make unit from string : " + rstring + " : " + repr(rex[0]))
                     return SignalPoint(rex[0], 0)
         raise ValueError("String not recognized : " + string)
 
@@ -572,6 +585,12 @@ class InstrumentRS2200087(InstrumentBase):
         self._dmm = InstInterface2200087(pfactory=factory)
         self._dmm.connect()
         self._channels = [DMMInputChannel(self, self._dmm)]
+
+    def disconnect(self):
+        self._dmm.disconnect()
+
+    def data_available(self):
+        return self._dmm.data_available()
 
     def configure(self, configuration):
         raise NotImplementedError
