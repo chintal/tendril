@@ -129,8 +129,8 @@ class EntityElnComp(EntityBase):
     @property
     def ident(self):
         return tendril.conventions.electronics.ident_transform(self.device,
-                                                             self.value,
-                                                             self.footprint)
+                                                               self.value,
+                                                               self.footprint)
 
     @property
     def device(self):

@@ -122,7 +122,7 @@ class ConfigsFile(object):
 
     def get_configsections(self):
         if 'configsections' not in self.configdata.keys():
-            return []
+            return None
         rval = []
         for configsection in self.configdata['configsections']:
             rval.append(configsection["sectionname"])
@@ -147,7 +147,7 @@ class ConfigsFile(object):
                     for configsection in self.get_configsections():
                         sec_confname = configuration["config"][configsection]
                         rval = rval + self.get_sec_groups(configsection, sec_confname)
-                except AttributeError:
+                except TypeError:
                     rval = ["default"]
                     try:
                         for group in configuration["grouplist"]:

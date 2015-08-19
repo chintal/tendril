@@ -97,6 +97,8 @@ class RunnableTest(object):
 
     @property
     def serialno(self):
+        # override_sno = "QTJDT7SL"
+        # return override_sno
         if self._serialno is not None:
             return self._serialno
         else:
@@ -158,6 +160,10 @@ class TestBase(RunnableTest):
         self._bom_object = None
         self._offline = offline
         self._inststr = None
+
+    @property
+    def offline(self):
+        return self._offline
 
     def add_measurement(self, measurement):
         measurement.parent = self
