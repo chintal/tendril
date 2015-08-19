@@ -89,7 +89,7 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
             add_prep_steps_from_cnf_prep(suite, suite_detail['prep'])
         if 'group-tests' in suite_detail.keys():
             cnf_groups = suite_detail['group-tests']
-            cnf_grouplist = gcf.grouplist(devicetype)
+            cnf_grouplist = gcf.config_grouplist(devicetype)
             for cnf_group in cnf_groups:
                 if len(cnf_suite.keys()) != 1:
                     raise ValueError("Group test configurations are "

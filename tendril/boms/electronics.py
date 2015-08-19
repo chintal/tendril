@@ -209,68 +209,47 @@ class EntityElnGroup(EntityGroupBase):
 
 
 class EntityElnBomConf(object):
-    def __init__(self, configdata):
+    def __init__(self, configfile):
         super(EntityElnBomConf, self).__init__()
+        self._configfile = configfile
+        configdata = configfile.configdata
         self.pcbname = configdata["pcbname"]
-        self.grouplist = configdata["grouplist"]
-        if "configsections" in configdata.keys():
-            self.configsections = configdata["configsections"]
-        else:
-            self.configsections = None
-        self.configurations = configdata["configurations"]
-        if "motiflist" in configdata.keys():
-            self.motiflist = configdata["motiflist"]
-        else:
-            self.motiflist = None
-        if "sjlist" in configdata.keys():
-            self.sjlist = configdata["sjlist"]
-        else:
-            self.sjlist = {}
         self.rawconfig = configdata
+
+    @property
+    def grouplist(self):
+        return self._configfile.grouplist
+
+    @property
+    def motiflist(self):
+        return self._configfile.motiflist
+
+    @property
+    def sjlist(self):
+        return self._configfile.sjlist
+
+    @property
+    def configurations(self):
+        return self._configfile.configurations
+
+    @property
+    def configsections(self):
+        return self._configfile.configsections
 
     def get_configurations(self):
         rval = []
         for configuration in self.configurations:
             rval.append(configuration["configname"])
         return rval
-        pass
 
     def get_configsections(self):
-        if self.configsections is None:
-            raise AttributeError
-        rval = []
-        for configsection in self.configsections:
-            rval.append(configsection["sectionname"])
-        return rval
+        return self._configfile.get_configsections
 
     def get_sec_groups(self, sectionname, config):
-        rval = []
-        for section in self.configsections:
-            if section["sectionname"] == sectionname:
-                for configuration in section["configurations"]:
-                    if configuration["configname"] == config:
-                        for group in configuration["groups"]:
-                            if group is not None:
-                                rval.append(group)
-        return rval
+        return self._configfile.get_sec_groups(sectionname, config)
 
     def get_configuration(self, configname):
-        rval = ["default"]
-        for configuration in self.configurations:
-            if configuration["configname"] == configname:
-                try:
-                    for configsection in self.get_configsections():
-                        sec_confname = configuration["config"][configsection]
-                        rval = rval + self.get_sec_groups(configsection, sec_confname)
-                except AttributeError:
-                    rval = ["default"]
-                    try:
-                        for group in configuration["grouplist"]:
-                            if group != "default":
-                                rval = rval + [group]
-                    except:
-                        raise AttributeError
-        return rval
+        return self._configfile.grouplist(configname)
 
     def get_configuration_motifs(self, configname):
         for configuration in self.configurations:
@@ -321,7 +300,7 @@ class EntityElnBom(EntityBomBase):
         self.projfile = configfile.configdata["projfile"]
         self.projfolder = configfile.projectfolder
 
-        self.configurations = EntityElnBomConf(configfile.configdata)
+        self.configurations = EntityElnBomConf(configfile)
         self._motifs = []
         self.create_groups()
         self.populate_bom()

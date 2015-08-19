@@ -91,22 +91,74 @@ class ConfigsFile(object):
                         rval[':'.join([motif, k])] = v
         return rval
 
-    def grouplist(self, configname):
-        for configuration in self.configdata['configurations']:
-            if configuration['configname'] == configname:
-                if 'grouplist' in configuration:
-                    rval = configuration['grouplist']
-                    if 'default' not in rval:
-                        rval.append('default')
-                    return rval
-        raise AttributeError('Configuration grouplist not found')
-
-    def tests(self):
-        return self.configdata['tests']
-
     @property
     def configurations(self):
         return [x for x in self.configdata['configurations']]
+
+    @property
+    def grouplist(self):
+        return self.configdata["grouplist"]
+
+    @property
+    def motiflist(self):
+        if "motiflist" in self.configdata.keys():
+            return self.configdata["motiflist"]
+        else:
+            return []
+
+    @property
+    def sjlist(self):
+        if "sjlist" in self.configdata.keys():
+            return self.configdata["sjlist"]
+        else:
+            return {}
+
+    @property
+    def configsections(self):
+        if "configsections" in self.configdata.keys():
+            return self.configdata["configsections"]
+        else:
+            return None
+
+    def get_configsections(self):
+        if 'configsections' not in self.configdata.keys():
+            return []
+        rval = []
+        for configsection in self.configdata['configsections']:
+            rval.append(configsection["sectionname"])
+        return rval
+
+    def get_sec_groups(self, sectionname, configname):
+        rval = []
+        for section in self.configsections:
+            if section["sectionname"] == sectionname:
+                for configuration in section["configurations"]:
+                    if configuration["configname"] == configname:
+                        for group in configuration["groups"]:
+                            if group is not None:
+                                rval.append(group)
+        return rval
+
+    def config_grouplist(self, configname):
+        rval = ["default"]
+        for configuration in self.configurations:
+            if configuration["configname"] == configname:
+                try:
+                    for configsection in self.get_configsections():
+                        sec_confname = configuration["config"][configsection]
+                        rval = rval + self.get_sec_groups(configsection, sec_confname)
+                except AttributeError:
+                    rval = ["default"]
+                    try:
+                        for group in configuration["grouplist"]:
+                            if group != "default":
+                                rval = rval + [group]
+                    except:
+                        raise AttributeError
+        return rval
+
+    def tests(self):
+        return self.configdata['tests']
 
     @property
     def status(self):
