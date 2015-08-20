@@ -1,5 +1,3 @@
-tendril.dox.purchaseorder module
-==============================
 
 .. automodule:: tendril.dox.purchaseorder
     :members:

@@ -24,6 +24,8 @@ the output files after constructing the appropriate stage.
 
 .. seealso:: :mod:`tendril.dox`
 
+.. rubric:: Document Generators
+
 .. autosummary::
 
     gen_pcb_am
