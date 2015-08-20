@@ -15,6 +15,44 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+The Dox Package (:mod:`tendril.dox`)
+====================================
+
+Some documentation
+
+.. rubric:: The Dox Modules
+
+.. toctree::
+
+   tendril.dox.db
+   tendril.dox.customs
+   tendril.dox.docstore
+   tendril.dox.gedaproject
+   tendril.dox.indent
+   tendril.dox.invoice
+   tendril.dox.labelmaker
+   tendril.dox.production
+   tendril.dox.purchaseorder
+   tendril.dox.render
+   tendril.dox.testing
+   tendril.dox.wallet
+
+Inheritance Diagram
+-------------------
+
+.. inheritance-diagram::
+   tendril.dox
+   tendril.dox.db
+   tendril.dox.customs
+   tendril.dox.docstore
+   tendril.dox.gedaproject
+   tendril.dox.indent
+   tendril.dox.invoice
+   tendril.dox.labelmaker
+   tendril.dox.production
+   tendril.dox.purchaseorder
+   tendril.dox.render
+   tendril.dox.testing
+   tendril.dox.wallet
+
 """

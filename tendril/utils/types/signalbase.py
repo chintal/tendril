@@ -36,7 +36,8 @@ class SignalBase(object):
 
 
 class SignalErrorBar(object):
-    def __init__(self, quantization=None, noise_floor=None, error_pc=None):
+    def __init__(self, quantization=None, noise_floor=None,
+                 error_pc=None):
         self.quantization = quantization
         self.noise_floor = noise_floor
         self.error_pc = error_pc
@@ -67,13 +68,15 @@ class SignalPoint(SignalBase):
         self._error_bar = value
 
     def __repr__(self):
-        return "<SignalPoint at " + repr(self.timestamp) + " :: " + repr(self.value) + " >"
+        return "<SignalPoint at " + repr(self.timestamp) + \
+               " :: " + repr(self.value) + " >"
 
 
 class SignalWave(SignalBase):
     def __init__(self, unitclass, points=None, spacing=None, ts0=None,
                  interpolation="piecewise_linear", buffer_size=None,
-                 use_point_ts=True, stabilization_length=5, stabilization_pc='1pc'):
+                 use_point_ts=True, stabilization_length=5,
+                 stabilization_pc='1pc'):
         super(SignalWave, self).__init__(unitclass)
 
         self._stabilization_length = stabilization_length
@@ -101,10 +104,12 @@ class SignalWave(SignalBase):
                 self._points = points
             else:
                 if not self._use_point_ts:
-                    self._points = deque([(ts0 + idx*spacing, point) for idx, point in enumerate(points)],
+                    self._points = deque([(ts0 + idx*spacing, point)
+                                          for idx, point in enumerate(points)],
                                          maxlen=buffer_size)
                 else:
-                    self._points = deque([(point.timestamp, point) for point in points],
+                    self._points = deque([(point.timestamp, point)
+                                          for point in points],
                                          maxlen=buffer_size)
         else:
             self._points = deque(maxlen=buffer_size)
@@ -128,7 +133,8 @@ class SignalWave(SignalBase):
     def is_stable(self):
         lval = self._points[-1][1].value
         for i in range(self.stabilization_length):
-            if abs(self._points[-1-i][1].value - lval) > abs(lval * self._stabilization_pc):
+            if abs(self._points[-1-i][1].value - lval) \
+                    > abs(lval * self._stabilization_pc):
                 return False
         return True
 

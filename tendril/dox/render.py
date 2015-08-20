@@ -117,7 +117,7 @@ def jinja2_pdfinit():
     functions provided in this module. If the renderer is required, the
     instance at :data:`tendril.dox.render.renderer_pdf` can be used.
 
-    ..rubric:: Environment Information
+    .. rubric:: Environment Information
 
     The environment created here is optimised to produce latex output.
 
@@ -186,12 +186,18 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
     :return: ``outpath``
 
     .. rubric:: Stage Keys Provided
+    .. list-table::
 
-    - ``logo`` : The company logo, as specified in :data:`tendril.utils.config.COMPANY_LOGO_PATH`
-    - ``company`` : The company name, as specified in :data:`tendril.utils.config.COMPANY_NAME`
-    - ``company_email`` : The company email address, as specified in :data:`tendril.utils.config.COMPANY_EMAIL`
-    - ``company_address_line`` : The company address, as specified in :data:`tendril.utils.config.COMPANY_ADDRESS_LINE`
-    - ``company_iec`` : The company IEC, as specified in :data:`tendril.utils.config.COMPANY_IEC`
+        * - ``logo``
+          - The company logo, as specified in :data:`tendril.utils.config.COMPANY_LOGO_PATH`
+        * - ``company``
+          - The company name, as specified in :data:`tendril.utils.config.COMPANY_NAME`
+        * - ``company_email``
+          - The company email address, as specified in :data:`tendril.utils.config.COMPANY_EMAIL`
+        * - ``company_address_line``
+          - The company address, as specified in :data:`tendril.utils.config.COMPANY_ADDRESS_LINE`
+        * - ``company_iec``
+          - The company IEC, as specified in :data:`tendril.utils.config.COMPANY_IEC`
 
     """
     if not os.path.exists(template) \
