@@ -1,5 +1,3 @@
-tendril.utils.vcs module
-========================
 
 .. automodule:: tendril.utils.vcs
     :members:

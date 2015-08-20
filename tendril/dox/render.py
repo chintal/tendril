@@ -16,8 +16,31 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-Dox Render module documentation (:mod:`dox.render`)
-===================================================
+Core Dox Render Module (:mod:`tendril.dox.render`)
+==================================================
+
+This module provides the underlying rendering functions to produce PDF
+output. Other :mod:`tendril.dox` modules should use these functions to
+generate their output files.
+
+
+.. rubric:: Processors
+
+.. autosummary::
+
+    format_currency
+    escape_latex
+    jinja2_pdfinit
+
+.. rubric:: Renderers
+
+.. autosummary::
+
+    render_pdf
+    render_lineplot
+    make_graph
+    make_histogram
+
 """
 
 from tendril.utils import log
@@ -45,10 +68,33 @@ from tendril.utils.colors import tableau20
 
 
 def format_currency(value):
+    """
+    Formats a number into the correct number of decimals (2) and with
+    thousands separators ``,``, for use when rendering currencies.
+
+    This function is added to the :mod:`jinja2` PDF environment constructed by
+    :func:`jinja2_pdfinit`, and is available as a filter in jinja2 templates.
+
+    :type value: float
+    :rtype: str
+
+    """
     return "{:,.2f}".format(value)
 
 
 def escape_latex(string):
+    """
+    Escapes latex control and reserved characters from the string. It also
+    converts `None` type inputs into an empty string.
+
+    This is also where 'special' string sequences are defined to produce
+    specialized latex output, such as the conversion of ``INR`` to the
+    rupee symbol, via the latex ``\\rupee~`` command provided by ``tfrupee``.
+
+    :param string: Input string
+    :return: Latex-safe string
+
+    """
     if string is not None:
         string = string.replace('\\', '\\\\')
         string = string.replace('$', '\$')
@@ -62,6 +108,38 @@ def escape_latex(string):
 
 
 def jinja2_pdfinit():
+    """
+    Creates a :class:`jinja2.Environment`, stored in this module's
+    :data:`rendered_pdf` variable.
+
+    Application code would typically not call this function or interact
+    directly wih the renderer, and instead use the various render
+    functions provided in this module. If the renderer is required, the
+    instance at :data:`tendril.dox.render.renderer_pdf` can be used.
+
+    ..rubric:: Environment Information
+
+    The environment created here is optimised to produce latex output.
+
+    .. rubric:: Loader
+
+    :class:`jinja2.FileSystemLoader`, with it's root at
+    :data:`tendril.utils.config.DOX_TEMPLATE_FOLDER`
+
+    .. rubric:: Template Markup Strings
+
+    - Blocks:      ``%{      %}``
+    - Variables:   ``%{{    %}}``
+    - Comments:    ``%{#    %#}``
+
+    .. rubric:: Filters
+
+    - :func:`format_currency`
+    - :func:`escape_latex`
+
+    :return: The jinja2 Environment.
+
+    """
     loader = jinja2.FileSystemLoader(DOX_TEMPLATE_FOLDER)
     renderer = jinja2.Environment(block_start_string='%{',
                                   block_end_string='%}',
@@ -74,11 +152,50 @@ def jinja2_pdfinit():
     renderer.filters['escape_latex'] = escape_latex
     return renderer
 
+#: The jinja2 environment which application code
+#: can use to produce latex output.
 renderer_pdf = jinja2_pdfinit()
 
 
 def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
-    if not os.path.exists(template) and not os.path.exists(os.path.join(DOX_TEMPLATE_FOLDER, template)):
+    """
+    Render the latex output and convert it into pdf using ``pdflatex``.
+
+    The ``stage`` is a dictionary passed on to the :mod:`jinja2`
+    environment, as is available within the template. This function adds
+    some common variables to the ``stage``.
+
+    This function makes three ``pdflatex`` passes to make sure all the
+    references are resolved.
+
+    This function will remove the sources, i.e., the ``.tex`` files and
+    intermediate files produced by ``pdflatex``, after conversion. It will
+    do so after running ``pdflatex``, irrespective of the result. If the
+    raw ``.tex`` file is needed (typically for debugging templates), the
+    ``remove_sources`` parameter should be used.
+
+    :param stage: A dictionary which will be available to the template
+    :type stage: dict
+    :param template: The template file to use, either relative to the
+                     loader's template root or an absolute path.
+    :type template: str
+    :param outpath: The path to the output file (including ``.pdf``).
+    :type outpath: str
+    :param remove_sources: Whether to remove the latex files after conversion.
+    :type remove_sources: bool
+    :return: ``outpath``
+
+    .. rubric:: Stage Keys Provided
+
+    - ``logo`` : The company logo, as specified in :data:`tendril.utils.config.COMPANY_LOGO_PATH`
+    - ``company`` : The company name, as specified in :data:`tendril.utils.config.COMPANY_NAME`
+    - ``company_email`` : The company email address, as specified in :data:`tendril.utils.config.COMPANY_EMAIL`
+    - ``company_address_line`` : The company address, as specified in :data:`tendril.utils.config.COMPANY_ADDRESS_LINE`
+    - ``company_iec`` : The company IEC, as specified in :data:`tendril.utils.config.COMPANY_IEC`
+
+    """
+    if not os.path.exists(template) \
+            and not os.path.exists(os.path.join(DOX_TEMPLATE_FOLDER, template)):
         logger.error("Template not found : " + template)
         raise ValueError
     template = renderer_pdf.get_template(template)
@@ -111,7 +228,23 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
 
 
 def render_lineplot(outf, plotdata, title, note):
-    # Deprecated ?
+    """
+    Renders a lineplot to PDF. This function is presently used to generate
+    PCB pricing graphs by :mod:``tendril.sourcing.csil``. It's pretty
+    unwieldy, and is likely going to be axed at some point in favor of
+    :func:``make_graph``, once the necessary functionality is implemented
+    there and the pricing graph code is modified to use that instead.
+
+    .. warning:: This function is likely to be deprecated.
+    .. seealso:: :func:`make_graph`
+
+    :param outf: The path to the output file.
+    :param plotdata: The data to plot.
+    :param title: The title of the plot.
+    :param note: An additional note to include with the plot (not implemented)
+    :return: outf
+    """
+
     curvenames = []
     ylists = []
     xlists = []
@@ -170,6 +303,32 @@ def make_graph(outpath, plotdata_y, plotdata_x=None,
                color='black', lw=2, marker=None,
                xscale='linear', yscale='linear',
                xlabel='', ylabel=''):
+    """
+    Renders a graph of the data provided as a ``.png`` file, saved to the
+    path specified by ``outpath``. This function uses :mod:`matplotlib.pyplot`.
+
+    :param outpath: The path to the output file
+    :type outpath: str
+    :param plotdata_y: The y-axis data to plot
+    :type plotdata_y: list
+    :param plotdata_x: The x-axis data to plot, or None if a plotdata_y is a sequence
+    :type plotdata_x: :class:`list` or None
+    :param color: The color of the curve, default ``black``. See matplotlib docs.
+    :type color: str
+    :param lw: The linewidth of the curve, default ``2``. See matplotlib docs.
+    :type lw: int
+    :param marker: The marker to be used, default ``None``. See matplotlib docs.
+    :type marker: str
+    :param xscale: The scale of the x axis, default ``linear``. See matplotlib docs.
+    :type xscale: str
+    :param yscale: The scale of the y axis, default ``linear``. See matplotlib docs.
+    :type yscale: str
+    :param xlabel: The x-axis label, default ``''``
+    :type xlabel: str
+    :param ylabel: The y-axis label, default ``''``
+    :type ylabel: str
+    :return: The output path.
+    """
     pyplot.plot(plotdata_x, plotdata_y, color=color, lw=lw, marker=marker)
     pyplot.xscale(xscale)
     pyplot.yscale(yscale)
@@ -235,6 +394,28 @@ def get_optimum_bins(plotdata_y):
 
 def make_histogram(outpath, plotdata_y, bins=None, color='red',
                    xlabel='', ylabel='', x_range=None):
+    """
+    Renders a histogram of the data provided as a ``.png`` file, saved to the
+    path specified by ``outpath``. This function uses :mod:`matplotlib.pyplot`.
+
+    .. seealso:: :func:`get_optimum_bins`
+
+    :param outpath: The path to the output file
+    :type outpath: str
+    :param plotdata_y: The y-axis data to plot
+    :type plotdata_y: list
+    :param bins: Number of bins to use. If None, uses the optimum. See matplotlib docs.
+    :type bins: int or None
+    :param color: The color of the curve, default ``red``. See matplotlib docs.
+    :type color: str
+    :param xlabel: The x-axis label, default ``''``
+    :type xlabel: str
+    :param ylabel: The y-axis label, default ``''``
+    :type ylabel: str
+    :param x_range: The x-axis range, if not the default. See matplotlib docs for range.
+    :type x_range: tuple
+    :return: The output path.
+    """
     if bins is None:
         bins = get_optimum_bins(plotdata_y)
     pyplot.hist(plotdata_y, bins=bins, color=color, range=x_range)

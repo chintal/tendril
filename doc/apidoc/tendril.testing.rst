@@ -41,3 +41,5 @@ Inheritance Diagram
    tendril.testing.testrunner
    tendril.testing.instruments
    tendril.testing.tests
+   tendril.testing.measurements
+   tendril.testing.analysis

@@ -1,5 +1,5 @@
 tendril.testing.measurements module
-=================================
+===================================
 
 .. automodule:: tendril.testing.measurements
     :members:

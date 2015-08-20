@@ -15,8 +15,3 @@ vel elementum. Quisque luctus, ex a tempor dapibus, lorem sapien cursus est,
 non blandit elit ante sit amet magna. Nulla elementum vitae purus at blandit.
 Praesent nec tincidunt enim. Nunc iaculis nisi at nibh ullamcorper ullamcorper.
 
-
-.. image:: https://d2weczhvl823v0.cloudfront.net/chintal/tendril/trend.png
-   :alt: Bitdeli badge
-   :target: https://bitdeli.com/free
-

@@ -27,6 +27,7 @@ or python libraries.
 .. autosummary::
 
     TEMPDIR
+    get_tempname
     fsutils_cleanup
     zipdir
 
@@ -35,10 +36,10 @@ or python libraries.
 
     get_folder_mtime
     get_file_mtime
+    get_file_hash
     VersionedOutputFile
 
     import_
-
 
 """
 
@@ -76,6 +77,11 @@ TEMPDIR = tempfile.gettempdir()
 
 
 def get_tempname():
+    """
+    Gets a random string for use as a temporary filename.
+
+    :return: A filename that can be used.
+    """
     return next(tempfile._get_candidate_names())
 
 
@@ -182,6 +188,17 @@ def get_file_mtime(f):
 
 
 def get_file_hash(filepath, hasher=None, blocksize=65536):
+    """
+    Return the hash of the file located at the given filepath, using
+    the hasher specified.
+
+    .. seealso:: :mod:`hashlib`
+
+    :param filepath: Path of the file which needs to be hashed.
+    :param hasher: Hash function to use. Default :mod:`hashlib.sha256`
+    :param blocksize: Size of each block to hash.
+    :return: The hex digest for the file.
+    """
     if hasher is None:
         hasher = hashlib.sha256()
     with open(filepath, 'rb') as afile:

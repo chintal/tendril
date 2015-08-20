@@ -1,5 +1,5 @@
 tendril.dox.testing module
-========================
+==========================
 
 .. automodule:: tendril.dox.testing
     :members:
