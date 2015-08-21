@@ -71,7 +71,7 @@ def is_in_wallet(fpath):
     whether the document is in the wallet.
 
     :param fpath: The path to the file.
-    :return: The absolute path to the document.
+    :return: True if the document is in the wallet, False if not.
 
     """
     if DOCUMENT_WALLET_ROOT in os.path.split(fpath)[0]:
