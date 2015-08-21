@@ -20,22 +20,33 @@ The Dox Package (:mod:`tendril.dox`)
 
 Some documentation
 
-.. rubric:: The Dox Modules
+.. automodule:: tendril.dox.db
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Core Dox Modules
+----------------
 
 .. toctree::
 
-   tendril.dox.db
-   tendril.dox.customs
+   tendril.dox.render
+   tendril.dox.wallet
    tendril.dox.docstore
+   tendril.dox.labelmaker
+
+Document Generator Modules
+--------------------------
+
+.. toctree::
+
+   tendril.dox.customs
    tendril.dox.gedaproject
    tendril.dox.indent
-   tendril.dox.invoice
-   tendril.dox.labelmaker
    tendril.dox.production
    tendril.dox.purchaseorder
-   tendril.dox.render
    tendril.dox.testing
-   tendril.dox.wallet
+   tendril.dox.invoice
 
 Inheritance Diagram
 -------------------

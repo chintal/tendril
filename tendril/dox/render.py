@@ -236,10 +236,11 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
 def render_lineplot(outf, plotdata, title, note):
     """
     Renders a lineplot to PDF. This function is presently used to generate
-    PCB pricing graphs by :mod:``tendril.sourcing.csil``. It's pretty
-    unwieldy, and is likely going to be axed at some point in favor of
-    :func:``make_graph``, once the necessary functionality is implemented
-    there and the pricing graph code is modified to use that instead.
+    PCB pricing graphs by :mod:`tendril.dox.gedaproject.gen_pcbpricing`.
+    It's pretty unwieldy, and is likely going to be axed at some point in
+    favor of :func:`make_graph`, once the necessary functionality is
+    implemented there and the pricing graph code is modified to use that
+    instead.
 
     .. warning:: This function is likely to be deprecated.
     .. seealso:: :func:`make_graph`
