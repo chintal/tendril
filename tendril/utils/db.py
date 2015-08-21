@@ -41,6 +41,7 @@ from sqlalchemy_utils import ArrowType
 log.logging.getLogger('sqlalchemy.engine').setLevel(log.WARNING)
 
 from contextlib import contextmanager
+import functools
 import arrow
 
 from tendril.utils.config import DB_URI
@@ -112,6 +113,7 @@ def with_db(func):
     .. seealso:: :func:`get_session`
 
     """
+    @functools.wraps(func)
     def inner(session=None, **kwargs):
         if session is None:
             with get_session() as s:

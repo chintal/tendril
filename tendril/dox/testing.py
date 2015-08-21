@@ -15,8 +15,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+Testing Dox Module (:mod:`tendril.dox.testing`)
+===============================================
+
+This module provides functions to generate testing documents.
+
+The functions here use the :mod:`tendril.dox.render` module to actually produce
+the output files after constructing the appropriate stage.
+
+.. seealso:: :mod:`tendril.testing.analysis`, which does much of
+             the heavy lifting
+
+.. rubric:: Document Generators
+
+.. autosummary::
+
+    render_test_report
+    render_device_summary
+
 """
 
 from tendril.utils import log
@@ -41,6 +57,57 @@ default_target = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
 
 @with_db
 def render_test_report(serialno=None, outfolder=None, session=None):
+    """
+    Renders the latest test results marked against the specified ``serialno``.
+
+    Since this function is defined against the database, all arguments should
+    be keyword arguments.
+
+    :param serialno: The serial number of the device.
+    :type serialno: :class:`str` or :class:`tendril.entityhub.db.SerialNumber`
+    :param outfolder: The folder in which the output file should be created.
+    :type outfolder: str
+    :param session: The database session. If None, the function will make
+                    it's own.
+    :return: The output file path.
+
+    .. rubric:: Template Used
+
+    ``tendril/dox/templates/testing/test_report_template.tex``
+    (:download:`Included version <../../tendril/dox/templates/testing/test_report_template.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``sno``
+          - Serial number of the device.
+        * - ``testdate``
+          - The timestamp of the latest test suite.
+        * - ``devicetype``
+          - The device type.
+        * - ``desc``
+          - The device description.
+        * - ``svnrevision``
+          - The VCS revision of the project config file.
+        * - ``svnrepo``
+          - The VCS repository containing the project
+        * - ``graphs``
+          - A list of graphs, each graph being a list of tuples of
+            (graphpath, graphtitle)
+        * - ``instruments``
+          - A list of instrument ident strings, one for each unique instrument used
+            in the suites.
+        * - ``suites``
+          - A list of instances of :class:`tendril.testing.testbase.TestSuiteBase`
+            or its subclasses.
+
+    Note that the ``suites`` provided to the template are typically
+    expected to be offline test suites which are reconstructed from the
+    database.
+
+    .. seealso:: :func:`tendril.testing.analysis.get_test_suite_objects`
+
+    """
     if serialno is None:
         raise ValueError("serialno cannot be None")
     if not isinstance(serialno, SerialNumber):
@@ -79,6 +146,45 @@ def render_test_report(serialno=None, outfolder=None, session=None):
 
 
 def render_device_summary(devicetype, include_failed=False, outfolder=None):
+    """
+    Renders a summary of all of the latest test results marked against the
+    serial numbers of the specified ``devicetype``.
+
+    :param devicetype: The type of device for which a summary is desired.
+    :type devicetype: str
+    :param outfolder: The folder in which the output file should be created.
+    :type outfolder: str
+    :param include_failed: Whether failed test results should be included in
+                      the graphs and the statistical analysis. Default False.
+    :type include_failed: bool
+    :return: The output file path.
+
+    .. rubric:: Template Used
+
+    ``tendril/dox/templates/testing/test_device_summary_template.tex``
+    (:download:`Included version <../../tendril/dox/templates/testing/test_device_summary_template.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``devicetype``
+          - The device type.
+        * - ``desc``
+          - The device description.
+        * - ``svnrevision``
+          - The VCS revision of the project config file.
+        * - ``svnrepo``
+          - The VCS repository containing the project
+        * - ``graphs``
+          - A list of graphs, each graph being a list of tuples of
+            (graphpath, graphtitle)
+        * - ``collector``
+          - An instance of :class:`tendril.testing.analysis.ResultCollector`,
+            containing the collated test results.
+
+    .. seealso:: :func:`tendril.testing.analysis.get_device_test_summary`
+
+    """
     if outfolder is None:
         outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
     template = os.path.join('testing', 'test_device_summary_template.tex')

@@ -37,6 +37,10 @@ def get_test_suite_objects(serialno=None, session=None):
     # from the actual test objects, which in turn have other dependencies.
     # Integrating the models with the classes should be considered in the
     # future when there is time.
+    """
+
+    :rtype : object
+    """
     suite_names = controller.get_test_suite_names(serialno=serialno,
                                                   session=session)
     devicetype = serialnos.get_serialno_efield(sno=serialno, session=session)
