@@ -1,5 +1,3 @@
-tendril.dox.customs module
-========================
 
 .. automodule:: tendril.dox.customs
     :members:

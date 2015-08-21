@@ -15,8 +15,43 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+Customs Dox Module (:mod:`tendril.dox.customs`)
+===============================================
+
+This module generates the customs document sets.
+
+The functions here use the :mod:`tendril.dox.render` module to actually
+produce the output files after constructing the appropriate stage.
+
+.. hint:: The functions and templates here are made for and in the Indian
+          Customs formats. This probably doesn't translate well to any other
+          country. As such, this module itself doesn't do much of the heavy
+          lifting. Instead, it relies on the :mod:`tendril.sourcing.customs`
+          module. Porting it to another country would probably start from
+          reimplementing that class and rewriting the templates.
+
+.. seealso:: :mod:`tendril.dox`, :mod:`tendril.sourcing.customs`
+
+.. rubric:: Document Set Generators
+
+.. autosummary::
+
+    generate_docs
+    gen_submitdocs
+    gen_verificationdocs
+
+.. rubric:: Document Generators
+
+.. autosummary::
+
+    gen_declaration
+    gen_valuation
+    gen_rsp_declaration
+    gen_authorization
+    gen_tech_writeup
+    gen_verification_sections
+    gen_verification_checklist
+
 """
 
 import os
@@ -34,6 +69,62 @@ from tendril.utils.config import COMPANY_GOVT_POINT
 
 
 def gen_declaration(invoice, target_folder, copyt, serialno):
+    """
+    Generates a copy of the Customs Declaration for Imports.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to
+    :param copyt: A string specifying which copy it is ("ORIGINAL",
+                  "DUPLICATE", so on)
+    :type copyt: str
+    :param serialno: The serial number of the Customs documentation set
+    :type serialno: str
+    :return: The output file path
+
+    .. rubric:: Template Used
+
+    ``tendril/dox/templates/customs/decl.tex``
+    (:download:`Included version <../../tendril/dox/templates/customs/decl.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``date``
+          - The date the documents were generated at, from :func:`datetime.date.today`.
+        * - ``signatory``
+          - The name of the person who 'signs' the document, from
+            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+        * - ``inv_no``
+          - The vendor's invoice number.
+        * - ``inv_date``
+          - The date of the vendor's invoice.
+        * - ``given_data``
+          - A dict containing various facts about the invoice. See
+            :attr:`tendril.sourcing.customs.CustomsInvoice.given_data`
+        * - ``currency``
+          - The symbol of the currency of the invoice.
+        * - ``inv_total``
+          - The total value of the invoice, in vendor currency.
+        * - ``exchrate``
+          - The applicable exchange rate.
+        * - ``exchnotif``
+          - The government notification number specifying the exchange rate.
+        * - ``exchnotifdt``
+          - The date of the exchange rate notification.
+        * - ``extended_total_sc``
+          - The extended total invoice value, in the vendor's currency.
+        * - ``assessable_total_sc``
+          - The assessable total invoice value, in the vendor's currency.
+        * - ``assessable_total_nc``
+          - The assessable total invoice value, in the vendor's currency.
+        * - ``copyt``
+          - The string specifying which copy it is.
+        * - ``sno``
+          - The serial number of the document.
+
+    """
     outpath = os.path.join(target_folder, "customs-declaration-" + copyt + '-' + str(invoice.inv_no) + ".pdf")
 
     given_data = copy.deepcopy(invoice.given_data)
@@ -62,6 +153,67 @@ def gen_declaration(invoice, target_folder, copyt, serialno):
 
 
 def gen_valuation(invoice, target_folder, serialno):
+    """
+    Generates the Customs Valuation Note.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to
+    :param serialno: The serial number of the Customs documentation set
+    :type serialno: str
+    :return: The output file path
+
+    .. rubric:: Template Used
+
+    ``tendril/dox/templates/customs/valuation.tex``
+    (:download:`Included version <../../tendril/dox/templates/customs/valuation.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``date``
+          - The date the documents were generated at, from :func:`datetime.date.today`.
+        * - ``signatory``
+          - The name of the person who 'signs' the document, from
+            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+        * - ``inv_no``
+          - The vendor's invoice number.
+        * - ``inv_date``
+          - The date of the vendor's invoice.
+        * - ``given_data``
+          - A dict containing various facts about the invoice. See
+            :attr:`tendril.sourcing.customs.CustomsInvoice.given_data`
+        * - ``currency``
+          - The symbol of the currency of the invoice.
+        * - ``inv_total``
+          - The total value of the invoice, in vendor currency.
+        * - ``exchrate``
+          - The applicable exchange rate.
+        * - ``exchnotif``
+          - The government notification number specifying the exchange rate.
+        * - ``exchnotifdt``
+          - The date of the exchange rate notification.
+        * - ``note1``
+          - A note mentioning the inclusion of freight.
+        * - ``note2``
+          - A list of strings mentioning other additions to the valuation.
+        * - ``include_note2``
+          - Boolean, whether or not to include note2.
+        * - ``extended_total_sc``
+          - The extended total invoice value, in the vendor's currency.
+        * - ``assessable_total_sc``
+          - The assessable total invoice value, in the vendor's currency.
+        * - ``assessable_total_nc``
+          - The assessable total invoice value, in the vendor's currency.
+        * - ``copyt``
+          - The string specifying which copy it is.
+        * - ``sno``
+          - The serial number of the document.
+        * - ``is_wire``
+          - Bool, whether the payment was made by a wire transfer.
+
+    """
     outpath = os.path.join(target_folder, "customs-valuation-" + str(invoice.inv_no) + ".pdf")
 
     note1 = ''
@@ -108,6 +260,41 @@ def gen_valuation(invoice, target_folder, serialno):
 
 
 def gen_rsp_declaration(invoice, target_folder, serialno):
+    """
+    Generates the Customs Retail Sales Price Declaration.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to
+    :param serialno: The serial number of the Customs documentation set
+    :type serialno: str
+    :return: The output file path
+
+    .. rubric:: Template Used
+
+    ``tendril/dox/templates/customs/rsp-declaration.tex``
+    (:download:`Included version <../../tendril/dox/templates/customs/rsp-declaration.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``date``
+          - The date the documents were generated at, from :func:`datetime.date.today`.
+        * - ``signatory``
+          - The name of the person who 'signs' the document, from
+            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+        * - ``inv_no``
+          - The vendor's invoice number.
+        * - ``inv_date``
+          - The date of the vendor's invoice.
+        * - ``given_data``
+          - A dict containing various facts about the invoice. See
+            :attr:`tendril.sourcing.customs.CustomsInvoice.given_data`
+        * - ``sno``
+          - The serial number of the document.
+
+    """
     outpath = os.path.join(target_folder, "customs-rsp-declaration-" + str(invoice.inv_no) + ".pdf")
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
@@ -121,6 +308,54 @@ def gen_rsp_declaration(invoice, target_folder, serialno):
 
 
 def gen_authorization(invoice, target_folder, serialno):
+    """
+    Generates the Customs CHA Authorization Letter.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to
+    :param serialno: The serial number of the Customs documentation set
+    :type serialno: str
+    :return: The output file path
+
+    .. rubric:: Template Used
+
+    This function uses a different template for each CHA, in the format
+    that the CHA asks for it.
+
+    Template Filename : ``tendril/dox/templates/customs/authorization.<cha>.tex``
+
+    Included Templates :
+
+    .. list-table::
+
+        * - FedEx India
+          - ``tendril/dox/templates/customs/authorization.fedex.tex``
+          - (:download:`Included version <../../tendril/dox/templates/customs/authorization.fedex.tex>`)
+        * - DHL India
+          - ``tendril/dox/templates/customs/authorization.dhl.tex``
+          - (:download:`Included version <../../tendril/dox/templates/customs/authorization.dhl.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``date``
+          - The date the documents were generated at, from :func:`datetime.date.today`.
+        * - ``signatory``
+          - The name of the person who 'signs' the document, from
+            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+        * - ``inv_no``
+          - The vendor's invoice number.
+        * - ``inv_date``
+          - The date of the vendor's invoice.
+        * - ``given_data``
+          - A dict containing various facts about the invoice. See
+            :attr:`tendril.sourcing.customs.CustomsInvoice.given_data`
+        * - ``sno``
+          - The serial number of the document.
+
+    """
     outpath = os.path.join(target_folder, "customs-authorization-" + str(invoice.inv_no) + ".pdf")
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
@@ -140,6 +375,65 @@ def gen_authorization(invoice, target_folder, serialno):
 
 
 def gen_tech_writeup(invoice, target_folder, serialno):
+    """
+    Generates the Customs Technical Writeup.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to
+    :param serialno: The serial number of the Customs documentation set
+    :type serialno: str
+    :return: The output file path
+
+    .. rubric:: Template Used
+
+    Template Filename : ``tendril/dox/templates/customs/technical-writeup.tex``
+    (:download:`Included version <../../tendril/dox/templates/customs/technical-writeup.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``date``
+          - The date the documents were generated at, from :func:`datetime.date.today`.
+        * - ``signatory``
+          - The name of the person who 'signs' the document, from
+            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+        * - ``inv_no``
+          - The vendor's invoice number.
+        * - ``inv_date``
+          - The date of the vendor's invoice.
+        * - ``given_data``
+          - A dict containing various facts about the invoice. See
+            :attr:`tendril.sourcing.customs.CustomsInvoice.given_data`
+        * - ``sno``
+          - The serial number of the document.
+        * - ``linecount``
+          - The number of lines in the invoice.
+        * - ``tqty``
+          - The total quantity.
+        * - ``tvalue``
+          - The total value.
+        * - ``unclassified``
+          - Lines in the invoice which could not be classified
+        * - ``sectable``
+          - The secion table, containing a list of ``section lines``,
+            described below. The 'sections' here are Customs HS Codes.
+
+    .. list-table:: Section line keys
+
+        * - ``code``
+          - The HS section code.
+        * - ``name``
+          - The HS section name.
+        * - ``idxs``
+          - Line numbers classified into this line.
+        * - ``qty``
+          - Total quantity of all lines classified into this line.
+        * - ``value``
+          - Total value of all lines classified into this line.
+
+    """
     outpath = os.path.join(target_folder, "customs-tech-writeup-" + str(invoice.inv_no) + ".pdf")
     sectable = []
     tqty = 0
@@ -181,6 +475,37 @@ def gen_tech_writeup(invoice, target_folder, serialno):
 
 
 def gen_submitdocs(invoice, target_folder, serialno):
+    """
+    Generates collated PDF files containing the submittable
+    documents. Two PDF files are generated - one for printing on
+    the company letterhead and one on regular paper.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to
+    :param serialno: The serial number of the Customs documentation set
+    :type serialno: str
+    :return: List of output file tuples (path, type)
+
+
+    .. rubric:: Included Documents - For Letterhead Printing
+
+    * CHA Authorization, generated by :func:`gen_authorization`
+    * RSP Declaration, generated by :func:`gen_rsp_declaration`
+    * Note on Valuation, generated by :func:`gen_valuation`
+    * Technical Writeup, generated by :func:`gen_tech_writeup`
+
+    .. rubric:: Included Documents - For Plain Paper Printing
+
+    * Declaration (ORIGINAL), generated by :func:`gen_declaration`
+    * Declaration (DUPLICATE), generated by :func:`gen_declaration`
+    * Two copies of the Gatt Declaration, from :mod:`tendril.dox.wallet`,
+      key ``CUSTOMS-DECL``.
+    * Scanned copy of the IEC, from :mod:`tendril.dox.wallet`,
+      key ``IEC``.
+
+    """
     lh_files = [gen_authorization(invoice, target_folder, serialno),
                 gen_rsp_declaration(invoice, target_folder, serialno),
                 gen_valuation(invoice, target_folder, serialno),
@@ -203,6 +528,43 @@ def gen_submitdocs(invoice, target_folder, serialno):
 
 
 def gen_verification_sections(invoice, target_folder, serialno):
+    """
+    Generates the Customs Sections Verification document.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to
+    :param serialno: The serial number of the Customs documentation set
+    :type serialno: str
+    :return: The output file tuple (path, type)
+
+    .. rubric:: Template Used
+
+    ``tendril/dox/templates/customs/verification-sections.tex``
+    (:download:`Included version <../../tendril/dox/templates/customs/verification-sections.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``date``
+          - The date the documents were generated at, from :func:`datetime.date.today`.
+        * - ``signatory``
+          - The name of the person who 'signs' the document, from
+            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+        * - ``inv_no``
+          - The vendor's invoice number.
+        * - ``inv_date``
+          - The date of the vendor's invoice.
+        * - ``given_data``
+          - A dict containing various facts about the invoice. See
+            :attr:`tendril.sourcing.customs.CustomsInvoice.given_data`.
+        * - ``lines``
+          - A list of :class:`tendril.sourcing.customs.CustomsInvoiceLine` instances.
+        * - ``sno``
+          - The serial number of the document.
+
+    """
     outpath = os.path.join(target_folder, "customs-verification-sections-" + str(invoice.inv_no) + ".pdf")
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
@@ -218,6 +580,81 @@ def gen_verification_sections(invoice, target_folder, serialno):
 
 
 def gen_verification_checklist(invoice, target_folder, serialno):
+    """
+    Generates the Customs Duties / Checklist Verification document.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to
+    :param serialno: The serial number of the Customs documentation set
+    :type serialno: str
+    :return: The output file tuple (path, type)
+
+    .. rubric:: Template Used
+
+    ``tendril/dox/templates/customs/verification-duties.tex``
+    (:download:`Included version <../../tendril/dox/templates/customs/verification-duties.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``date``
+          - The date the documents were generated at, from :func:`datetime.date.today`.
+        * - ``signatory``
+          - The name of the person who 'signs' the document, from
+            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+        * - ``inv_no``
+          - The vendor's invoice number.
+        * - ``inv_date``
+          - The date of the vendor's invoice.
+        * - ``given_data``
+          - A dict containing various facts about the invoice. See
+            :attr:`tendril.sourcing.customs.CustomsInvoice.given_data`.
+        * - ``lines``
+          - A list of :class:`tendril.sourcing.customs.CustomsInvoiceLine` instances.
+        * - ``invoice``
+          - The :class:`tendril.sourcing.customs.CustomsInvoice` instance.
+        * - ``sno``
+          - The serial number of the document.
+        * - ``summary``
+          - A list of dicts containing the summary of the customs duties applicable
+            against a particular section, as described below
+
+    .. list-table:: Summary keys
+
+        * - ``section``
+          - The HS section, a :class:`tendril.sourcing.customs.CustomsSection``
+            instance.
+        * - ``code``
+          - The HS section code.
+        * - ``name``
+          - The HS section name.
+        * - ``idxs``
+          - Line numbers classified into this line.
+        * - ``qty``
+          - Total quantity of all lines classified into this line.
+        * - ``assessablevalue``
+          - Total assessable value of all lines classified into this line.
+        * - ``bcd``
+          - Total Basic Customs Duty applicable against this section.
+        * - ``cvd``
+          - Total Countervailing Duty applicable against this section.
+        * - ``acvd``
+          - Total Additional Countervailing Duty applicable against this section.
+        * - ``cec``
+          - Total Education Cess on Customs Duty applicable against this section.
+        * - ``cshec``
+          - Total Secondary and Higher Education Cess on Customs Duty applicable
+            against this section.
+        * - ``cvdec``
+          - Total Education Cess on Countervailing Duty applicable against this
+            section.
+        * - ``cvdshec``
+          - Total Secondary and Higher Education Cess on Countervailing Duty
+            applicable against this section.
+
+    """
     outpath = os.path.join(target_folder, "customs-verification-duties-" + str(invoice.inv_no) + ".pdf")
     summary = []
     for section in invoice.hssections:
@@ -248,6 +685,23 @@ def gen_verification_checklist(invoice, target_folder, serialno):
 
 
 def gen_verificationdocs(invoice, target_folder, serialno):
+    """
+    Generates customs verification documents.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to
+    :param serialno: The serial number of the Customs documentation set
+    :type serialno: str
+    :return: List of output file tuples (path, type)
+
+    .. rubric:: Included Documents
+
+    * Sections Verification, generated by :func:`gen_verification_sections`
+    * Duties / Checklist Verification, generated by :func:`gen_verification_checklist`
+
+    """
     files = [gen_verification_sections(invoice, target_folder, serialno),
              gen_verification_checklist(invoice, target_folder, serialno)
              ]
@@ -255,6 +709,32 @@ def gen_verificationdocs(invoice, target_folder, serialno):
 
 
 def generate_docs(invoice, target_folder=None, serialno=None, register=False, efield=None):
+    """
+    Generates all the Customs related documentation given a CustomsInvoice
+    (or subclass) instance.
+
+    :param invoice: The invoice object with customs information
+    :type invoice: :class:`tendril.sourcing.customs.CustomsInvoice`
+    :param target_folder: The folder in which the generated files
+                          should be written to. Auto sets to Instance scratch
+                          folder if None
+    :type target_folder: str
+    :param serialno: The serial number of the Customs documentation set.
+                     Autogenerates if None.
+    :type serialno: str
+    :param register: Whether or not to register in the docstore. Default False.
+    :type register: bool
+    :param efield: Additional short note to identify the document in the store.
+                   Autogenerates from invoice if None.
+    :type efield: str
+    :return: The serial number of the generated document set.
+
+    .. rubric:: Included Document Sets
+
+    * Sumbmittable Documents, generated by :func:`gen_submitdocs`
+    * Verification Documents, generated by :func:`gen_verificationdocs`
+
+    """
     if efield is None:
         efield = ' '.join([invoice.vendor_name, str(invoice.inv_no)])
     if serialno is None:
