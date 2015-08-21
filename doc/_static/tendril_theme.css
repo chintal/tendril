@@ -1,0 +1,10 @@
+
+.wy-side-nav-search{
+    background-color: #ECECEC;
+    color: #84B33F;
+}
+
+.wy-side-nav-search > a, .wy-side-nav-search .wy-dropdown > a
+{
+    color: #84B33F;
+}
