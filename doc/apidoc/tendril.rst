@@ -1,7 +1,7 @@
 API & Modules Documentation
 ===========================
 
-.. automodule:: temake ndril
+.. automodule:: tendril
     :members:
     :undoc-members:
     :show-inheritance:
