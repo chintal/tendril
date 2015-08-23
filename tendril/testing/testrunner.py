@@ -26,13 +26,16 @@ import os
 from tendril.entityhub import serialnos
 from tendril.entityhub import projects
 from tendril.entityhub import macs
+from tendril.entityhub.products import get_product_calibformat
 
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.gedaif.conffile import NoGedaProjectException
 from tendril.boms.electronics import import_pcb
 
-from tendril.dox.docstore import register_document
+from tendril.utils.fs import import_
+from tendril.utils.config import INSTANCE_ROOT
 from tendril.utils.config import PRINTER_NAME
+from tendril.dox.docstore import register_document
 
 from testbase import TestSuiteBase
 from testbase import TestPrepUser
@@ -138,6 +141,17 @@ def commit_test_results(suites):
         controller.commit_test_suite(suiteobj=suite)
 
 
+def write_to_device(serialno, devicetype):
+    try:
+        modname = get_product_calibformat(devicetype)
+        mod = import_(os.path.join(INSTANCE_ROOT, 'products', 'calibformats', modname))
+        func = getattr(mod, 'write_to_device')
+        func(serialno, devicetype)
+    except ImportError:
+        logger.error("Write to device not implemented for devicetype : "
+                     + devicetype)
+
+
 def publish_and_print(serialno, devicetype, print_to_paper=False):
     from tendril.dox import testing
     pdfpath = testing.render_test_report(serialno=serialno)
@@ -171,6 +185,10 @@ def run_test(serialno=None):
 
     for suite in suites:
         suite.finish()
+
+    user_input = raw_input("Write to device [y/N] ?: ").strip()
+    if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
+        write_to_device(serialno, devicetype)
 
     user_input = raw_input("Print to Paper [y/N] ?: ").strip()
     if user_input.lower() in ['y', 'yes', 'ok', 'pass']:

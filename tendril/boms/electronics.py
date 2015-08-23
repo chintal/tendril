@@ -302,6 +302,7 @@ class EntityElnBom(EntityBomBase):
 
         self.configurations = EntityElnBomConf(configfile)
         self._motifs = []
+        self._configured_for = None
         self.create_groups()
         self.populate_bom()
 
@@ -373,7 +374,12 @@ class EntityElnBom(EntityBomBase):
                 return motif
         return None
 
+    @property
+    def configured_for(self):
+        return self._configured_for
+
     def configure_motifs(self, configname):
+        self._configured_for = configname
         motifconfs = self.configurations.get_configuration_motifs(configname)
         if motifconfs is not None:
             for key, motifconf in motifconfs.iteritems():

@@ -62,6 +62,7 @@ class ProductBase(object):
         self._cables = self._raw_data['cables']
         self._labels = self._raw_data['labels']
         self._core = self._raw_data['derive_sno_from']
+        self._calibformat = self._raw_data['calibformat']
         try:
             self._product_info = INSTANCE_PRODUCT_CLASSES.get_product_info_class(
                 self._raw_data['productinfo']['line'],
@@ -92,6 +93,10 @@ class ProductBase(object):
 
     def labelinfo(self, sno):
         return self._product_info.labelinfo(sno)
+
+    @property
+    def calibformat(self):
+        return self._calibformat
 
     def get_component_snos(self):
         pass
@@ -130,6 +135,11 @@ def get_product_by_core(core):
         if product.core == core:
             return product
     logger.error("Could not find product for core : " + core)
+
+
+def get_product_calibformat(devicetype):
+    info = get_product_by_core(devicetype)
+    return info.calibformat
 
 
 def generate_labels(product, sno):

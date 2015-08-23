@@ -339,3 +339,8 @@ class TestSuiteBase(RunnableTest):
     @property
     def tests(self):
         return self._tests
+
+    def get_test_by_desc(self, desc):
+        for test in self._tests:
+            if test.desc == desc:
+                return test
