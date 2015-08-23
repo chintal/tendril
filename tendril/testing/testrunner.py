@@ -23,6 +23,8 @@ import sys
 import copy
 import os
 
+from collections import namedtuple
+
 from tendril.entityhub import serialnos
 from tendril.entityhub import projects
 from tendril.entityhub import macs
@@ -76,6 +78,33 @@ def get_testobj_from_cnf_test(cnf_test, testvars, bomobj, offline=False):
     return testobj
 
 
+ChannelDef = namedtuple('ChannelDef', ['idx', 'name'])
+
+
+def get_channel_defs_from_cnf_channels(channeldict, grouplist):
+    channeldefs = []
+    for groupdict in channeldict:
+        if len(groupdict.keys()) != 1:
+            raise ValueError("Channel group configurations are expected "
+                             "to have exactly one key at the top level")
+        groupname = groupdict.keys()[0]
+        if groupname in grouplist:
+            channellist = groupdict[groupname]
+            for c in channellist:
+                channeldefs.extend([ChannelDef(idx=k, name=v) for k, v in c.iteritems()])
+    return channeldefs
+
+
+def replace_in_test_cnf_dict(cnf_dict, token, value):
+    d = copy.deepcopy(cnf_dict)
+    for key in d[d.keys()[0]].keys():
+        try:
+            d[d.keys()[0]][key] = d[d.keys()[0]][key].replace(token, str(value))
+        except (TypeError, AttributeError):
+            pass
+    return d
+
+
 def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
     if len(cnf_suite.keys()) != 1:
         raise ValueError("Suite configurations are expected "
@@ -84,6 +113,7 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
     testvars = gcf.testvars(devicetype)
     bomobj = import_pcb(gcf.projectfolder)
     bomobj.configure_motifs(devicetype)
+    cnf_grouplist = gcf.config_grouplist(devicetype)
     logger.debug("Creating test suite : " + cnf_suite_name)
     if cnf_suite_name == "TestSuiteBase":
         suite = TestSuiteBase()
@@ -92,7 +122,6 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
             add_prep_steps_from_cnf_prep(suite, suite_detail['prep'])
         if 'group-tests' in suite_detail.keys():
             cnf_groups = suite_detail['group-tests']
-            cnf_grouplist = gcf.config_grouplist(devicetype)
             for cnf_group in cnf_groups:
                 if len(cnf_suite.keys()) != 1:
                     raise ValueError("Group test configurations are "
@@ -102,8 +131,20 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
                 if cnf_group.keys()[0] in cnf_grouplist:
                     cnf_test_list = cnf_group[cnf_group.keys()[0]]
                     for cnf_test in cnf_test_list:
-                        suite.add_test(get_testobj_from_cnf_test(cnf_test, testvars,
-                                                                 bomobj, offline=offline))
+                        suite.add_test(get_testobj_from_cnf_test(cnf_test,
+                                                                 testvars,
+                                                                 bomobj,
+                                                                 offline=offline))
+        if 'channel-tests' in suite_detail.keys():
+            channel_defs = get_channel_defs_from_cnf_channels(suite_detail['channels'],
+                                                              cnf_grouplist)
+            for test in suite_detail['channel-tests']:
+                for channel_def in channel_defs:
+                    cnf_test_dict = replace_in_test_cnf_dict(test, '<CH>',
+                                                             channel_def.idx)
+                    suite.add_test(get_testobj_from_cnf_test(cnf_test_dict,
+                                                             testvars, bomobj,
+                                                             offline=offline))
     else:
         suite = get_test_object(cnf_suite)
     if 'desc' in cnf_suite.keys():
