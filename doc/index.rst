@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-===================
+=====================
 Tendril documentation
-===================
+=====================
 
 .. include:: ../README.rst
 
@@ -14,8 +14,8 @@ Tendril documentation
 
    userdoc/userdoc
    devdoc/todo
-   apidoc/modules
-   license
+   apidoc/tendril
+   other
 
 *  :ref:`genindex`
 *  :ref:`modindex`

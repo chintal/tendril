@@ -231,7 +231,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     ('index', 'Tendril.tex', u'Tendril Documentation',
-     u'Chintalagiri Shashank', 'manual'),
+     u'Chintalagiri Shashank', 'manual', True),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -243,7 +243,7 @@ latex_logo = '../resources/tendril-logo_1000px.png'
 latex_use_parts = True
 
 # If true, show page references after internal links.
-latex_show_pagerefs = False
+latex_show_pagerefs = True
 
 # If true, show URL addresses after external links.
 #latex_show_urls = False

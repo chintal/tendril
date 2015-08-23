@@ -1,8 +1,10 @@
-tendril package
-=============
+API & Modules Documentation
+===========================
 
-Subpackages
------------
+.. automodule:: temake ndril
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 .. toctree::
 
@@ -18,21 +20,9 @@ Subpackages
     tendril.testing
     tendril.utils
 
-Submodules
-----------
-
 .. toctree::
 
    tendril.main
    tendril.runserver
-
-Module contents
----------------
-
-.. automodule:: tendril
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 

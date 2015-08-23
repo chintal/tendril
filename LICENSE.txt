@@ -1,6 +1,9 @@
 
-License Overview
-----------------
+License Terms
+-------------
+
+Overview
+~~~~~~~~
 
 The Tendril sources are distributed under the terms of various Open Source
 Licenses. Each source file contains within it the applicable license for
@@ -20,7 +23,7 @@ insufficient to determine this license, the license for such files is PROPRIETAR
 The full text of the licenses used are included in the source distribution.
 
 Licenses
---------
+~~~~~~~~
 
 * GNU Affero General Public License v3 (`LICENSE.AGPLv3.txt <_static/LICENSE.AGPLv3.txt>`_)
 	This is the "Dominant License" for Tendril, and applies to most
@@ -32,7 +35,7 @@ Licenses
 
 
 Licensing Roadmap
------------------
+~~~~~~~~~~~~~~~~~
 
 Tendril sources are distributed under the terms of the "Dominant License",
 i.e. AGPLv3+, unless otherwise specified within individual source files.

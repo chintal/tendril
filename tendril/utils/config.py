@@ -41,10 +41,10 @@ from fs import import_
 
 
 CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
-KOALA_ROOT = os.path.normpath(os.path.join(CONFIG_PATH, os.pardir, os.pardir))
+TENDRIL_ROOT = os.path.normpath(os.path.join(CONFIG_PATH, os.pardir, os.pardir))
 INSTANCE_ROOT = os.path.join(os.path.expanduser('~chintal'), '.tendril')
 INSTANCE_CONFIG_FILE = os.path.join(INSTANCE_ROOT, 'instance_config.py')
-DOX_TEMPLATE_FOLDER = os.path.join(KOALA_ROOT, 'dox/templates')
+DOX_TEMPLATE_FOLDER = os.path.join(TENDRIL_ROOT, 'dox/templates')
 
 INSTANCE_CONFIG = import_(INSTANCE_CONFIG_FILE)
 
