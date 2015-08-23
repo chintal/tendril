@@ -30,7 +30,7 @@ import iec60063
 
 from tendril.utils.config import GEDA_SYMLIB_ROOT
 from tendril.utils.config import AUDIT_PATH
-from tendril.utils.config import KOALA_ROOT
+from tendril.utils.config import TENDRIL_ROOT
 from tendril.utils.config import INSTANCE_CACHE
 
 import tendril.utils.fs
@@ -93,8 +93,8 @@ class GedaSymbol(object):
     @property
     def ident(self):
         return tendril.conventions.electronics.ident_transform(self.device,
-                                                             self.value,
-                                                             self.footprint)
+                                                               self.value,
+                                                               self.footprint)
 
     @property
     def sym_ok(self):
@@ -243,7 +243,8 @@ class GSymGeneratorFile(object):
                                                         start=generator['start'],
                                                         end=generator['end'])
                             for rvalue in rvalues:
-                                values.append(tendril.conventions.electronics.construct_resistor(rvalue, generator['wattage']))
+                                values.append(tendril.conventions.electronics.construct_resistor(rvalue,
+                                                                                                 generator['wattage']))
                         else:
                             raise ValueError
                 if 'values' in gendata.keys():
@@ -267,7 +268,8 @@ class GSymGeneratorFile(object):
                                                         start=generator['start'],
                                                         end=generator['end'])
                             for cvalue in cvalues:
-                                values.append(tendril.conventions.electronics.construct_capacitor(cvalue, generator['voltage']))
+                                values.append(tendril.conventions.electronics.construct_capacitor(cvalue,
+                                                                                                  generator['voltage']))
                         else:
                             raise ValueError
                 if 'values' in gendata.keys():
@@ -337,7 +339,7 @@ def gen_symlib(path=GEDA_SYMLIB_ROOT, recursive=True,
 
 
 def _jinja_init():
-    loader = jinja2.FileSystemLoader(searchpath=os.path.join(KOALA_ROOT, 'gedaif', 'templates'))
+    loader = jinja2.FileSystemLoader(searchpath=os.path.join(TENDRIL_ROOT, 'gedaif', 'templates'))
     renderer = jinja2.Environment(loader=loader)
     template_file = 'generator.gen.yaml'
     template = renderer.get_template(template_file)
@@ -402,7 +404,8 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
 
 def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
     if device == 'RES THRU':
-        if resistance in [tendril.conventions.electronics.parse_resistance(x) for x in iec60063.gen_vals(iec60063.get_series('E24'), iec60063.res_ostrs)]:
+        if resistance in [tendril.conventions.electronics.parse_resistance(x)
+                          for x in iec60063.gen_vals(iec60063.get_series('E24'), iec60063.res_ostrs)]:
             return tendril.conventions.electronics.construct_resistor(tendril.conventions.electronics.normalize_resistance(resistance), '0.25W')
         else:
             raise ValueError(resistance, device)

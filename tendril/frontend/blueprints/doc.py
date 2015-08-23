@@ -24,11 +24,11 @@ import os
 from flask import Blueprint
 from flask_user import login_required
 
-from tendril.utils.config import KOALA_ROOT
+from tendril.utils.config import TENDRIL_ROOT
 
 
 doc = Blueprint('doc', __name__,
-                static_folder=os.path.join(KOALA_ROOT, os.pardir, 'doc', '_build', 'html'))
+                static_folder=os.path.join(TENDRIL_ROOT, os.pardir, 'doc', '_build', 'html'))
 
 
 @doc.route('/')

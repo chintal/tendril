@@ -23,7 +23,7 @@ import re
 import csv
 
 from tendril.utils.config import PROJECTS_ROOT
-from tendril.utils.config import KOALA_ROOT
+from tendril.utils.config import TENDRIL_ROOT
 from tendril.gedaif import conffile
 
 
@@ -39,7 +39,7 @@ def get_project_doc_folder(projectfolder):
     try:
         conffile.ConfigsFile(projectfolder)
     except conffile.NoGedaProjectException:
-        return os.path.join(KOALA_ROOT, 'scratch', 'lostandfound')
+        return os.path.join(TENDRIL_ROOT, 'scratch', 'lostandfound')
     pth = os.path.join(projectfolder, 'doc')
     if not os.path.exists(pth):
         os.makedirs(pth)
