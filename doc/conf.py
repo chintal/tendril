@@ -222,7 +222,7 @@ latex_elements = {
     'pointsize': '9pt',
 
     # Additional stuff for the LaTeX preamble.
-    'preamble': '\setcounter{tocdepth}{5}'
+    'preamble': '\setcounter{tocdepth}{3}'
     #'preamble': '',
 }
 

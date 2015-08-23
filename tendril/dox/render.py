@@ -110,7 +110,7 @@ def escape_latex(string):
 def jinja2_pdfinit():
     """
     Creates a :class:`jinja2.Environment`, stored in this module's
-    :data:`rendered_pdf` variable.
+    :data:`renderer_pdf` variable.
 
     Application code would typically not call this function or interact
     directly wih the renderer, and instead use the various render
