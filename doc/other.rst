@@ -1,5 +1,5 @@
 
-License Terms
-=============
+Other Notes
+===========
 
 .. include:: ../LICENSE.txt
