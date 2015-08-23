@@ -14,7 +14,7 @@ Tendril documentation
 
    userdoc/userdoc
    devdoc/todo
-   apidoc/modules
+   apidoc/tendril
    other
 
 *  :ref:`genindex`
