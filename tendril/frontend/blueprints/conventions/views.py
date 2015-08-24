@@ -21,7 +21,6 @@ See the COPYING, README, and INSTALL files for more information
 
 
 from flask import render_template, request
-from flask import abort
 from flask_user import login_required
 
 import iec60063

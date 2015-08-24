@@ -43,7 +43,7 @@ def cards():
                            pagetitle="Cards")
 
 
-@blueprint.route('/pcbs/detail/<pcbname>')
+@blueprint.route('/pcbs/<pcbname>')
 @blueprint.route('/pcbs/')
 @login_required
 def pcbs(pcbname=None):

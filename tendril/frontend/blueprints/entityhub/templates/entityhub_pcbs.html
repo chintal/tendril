@@ -11,7 +11,7 @@
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
     {% for pcb in stage.pcbs %}
     <li>
-        <a href="/entityhub/pcbs/detail/{{ pcb.name }}">
+        <a href="/entityhub/pcbs/{{ pcb.name }}">
         <ul class="pricing-table active-tb shadow mrgn-20-top">
             <li class="price {% if stage.pcbs|length < 40 %} autoscale {% endif %}"> {{ pcb.name }} </li>
             <li class="description"> {{ pcb.configdata.description() }} </li>
