@@ -19,6 +19,10 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+import os
+
+from tendril.utils.config import TENDRIL_ROOT
+
 
 def create_motif_object(motifst):
     modname = motifst.split('.')[0]
@@ -29,5 +33,23 @@ def create_motif_object(motifst):
         cls = getattr(mod, clsname)
         instance = cls(motifst)
         return instance
-    except ImportError:
+    except (ImportError, AttributeError):
         raise ValueError("Motif Unrecognized :" + motifst)
+
+
+def get_motifs_list():
+    motifspath = os.path.join(TENDRIL_ROOT, 'conventions', 'motifs')
+    candidates = [f for f in os.listdir(motifspath)
+                  if os.path.isfile(os.path.join(motifspath, f))]
+
+    motifs = []
+    for candidate in candidates:
+        name, ext = os.path.splitext(candidate)
+        if ext == '.py':
+            try:
+                create_motif_object(name + '.1')
+                motifs.append(name)
+            except ValueError:
+                pass
+
+    return motifs

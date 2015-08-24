@@ -21,6 +21,7 @@ See the COPYING, README, and INSTALL files for more information
 
 
 from flask import render_template, request
+from flask import abort
 from flask_user import login_required
 
 import iec60063
@@ -28,7 +29,18 @@ import iec60063
 from . import conventions as blueprint
 
 from tendril.conventions import electronics
+from tendril.conventions import motifs
 from tendril.inventory import guidelines
+
+from tendril.utils.fs import get_path_breadcrumbs
+
+
+def get_motifs():
+    return motifs.get_motifs_list()
+
+
+def get_motif_render(motifname):
+    return motifs.create_motif_object(motifname + '.1').get_configdict_stub()
 
 
 def get_iec60063_params():
@@ -73,10 +85,22 @@ def get_iec60063_contextpart(stype, series, start=None, end=None):
             }
 
 
+@blueprint.route('/motif/<path:motifname>/')
+@login_required
+def motif_description(motifname=None):
+    stage = {'crumbroot': "/conventions",
+             'motifname': motifname,
+             'motif': get_motif_render(motifname),
+             'breadcrumbs': get_path_breadcrumbs(motifname, rootst="Conventions  /  Motifs")}
+    return render_template('motif.html', stage=stage,
+                           pagetitle='MOTIF ' + motifname)
+
+
 @blueprint.route('/', methods=['GET'])
 @login_required
 def main():
-    stage = {'devices': electronics.DEVICE_CLASSES,
+    stage = {'motifs': get_motifs(),
+             'devices': electronics.DEVICE_CLASSES,
              'guidelines': guidelines.electronics_qty.get_guideline_table()}
     if request.method == 'GET':
         stage.update(get_iec60063_params())

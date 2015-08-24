@@ -27,9 +27,11 @@
 <h4> Motifs </h4>
 <a name="motifs"></a>
     <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
-        <li><a href="/conventions/motifs/M1/" class="button square radius expand bg-t1" data-equalizer-watch>
-            <b> M1 </b></a>
+        {% for motif in stage.motifs %}
+        <li><a href="/conventions/motif/{{ motif }}/" class="button square radius expand bg-t1" data-equalizer-watch>
+            <b> {{ motif }} </b></a>
         </li>
+        {% endfor %}
     </ul>
 </div>
 

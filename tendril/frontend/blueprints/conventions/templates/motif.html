@@ -1,0 +1,27 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<h3> Motif {{ stage.motifname }} </h3>
+
+<h4> Configdict Stub </h4>
+<table>
+{% for item in stage.motif|dictsort %}
+   <tr>
+        <th> {{ item.0 }} </th>
+        <td> {{ item.1 }} </td>
+   </tr>
+{% endfor %}
+</table>
+
+<!--Utilization Information-->
+
+<!--Utilization History-->
+
+
+{% endblock %}
