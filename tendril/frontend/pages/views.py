@@ -15,13 +15,29 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 
 from flask import render_template
+from flask import send_file
+from flask import send_from_directory
 
 from tendril.frontend.app import app
+from tendril.utils.config import COMPANY_BLACK_LOGO_PATH
 
 
 # The Home page is accessible to anyone
 @app.route('/')
 def home_page():
     return render_template('pages/home_page.html')
+
+
+@app.route('/instanceassets/logo.png')
+def get_instance_logo():
+    return send_file(COMPANY_BLACK_LOGO_PATH)
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static', 'img'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+

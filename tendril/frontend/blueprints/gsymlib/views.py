@@ -89,9 +89,9 @@ def get_geda_browser_context(path):
         subfolders = []
 
     symbols = tendril.gedaif.gsymlib.gen_symlib(path,
-                                              include_generators=show_generators,
-                                              resolve_generators=resolve_generators,
-                                              recursive=flatten_folders)
+                                                include_generators=show_generators,
+                                                resolve_generators=resolve_generators,
+                                                recursive=flatten_folders)
     if symbols is None:
         symbols = []
 
