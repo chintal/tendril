@@ -48,6 +48,7 @@ defined in :mod:`tendril.utils.config`.
 
 from tendril.utils.config import BASE_CURRENCY
 from tendril.utils.config import BASE_CURRENCY_SYMBOL
+from tendril.utils.config import CURRENCYLAYER_API_KEY
 
 from tendril.utils import www
 import urllib
@@ -121,7 +122,7 @@ class CurrencyDefinition(object):
     def _get_exchval(code):
         """
         Obtains the exchange rate of the currency definition's :attr:`code`
-        using the `<http://jsonrates.com>`_ JSON API. The native currency
+        using the `<http://currencylayer.com>`_ JSON API. The native currency
         is used as the reference.
 
         :param code: The currency code for which the exchange rate is needed.
@@ -129,19 +130,24 @@ class CurrencyDefinition(object):
         :return: The exchange rate of currency specified by code vs the native currency.
         :rtype: float
 
-        .. todo:: Switch to currencyrates API instead.
-
         """
 
-        apiurl = 'http://jsonrates.com/get/?'
-        params = {'from': code,
-                  'to': BASE_CURRENCY,
-                  'apiKey': 'jr-b612b56a860a1e7e6de8863d3379404f'}
+        apiurl = 'http://apilayer.net/api/live?'
+        params = {'currencies': ','.join([BASE_CURRENCY, code]),
+                  'access_key': CURRENCYLAYER_API_KEY}
         request = urllib2.Request(apiurl + urllib.urlencode(params))
         response = www.urlopen(request)
         data = json.load(response)
+
         try:
-            rate = float(data['rate'])
+            api_source_code = data['source']
+            api_target_code = code
+            api_base_code = BASE_CURRENCY
+
+            api_target_from_source = float(data['quotes'][api_source_code + api_target_code])
+            api_base_from_source = float(data['quotes'][api_source_code + api_base_code])
+
+            rate = api_base_from_source / api_target_from_source
         except KeyError:
             raise KeyError(code)
         return rate
