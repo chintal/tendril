@@ -48,6 +48,20 @@ class ConfigsFile(object):
             logging.ERROR("Config file schema is not supported")
 
     @property
+    def is_pcb(self):
+        if 'pcbname' in self.configdata.keys() and self.configdata['pcbname'] is not None:
+            return True
+        else:
+            return False
+
+    @property
+    def is_cable(self):
+        if 'cblname' in self.configdata.keys() and self.configdata['cblname'] is not None:
+            return True
+        else:
+            return False
+
+    @property
     def doc_folder(self):
         return os.path.join(self.projectfolder, "doc")
 
@@ -94,6 +108,12 @@ class ConfigsFile(object):
     @property
     def configurations(self):
         return [x for x in self.configdata['configurations']]
+
+    def configuration(self, configname):
+        for x in self.configdata['configurations']:
+            if x['configname'] == configname:
+                return x
+        raise ValueError(configname + ' Not Found')
 
     @property
     def grouplist(self):

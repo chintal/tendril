@@ -1,0 +1,91 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+
+{% block main %}
+
+<div class="row" data-magellan-destination="details">
+<h3> Card Details </h3>
+<a name="details"></a>
+
+    <!-- Some Simple Detail Table -->
+    <ul class="small-12 medium-6 pricing-table shadow mrgn-20-top">
+        <li class="price"> {{ stage.card.configname }} </li>
+        <li class="description"> {{ stage.card.desc }} </li>
+        {% if stage.card.grouplist %}
+        <li class="title"> Groups </li>
+        <li>
+        <ul class="small-block-grid-3 small-11 columns small-centered">
+                {% for group in stage.card.grouplist %}
+                <li class="bullet-item"> {{ group }} </li>
+                {% endfor %}
+        </ul>
+        </li>
+        {% endif %}
+        {% if stage.card.motiflist %}
+        <li class="title"> Motifs </li>
+        {% for k, v in stage.card.motiflist|dictsort %}
+        {% if v|length >2 %}
+        <li class="bullet-item"> <b>{{ k }}</b> </li>
+        <li>
+        <ul class="small-block-grid-3 small-11 columns small-centered">
+            {% for p, s in v|dictsort %}
+            <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
+            {% endfor %}
+        </ul>
+        </li>
+        {% else %}
+        <li>
+        <ul class="small-block-grid-3 small-11 columns small-centered">
+            <li class="bullet-item"> <b>{{ k }}</b> </li>
+            {% for p, s in v|dictsort %}
+            <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
+            {% endfor %}
+        </ul>
+        </li>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+
+        {% if stage.card.genlist %}
+        <li class="title"> Generators </li>
+        {% for k, v in stage.card.genlist|dictsort %}
+            <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
+        {% endfor %}
+        {% endif %}
+
+
+        {% if stage.card.sjlist %}
+        <li class="title"> SJs </li>
+        <li><ul class="small-block-grid-3 small-11 columns small-centered">
+        {% for k, v in stage.card.sjlist|dictsort %}
+            <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
+        {% endfor %}
+        </ul></li>
+        {% endif %}
+    </ul>
+    <!-- Base PCB -->
+    <!-- BOM -->
+    <!-- Test Protocols -->
+    <!-- Pricing -->
+    <!-- Inclusion Inforamtion -->
+    <!-- Serialnos Information > Each Pointing subsequently to  Test Results -->
+    <!-- Inventory Information -->
+    <!-- Utilization Information -->
+
+
+</div>
+{% endblock %}

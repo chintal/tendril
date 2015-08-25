@@ -30,17 +30,40 @@ from tendril.gedaif.conffile import ConfigsFile
 from tendril.utils.fs import Crumb
 
 
+@blueprint.route('/cards/<cardname>')
 @blueprint.route('/cards/')
 @login_required
-def cards():
-    stage_cards = ehprojects.cards
-    stage = {'cards': stage_cards,
-             'crumbroot': '/entityhub',
-             'breadcrumbs': [Crumb(name="Entity Hub", path=""),
-                             Crumb(name="Cards", path="cards/")]
-             }
-    return render_template('entityhub_cards.html', stage=stage,
-                           pagetitle="Cards")
+def cards(cardname=None):
+    if cardname is None:
+        stage_cards = [{'name': k,
+                        'detail': ConfigsFile(v).configuration(k)}
+                       for k, v in ehprojects.cards.iteritems()
+                       if ConfigsFile(v).is_pcb]
+
+        stage_cables = [{'name': k,
+                         'detail': ConfigsFile(v).configuration(k)}
+                        for k, v in ehprojects.cards.iteritems()
+                        if ConfigsFile(v).is_cable]
+
+        stage = {'cards': sorted(stage_cards, key=lambda x: x['name']),
+                 'cables': sorted(stage_cables, key=lambda x: x['name']),
+                 'crumbroot': '/entityhub',
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Cards", path="cards/")]
+                 }
+        return render_template('entityhub_cards.html', stage=stage,
+                               pagetitle="Cards")
+    else:
+        stage_card = ConfigsFile(ehprojects.cards[cardname]).configuration(cardname)
+        stage = {'name': cardname,
+                 'card': stage_card,
+                 'crumbroot': '/entityhub',
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Cards", path="cards/"),
+                                 Crumb(name=cardname, path="cards/"+cardname)]
+                 }
+        return render_template('entityhub_card_detail.html', stage=stage,
+                               pagetitle="Card Details")
 
 
 @blueprint.route('/pcbs/<pcbname>')

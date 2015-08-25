@@ -75,12 +75,20 @@
         </ul>
 </div>
 
+<!-- Rendering of Image -->
+<!-- Gerber Download Link -->
+<!-- Pricing Information -->
+<!-- Inventory Information -->
+<!-- Product Utilization Information -->
+
 <div class="row" data-magellan-destination="configurations">
 <h4> Configurations </h4>
 <a name="configurations"></a>
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-2" data-equalizer>
     {% for configuration in stage.configdata.configurations %}
-    <li><ul class="pricing-table">
+    <li>
+        <a href="/entityhub/cards/{{configuration.configname}}">
+        <ul class="pricing-table active-tb shadow mrgn-20-top">
         <li class="price"> {{ configuration.configname }} </li>
         <li class="description"> {{ configuration.desc }} </li>
         {% if configuration.grouplist %}
@@ -134,7 +142,9 @@
         {% endfor %}
         </ul></li>
         {% endif %}
-    </ul></li>
+    </ul>
+    </a>
+    </li>
     {% endfor %}
 </ul>
 </div>
