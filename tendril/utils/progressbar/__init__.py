@@ -42,6 +42,12 @@ one written by Nadia Alramli in 2009, made available under the BSD License. This
 license is retained for this package (:mod:`tendril.utils.progressbar`) and it's
 submodules. The changes to the original code are minimal.
 
+This package should ideally be outside tendril, on it's own and living in PyPi.
+It is here because PyPi seems to already have a large assortment of progressbar
+packages, and I have no idea which of those are usable / how. This version,
+though, has done it's job satisfactorily in the past, and doesn't need me to go
+digging though the various PyPi modules to find a stable progressbar package.
+
 .. rubric:: Submodules
 
 .. automodule:: tendril.utils.progressbar.progressbar

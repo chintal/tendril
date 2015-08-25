@@ -339,7 +339,7 @@ def conv_gsch2png(schpath, outfolder):
     epspath = os.path.join(outfolder, schfname + '.eps')
 
     if ext == '.sym':
-        gschem_epscmd = ["sym2eps", schpath, epspath]
+        gschem_epscmd = ["gsym2eps", schpath, epspath]
         try:
             subprocess.check_call(gschem_epscmd)
             gschem_pngcmd = ["convert", epspath, "-transparent", "white", outpath]

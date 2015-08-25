@@ -76,6 +76,18 @@
         {% endfor %}
         </ul></li>
         {% endif %}
+
+        <li class="title"> References </li>
+
+        {% if stage.barepcb %}
+        <li class="bullet-item">
+            <b> gEDA Project : </b>
+            <a target="_blank" href="/entityhub/pcbs/{{stage.barepcb}}">
+                {{ stage.barepcb }}
+            </a>
+        </li>
+        {% endif %}
+
     </ul>
     <!-- Base PCB -->
     <!-- BOM -->

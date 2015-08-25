@@ -54,9 +54,15 @@ def cards(cardname=None):
         return render_template('entityhub_cards.html', stage=stage,
                                pagetitle="Cards")
     else:
-        stage_card = ConfigsFile(ehprojects.cards[cardname]).configuration(cardname)
+        gcf = ConfigsFile(ehprojects.cards[cardname])
+        stage_card = gcf.configuration(cardname)
+        if gcf.is_pcb:
+            barepcb = gcf.configdata['pcbname']
+        elif gcf.is_cable:
+            barepcb = gcf.configdata['cblname']
         stage = {'name': cardname,
                  'card': stage_card,
+                 'barepcb': barepcb,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Cards", path="cards/"),
