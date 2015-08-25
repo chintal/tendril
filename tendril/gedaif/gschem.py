@@ -105,6 +105,7 @@ from tendril.utils.types.cartesian import CartesianPoint
 from tendril.utils.types.cartesian import CartesianLineSegment
 
 from tendril.utils.config import GEDA_SCHEME_DIR
+from tendril.utils.config import TENDRIL_ROOT
 
 
 class GschPoint(CartesianPoint):
@@ -339,12 +340,16 @@ def conv_gsch2png(schpath, outfolder):
     epspath = os.path.join(outfolder, schfname + '.eps')
 
     if ext == '.sym':
-        gschem_epscmd = ["gsym2eps", schpath, epspath]
+        gschem_epscmd = [os.path.join(TENDRIL_ROOT, 'gedaif', 'bin', 'sym2eps'),
+                         schpath, epspath]
         try:
             subprocess.check_call(gschem_epscmd)
             gschem_pngcmd = ["convert", epspath, "-transparent", "white", outpath]
             subprocess.call(gschem_pngcmd)
-            os.remove(epspath)
+            try:
+                os.remove(epspath)
+            except OSError:
+                logger.warning("Temporary .eps file not found to remove : " + epspath)
         except subprocess.CalledProcessError:
             logger.error("SYM2EPS Segmentation Fault on symbol : " + schpath)
     elif ext == '.sch':
