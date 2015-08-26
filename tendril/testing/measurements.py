@@ -56,7 +56,12 @@ class TestMeasurementBase(object):
         raise NotImplementedError
 
     def render_dox(self):
-        meas_dict = {'ts': self._ts.format()}
+        if self._ts is None:
+            logger.warning("render_dox can't find _ts for Measurement Class"
+                           + str(self.__class__))
+            meas_dict = {}
+        else:
+            meas_dict = {'ts': self._ts.format()}
         return meas_dict
 
     def load_result_from_obj(self, result_db_obj):

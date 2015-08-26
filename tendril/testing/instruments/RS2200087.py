@@ -117,6 +117,8 @@ def voltage_processor(m):
         rng = m.group('range')
         if rng == 'K':
             rng = 'k'
+        elif rng is None:
+            rng = ''
     except IndexError:
         rng = ''
     rval = num + rng + 'V'
@@ -227,6 +229,8 @@ def current_processor(m):
         rng = m.group('range')
         if rng == 'K':
             rng = 'k'
+        elif rng is None:
+            rng = ''
     except IndexError:
         rng = ''
     rval = num + rng + 'A'

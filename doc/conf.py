@@ -45,9 +45,12 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
-    'documentedlist'
+    'documentedlist',
+    'sphinxcontrib.googleanalytics',
     # 'sphinxcontrib.fulltoc'
 ]
+
+googleanalytics_id = 'UA-10367073-7'
 
 intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
                        'driver2200087': ('http://driver2200087.readthedocs.org/en/latest', None),

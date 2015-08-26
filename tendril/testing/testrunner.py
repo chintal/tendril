@@ -147,10 +147,12 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
                                                              offline=offline))
     else:
         suite = get_test_object(cnf_suite)
-    if 'desc' in cnf_suite.keys():
-        suite.desc = cnf_suite['desc']
-    if 'title' in cnf_suite.keys():
-        suite.title = cnf_suite['title']
+    if 'desc' in cnf_suite[cnf_suite.keys()[0]].keys():
+        logger.debug("Setting Test Suite Description")
+        suite.desc = cnf_suite[cnf_suite.keys()[0]]['desc']
+    if 'title' in cnf_suite[cnf_suite.keys()[0]].keys():
+        logger.debug("Setting Test Suite Title")
+        suite.title = cnf_suite[cnf_suite.keys()[0]]['title']
     return suite
 
 

@@ -37,7 +37,9 @@ def get_test_suite_objects(serialno=None, session=None):
     # from the actual test objects, which in turn have other dependencies.
     # Integrating the models with the classes should be considered in the
     # future when there is time.
-    suite_names = controller.get_test_suite_names(serialno=serialno,
+    # suite_names = controller.get_test_suite_names(serialno=serialno,
+    #                                               session=session)
+    suite_descs = controller.get_test_suite_descs(serialno=serialno,
                                                   session=session)
     devicetype = serialnos.get_serialno_efield(sno=serialno, session=session)
     projectfolder = projects.cards[devicetype]
@@ -47,9 +49,11 @@ def get_test_suite_objects(serialno=None, session=None):
 
     suites = []
 
-    for suite_name in suite_names:
+    # for suite_name in suite_names:
+    for desc, name in suite_descs:
         suite_db_obj = controller.get_latest_test_suite(serialno=serialno,
-                                                        suite_class=suite_name,
+                                                        suite_class=name,
+                                                        descr=desc,
                                                         session=session)
         if suite_db_obj.suite_class == "<class 'tendril.testing.testbase.TestSuiteBase'>":
             suite_obj = TestSuiteBase()

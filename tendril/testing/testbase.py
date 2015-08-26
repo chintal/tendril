@@ -325,16 +325,17 @@ class TestSuiteBase(RunnableTest):
         for test in self._tests:
             test.finish()
         hline = '-' * 80
-        print terminal.YELLOW + hline + terminal.NORMAL
+        hcolor = terminal.CYAN
+        print hcolor + hline + terminal.NORMAL
         if self.passed is True:
             result = terminal.GREEN + '[PASSED]' + terminal.NORMAL
         else:
             result = terminal.RED + '[FAILED]' + terminal.NORMAL
-        print "{0}{1:<70}{2} {3:>9}".format(terminal.YELLOW,
+        print "{0}{1:<70}{2} {3:>9}".format(hcolor,
                                             (self.desc or 'None'),
                                             terminal.NORMAL,  result)
-        print "{0}{1}{2}".format(terminal.YELLOW, repr(self), terminal.NORMAL)
-        print terminal.YELLOW + hline + terminal.NORMAL
+        print "{0}{1}{2}".format(hcolor, repr(self), terminal.NORMAL)
+        print hcolor + hline + terminal.NORMAL
 
     @property
     def tests(self):
