@@ -249,7 +249,7 @@ class EntityElnBomConf(object):
         return self._configfile.get_sec_groups(sectionname, config)
 
     def get_configuration(self, configname):
-        return self._configfile.grouplist(configname)
+        return self._configfile.config_grouplist(configname)
 
     def get_configuration_motifs(self, configname):
         for configuration in self.configurations:

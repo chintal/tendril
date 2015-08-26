@@ -20,7 +20,7 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
+logger = log.get_logger(__name__, log.DEBUG)
 
 import idstring
 
@@ -108,7 +108,7 @@ def delete_serialno(sno, recurse=False, session=None):
 
 
 @with_db
-def get_serialno(series, efield=None, register=True, start_seed='100A', session=None):
+def get_serialno(series=None, efield=None, register=True, start_seed='100A', session=None):
     series = series.upper()
     if series in [x['series'] for x in nsno_table]:
         last_seed = nsno_table.find_one(series=series)['last_seed']

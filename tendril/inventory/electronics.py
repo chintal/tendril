@@ -26,6 +26,8 @@ import os
 import csv
 
 from tendril.utils.config import ELECTRONICS_INVENTORY_DATA
+from tendril.utils.types.lengths import Length
+from tendril.conventions.electronics import fpiswire_ident
 
 import acquire
 from db.controller import get_inventorylocationcode
@@ -47,7 +49,10 @@ class InventoryLine(object):
 
     @property
     def avail_qty(self):
-        return self._qty - self.reserved_qty
+        if fpiswire_ident(self._ident):
+            return Length(str(self._qty) + 'm') - self.reserved_qty
+        else:
+            return self._qty - self.reserved_qty
 
     @property
     def reserved_qty(self):
@@ -57,6 +62,8 @@ class InventoryLine(object):
         return reserved
 
     def reserve_qty(self, value, earmark):
+        if fpiswire_ident(self._ident) and not isinstance(value, Length):
+            value = Length(str(value) + 'm')
         if value > self.avail_qty:
             raise ValueError
         logger.debug("Reserving " + self.ident + " in " + self._parent._dname +
@@ -112,6 +119,8 @@ class InventoryLocation(object):
                 avail_qty += line.avail_qty
         if is_here:
             logger.debug("Found " + ident + " in " + self._dname + " : " + str(avail_qty))
+            if fpiswire_ident(ident):
+                avail_qty = Length(str(avail_qty)+'m')
             return avail_qty
         else:
             return None
@@ -187,6 +196,8 @@ def get_total_reservations(ident):
 def reserve_items(ident, qty, earmark, die_if_not=True):
     if qty <= 0:
         raise ValueError
+    if fpiswire_ident(ident) and not isinstance(qty, Length):
+        qty = Length(str(qty) + 'm')
     for location in inventory_locations:
         lqty = location.get_ident_qty(ident)
         if lqty is not None:

@@ -127,7 +127,10 @@ class Length(object):
         return self._lstr
 
     def __add__(self, other):
-        return Length(length=self._length + float(other))
+        if isinstance(other, numbers.Number) and other == 0:
+            return Length(length=self._length)
+        else:
+            return Length(length=self._length + other.decimal)
 
     def __radd__(self, other):
         if other == 0:
@@ -145,7 +148,7 @@ class Length(object):
         if isinstance(other, numbers.Number):
             return Length(length=self._length / other)
         elif isinstance(other, Length):
-            return self._length / float(other)
+            return self._length / other.decimal
         else:
             raise TypeError
 
@@ -159,9 +162,20 @@ class Length(object):
             return self.__add__(other.__mul__(-1))
 
     def __cmp__(self, other):
-        if self._length == float(other):
+        if isinstance(other, numbers.Number):
+            if other == 0:
+                cval = 0
+            else:
+                raise NotImplementedError("Can't Compare :: " + str(self) + ' ' + str(other))
+        elif isinstance(other, Length):
+            cval = other.decimal
+        else:
+            raise NotImplementedError
+
+        if self._length == cval:
             return 0
-        elif self._length < float(other):
+        elif self._length < cval:
             return -1
         else:
             return 1
+

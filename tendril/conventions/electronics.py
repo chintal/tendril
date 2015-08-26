@@ -89,6 +89,7 @@ DEVICE_CLASSES_DOC = [
     ('CONN DF13', 'Hirose DF13 PCB Mount Connectors'),
     ('CONN MODULAR', 'Modular Connectors'),
     ('CONN USB', 'USB Connectors'),
+    ('CONN THC', 'Thermocouple Connectors'),
     ('SWITCH TACT', 'Tactile Switches'),
     ('SWITCH PUSHBTN', 'Pushbutton Switches'),
     ('SWITCH ROCKER', 'Rocker Switches'),
@@ -102,6 +103,7 @@ DEVICE_CLASSES_DOC = [
     ('CABLE ROUND SHLD', 'Round Shielded Cables'),
     ('CONN CIRCULAR', 'Circular Connectors'),
     ('WIRE INSULATED', 'Insulated Wires'),
+    ('WIRE THERMOCOUPLE', 'Thermocouple Wires'),
     ('SLEEVE SHRINK', 'Heat shrinking sleeves'),
     ('CRIMP', 'Crimps'),
     ('THIMBLE', 'Thimbles'),
@@ -110,6 +112,7 @@ DEVICE_CLASSES_DOC = [
     ('SOCKET POWER', 'Power Sockets'),
     ('POWER CORD', 'Power Cords'),
     ('USB CABLE', 'USB Cables'),
+    ('RTD', 'Temperature Dependent Resistors')
 ]
 
 

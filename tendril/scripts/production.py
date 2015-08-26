@@ -21,7 +21,7 @@ See the COPYING, README, and INSTALL files for more information
 
 from tendril.utils import log
 
-logger = log.get_logger(__name__, log.INFO)
+logger = log.get_logger(__name__, log.DEBUG)
 
 import yaml
 import os
@@ -86,7 +86,6 @@ if __name__ == "__main__":
     else:
         FORCE_LABELS = False
 
-
     if 'sourcing_orders' in data.keys():
         SOURCING_ORDERS = data['sourcing_orders']
     else:
@@ -100,7 +99,7 @@ if __name__ == "__main__":
         ROOT_ORDERS = None
 
     if PROD_ORD_SNO is None:
-        PROD_ORD_SNO = serialnos.get_serialno('PROD', data['title'], register=False)
+        PROD_ORD_SNO = serialnos.get_serialno(series='PROD', efield=data['title'], register=REGISTER)
 
     # Generate Tendril Requisitions, confirm production viability.
 
@@ -120,7 +119,6 @@ if __name__ == "__main__":
         logger.info('Exporting Composite Output BOM to File : ' + os.linesep + os.path.join(orderfolder, 'cobom.csv'))
         cobom.dump(f)
 
-
     unsourced = []
     pb = ProgressBar('red', block='#', empty='.')
     nlines = len(cobom.lines)
@@ -131,8 +129,9 @@ if __name__ == "__main__":
                   "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Reservations".format(
                       percentage, line.ident, line.quantity))
         shortage = 0
-
+        logger.debug("Processing Line : " + line.ident)
         for idx, descriptor in enumerate(cobom.descriptors):
+            logger.debug("    for earmark : " + descriptor.configname)
             earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
             avail = tendril.inventory.electronics.get_total_availability(line.ident)
             if line.columns[idx] == 0:
@@ -153,7 +152,6 @@ if __name__ == "__main__":
         if shortage > 0:
             unsourced.append((line.ident, shortage))
 
-
     if len(unsourced) > 0:
         logger.warning("Shortage of the following components: ")
         for elem in unsourced:
@@ -162,10 +160,7 @@ if __name__ == "__main__":
             logger.info("Halt on shortage is set. Reversing changes and exiting")
             exit()
 
-
     # TODO Transfer Reservations
-
-
     # Generate Indent
     logger.info("Generating Indent")
 
@@ -173,29 +168,32 @@ if __name__ == "__main__":
     if 'indentsno' in snomap.keys():
         indentsno = snomap['indentsno']
     else:
-        indentsno = serialnos.get_serialno('IDT', 'FOR ' + PROD_ORD_SNO, REGISTER)
+        indentsno = serialnos.get_serialno(series='IDT', efield='FOR ' + PROD_ORD_SNO, register=REGISTER)
         snomap['indentsno'] = indentsno
     title = data['title']
     indentpath, indentsno = tendril.dox.indent.gen_stock_idt_from_cobom(orderfolder,
-                                                                      indentsno, title,
-                                                                      data['cards'], cobom)
+                                                                        indentsno, title,
+                                                                        data['cards'], cobom)
     if REGISTER is True:
-        tendril.dox.docstore.register_document(indentsno, indentpath, 'INVENTORY INDENT', efield=title)
+        tendril.dox.docstore.register_document(serialno=indentsno,
+                                               docpath=indentpath,
+                                               doctype='INVENTORY INDENT',
+                                               efield=title)
     else:
         logger.info("Not Registering Document : INVENTORY INDENT - " + indentsno)
 
     # Generate Production Order
     logger.info("Generating Production Order")
     if REGISTER is True:
-        serialnos.register_serialno(PROD_ORD_SNO, efield=title)
-        tendril.dox.docstore.register_document(indentsno, os.path.join(orderfolder, 'cobom.csv'),
-                                             'PRODUCTION COBOM CSV', efield=title)
-        serialnos.link_serialno(indentsno, PROD_ORD_SNO)
+        tendril.dox.docstore.register_document(serialno=indentsno,
+                                               docpath=os.path.join(orderfolder, 'cobom.csv'),
+                                               doctype='PRODUCTION COBOM CSV',
+                                               efield=title)
+        serialnos.link_serialno(child=indentsno, parent=PROD_ORD_SNO)
     else:
         logger.info("Not registering used serial number : " + PROD_ORD_SNO)
         logger.info("Not Registering Document : PRODUCTION COBOM CSV - " + indentsno)
         logger.info("Not Linking Serial Nos : " + indentsno + ' to parent ' + PROD_ORD_SNO)
-
 
     snos = []
     addldocs = []
@@ -256,14 +254,14 @@ if __name__ == "__main__":
                 if idx in snomap[card].keys():
                     sno = snomap[card][idx]
                 else:
-                    sno = serialnos.get_serialno(series, card, REGISTER)
+                    sno = serialnos.get_serialno(series=series, efield=card, register=REGISTER)
                     snomap[card][idx] = sno
             else:
                 snomap[card] = {}
-                sno = serialnos.get_serialno(series, card, REGISTER)
+                sno = serialnos.get_serialno(series=series, efield=card, register=REGISTER)
                 snomap[card][idx] = sno
             if REGISTER is True:
-                serialnos.link_serialno(sno, PROD_ORD_SNO)
+                serialnos.link_serialno(child=sno, parent=PROD_ORD_SNO)
             c = {'sno': sno, 'ident': card, 'prodst': prodst, 'lblst': lblst, 'testst': testst}
             snos.append(c)
             if genlabel is True:
@@ -271,17 +269,18 @@ if __name__ == "__main__":
                     tendril.dox.labelmaker.manager.add_label(label['code'], label['ident'], sno)
             if genmanifest is True:
                 ampath = tendril.dox.production.gen_pcb_am(cardfolder, card,
-                                                         manifestsfolder, sno,
-                                                         productionorderno=PROD_ORD_SNO,
-                                                         indentsno=indentsno)
+                                                           manifestsfolder, sno,
+                                                           productionorderno=PROD_ORD_SNO,
+                                                           indentsno=indentsno)
                 manifestfiles.append(ampath)
                 if REGISTER is True:
-                    tendril.dox.docstore.register_document(sno, ampath, 'ASSEMBLY MANIFEST')
+                    tendril.dox.docstore.register_document(serialno=sno, docpath=ampath,
+                                                           doctype='ASSEMBLY MANIFEST')
 
     production_order = tendril.dox.production.gen_production_order(orderfolder, PROD_ORD_SNO,
-                                                                 data, snos,
-                                                                 sourcing_orders=SOURCING_ORDERS,
-                                                                 root_orders=ROOT_ORDERS)
+                                                                   data, snos,
+                                                                   sourcing_orders=SOURCING_ORDERS,
+                                                                   root_orders=ROOT_ORDERS)
     labelpaths = tendril.dox.labelmaker.manager.generate_pdfs(orderfolder, force=FORCE_LABELS)
 
     if len(labelpaths) > 0:
@@ -293,10 +292,18 @@ if __name__ == "__main__":
 
     if REGISTER is True:
         if os.path.exists(os.path.join(orderfolder, 'device-labels.pdf')):
-            tendril.dox.docstore.register_document(PROD_ORD_SNO, os.path.join(orderfolder, 'device-labels.pdf'),
-                                                 'DEVICE LABELS', data['title'])
-        tendril.dox.docstore.register_document(PROD_ORD_SNO, production_order, 'PRODUCTION ORDER', data['title'])
-        tendril.dox.docstore.register_document(PROD_ORD_SNO, orderfile, 'PRODUCTION ORDER YAML', data['title'])
+            tendril.dox.docstore.register_document(serialno=PROD_ORD_SNO,
+                                                   docpath=os.path.join(orderfolder, 'device-labels.pdf'),
+                                                   doctype='DEVICE LABELS',
+                                                   efield=data['title'])
+        tendril.dox.docstore.register_document(serialno=PROD_ORD_SNO,
+                                               docpath=production_order,
+                                               doctype='PRODUCTION ORDER',
+                                               efield=data['title'])
+        tendril.dox.docstore.register_document(serialno=PROD_ORD_SNO,
+                                               docpath=orderfile,
+                                               doctype='PRODUCTION ORDER YAML',
+                                               efield=data['title'])
     else:
         logger.info("Not registering document : DEVICE LABELS " + PROD_ORD_SNO)
         logger.info("Not registering document : PRODUCTION ORDER " + PROD_ORD_SNO)
@@ -305,5 +312,7 @@ if __name__ == "__main__":
     with open(os.path.join(orderfolder, 'snomap.yaml'), 'w') as f:
         f.write(yaml.dump(snomap, default_flow_style=False))
     if REGISTER is True:
-        tendril.dox.docstore.register_document(PROD_ORD_SNO, os.path.join(orderfolder, 'snomap.yaml'),
-                                             'SNO MAP', data['title'])
+        tendril.dox.docstore.register_document(serialno=PROD_ORD_SNO,
+                                               docpath=os.path.join(orderfolder, 'snomap.yaml'),
+                                               doctype='SNO MAP',
+                                               efield=data['title'])
