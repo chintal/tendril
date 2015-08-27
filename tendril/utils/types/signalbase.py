@@ -216,7 +216,8 @@ class SignalWave(SignalBase):
         return self._points.__contains__(item)
 
     def clear(self):
-        return self._points.clear()
+        self._ts0 = self.last_timestamp
+        self._points.clear()
 
     def popleft(self, *args, **kwargs):
         return self._points.popleft(*args, **kwargs)

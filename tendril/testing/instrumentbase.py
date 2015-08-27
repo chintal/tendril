@@ -48,6 +48,63 @@ class InstrumentOutputChannelBase(InstrumentChannelBase):
         raise NotImplementedError
 
 
+class SignalWaveInputChannel(InstrumentInputChannelBase):
+    """
+    This class provides the bulk of the accessors to the instrument
+    channels providing vanilla SignalWave types. More complex implementations
+    should provide their own channel classes.
+
+    :param parent: The instrument of which this channel is a part of.
+    :param interface: The interface to the instrument.
+    :param chidx: The channel index.
+
+    """
+    def __init__(self, parent, interface, chidx):
+        super(SignalWaveInputChannel, self).__init__(parent)
+        self._interface = interface
+        self._chidx = chidx
+
+    def get(self, unitclass=None, flush=True):
+        """
+        Gets the latest data point in the channel's point buffer. By default, it
+        also flushes any older points from the buffer. This behavior can be
+        suppressed by passing flush=False.
+
+        :param unitclass: Unit class of which the data point is expected, or None if you don't care.
+        :param flush: Whether or not older points should be flushed. Default True.
+        :return: Latest datapoint.
+        :rtype: :class:`tendril.utils.types.signalbase.SignalPoint`
+
+        """
+        value = self._interface.latest_point(chidx=self._chidx, flush=flush)
+        if unitclass is None or value.unitclass == unitclass:
+            return value
+        else:
+            raise TypeError
+
+    def get_next_chunk(self, unitclass=None):
+        """
+        Gets the next chunk of data from the instrument channel. Note that the
+        chunk returned has already been removed from the channel's point buffer.
+
+        :param unitclass: Unit class of which the data point is expected, or None if you don't care.
+        :return: Wave containing all but the latest data point in the channel's point buffer.
+        :rtype: :class:`tendril.utils.types.signalbase.SignalWave`
+
+        """
+        chunk = self._interface.next_chunk(chidx=self._chidx)
+        if unitclass is None or chunk.unitclass == unitclass:
+            return chunk
+        else:
+            raise TypeError
+
+    def reset_wave(self):
+        """
+        Resets the point / wave buffer in the channel
+        """
+        self._interface.reset_buffer(chidx=self._chidx)
+
+
 class InstrumentBase(object):
     def __init__(self, channels=None):
         self._ident = None
