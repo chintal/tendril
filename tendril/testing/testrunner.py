@@ -109,50 +109,73 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
     if len(cnf_suite.keys()) != 1:
         raise ValueError("Suite configurations are expected "
                          "to have exactly one key at the top level")
+
     cnf_suite_name = cnf_suite.keys()[0]
     testvars = gcf.testvars(devicetype)
     bomobj = import_pcb(gcf.projectfolder)
     bomobj.configure_motifs(devicetype)
     cnf_grouplist = gcf.config_grouplist(devicetype)
+
+    desc = None
+    title = None
+    if 'desc' in cnf_suite[cnf_suite.keys()[0]].keys():
+        logger.debug("Found Test Suite Description")
+        desc = cnf_suite[cnf_suite.keys()[0]]['desc']
+    if 'title' in cnf_suite[cnf_suite.keys()[0]].keys():
+        logger.debug("Found Test Suite Title")
+        title = cnf_suite[cnf_suite.keys()[0]]['title']
+
     logger.debug("Creating test suite : " + cnf_suite_name)
     if cnf_suite_name == "TestSuiteBase":
-        suite = TestSuiteBase()
+        suite = []
         suite_detail = cnf_suite[cnf_suite_name]
+
         if 'prep' in suite_detail.keys():
-            add_prep_steps_from_cnf_prep(suite, suite_detail['prep'])
+            add_prep_steps_from_cnf_prep(suite[0], suite_detail['prep'])
+
         if 'group-tests' in suite_detail.keys():
+            suite.append(TestSuiteBase())
+
+            if desc is not None:
+                suite[0].desc = desc
+            if title is not None:
+                suite[0].title = title
+
             cnf_groups = suite_detail['group-tests']
             for cnf_group in cnf_groups:
                 if len(cnf_suite.keys()) != 1:
                     raise ValueError("Group test configurations are "
                                      "expected to have exactly one "
                                      "key at the top level")
+
                 logger.debug("Creating group tests : " + cnf_group.keys()[0])
                 if cnf_group.keys()[0] in cnf_grouplist:
                     cnf_test_list = cnf_group[cnf_group.keys()[0]]
                     for cnf_test in cnf_test_list:
-                        suite.add_test(get_testobj_from_cnf_test(cnf_test,
-                                                                 testvars,
-                                                                 bomobj,
-                                                                 offline=offline))
+                        suite[0].add_test(get_testobj_from_cnf_test(cnf_test,
+                                                                    testvars,
+                                                                    bomobj,
+                                                                    offline=offline))
+
         if 'channel-tests' in suite_detail.keys():
             channel_defs = get_channel_defs_from_cnf_channels(suite_detail['channels'],
                                                               cnf_grouplist)
-            for test in suite_detail['channel-tests']:
-                for channel_def in channel_defs:
+
+            lsuites = []
+            for channel_def in channel_defs:
+                lsuite = TestSuiteBase()
+                for test in suite_detail['channel-tests']:
                     cnf_test_dict = replace_in_test_cnf_dict(test, '<CH>',
                                                              channel_def.idx)
-                    suite.add_test(get_testobj_from_cnf_test(cnf_test_dict,
-                                                             testvars, bomobj,
-                                                             offline=offline))
+                    lsuite.add_test(get_testobj_from_cnf_test(cnf_test_dict,
+                                                              testvars, bomobj,
+                                                              offline=offline))
+                lsuites.append(lsuite)
+
+            suite.extend(lsuites)
     else:
-        suite = get_test_object(cnf_suite)
-    if 'desc' in cnf_suite[cnf_suite.keys()[0]].keys():
-        logger.debug("Setting Test Suite Description")
-        suite.desc = cnf_suite[cnf_suite.keys()[0]]['desc']
-    if 'title' in cnf_suite[cnf_suite.keys()[0]].keys():
-        logger.debug("Setting Test Suite Title")
-        suite.title = cnf_suite[cnf_suite.keys()[0]]['title']
+        suite = [get_test_object(cnf_suite)]
+
     return suite
 
 
@@ -162,26 +185,27 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder, offline=Fal
         logger.info("Using gEDA configs file from : " + projects.cards[devicetype])
     except NoGedaProjectException:
         raise AttributeError("gEDA project for " + devicetype + " not found.")
-    suites = []
     cnf_suites = gcf.tests()
     for cnf_suite in cnf_suites:
         suite = get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=offline)
-        suite.serialno = serialno
-        logger.info("Created test suite : " + repr(suite))
+        for lsuite in suite:
+            suite.serialno = serialno
+            logger.info("Created test suite : " + repr(suite))
+            yield lsuite
+
+
+def run_electronics_test(serialno, devicetype, projectfolder):
+    suites = []
+    for suite in get_electronics_test_suites(serialno, devicetype, projectfolder):
+        suite.run_test()
+        commit_test_results(suite)
+        suite.finish()
         suites.append(suite)
     return suites
 
 
-def run_electronics_test(serialno, devicetype, projectfolder):
-    suites = get_electronics_test_suites(serialno, devicetype, projectfolder)
-    for suite in suites:
-        suite.run_test()
-    return suites
-
-
-def commit_test_results(suites):
-    for suite in suites:
-        controller.commit_test_suite(suiteobj=suite)
+def commit_test_results(suite):
+    controller.commit_test_suite(suiteobj=suite)
 
 
 def write_to_device(serialno, devicetype):
@@ -219,15 +243,6 @@ def run_test(serialno=None):
         raise AttributeError("Project for " + devicetype + " not found.")
 
     suites = run_electronics_test(serialno, devicetype, projectfolder)
-
-    user_input = raw_input("Discard Results [y/N] ?: ").strip()
-    if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
-        return suites
-    else:
-        commit_test_results(suites)
-
-    for suite in suites:
-        suite.finish()
 
     user_input = raw_input("Write to device [y/N] ?: ").strip()
     if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
