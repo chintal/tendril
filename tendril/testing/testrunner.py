@@ -95,13 +95,47 @@ def get_channel_defs_from_cnf_channels(channeldict, grouplist):
     return channeldefs
 
 
-def replace_in_test_cnf_dict(cnf_dict, token, value):
+def replace_in_string(cnf_string, token, value, channelmap=None):
+    if not isinstance(cnf_string, str):
+        return cnf_string
+
+    if channelmap is not None:
+        mapped_strings = channelmap.keys()
+    else:
+        mapped_strings = None
+
+    lidx = value
+    if mapped_strings is not None:
+        for s in mapped_strings:
+            if cnf_string.startswith(s):
+                lidx = channelmap[s][value]
+                logger.info("Applying channel map : " + ' '.join([str(s), str(value), str(lidx)]))
+
+    return cnf_string.replace(token, str(lidx))
+
+
+def replace_in_test_cnf_list(cnf_list, token, value, channelmap=None):
+    l = copy.deepcopy(cnf_list)
+    for idx, startval in enumerate(l):
+        if isinstance(startval, str):
+            l[idx] = replace_in_string(startval, token, value, channelmap)
+        elif isinstance(startval, dict):
+            l[idx] = replace_in_test_cnf_dict(startval, token, value, channelmap)
+        elif isinstance(startval, list):
+            l[idx] = replace_in_test_cnf_list(startval, token, value, channelmap)
+    return l
+
+
+def replace_in_test_cnf_dict(cnf_dict, token, value, channelmap=None):
     d = copy.deepcopy(cnf_dict)
-    for key in d[d.keys()[0]].keys():
-        try:
-            d[d.keys()[0]][key] = d[d.keys()[0]][key].replace(token, str(value))
-        except (TypeError, AttributeError):
-            pass
+    for key in d.keys():
+        startval = d[key]
+        if isinstance(startval, str):
+            d[key] = replace_in_string(startval, token, value, channelmap)
+        elif isinstance(startval, dict):
+            d[key] = replace_in_test_cnf_dict(startval, token, value, channelmap)
+        elif isinstance(startval, list):
+            d[key] = replace_in_test_cnf_list(startval, token, value, channelmap)
     return d
 
 
@@ -130,11 +164,11 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
         suite = []
         suite_detail = cnf_suite[cnf_suite_name]
 
-        if 'prep' in suite_detail.keys():
-            add_prep_steps_from_cnf_prep(suite[0], suite_detail['prep'])
-
         if 'group-tests' in suite_detail.keys():
             suite.append(TestSuiteBase())
+
+            if 'prep' in suite_detail.keys():
+                add_prep_steps_from_cnf_prep(suite[0], suite_detail['prep'])
 
             if desc is not None:
                 suite[0].desc = desc
@@ -164,9 +198,21 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
             lsuites = []
             for channel_def in channel_defs:
                 lsuite = TestSuiteBase()
+                if 'prep' in suite_detail.keys():
+                    add_prep_steps_from_cnf_prep(lsuite, replace_in_test_cnf_dict(suite_detail['prep'],
+                                                                                  '<CH>', channel_def.idx))
+                if desc is not None:
+                    lsuite.desc = desc.replace('<CH>', channel_def.name)
+                if title is not None:
+                    lsuite.title = title
                 for test in suite_detail['channel-tests']:
+                    if 'motif-map' in suite_detail.keys():
+                        motifmap = suite_detail['motif-map']
+                    else:
+                        motifmap = None
                     cnf_test_dict = replace_in_test_cnf_dict(test, '<CH>',
-                                                             channel_def.idx)
+                                                             channel_def.idx,
+                                                             motifmap)
                     lsuite.add_test(get_testobj_from_cnf_test(cnf_test_dict,
                                                               testvars, bomobj,
                                                               offline=offline))
@@ -189,17 +235,19 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder, offline=Fal
     for cnf_suite in cnf_suites:
         suite = get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=offline)
         for lsuite in suite:
-            suite.serialno = serialno
-            logger.info("Created test suite : " + repr(suite))
+            lsuite.serialno = serialno
+            logger.info("Created test suite : " + repr(lsuite))
             yield lsuite
 
 
 def run_electronics_test(serialno, devicetype, projectfolder):
+    offline = True
     suites = []
-    for suite in get_electronics_test_suites(serialno, devicetype, projectfolder):
-        suite.run_test()
-        commit_test_results(suite)
-        suite.finish()
+    for suite in get_electronics_test_suites(serialno, devicetype, projectfolder, offline=offline):
+        if offline is False:
+            suite.run_test()
+            commit_test_results(suite)
+            suite.finish()
         suites.append(suite)
     return suites
 
