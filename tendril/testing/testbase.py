@@ -160,6 +160,7 @@ class TestBase(RunnableTest):
         self._bom_object = None
         self._offline = offline
         self._inststr = None
+        self._passfailonly = False
 
     @property
     def offline(self):
@@ -189,12 +190,21 @@ class TestBase(RunnableTest):
             if ':' in value:
                 motif_refdes, elem = value.split(':')
                 motif = self._bom_object.get_motif_by_refdes(motif_refdes)
-                value = getattr(motif, elem)
+                try:
+                    value = getattr(motif, elem)
+                except (TypeError, AttributeError):
+                    logger.error("Error getting element " + repr(elem) +
+                                 " from Motif " + repr(motif) + ", required by "
+                                 + value)
+                    logger.error("Bomobject configured for " + self._bom_object.configured_for)
+                    raise
             value = typeclass(value)
         return value
 
     def configure(self, **kwargs):
         self.variables.update(kwargs)
+        if 'passfailonly' in kwargs.keys():
+            self._passfailonly = kwargs['passfailonly']
 
     def use_bom(self, bomobj):
         self._bom_object = bomobj
@@ -221,6 +231,13 @@ class TestBase(RunnableTest):
                      'lines': self.lines,
                      }
         return test_dict
+
+    @property
+    def passfailonly(self):
+        try:
+            return self._passfailonly
+        except AttributeError:
+            return False
 
     @property
     def lines(self):
