@@ -54,6 +54,7 @@ import os
 import glob
 import string
 import hashlib
+import base64
 from datetime import datetime
 from collections import namedtuple
 
@@ -190,7 +191,9 @@ def get_file_mtime(f):
 def get_file_hash(filepath, hasher=None, blocksize=65536):
     """
     Return the hash of the file located at the given filepath, using
-    the hasher specified.
+    the hasher specified. The hash is encoded in base64 to make it
+    shorter while preserving collision resistance. Note that the
+    resulting hash is case sensitive.
 
     .. seealso:: :mod:`hashlib`
 
@@ -206,7 +209,7 @@ def get_file_hash(filepath, hasher=None, blocksize=65536):
         while len(buf) > 0:
             hasher.update(buf)
             buf = afile.read(blocksize)
-    return hasher.hexdigest()
+    return base64.urlsafe_b64encode(hasher.digest())
 
 
 class VersionedOutputFile:
