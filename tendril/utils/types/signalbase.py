@@ -18,6 +18,7 @@
 
 from tendril.utils.types.time import timestamp_factory
 from tendril.utils.types.time import TimeStamp
+from tendril.utils.types.time import TimeSpan
 from tendril.utils.types.time import TimeDelta
 
 from tendril.utils.types.unitbase import Percentage
@@ -88,9 +89,13 @@ class SignalWave(SignalBase):
         self._use_point_ts = use_point_ts
 
         if spacing is not None:
-            if not isinstance(spacing, TimeDelta):
-                raise TypeError("spacing must be an instance of TimeDelta")
-            self._spacing = spacing
+            if isinstance(spacing, TimeSpan):
+                self._spacing = spacing.timedelta
+            elif isinstance(spacing, TimeDelta):
+                self._spacing = spacing
+            else:
+                raise TypeError("spacing must be an instance of TimeDelta or "
+                                "TimeSpan. Got " + repr(spacing))
 
         if ts0 is not None:
             if not isinstance(ts0, TimeStamp):
@@ -104,7 +109,8 @@ class SignalWave(SignalBase):
                 self._points = points
             else:
                 if not self._use_point_ts:
-                    self._points = deque([(ts0 + idx*spacing, point)
+                    span_spacing = self._spacing.timespan
+                    self._points = deque([(ts0 + (span_spacing * idx).timedelta, point)
                                           for idx, point in enumerate(points)],
                                          maxlen=buffer_size)
                 else:
@@ -146,12 +152,44 @@ class SignalWave(SignalBase):
         return acc / self.stabilization_length
 
     @property
+    def ts0(self):
+        return self._ts0
+
+    @property
+    def max(self):
+        return max(self._points, key=lambda x: x[1].value)[1].value
+
+    @property
+    def min(self):
+        return min(self._points, key=lambda x: x[1].value)[1].value
+
+    @property
+    def spread(self):
+        return self.max - self.min
+
+    @property
+    def mean(self):
+        return sum([x[1].value for x in self._points]) / len(self._points)
+
+    @property
     def latest_point(self):
         return self._points[-1][1].value
 
     @property
     def points(self):
         return sorted(self._points, key=lambda x: x[0])
+
+    @property
+    def spacing(self):
+        return TimeSpan(self._spacing)
+
+    @property
+    def maxlen(self):
+        return self._points.maxlen
+
+    @maxlen.setter
+    def maxlen(self, value):
+        self._points = deque(self._points, maxlen=value)
 
     def add_point(self, point, ts=None):
         if point.unitclass != self.unitclass:
