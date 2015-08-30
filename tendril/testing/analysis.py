@@ -29,8 +29,20 @@ from matplotlib import pyplot
 rex_class = re.compile(ur'^<class \'(?P<cl>[a-zA-Z0-9.]+)\'>$')
 
 
+def sort_by_order(desc, order):
+    rval = []
+    for d in order:
+        for od, on in desc:
+            if d == od:
+                rval.append((od, on))
+                desc.remove((od, on))
+                break
+    rval.extend(desc)
+    return rval
+
+
 @with_db
-def get_test_suite_objects(serialno=None, session=None):
+def get_test_suite_objects(serialno=None, order_by='FILE_ORDER', session=None):
     # This reconstructs the test objects from the database. Using SQLAlchemy
     # as the ORM that it is, and letting it handle the object creation would
     # be infinitely better. It isn't done here since the models are separate
@@ -47,7 +59,26 @@ def get_test_suite_objects(serialno=None, session=None):
     # Perhaps this bomobject should not be recreated on the fly.
     bomobj.configure_motifs(devicetype)
 
+    if order_by == 'FILE_ORDER':
+
+        logger.info("Creating dummy test suites for file ordering")
+        dummy_suites = get_electronics_test_suites(None, devicetype,
+                                                   projectfolder,
+                                                   offline=True)
+        ldummy_suites = []
+        for suite in dummy_suites:
+            suite.dummy = True
+            ldummy_suites.append(suite)
+
+        file_order = [(x.desc, [y.desc for y in x.tests]) for x in ldummy_suites]
+        suite_order = [x[0] for x in file_order]
+        test_order = {x[0]: x[1] for x in file_order}
+
+    else:
+        raise ValueError('Unknown order_by heuristic : ' + order_by)
+
     suites = []
+    suite_descs = sort_by_order(suite_descs, suite_order)
 
     # for suite_name in suite_names:
     for desc, name in suite_descs:
