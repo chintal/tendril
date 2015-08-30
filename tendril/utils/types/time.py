@@ -66,7 +66,11 @@ class TimeSpan(NumericalUnitBase):
         _ostrs = None
         _dostr = None
         _parse_func = parse_none
-        if not isinstance(value, Number):
+        if isinstance(value, TimeDelta):
+            value = value.microseconds / Decimal('1000.0') + value.seconds + \
+                value.minutes * 60 + value.hours * 3600 + \
+                value.days * 3600 * 24
+        elif not isinstance(value, Number):
             raise TypeError("Only numerical time spans (in seconds) are supported at this time")
         super(TimeSpan, self).__init__(value, _ostrs, _dostr, _parse_func)
 
@@ -120,7 +124,8 @@ class TimeStamp(arrow.arrow.Arrow):
             #                             microseconds=other.microsecond)
             raise ValueError
         else:
-            raise NotImplementedError
+            raise NotImplementedError("Add not implemented for " +
+                                      repr(self.__class__) + " + " + repr(other.__class__))
 
 
 class TimeDelta(object):
@@ -161,6 +166,10 @@ class TimeDelta(object):
         return ':'.join([str(self.years), str(self.months), str(self.days),
                          str(self.hours), str(self.minutes), str(self.seconds),
                          str(self.microseconds)])
+
+    @property
+    def timespan(self):
+        return TimeSpan(self)
 
 
 timestamp_factory = arrow.ArrowFactory(TimeStamp)
