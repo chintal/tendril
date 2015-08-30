@@ -128,6 +128,7 @@ def render_test_report(serialno=None, outfolder=None, session=None):
     for suite in suites:
         for test in suite._tests:
             graphs.extend(test.graphs)
+            graphs.extend(test.histograms)
             if test._inststr is not None and test._inststr not in instruments.keys():
                 instruments[test._inststr] = len(instruments.keys()) + 1
 

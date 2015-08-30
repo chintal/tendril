@@ -199,6 +199,8 @@ class TestBase(RunnableTest):
                     logger.error("Bomobject configured for " + self._bom_object.configured_for)
                     raise
             value = typeclass(value)
+        except KeyError:
+            raise
         return value
 
     def configure(self, **kwargs):
@@ -247,6 +249,10 @@ class TestBase(RunnableTest):
     def graphs(self):
         return self._make_graphs()
 
+    @property
+    def histograms(self):
+        return self._make_histograms()
+
     @staticmethod
     def get_new_graph_path():
         return os.path.join(TEMPDIR, 'graph' + get_tempname() + '.png')
@@ -256,20 +262,41 @@ class TestBase(RunnableTest):
         from tendril.dox.render import make_graph
         return make_graph(*args, **kwargs)
 
+    @staticmethod
+    def _make_histogram(*args, **kwargs):
+        from tendril.dox.render import make_histogram
+        return make_histogram(*args, **kwargs)
+
     def _get_graphs_data(self):
+        return []
+
+    def _get_histograms_data(self):
         return []
 
     @property
     def graphs_data(self):
         return self._get_graphs_data()
 
+    @property
+    def histograms_data(self):
+        return self._get_histograms_data()
+
     def _make_graphs(self):
         rval = []
         for plotdata_x, plotdata_y, params, title in self._get_graphs_data():
             plt_path = self.get_new_graph_path()
             self._make_graph(plt_path, plotdata_y, plotdata_x, **params)
-            rval.append((plt_path, title))
+            rval.append((plt_path, self.desc + ' ' + title))
         return rval
+
+    def _make_histograms(self):
+        rval = []
+        for plotdata_y, params, title in self._get_histograms_data():
+            plt_path = self.get_new_graph_path()
+            self._make_histogram(plt_path, plotdata_y, **params)
+            rval.append((plt_path, self.desc + ' ' + title))
+        return rval
+
 
     @staticmethod
     def _pr_repr(string):

@@ -202,9 +202,9 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
                     add_prep_steps_from_cnf_prep(lsuite, replace_in_test_cnf_dict(suite_detail['prep'],
                                                                                   '<CH>', channel_def.idx))
                 if desc is not None:
-                    lsuite.desc = desc.replace('<CH>', channel_def.name)
+                    lsuite.desc = replace_in_string(desc, '<CH>', channel_def.idx)
                 if title is not None:
-                    lsuite.title = title
+                    lsuite.title = replace_in_string(title, '<CH>', channel_def.idx)
                 for test in suite_detail['channel-tests']:
                     if 'motif-map' in suite_detail.keys():
                         motifmap = suite_detail['motif-map']
@@ -241,7 +241,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder, offline=Fal
 
 
 def run_electronics_test(serialno, devicetype, projectfolder):
-    offline = True
+    offline = False
     suites = []
     for suite in get_electronics_test_suites(serialno, devicetype, projectfolder, offline=offline):
         if offline is False:
