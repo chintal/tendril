@@ -82,7 +82,7 @@ class SignalWaveInputChannel(InstrumentInputChannelBase):
         else:
             raise TypeError
 
-    def get_next_chunk(self, unitclass=None):
+    def get_next_chunk(self, unitclass=None, maxlen=None):
         """
         Gets the next chunk of data from the instrument channel. Note that the
         chunk returned has already been removed from the channel's point buffer.
@@ -94,7 +94,12 @@ class SignalWaveInputChannel(InstrumentInputChannelBase):
         """
         chunk = self._interface.next_chunk(chidx=self._chidx)
         if unitclass is None or chunk.unitclass == unitclass:
-            return chunk
+            if maxlen is not None:
+                if maxlen > chunk.maxlen:
+                    chunk.maxlen = maxlen
+                    return chunk
+            else:
+                return chunk
         else:
             raise TypeError
 
@@ -103,6 +108,10 @@ class SignalWaveInputChannel(InstrumentInputChannelBase):
         Resets the point / wave buffer in the channel
         """
         self._interface.reset_buffer(chidx=self._chidx)
+
+    @property
+    def data_available(self):
+        return self._interface.data_available(chidx=self._chidx)
 
 
 class InstrumentBase(object):
