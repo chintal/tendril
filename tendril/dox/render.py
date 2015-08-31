@@ -82,7 +82,7 @@ def format_currency(value):
     return "{:,.2f}".format(value)
 
 
-def escape_latex(string):
+def escape_latex(string, aggressive=True):
     """
     Escapes latex control and reserved characters from the string. It also
     converts `None` type inputs into an empty string.
@@ -102,6 +102,8 @@ def escape_latex(string):
         string = string.replace('&', '\&')
         string = string.replace('_', '\_')
         string = string.replace('INR ', '\\rupee~')
+        if aggressive is True:
+            string = string.replace('--', '-{}-')
     else:
         string = ''
     return string
