@@ -104,14 +104,13 @@
   %{ for test in suite.tests %}
     %{{ loop.index %}} & %{{ test.desc %}} & %{{ test.title %}}\hfill %{ if test.instrument %}{\footnotesize Instrument: %{{ stage.instruments.get(test.instrument) %}}}%{ endif %} & {\footnotesize %{{ test.ts %}}} & %{{ test.passed %}} \tabularnewline
     
-    %{ if test.lines|length > 0 %}
+    %{ if test.lines|length > 0 and not test.passfailonly %}
     &  &  \begin{tabular}{>{\centering\arraybackslash}p{0.25\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}}
-      %{ if not test.passfailonly %}
+      
       %{ for l in test.lines %}
 	\hline
          {\small %{{ l.desc %}}} & %{ if l.expected %} {\small %{{ l.expected %}}} & \textbf{\small %{{ l.measured %}}} %{ else %} \multicolumn{2}{r}{\small %{{ l.measured %}}} %{ endif %} \tabularnewline
       %{ endfor %}
-      %{ endif %}
       \end{tabular}
       &  &  \tabularnewline
     %{ endif %}

@@ -70,7 +70,7 @@ def get_test_suite_objects(serialno=None, order_by='FILE_ORDER', session=None):
             suite.dummy = True
             ldummy_suites.append(suite)
 
-        file_order = [(x.desc, [y.desc for y in x.tests]) for x in ldummy_suites]
+        file_order = [(x.desc, [(y.desc, y.passfailonly) for y in x.tests]) for x in ldummy_suites]
         suite_order = [x[0] for x in file_order]
         test_order = {x[0]: x[1] for x in file_order}
 
@@ -95,15 +95,18 @@ def get_test_suite_objects(serialno=None, order_by='FILE_ORDER', session=None):
         suite_obj.title = suite_db_obj.title
         suite_obj.ts = suite_db_obj.created_at
         suite_obj.serialno = serialno
+        test_display_params = {x[0]: x[1] for x in test_order[suite_obj.desc]}
 
         for test_db_obj in suite_db_obj.tests:
             class_name = rex_class.match(test_db_obj.test_class).group('cl')
+
             test_obj = get_test_object(class_name, offline=True)
             test_obj.desc = test_db_obj.desc
             test_obj.title = test_db_obj.title
             test_obj.ts = test_db_obj.created_at
             test_obj.use_bom(bomobj)
             test_obj.load_result_from_obj(test_db_obj.result)
+            test_obj.passfailonly = test_display_params[test_obj.desc]
             suite_obj.add_test(test_obj)
             # Crosscheck test passed?
 

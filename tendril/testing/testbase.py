@@ -148,6 +148,9 @@ class RunnableTest(object):
         else:
             self._ts = arrow.get(value)
 
+    def __repr__(self):
+        return "<{0} {1}>".format(self.__class__, self.desc)
+
 
 class TestBase(RunnableTest):
     """ Object representing a full runnable Test of the same Measurement type"""
@@ -231,6 +234,7 @@ class TestBase(RunnableTest):
                      'measurements': [x.render_dox() for x in self._measurements],
                      'instrument': self._inststr,
                      'lines': self.lines,
+                     'passfailonly': self.passfailonly,
                      }
         return test_dict
 
@@ -240,6 +244,10 @@ class TestBase(RunnableTest):
             return self._passfailonly
         except AttributeError:
             return False
+
+    @passfailonly.setter
+    def passfailonly(self, value):
+        self._passfailonly = value
 
     @property
     def lines(self):
@@ -296,7 +304,6 @@ class TestBase(RunnableTest):
             self._make_histogram(plt_path, plotdata_y, **params)
             rval.append((plt_path, self.desc + ' ' + title))
         return rval
-
 
     @staticmethod
     def _pr_repr(string):
@@ -384,6 +391,10 @@ class TestSuiteBase(RunnableTest):
     @property
     def tests(self):
         return self._tests
+
+    @property
+    def test_descs(self):
+        return [x.desc for x in self._tests]
 
     def get_test_by_desc(self, desc):
         for test in self._tests:
