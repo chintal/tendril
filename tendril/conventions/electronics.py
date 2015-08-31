@@ -197,9 +197,12 @@ def ident_transform(device, value, footprint, tf=None):
     except TypeError:
         logging.error('Error generating ident : ' + str(device) + ' ' + str(value) + ' ' + str(footprint))
         ident = 'FATAL'
-    for st in nofp_strs:
-        if device.startswith(st):
-            ident = device + " " + value
+    if device is None:
+        logging.critical("Malformed ident : " + ident)
+    else:
+        for st in nofp_strs:
+            if device.startswith(st):
+                ident = device + " " + value
     if tf is None:
         return ident
     else:

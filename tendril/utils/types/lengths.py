@@ -92,11 +92,11 @@ class Length(object):
 
     def __repr__(self):
         if self.__float__() < 10:
-            return str(round(self.__float__(), 2)) + " mm"
+            return str(round(self.__float__(), 2)) + "mm"
         elif self.__float__() < 1000:
-            return str(round(self.__float__() / 10, 2)) + " cm"
+            return str(round(self.__float__() / 10, 2)) + "cm"
         else:
-            return str(round(self.__float__() / 1000, 2)) + " m"
+            return str(round(self.__float__() / 1000, 2)) + "m"
 
     def __float__(self):
         return float(self._length)

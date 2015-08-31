@@ -21,6 +21,7 @@ See the COPYING, README, and INSTALL files for more information
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
+import os
 import csv
 from entitybase import EntityBase
 
@@ -156,10 +157,11 @@ class CompositeOutputBomLine(object):
 
 
 class CompositeOutputBom(object):
-    def __init__(self, bom_list):
+    def __init__(self, bom_list, name=None):
         self.descriptors = []
         self.lines = []
         self.colcount = len(bom_list)
+        self.descriptor = OutputElnBomDescriptor(None, None, name, None, 1)
         i = 0
         for bom in bom_list:
             self.insert_bom(bom, i)
@@ -228,3 +230,65 @@ class CompositeOutputBom(object):
                 else:
                     newline.merge_line(line)
                     self.lines.remove(line)
+
+
+def load_cobom_from_file(cobompath, tf=None):
+    bomlist = []
+    if os.path.exists(cobompath):
+        logger.info("Loading Cobom File : " + cobompath)
+        with open(cobompath, 'r') as f:
+            header = []
+            reader = csv.reader(f)
+            for line in reader:
+                line = [elem.strip() for elem in line]
+                if line[0] == 'device':
+                    header = line
+                    break
+
+            logger.info('Inserting External Boms')
+            oboms = []
+            for head in header[1:-1]:
+                logger.info('Creating Bom : ' + head)
+                obom_descriptor = OutputElnBomDescriptor(head,
+                                                         None,
+                                                         head, None)
+                obom = OutputBom(obom_descriptor)
+                oboms.append(obom)
+
+            for line in reader:
+                line = [elem.strip() for elem in line]
+                if line[0] == '':
+                    continue
+                if line[0] == 'END':
+                    break
+                if tf and not tf.has_contextual_repr(line[0]):
+                    print line[0] + ' Possibly not recognized'
+                if tf:
+                    device, value, footprint = parse_ident(tf.get_canonical_repr(line[0]))
+                else:
+                    device, value, footprint = parse_ident(line[0])
+                logger.debug("Trying to insert line : " + line[0])
+                # print base_tf.get_canonical_repr(line[0])
+                from tendril.boms.electronics import EntityElnComp
+                item = EntityElnComp()
+                item.define('Undef', device, value, footprint)
+                for idx, col in enumerate(line[1:-1]):
+                    if col != '':
+                        if device and fpiswire(device):
+                            length = Length(col)
+                            if length > 0:
+                                wireitem = EntityElnComp()
+                                wireitem.define('Undef', device, value, str(length))
+                                oboms[idx].insert_component(wireitem)
+                        else:
+                            num = int(col)
+                            if num > 0:
+                                for i in range(num):
+                                    oboms[idx].insert_component(item)
+
+            for obom in oboms:
+                logger.info('Inserting External Bom : ' + obom.descriptor.configname)
+                bomlist.append(obom)
+    cobom = CompositeOutputBom(bomlist, name=os.path.splitext(os.path.split(cobompath)[1])[0])
+    return cobom
+
