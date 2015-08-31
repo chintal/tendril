@@ -95,11 +95,10 @@ from tendril.utils.types.unitbase import DummyUnit
 
 from tendril.testing.instrumentbase import InstrumentBase
 from tendril.testing.instrumentbase import InstrumentInputChannelBase
+from tendril.testing.instruments import connectionDone
 
 from decimal import Decimal
 from decimal import InvalidOperation
-
-from twisted.internet.protocol import connectionDone
 
 
 def voltage_processor(m):
