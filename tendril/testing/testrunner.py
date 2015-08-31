@@ -74,7 +74,7 @@ def get_testobj_from_cnf_test(cnf_test, testvars, bomobj, offline=False):
         testobj.title = vardict.pop('title')
     testobj.use_bom(bomobj)
     testobj.configure(**vardict)
-    logger.info("Adding test object to suite : " + repr(testobj))
+    logger.info("Adding Test Obj : " + repr(testobj))
     return testobj
 
 
@@ -109,7 +109,7 @@ def replace_in_string(cnf_string, token, value, channelmap=None):
         for s in mapped_strings:
             if cnf_string.startswith(s):
                 lidx = channelmap[s][value]
-                logger.info("Applying channel map : " + ' '.join([str(s), str(value), str(lidx)]))
+                logger.debug("Applying channel map : " + ' '.join([str(s), str(value), str(lidx)]))
 
     return cnf_string.replace(token, str(lidx))
 
@@ -236,7 +236,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder, offline=Fal
         suite = get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=offline)
         for lsuite in suite:
             lsuite.serialno = serialno
-            logger.info("Created test suite : " + repr(lsuite))
+            logger.info("Constructed Suite : " + repr(lsuite))
             yield lsuite
 
 
@@ -280,7 +280,7 @@ def publish_and_print(serialno, devicetype, print_to_paper=False):
 def run_test(serialno=None):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
-    logger.info("Staring test for serial no : " + serialno)
+    logger.info("Staring Test for Serial No : " + serialno)
 
     devicetype = serialnos.get_serialno_efield(sno=serialno)
     logger.info(serialno + " is device : " + devicetype)

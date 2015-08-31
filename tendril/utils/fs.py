@@ -209,7 +209,7 @@ def get_file_hash(filepath, hasher=None, blocksize=65536):
         while len(buf) > 0:
             hasher.update(buf)
             buf = afile.read(blocksize)
-    return base64.urlsafe_b64encode(hasher.digest())
+    return base64.b64encode(hasher.digest())
 
 
 class VersionedOutputFile:
@@ -346,6 +346,19 @@ def import_(fpath):
     (name, ext) = os.path.splitext(name)
     (f, filename, data) = imp.find_module(name, [path])
     return imp.load_module(name, f, filename, data)
+
+
+def get_parent(obj, n=1):
+    """
+    This function is intended for use by modules imported from outside
+    the package via the filesystem to get around the behavior of python's
+    super() which breaks when something is effectively reloaded.
+
+    .. todo:: A cleaner solution to handle this condition is needed.
+
+    """
+    import inspect
+    return inspect.getmro(obj.__class__)[n]
 
 
 atexit.register(fsutils_cleanup)
