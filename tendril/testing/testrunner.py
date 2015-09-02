@@ -22,6 +22,7 @@ logger = log.get_logger(__name__, log.DEFAULT)
 import sys
 import copy
 import os
+import arrow
 
 from collections import namedtuple
 
@@ -240,14 +241,26 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder, offline=Fal
             yield lsuite
 
 
-def run_electronics_test(serialno, devicetype, projectfolder):
+def run_electronics_test(serialno, devicetype, projectfolder, incremental=True):
     offline = False
     suites = []
     for suite in get_electronics_test_suites(serialno, devicetype, projectfolder, offline=offline):
         if offline is False:
-            suite.run_test()
-            commit_test_results(suite)
-            suite.finish()
+            if incremental is True:
+                latest = controller.get_latest_test_suite(serialno=serialno,
+                                                          suite_class=repr(suite.__class__),
+                                                          descr=suite.desc)
+                if latest.passed and \
+                        latest.created_at.floor('day') == arrow.utcnow().floor('day'):
+                    suite_needs_be_run = False
+                else:
+                    suite_needs_be_run = True
+            else:
+                suite_needs_be_run = True
+            if suite_needs_be_run is True:
+                suite.run_test()
+                commit_test_results(suite)
+                suite.finish()
         suites.append(suite)
     return suites
 
