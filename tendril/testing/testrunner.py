@@ -241,7 +241,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder, offline=Fal
             yield lsuite
 
 
-def run_electronics_test(serialno, devicetype, projectfolder, incremental=True):
+def run_electronics_test(serialno, devicetype, projectfolder, incremental=False):
     offline = False
     suites = []
     for suite in get_electronics_test_suites(serialno, devicetype, projectfolder, offline=offline):
@@ -253,6 +253,7 @@ def run_electronics_test(serialno, devicetype, projectfolder, incremental=True):
                 if latest.passed and \
                         latest.created_at.floor('day') == arrow.utcnow().floor('day'):
                     suite_needs_be_run = False
+                    suite.destroy()
                 else:
                     suite_needs_be_run = True
             else:

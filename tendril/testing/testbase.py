@@ -121,6 +121,9 @@ class RunnableTest(object):
     def finish(self):
         logger.info(repr(self) + " :: Result : " + str(self.passed))
 
+    def destroy(self):
+        raise NotImplementedError
+
     @property
     def desc(self):
         return self._desc
@@ -328,6 +331,9 @@ class TestBase(RunnableTest):
         print "{0}".format(self.title)
         print "{0}".format(repr(self))
 
+    def destroy(self):
+        pass
+
 
 class TestSuiteBase(RunnableTest):
     """ Object representing a full runnable Test Suite on a single entity """
@@ -387,6 +393,10 @@ class TestSuiteBase(RunnableTest):
                                             terminal.NORMAL,  result)
         print "{0}{1}{2}".format(hcolor, repr(self), terminal.NORMAL)
         print hcolor + hline + terminal.NORMAL
+
+    def destroy(self):
+        for test in self._tests:
+            test.destroy()
 
     @property
     def tests(self):
