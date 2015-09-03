@@ -241,7 +241,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder, offline=Fal
             yield lsuite
 
 
-def run_electronics_test(serialno, devicetype, projectfolder, incremental=False):
+def run_electronics_test(serialno, devicetype, projectfolder, incremental=True):
     offline = False
     suites = []
     for suite in get_electronics_test_suites(serialno, devicetype, projectfolder, offline=offline):

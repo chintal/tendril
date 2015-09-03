@@ -97,7 +97,7 @@ class SignalWaveInputChannel(InstrumentInputChannelBase):
             if maxlen is not None:
                 if maxlen > chunk.maxlen:
                     chunk.maxlen = maxlen
-                    return chunk
+                return chunk
             else:
                 return chunk
         else:

@@ -311,7 +311,7 @@ def render_lineplot(outf, plotdata, title, note):
 def make_graph(outpath, plotdata_y, plotdata_x=None,
                color='black', lw=2, marker=None,
                xscale='linear', yscale='linear',
-               xlabel='', ylabel=''):
+               xlabel='', ylabel='', ymax=None, ymin=None):
     """
     Renders a graph of the data provided as a ``.png`` file, saved to the
     path specified by ``outpath``. This function uses :mod:`matplotlib.pyplot`.
@@ -338,7 +338,8 @@ def make_graph(outpath, plotdata_y, plotdata_x=None,
     :type ylabel: str
     :return: The output path.
     """
-    pyplot.plot(plotdata_x, plotdata_y, color=color, lw=lw, marker=marker)
+    pyplot.plot(plotdata_x, plotdata_y,
+                color=color, lw=lw, marker=marker)
     pyplot.xscale(xscale)
     pyplot.yscale(yscale)
     pyplot.grid(True, which='major', color='0.3', linestyle='-')
@@ -347,6 +348,8 @@ def make_graph(outpath, plotdata_y, plotdata_x=None,
     pyplot.ylabel(ylabel, fontsize=20)
     pyplot.tick_params(axis='both', which='major', labelsize=16)
     pyplot.tick_params(axis='both', which='minor', labelsize=8)
+    if (ymax, ymin) is not (None, None):
+        pyplot.ylim((ymax, ymin))
     pyplot.tight_layout()
     pyplot.savefig(outpath)
     pyplot.close()
@@ -369,11 +372,20 @@ def get_optimum_bins(plotdata_y):
 
     :param plotdata_y: The data for which a histogram is to be made
     :return: The optimal number of bins
+
+    .. warning:: This function fails if the provided data lacks a proper
+                 distribution, such as if there are only 4 distinct values
+                 in the output. Figure out why and how to fix it. In the
+                 meanwhile, specify bins manually to not let this function
+                 be called.
     """
+
+    print plotdata_y
 
     max_p = max(plotdata_y)
     min_p = min(plotdata_y)
-    n_min = 4
+
+    n_min = 2
     n_max = 50
     n = range(n_min, n_max)
 
