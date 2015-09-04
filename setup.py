@@ -54,6 +54,8 @@ setup(
         'sqlalchemy_utils',
         'alembic',
         'svn',
+        'fs',
+        'paramiko',
 
         # Flask Dependencies (to be pruned?)
         'jsmin',

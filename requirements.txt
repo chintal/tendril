@@ -1,3 +1,5 @@
+fs
+paramiko
 svn
 scipy
 driver2200087==0.4

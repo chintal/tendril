@@ -19,9 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import shutil
 import glob
@@ -33,6 +30,9 @@ from tendril.utils.config import DOCSTORE_ROOT
 from tendril.utils.config import INSTANCE_ROOT
 
 from db import controller
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 @with_db

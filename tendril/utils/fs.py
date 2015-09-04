@@ -43,9 +43,6 @@ or python libraries.
 
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import imp
 import tempfile
 import zipfile
@@ -55,8 +52,12 @@ import glob
 import string
 import hashlib
 import base64
+
 from datetime import datetime
 from collections import namedtuple
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 if tempfile.tempdir is None:
