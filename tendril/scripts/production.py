@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     if os.path.exists(os.path.join(orderfolder, 'wsno')):
         with open(os.path.join(orderfolder, 'wsno'), 'r') as f:
-            PROD_ORD_SNO = f.readline()
+            PROD_ORD_SNO = f.readline().strip()
     else:
         PROD_ORD_SNO = None
 
@@ -94,12 +94,15 @@ if __name__ == "__main__":
     if 'root_orders' in data.keys():
         ROOT_ORDERS = data['root_orders']
         if len(ROOT_ORDERS) > 1:
-            logger.warning("Having more than one Root Order is not fully defined. This may break other functionality")
+            logger.warning("Having more than one Root Order is not fully "
+                           "defined. This may break other functionality")
     else:
         ROOT_ORDERS = None
 
     if PROD_ORD_SNO is None:
-        PROD_ORD_SNO = serialnos.get_serialno(series='PROD', efield=data['title'], register=REGISTER)
+        PROD_ORD_SNO = serialnos.get_serialno(series='PROD',
+                                              efield=data['title'],
+                                              register=REGISTER)
 
     # Generate Tendril Requisitions, confirm production viability.
 
@@ -116,7 +119,8 @@ if __name__ == "__main__":
     cobom.collapse_wires()
 
     with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
-        logger.info('Exporting Composite Output BOM to File : ' + os.linesep + os.path.join(orderfolder, 'cobom.csv'))
+        logger.info('Exporting Composite Output BOM to File : ' + os.linesep +
+                    os.path.join(orderfolder, 'cobom.csv'))
         cobom.dump(f)
 
     unsourced = []
@@ -137,17 +141,22 @@ if __name__ == "__main__":
             if line.columns[idx] == 0:
                 continue
             if avail > line.columns[idx]:
-                tendril.inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
+                tendril.inventory.electronics.reserve_items(line.ident,
+                                                            line.columns[idx],
+                                                            earmark)
             elif avail > 0:
-                tendril.inventory.electronics.reserve_items(line.ident, avail, earmark)
+                tendril.inventory.electronics.reserve_items(line.ident,
+                                                            avail, earmark)
                 pshort = line.columns[idx] - avail
                 shortage += pshort
                 logger.debug('Adding Partial Qty of ' + line.ident +
-                             ' for ' + earmark + ' to shortage : ' + str(pshort))
+                             ' for ' + earmark + ' to shortage : ' +
+                             str(pshort))
             else:
                 shortage += line.columns[idx]
                 logger.debug('Adding Full Qty of ' + line.ident +
-                             ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
+                             ' for ' + earmark + ' to shortage : ' +
+                             str(line.columns[idx]))
 
         if shortage > 0:
             unsourced.append((line.ident, shortage))
@@ -157,7 +166,8 @@ if __name__ == "__main__":
         for elem in unsourced:
             logger.warning("{0:<40}{1:>5}".format(elem[0], elem[1]))
         if HALT_ON_SHORTAGE is True:
-            logger.info("Halt on shortage is set. Reversing changes and exiting")
+            logger.info("Halt on shortage is set. Reversing changes "
+                        "and exiting")
             exit()
 
     # TODO Transfer Reservations
@@ -168,7 +178,9 @@ if __name__ == "__main__":
     if 'indentsno' in snomap.keys():
         indentsno = snomap['indentsno']
     else:
-        indentsno = serialnos.get_serialno(series='IDT', efield='FOR ' + PROD_ORD_SNO, register=REGISTER)
+        indentsno = serialnos.get_serialno(series='IDT',
+                                           efield='FOR ' + PROD_ORD_SNO,
+                                           register=REGISTER)
         snomap['indentsno'] = indentsno
     title = data['title']
     indentpath, indentsno = tendril.dox.indent.gen_stock_idt_from_cobom(orderfolder,
@@ -191,9 +203,12 @@ if __name__ == "__main__":
                                                efield=title)
         serialnos.link_serialno(child=indentsno, parent=PROD_ORD_SNO)
     else:
-        logger.info("Not registering used serial number : " + PROD_ORD_SNO)
-        logger.info("Not Registering Document : PRODUCTION COBOM CSV - " + indentsno)
-        logger.info("Not Linking Serial Nos : " + indentsno + ' to parent ' + PROD_ORD_SNO)
+        logger.info("Not registering used serial number : " +
+                    PROD_ORD_SNO)
+        logger.info("Not Registering Document : PRODUCTION COBOM CSV - " +
+                    indentsno)
+        logger.info("Not Linking Serial Nos : " + indentsno +
+                    ' to parent ' + PROD_ORD_SNO)
 
     snos = []
     addldocs = []
