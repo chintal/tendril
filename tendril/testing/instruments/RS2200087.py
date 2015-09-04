@@ -397,7 +397,7 @@ class TendrilProtocol2200087(InstProtocol2200087):
         This function is called by twisted when the connection to the
         serial transport is lost.
         """
-        if reason == connectionDone:
+        if repr(reason) == repr(connectionDone):
             return
         else:
             print "Lost Connection to Device"
