@@ -26,8 +26,8 @@ import os
 import arrow
 from collections import namedtuple
 
-from tendril.utils.fs import TEMPDIR
-from tendril.utils.fs import get_tempname
+from tendril.utils.fsutils import TEMPDIR
+from tendril.utils.fsutils import get_tempname
 
 # TODO  Replace with colorama or so
 from tendril.utils.progressbar import terminal

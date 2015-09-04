@@ -33,7 +33,7 @@ from tendril.utils.config import AUDIT_PATH
 from tendril.utils.config import TENDRIL_ROOT
 from tendril.utils.config import INSTANCE_CACHE
 
-import tendril.utils.fs
+import tendril.utils.fsutils
 import tendril.conventions.electronics
 
 from gschem import conv_gsch2png
@@ -82,7 +82,7 @@ class GedaSymbol(object):
         if not os.path.exists(outfolder):
             os.makedirs(outfolder)
         if os.path.exists(self._img_repr_path):
-            if tendril.utils.fs.get_file_mtime(self._img_repr_path) > tendril.utils.fs.get_file_mtime(self.fpath):
+            if tendril.utils.fsutils.get_file_mtime(self._img_repr_path) > tendril.utils.fsutils.get_file_mtime(self.fpath):
                 return
         conv_gsch2png(self.fpath, outfolder)
 
@@ -420,7 +420,7 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
 
 def export_gsymlib_audit():
     auditfname = os.path.join(AUDIT_PATH, 'gsymlib-audit.csv')
-    outf = tendril.utils.fs.VersionedOutputFile(auditfname)
+    outf = tendril.utils.fsutils.VersionedOutputFile(auditfname)
     outw = csv.writer(outf)
     outw.writerow(['filename', 'status', 'ident', 'device', 'value',
                    'footprint', 'description', 'path', 'package'])

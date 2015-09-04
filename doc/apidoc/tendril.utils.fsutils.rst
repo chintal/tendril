@@ -1,5 +1,5 @@
 
-.. automodule:: tendril.utils.fs
+.. automodule:: tendril.utils.fsutils
     :members:
     :undoc-members:
     :show-inheritance:

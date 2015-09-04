@@ -76,7 +76,7 @@ from tendril.gedaif import projfile
 from tendril.gedaif import pcb
 
 from tendril.utils import pdf
-from tendril.utils import fs
+from tendril.utils import fsutils
 
 from tendril.entityhub import projects
 from tendril.boms import electronics as boms_electronics
@@ -119,11 +119,11 @@ def gen_confbom(projfolder, configname):
 
     """
     gpf = projfile.GedaProjectFile(projfolder)
-    sch_mtime = fs.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
     docfolder = projects.get_project_doc_folder(projfolder)
     outpath = os.path.join(docfolder, 'confdocs', configname + '-bom.pdf')
-    outf_mtime = fs.get_file_mtime(outpath)
+    outf_mtime = fsutils.get_file_mtime(outpath)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + outpath)
@@ -189,13 +189,13 @@ def gen_schpdf(projfolder, namebase):
 
     """
     gpf = projfile.GedaProjectFile(projfolder)
-    sch_mtime = fs.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
     configfile = conffile.ConfigsFile(projfolder)
     docfolder = projects.get_project_doc_folder(projfolder)
 
     schpdfpath = os.path.join(docfolder, namebase + '-schematic.pdf')
-    outf_mtime = fs.get_file_mtime(schpdfpath)
+    outf_mtime = fsutils.get_file_mtime(schpdfpath)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + schpdfpath)
@@ -244,11 +244,11 @@ def gen_masterdoc(projfolder, namebase):
 
     """
     gpf = projfile.GedaProjectFile(projfolder)
-    sch_mtime = fs.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
     docfolder = projects.get_project_doc_folder(projfolder)
     masterdocfile = os.path.join(docfolder, namebase + '-masterdoc.pdf')
-    outf_mtime = fs.get_file_mtime(masterdocfile)
+    outf_mtime = fsutils.get_file_mtime(masterdocfile)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + masterdocfile)
@@ -294,11 +294,11 @@ def gen_confpdf(projfolder, configname, namebase):
 
     """
     gpf = projfile.GedaProjectFile(projfolder)
-    sch_mtime = fs.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
     docfolder = projects.get_project_doc_folder(projfolder)
     confdocfile = os.path.join(docfolder, 'confdocs', configname + '-doc.pdf')
-    outf_mtime = fs.get_file_mtime(confdocfile)
+    outf_mtime = fsutils.get_file_mtime(confdocfile)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + confdocfile)
@@ -338,11 +338,11 @@ def gen_cobom_csv(projfolder, namebase):
     """
     gpf = projfile.GedaProjectFile(projfolder)
     configfile = conffile.ConfigsFile(projfolder)
-    sch_mtime = fs.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
     docfolder = projects.get_project_doc_folder(projfolder)
     cobom_csv_path = os.path.join(docfolder, 'confdocs', 'conf-boms.csv')
-    outf_mtime = fs.get_file_mtime(cobom_csv_path)
+    outf_mtime = fsutils.get_file_mtime(cobom_csv_path)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + cobom_csv_path)
@@ -389,10 +389,10 @@ def gen_pcb_pdf(projfolder):
     """
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
-    pcb_mtime = fs.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
+    pcb_mtime = fsutils.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
     docfolder = projects.get_project_doc_folder(projfolder)
     pdffile = os.path.join(docfolder, configfile.configdata['pcbname'] + '-pcb.pdf')
-    outf_mtime = fs.get_file_mtime(pdffile)
+    outf_mtime = fsutils.get_file_mtime(pdffile)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + pdffile)
@@ -430,13 +430,13 @@ def gen_pcb_gbr(projfolder):
     """
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
-    pcb_mtime = fs.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
+    pcb_mtime = fsutils.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
     gbrfolder = os.path.join(configfile.projectfolder, 'gerber')
     outf_mtime = None
     if not os.path.exists(gbrfolder):
         os.makedirs(gbrfolder)
     else:
-        outf_mtime = fs.get_folder_mtime(gbrfolder)
+        outf_mtime = fsutils.get_folder_mtime(gbrfolder)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + gbrfolder)
@@ -450,7 +450,7 @@ def gen_pcb_gbr(projfolder):
         os.remove(f)
     gbrfolder = pcb.conv_pcb2gbr(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
     zfile = os.path.join(projfolder, gpf.pcbfile + '-gerber.zip')
-    fs.zipdir(gbrfolder, zfile)
+    fsutils.zipdir(gbrfolder, zfile)
     return gbrfolder
 
 
@@ -476,9 +476,9 @@ def gen_pcb_dxf(projfolder):
     """
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
-    pcb_mtime = fs.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
+    pcb_mtime = fsutils.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
     dxffile = os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.dxf')
-    outf_mtime = fs.get_file_mtime(dxffile)
+    outf_mtime = fsutils.get_file_mtime(dxffile)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + dxffile)
@@ -520,14 +520,14 @@ def gen_pcbpricing(projfolder, namebase):
     """
     gpf = projfile.GedaProjectFile(projfolder)
     pcbpricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
-    pcbpricing_mtime = fs.get_file_mtime(pcbpricingfp)
+    pcbpricing_mtime = fsutils.get_file_mtime(pcbpricingfp)
 
     if not os.path.exists(pcbpricingfp):
         return None
 
     docfolder = projects.get_project_doc_folder(projfolder)
     plotfile = os.path.join(docfolder, namebase + '-pricing.pdf')
-    outf_mtime = fs.get_file_mtime(plotfile)
+    outf_mtime = fsutils.get_file_mtime(plotfile)
 
     if outf_mtime is not None and outf_mtime > pcbpricing_mtime:
         logger.debug('Skipping up-to-date ' + pcbpricingfp)

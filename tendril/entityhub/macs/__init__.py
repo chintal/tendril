@@ -37,7 +37,7 @@ from tendril.entityhub import projects
 from tendril.utils.db import with_db
 
 from tendril.utils.config import INSTANCE_ROOT
-from tendril.utils.fs import import_
+from tendril.utils.fsutils import import_
 
 macs_folder = os.path.join(INSTANCE_ROOT, 'macs')
 

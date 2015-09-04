@@ -62,7 +62,7 @@ Tendril application code.
     tendril.utils.colors
     tendril.utils.config
     tendril.utils.db
-    tendril.utils.fs
+    tendril.utils.fsutils
     tendril.utils.libreoffice
     tendril.utils.log
     tendril.utils.pdf

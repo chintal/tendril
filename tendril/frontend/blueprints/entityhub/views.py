@@ -27,7 +27,7 @@ from . import entityhub as blueprint
 from tendril.entityhub import projects as ehprojects
 from tendril.gedaif.conffile import ConfigsFile
 
-from tendril.utils.fs import Crumb
+from tendril.utils.fsutils import Crumb
 
 
 @blueprint.route('/cards/<cardname>')

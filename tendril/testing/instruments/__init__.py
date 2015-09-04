@@ -28,7 +28,7 @@ setup()
 from twisted.internet.protocol import connectionDone
 
 from tendril.utils.config import INSTANCE_ROOT
-from tendril.utils.fs import import_
+from tendril.utils.fsutils import import_
 
 
 INSTANCE_INSTRUMENTS_ROOT = os.path.join(INSTANCE_ROOT, 'instruments')

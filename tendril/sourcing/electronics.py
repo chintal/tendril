@@ -34,7 +34,7 @@ from tendril.gedaif import gsymlib
 import tendril.gedaif.conffile
 
 from tendril.utils.types import currency
-from tendril.utils import fs
+from tendril.utils import fsutils
 from tendril.utils import config
 from tendril.utils.progressbar.progressbar import ProgressBar
 
@@ -58,7 +58,7 @@ def gen_vendor_mapfile(vendor_obj):
         pb = ProgressBar('red', block='#', empty='.')
 
         outp = vendor_obj.mappath
-        outf = fs.VersionedOutputFile(outp)
+        outf = fsutils.VersionedOutputFile(outp)
         outw = csv.writer(outf)
         outw.writerow(('Canonical', 'Strategy', 'Lparts'))
 
@@ -94,7 +94,7 @@ def gen_vendor_mapfile(vendor_obj):
         pb = ProgressBar('red', block='#', empty='.')
 
         outp = vendor_obj.mappath
-        outf = fs.VersionedOutputFile(outp)
+        outf = fsutils.VersionedOutputFile(outp)
         outw = csv.writer(outf)
         outw.writerow(('Canonical', 'Strategy', 'Lparts'))
 
@@ -181,7 +181,7 @@ def export_vendor_map_audit(vendor_obj):
     assert isinstance(mapobj, tendril.entityhub.maps.MapFile)
 
     outp = os.path.join(config.vendor_map_audit_folder, vendor_obj.name + '-electronics-audit.csv')
-    outf = fs.VersionedOutputFile(outp)
+    outf = fsutils.VersionedOutputFile(outp)
     outw = csv.writer(outf)
     pb = ProgressBar('red', block='#', empty='.')
     idents = mapobj.get_idents()

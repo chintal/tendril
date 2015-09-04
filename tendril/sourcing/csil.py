@@ -37,7 +37,7 @@ import selenium.common.exceptions
 
 import vendors
 
-from tendril.utils import fs
+from tendril.utils import fsutils
 from tendril.utils.types import currency
 from tendril.utils.progressbar.progressbar import ProgressBar
 
@@ -455,8 +455,8 @@ def generate_pcb_pricing(projfolder, noregen=True, forceregen=False):
 
     if noregen is True:
         if forceregen is False:
-            pcb_mtime = fs.get_file_mtime(os.path.join(gpf.configsfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
-            outf_mtime = fs.get_file_mtime(pricingfp)
+            pcb_mtime = fsutils.get_file_mtime(os.path.join(gpf.configsfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
+            outf_mtime = fsutils.get_file_mtime(pricingfp)
             if outf_mtime is not None and outf_mtime > pcb_mtime:
                 logger.info('Skipping up-to-date ' + pricingfp)
                 return pricingfp

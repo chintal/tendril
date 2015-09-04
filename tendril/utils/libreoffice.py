@@ -36,7 +36,7 @@ For details about how it actually works, look at the documentation of the
 
 """
 
-from tendril.utils.fs import TEMPDIR
+from tendril.utils.fsutils import TEMPDIR
 
 import shutil
 import os

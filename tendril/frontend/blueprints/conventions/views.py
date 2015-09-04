@@ -31,7 +31,7 @@ from tendril.conventions import electronics
 from tendril.conventions import motifs
 from tendril.inventory import guidelines
 
-from tendril.utils.fs import get_path_breadcrumbs
+from tendril.utils.fsutils import get_path_breadcrumbs
 
 
 def get_motifs():

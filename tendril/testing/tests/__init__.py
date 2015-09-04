@@ -22,7 +22,7 @@ See the COPYING, README, and INSTALL files for more information
 import os
 
 from tendril.utils.config import INSTANCE_ROOT
-from tendril.utils.fs import import_
+from tendril.utils.fsutils import import_
 
 
 INSTANCE_TESTS_ROOT = os.path.join(INSTANCE_ROOT, 'tests')

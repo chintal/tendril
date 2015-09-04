@@ -28,7 +28,7 @@ import re
 import datetime
 
 from tendril.utils import libreoffice
-from tendril.utils import fs
+from tendril.utils import fsutils
 from tendril.utils import config
 
 from tendril.gedaif import gsymlib
@@ -153,7 +153,7 @@ def gen_canonical_transform(elec_inven_data_idx, regen=True):
         rdr = get_stockxlsreader(fpath, sname, location, tfpath)
 
         outp = tfpath
-        outf = fs.VersionedOutputFile(outp)
+        outf = fsutils.VersionedOutputFile(outp)
         outw = csv.writer(outf)
         outw.writerow(('Current', 'gEDA Current', 'Ideal', 'Status', 'In Symlib'))
         for line in rdr.row_gen:

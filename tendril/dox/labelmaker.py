@@ -28,7 +28,7 @@ import atexit
 import cPickle
 
 import render
-from tendril.utils.fs import TEMPDIR
+from tendril.utils.fsutils import TEMPDIR
 from tendril.utils.config import COMPANY_NAME
 from tendril.utils.config import COMPANY_LOGO_PATH
 from tendril.utils.config import INSTANCE_CACHE

@@ -16,8 +16,8 @@ from tendril.entityhub import projects
 from tendril.entityhub.db import controller as sno_controller
 from tendril.boms.electronics import import_pcb
 from tendril.dox.render import make_histogram
-from tendril.utils.fs import TEMPDIR
-from tendril.utils.fs import get_tempname
+from tendril.utils.fsutils import TEMPDIR
+from tendril.utils.fsutils import get_tempname
 
 from db import controller
 from testbase import TestSuiteBase

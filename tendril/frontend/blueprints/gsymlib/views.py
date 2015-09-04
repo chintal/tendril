@@ -31,8 +31,8 @@ import tendril.gedaif.gsymlib
 
 from . import gsymlib as blueprint
 
-from tendril.utils.fs import get_path_breadcrumbs
-from tendril.utils.fs import Crumb
+from tendril.utils.fsutils import get_path_breadcrumbs
+from tendril.utils.fsutils import Crumb
 from tendril.utils.config import GEDA_SYMLIB_ROOT
 
 

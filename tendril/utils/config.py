@@ -37,7 +37,7 @@ module into this namespace.
 
 import os
 import inspect
-from fs import import_
+from fsutils import import_
 
 
 CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))

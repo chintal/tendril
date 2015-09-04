@@ -27,7 +27,7 @@ import yaml
 
 from tendril.dox.labelmaker import manager
 
-from tendril.utils.fs import import_
+from tendril.utils.fsutils import import_
 from tendril.utils.config import INSTANCE_ROOT
 
 PRODUCTS_ROOT = os.path.join(INSTANCE_ROOT, 'products')
