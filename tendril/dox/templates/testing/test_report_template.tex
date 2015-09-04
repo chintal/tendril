@@ -18,7 +18,7 @@
 \usepackage{tfrupee}
 \pdfmapfile{=tfrupee.map}
 \usepackage{lastpage}
-
+\usepackage{placeins}
 \usepackage{caption}
 \usepackage[margin=0pt,skip=0pt]{subcaption}
 
@@ -99,43 +99,48 @@
 \begin{tabularx}{1.0\textwidth}{|>{\raggedleft\arraybackslash}p{0.01\textwidth}|>{\raggedleft\arraybackslash}p{0.13\textwidth}|>{\raggedright\arraybackslash}X|>{\centering\arraybackslash}p{0.16\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|}
 \hline
 %{ for suite in stage.suites %}
-\rowcolor[gray]{0.9} & \normalsize\textbf{%{{ suite.desc %}}} & \textbf{%{{ suite.title %}}} & {\footnotesize %{{ suite.ts %}}} & \textbf{%{{ suite.passed %}}} \tabularnewline\hline
+\rowcolor[gray]{0.9} & \normalsize\textbf{%{{ suite.desc %}}} & \textbf{%{{ suite.title %}}} & {\footnotesize %{{ suite.ts %}}} & \textbf{%{{ suite.passed %}}} \tabularnewline\hline\nopagebreak[4]
 
   %{ for test in suite.tests %}
-    %{{ loop.index %}} & %{{ test.desc %}} & %{{ test.title %}}\hfill %{ if test.instrument %}{\footnotesize Instrument: %{{ stage.instruments.get(test.instrument) %}}}%{ endif %} & {\footnotesize %{{ test.ts %}}} & %{{ test.passed %}} \tabularnewline
+    %{{ loop.index %}} & %{{ test.desc %}} & %{{ test.title %}}\hfill %{ if test.instrument %}{\footnotesize Instrument: %{{ stage.instruments.get(test.instrument) %}}}%{ endif %} & {\footnotesize %{{ test.ts %}}} & %{{ test.passed %}} \tabularnewline\nopagebreak[4]
     
     %{ if test.lines|length > 0 and not test.passfailonly %}
     &  &  \begin{tabular}{>{\centering\arraybackslash}p{0.25\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}}
       
       %{ for l in test.lines %}
 	\hline
-         {\small %{{ l.desc %}}} & %{ if l.expected %} {\small %{{ l.expected %}}} & \textbf{\small %{{ l.measured %}}} %{ else %} \multicolumn{2}{r}{\small %{{ l.measured %}}} %{ endif %} \tabularnewline
+         {\small %{{ l.desc %}}} & %{ if l.expected %} {\small %{{ l.expected %}}} & \textbf{\small %{{ l.measured %}}} %{ else %} \multicolumn{2}{r}{\small %{{ l.measured %}}} %{ endif %} \tabularnewline %{ if not loop.last %}\nopagebreak[4]%{ endif %}
       %{ endfor %}
       \end{tabular}
-      &  &  \tabularnewline
+      &  &  \tabularnewline\nopagebreak[2]
     %{ endif %}
     \hline
   %{ endfor %}
 
 %{ endfor %}
-\rowcolor[gray]{0.95} & \multicolumn{4}{l|}{\normalsize\textbf{Test Instruments}} \tabularnewline\hline
+\rowcolor[gray]{0.95} & \multicolumn{4}{l|}{\normalsize\textbf{Test Instruments}} \tabularnewline\hline\nopagebreak[4]
 %{ for instrument in stage.instruments|dictsort(False, 'value') %}
-  %{{ instrument.1 %}} & \multicolumn{4}{l|}{%{{ instrument.0 %}}} \tabularnewline
+  %{{ instrument.1 %}} & \multicolumn{4}{l|}{%{{ instrument.0 %}}} \tabularnewline %{ if not loop.last %}\nopagebreak[4]%{ endif %}
 %{ endfor %}
 \hline
 \end{tabularx}
 \end{center}
 
 %{ if stage.graphs|length > 0 %}
-\begin{figure}[h!]
-  %{ for graph in stage.graphs %}\begin{subfigure}[b]{0.33\textwidth}
-      \includegraphics[width=\linewidth]{%{{ graph.0 %}}}
-      \caption{%{{ graph.1 %}}}
+  %{ for row in stage.graphs|batch(3) %}
+  \begin{figure}[ht!]
+  %{ if loop.index > 0 %} \ContinuedFloat %{ endif %}
+  %{ for column in row %}\begin{subfigure}[b]{0.33\textwidth}
+      \includegraphics[width=\linewidth]{%{{ column.0 %}}}
+      \caption{%{{ column.1 %}}}
     \end{subfigure}\hspace{0.005\textwidth}%{ endfor %}%
-\end{figure}
+  \end{figure}
+  %{ endfor %}
 %{ endif %}
 
-\begin{table}[b]
+\FloatBarrier
+
+\begin{table}[h]
 \begin{tabular}{>{\centering\arraybackslash}p{0.44\textwidth}>{\centering\arraybackslash}p{0.44\textwidth}}
 \hline
   & \tabularnewline
@@ -147,6 +152,7 @@
   \footnotesize Date: \testdate & \footnotesize{for %{{stage.company%}}} \tabularnewline
 \end{tabular}
 \end{table}
+
 %{ if stage.evenpages == True %}
 \cleardoublepage
 %{ endif %} 
