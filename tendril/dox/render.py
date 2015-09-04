@@ -349,7 +349,7 @@ def make_graph(outpath, plotdata_y, plotdata_x=None,
     pyplot.tick_params(axis='both', which='major', labelsize=16)
     pyplot.tick_params(axis='both', which='minor', labelsize=8)
     if (ymax, ymin) is not (None, None):
-        pyplot.ylim((ymax, ymin))
+        pyplot.ylim((ymin, ymax))
     pyplot.tight_layout()
     pyplot.savefig(outpath)
     pyplot.close()
