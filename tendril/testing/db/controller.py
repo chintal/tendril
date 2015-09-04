@@ -47,7 +47,7 @@ def create_test_model_obj(testobj=None, suite=None, session=None):
     tro.testsuite = suite
 
     if testobj.ts is not None:
-        tro.ts = testobj.ts
+        tro.created_at = testobj.ts
 
     session.add(tro)
     return tro
@@ -65,7 +65,7 @@ def commit_test_suite(suiteobj=None, session=None):
     sro.serialno = sno
 
     if suiteobj.ts is not None:
-        sro.ts = suiteobj.ts
+        sro.created_at = suiteobj.ts
 
     session.add(sro)
     for test in suiteobj.tests:
