@@ -37,6 +37,11 @@ INSTANCE_INSTRUMENTS = import_(INSTANCE_INSTRUMENTS_ROOT)
 instument_pool = {}
 
 
+def destroy_instrument(instst, instobj=None):
+    if instobj is None:
+        instument_pool.pop(instst)
+
+
 def get_instrument_object(instst, dedicated=False):
     modname = instst
     modstr = 'tendril.testing.instruments.' + modname
