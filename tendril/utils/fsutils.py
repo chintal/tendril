@@ -53,6 +53,9 @@ import string
 import hashlib
 import base64
 
+from fs.opener import fsopendir
+from fs.errors import ResourceNotFoundError
+
 from datetime import datetime
 from collections import namedtuple
 
@@ -76,6 +79,7 @@ if tempfile.tempdir is None:
 #: .. seealso:: :func:`fsutils_cleanup`
 #:
 TEMPDIR = tempfile.gettempdir()
+temp_fs = fsopendir(TEMPDIR)
 
 
 def get_tempname():
@@ -208,7 +212,10 @@ def get_file_mtime(f, fs=None):
         except OSError:
             return None
     else:
-        return fs.getinfo(f)['modified_time']
+        try:
+            return fs.getinfo(f)['modified_time']
+        except ResourceNotFoundError:
+            return None
 
 
 def get_file_hash(filepath, hasher=None, blocksize=65536):

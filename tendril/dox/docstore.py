@@ -29,6 +29,7 @@ from tendril.utils.db import with_db
 from tendril.entityhub import serialnos
 from tendril.utils.config import DOCSTORE_ROOT
 from tendril.utils.config import INSTANCE_ROOT
+from tendril.utils.config import REFDOC_ROOT
 
 from db import controller
 
@@ -38,6 +39,7 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
 workspace_fs = fsopendir(os.path.join(INSTANCE_ROOT, 'scratch'), create_dir=True)
+refdoc_fs = fsopendir(REFDOC_ROOT)
 local_fs = fsopendir('/')
 
 

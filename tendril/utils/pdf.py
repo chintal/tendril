@@ -49,7 +49,7 @@ def merge_pdf(pdflist, outfilepath, remove_sources=False):
             continue
         f = os.path.normpath(f)
         merger.append(PyPDF2.PdfFileReader(file(f, 'rb')))
-    merger.write(outfilepath)
+    merger.write(str(outfilepath))
     if remove_sources is True:
         for f in pdflist:
             if not tendril.dox.wallet.is_in_wallet(f):

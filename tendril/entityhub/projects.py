@@ -35,19 +35,6 @@ def is_project_folder(folder):
     return True
 
 
-def get_project_doc_folder(projectfolder):
-    try:
-        conffile.ConfigsFile(projectfolder)
-    except conffile.NoGedaProjectException:
-        return os.path.join(TENDRIL_ROOT, 'scratch', 'lostandfound')
-    pth = os.path.join(projectfolder, 'doc')
-    if not os.path.exists(pth):
-        os.makedirs(pth)
-    if not os.path.exists(os.path.join(pth, 'confdocs')):
-        os.makedirs(os.path.join(pth, 'confdocs'))
-    return pth
-
-
 def parse_total_costing(filename):
     with open(filename, 'r') as f:
         reader = csv.reader(f)

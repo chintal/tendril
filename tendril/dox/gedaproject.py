@@ -61,8 +61,6 @@ names. Each function specifies the paths it operates on.
     gen_pcbpricing
 
 """
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
 
 import os
 import csv
@@ -78,11 +76,32 @@ from tendril.gedaif import pcb
 from tendril.utils import pdf
 from tendril.utils import fsutils
 
-from tendril.entityhub import projects
 from tendril.boms import electronics as boms_electronics
 from tendril.boms import outputbase as boms_outputbase
 
 import render
+from fs import path
+from fs.utils import copyfile
+
+from docstore import refdoc_fs
+
+from tendril.utils.config import PROJECTS_ROOT
+
+from tendril.utils import log
+from tendril.utils.fsutils import temp_fs
+
+workspace_fs = temp_fs.makeopendir('workspace_gpd')
+logger = log.get_logger(__name__, log.DEFAULT)
+
+
+def get_project_doc_folder(projectfolder):
+    projectfolder = os.path.relpath(projectfolder, PROJECTS_ROOT)
+    pth = path.join(projectfolder, 'doc')
+    if not refdoc_fs.exists(pth):
+        refdoc_fs.makedir(pth, recursive=True)
+    if not refdoc_fs.exists(path.join(pth, 'confdocs')):
+        refdoc_fs.makedir(path.join(pth, 'confdocs'), recursive=True)
+    return pth
 
 
 def gen_confbom(projfolder, configname):
@@ -118,12 +137,13 @@ def gen_confbom(projfolder, configname):
           - A list of :mod:`tendril.boms.outputbase.OutputBomLine` instances
 
     """
+
     gpf = projfile.GedaProjectFile(projfolder)
     sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
-    docfolder = projects.get_project_doc_folder(projfolder)
-    outpath = os.path.join(docfolder, 'confdocs', configname + '-bom.pdf')
-    outf_mtime = fsutils.get_file_mtime(outpath)
+    docfolder = get_project_doc_folder(projfolder)
+    outpath = path.join(docfolder, 'confdocs', configname + '-bom.pdf')
+    outf_mtime = fsutils.get_file_mtime(outpath, fs=refdoc_fs)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + outpath)
@@ -143,7 +163,11 @@ def gen_confbom(projfolder, configname):
 
     template = 'geda-bom-simple.tex'
 
-    render.render_pdf(stage, template, outpath)
+    workspace_outpath = workspace_fs.getsyspath(outpath)
+    workspace_fs.makedir(path.dirname(outpath), recursive=True, allow_recreate=True)
+    render.render_pdf(stage, template, workspace_outpath)
+    copyfile(workspace_fs, outpath, refdoc_fs, outpath, overwrite=True)
+
     return outpath
 
 
@@ -192,10 +216,10 @@ def gen_schpdf(projfolder, namebase):
     sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
     configfile = conffile.ConfigsFile(projfolder)
-    docfolder = projects.get_project_doc_folder(projfolder)
+    docfolder = get_project_doc_folder(projfolder)
 
-    schpdfpath = os.path.join(docfolder, namebase + '-schematic.pdf')
-    outf_mtime = fsutils.get_file_mtime(schpdfpath)
+    schpdfpath = path.join(docfolder, namebase + '-schematic.pdf')
+    outf_mtime = fsutils.get_file_mtime(schpdfpath, fs=refdoc_fs)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + schpdfpath)
@@ -205,14 +229,18 @@ def gen_schpdf(projfolder, namebase):
                 'Last modified : ' + str(sch_mtime) + '; Last Created : ' + str(outf_mtime))
 
     if configfile.configdata is not None:
+        workspace_outpath = workspace_fs.getsyspath(schpdfpath)
+        workspace_folder = workspace_fs.getsyspath(path.dirname(schpdfpath))
+        workspace_fs.makedir(path.dirname(schpdfpath), recursive=True, allow_recreate=True)
         pdffiles = []
         for schematic in gpf.schfiles:
             schfile = os.path.normpath(projfolder + '/schematic/' + schematic)
-            pdffile = gschem.conv_gsch2pdf(schfile, docfolder)
+            pdffile = gschem.conv_gsch2pdf(schfile, workspace_folder)
             pdffiles.append(pdffile)
-        pdf.merge_pdf(pdffiles, schpdfpath)
+        pdf.merge_pdf(pdffiles, workspace_outpath)
         for pdffile in pdffiles:
             os.remove(pdffile)
+        copyfile(workspace_fs, schpdfpath, refdoc_fs, schpdfpath, overwrite=True)
         return schpdfpath
 
 
@@ -246,9 +274,9 @@ def gen_masterdoc(projfolder, namebase):
     gpf = projfile.GedaProjectFile(projfolder)
     sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
-    docfolder = projects.get_project_doc_folder(projfolder)
-    masterdocfile = os.path.join(docfolder, namebase + '-masterdoc.pdf')
-    outf_mtime = fsutils.get_file_mtime(masterdocfile)
+    docfolder = get_project_doc_folder(projfolder)
+    masterdocfile = path.join(docfolder, namebase + '-masterdoc.pdf')
+    outf_mtime = fsutils.get_file_mtime(masterdocfile, fs=refdoc_fs)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + masterdocfile)
@@ -260,7 +288,21 @@ def gen_masterdoc(projfolder, namebase):
     pdffiles = [gen_configdoc(projfolder, namebase),
                 gen_schpdf(projfolder, namebase)]
 
-    pdf.merge_pdf(pdffiles, masterdocfile)
+    for p in pdffiles:
+        if p and not workspace_fs.exists(p):
+            workspace_fs.makedir(path.dirname(p),
+                                 recursive=True, allow_recreate=True)
+            copyfile(refdoc_fs, p, workspace_fs, p)
+
+    workspace_pdffiles = [workspace_fs.getsyspath(x) for x in pdffiles if x is not None]
+
+    workspace_outpath = workspace_fs.getsyspath(masterdocfile)
+    workspace_fs.makedir(path.dirname(masterdocfile),
+                         recursive=True, allow_recreate=True)
+    pdf.merge_pdf(workspace_pdffiles, workspace_outpath)
+    copyfile(workspace_fs, masterdocfile,
+             refdoc_fs, masterdocfile,
+             overwrite=True)
     return masterdocfile
 
 
@@ -296,9 +338,9 @@ def gen_confpdf(projfolder, configname, namebase):
     gpf = projfile.GedaProjectFile(projfolder)
     sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
-    docfolder = projects.get_project_doc_folder(projfolder)
-    confdocfile = os.path.join(docfolder, 'confdocs', configname + '-doc.pdf')
-    outf_mtime = fsutils.get_file_mtime(confdocfile)
+    docfolder = get_project_doc_folder(projfolder)
+    confdocfile = path.join(docfolder, 'confdocs', configname + '-doc.pdf')
+    outf_mtime = fsutils.get_file_mtime(confdocfile, fs=refdoc_fs)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + confdocfile)
@@ -309,7 +351,22 @@ def gen_confpdf(projfolder, configname, namebase):
 
     pdffiles = [gen_confbom(projfolder, configname),
                 gen_schpdf(projfolder, namebase)]
-    pdf.merge_pdf(pdffiles, confdocfile)
+
+    for p in pdffiles:
+        if p and not workspace_fs.exists(p):
+            workspace_fs.makedir(path.dirname(p),
+                                 recursive=True, allow_recreate=True)
+            copyfile(refdoc_fs, p, workspace_fs, p)
+
+    workspace_pdffiles = [workspace_fs.getsyspath(x) for x in pdffiles if x is not None]
+
+    workspace_outpath = workspace_fs.getsyspath(confdocfile)
+    workspace_fs.makedir(path.dirname(confdocfile),
+                         recursive=True, allow_recreate=True)
+    pdf.merge_pdf(workspace_pdffiles, workspace_outpath)
+    copyfile(workspace_fs, confdocfile,
+             refdoc_fs, confdocfile,
+             overwrite=True)
     return confdocfile
 
 
@@ -340,9 +397,9 @@ def gen_cobom_csv(projfolder, namebase):
     configfile = conffile.ConfigsFile(projfolder)
     sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
 
-    docfolder = projects.get_project_doc_folder(projfolder)
-    cobom_csv_path = os.path.join(docfolder, 'confdocs', 'conf-boms.csv')
-    outf_mtime = fsutils.get_file_mtime(cobom_csv_path)
+    docfolder = get_project_doc_folder(projfolder)
+    cobom_csv_path = path.join(docfolder, 'confdocs', 'conf-boms.csv')
+    outf_mtime = fsutils.get_file_mtime(cobom_csv_path, fs=refdoc_fs)
 
     if outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + cobom_csv_path)
@@ -359,7 +416,7 @@ def gen_cobom_csv(projfolder, namebase):
         bomlist.append(lobom)
     cobom = boms_outputbase.CompositeOutputBom(bomlist)
 
-    with open(cobom_csv_path, 'w') as f:
+    with refdoc_fs.open(cobom_csv_path, 'wb') as f:
         writer = csv.writer(f)
         writer.writerow(['device'] + [x.configname for x in cobom.descriptors])
         for line in cobom.lines:
@@ -390,9 +447,9 @@ def gen_pcb_pdf(projfolder):
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
     pcb_mtime = fsutils.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
-    docfolder = projects.get_project_doc_folder(projfolder)
-    pdffile = os.path.join(docfolder, configfile.configdata['pcbname'] + '-pcb.pdf')
-    outf_mtime = fsutils.get_file_mtime(pdffile)
+    docfolder = get_project_doc_folder(projfolder)
+    pdffile = path.join(docfolder, configfile.configdata['pcbname'] + '-pcb.pdf')
+    outf_mtime = fsutils.get_file_mtime(pdffile, fs=refdoc_fs)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + pdffile)
@@ -401,8 +458,15 @@ def gen_pcb_pdf(projfolder):
     logger.info('Regenerating ' + pdffile + os.linesep +
                 'Last modified : ' + str(pcb_mtime) + '; Last Created : ' + str(outf_mtime))
 
-    pdffile = pcb.conv_pcb2pdf(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
-                               docfolder, configfile.configdata['pcbname'])
+    workspace_folder = workspace_fs.getsyspath(path.dirname(pdffile))
+    workspace_fs.makedir(path.dirname(pdffile), recursive=True, allow_recreate=True)
+
+    workspace_pdffile = pcb.conv_pcb2pdf(
+        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
+        workspace_folder, configfile.configdata['pcbname']
+    )
+
+    copyfile(workspace_fs, pdffile, refdoc_fs, pdffile, overwrite=True)
     return pdffile
 
 
@@ -416,6 +480,10 @@ def gen_pcb_gbr(projfolder):
 
     This function does not use jinja2 and latex. It relies on
     :func:`tendril.gedaif.pcb.conv_pcb2gbr` instead.
+
+    The generated gerber files are retained in the source tree instead of
+    being moved to the refdoc filesystem due to the relative sensitivity of
+    gerber files to version mismatches.
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
@@ -463,6 +531,10 @@ def gen_pcb_dxf(projfolder):
 
     This function does not use jinja2 and latex. It relies on
     :func:`tendril.gedaif.pcb.conv_pcb2dxf` instead.
+
+    The generated DXF file is retained in the source tree instead of
+    being moved to the refdoc filesystem since is it not just
+    expositional, and is a source file for other processes.
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
@@ -525,9 +597,9 @@ def gen_pcbpricing(projfolder, namebase):
     if not os.path.exists(pcbpricingfp):
         return None
 
-    docfolder = projects.get_project_doc_folder(projfolder)
-    plotfile = os.path.join(docfolder, namebase + '-pricing.pdf')
-    outf_mtime = fsutils.get_file_mtime(plotfile)
+    docfolder = get_project_doc_folder(projfolder)
+    plotfile = path.join(docfolder, namebase + '-pricing.pdf')
+    outf_mtime = fsutils.get_file_mtime(plotfile, fs=refdoc_fs)
 
     if outf_mtime is not None and outf_mtime > pcbpricing_mtime:
         logger.debug('Skipping up-to-date ' + pcbpricingfp)
@@ -539,8 +611,12 @@ def gen_pcbpricing(projfolder, namebase):
     with open(pcbpricingfp, 'r') as f:
         data = yaml.load(f)
 
-    plot1file = os.path.join(docfolder, namebase + '-1pricing.pdf')
-    plot2file = os.path.join(docfolder, namebase + '-2pricing.pdf')
+    workspace_outpath = workspace_fs.getsyspath(plotfile)
+    workspace_folder = workspace_fs.getsyspath(path.dirname(plotfile))
+    workspace_fs.makedir(path.dirname(plotfile), recursive=True, allow_recreate=True)
+
+    plot1file = os.path.join(workspace_folder, namebase + '-1pricing.pdf')
+    plot2file = os.path.join(workspace_folder, namebase + '-2pricing.pdf')
 
     pltnote = "This pricing refers to the bare PCB only. See the corresponding Config Docs for Card Pricing"
 
@@ -552,27 +628,21 @@ def gen_pcbpricing(projfolder, namebase):
         plt2data = {key: data['pricing'][key] for key in data['pricing'].keys() if key > 10}
         plt2title = gpf.configsfile.configdata['pcbname'] + " PCB Unit Price vs Order Quantity (Production Quantity)"
         plot2file = render.render_lineplot(plot2file, plt2data, plt2title, pltnote)
-        pdf.merge_pdf([plot1file, plot2file], plotfile)
+        pdf.merge_pdf([plot1file, plot2file], workspace_outpath)
         os.remove(plot2file)
     else:
-        shutil.copyfile(plot1file, plotfile)
+        shutil.copyfile(plot1file, workspace_outpath)
     os.remove(plot1file)
-
-    return pcbpricingfp
+    copyfile(workspace_fs, plotfile, refdoc_fs, plotfile, overwrite=True)
+    return plotfile
 
 
 def generate_docs(projfolder):
     """
-    Generates a PDF file of the documentation for a specific configuration
-    of a project. It uses other document generator functions to make the
-    various parts of the master document and then merges them.
+    Generates all the docs for a specified gEDA project.
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
-    :param configname: The name of the configuration.
-    :type configname: str
-    :param namebase: The project name.
-    :type namebase: str
     :return: The output file path.
 
     .. rubric:: Paths
