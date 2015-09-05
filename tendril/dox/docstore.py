@@ -20,8 +20,9 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import os
-import shutil
-import glob
+from fs.opener import fsopendir
+from fs.utils import copyfile
+from fs import path
 
 from tendril.utils.db import with_db
 
@@ -32,7 +33,12 @@ from tendril.utils.config import INSTANCE_ROOT
 from db import controller
 
 from tendril.utils import log
+
+
 logger = log.get_logger(__name__, log.INFO)
+docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
+workspace_fs = fsopendir(os.path.join(INSTANCE_ROOT, 'scratch'), create_dir=True)
+local_fs = fsopendir('/')
 
 
 @with_db
@@ -46,44 +52,40 @@ def list_sno_documents(serialno=None, session=None):
 
 
 @with_db
-def copy_docs_to_workspace(serialno=None, workspace=None, clearws=False, setwsno=True, iagree=False, session=None):
+def copy_docs_to_workspace(serialno=None, workspace=None, clearws=False, setwsno=True, session=None):
     if serialno is None:
         raise AttributeError('serialno cannot be None')
     if workspace is None:
-        workspace = os.path.join(INSTANCE_ROOT, 'scratch', 'workspace')
+        workspace = workspace_fs.makeopendir('workspace', recursive=True)
     elif workspace.startswith('/'):
-        workspace = workspace
-        if clearws is True and iagree is False:
-            raise StandardError('Workspace defined outside the Instance Scratch Area, and clearws is set to True. '
-                                'All files within the provided path will be removed. '
-                                'Set the iagree argument to True to accept responsibility for what you\'re doing.')
+        # workspace = workspace
+        # if clearws is True and iagree is False:
+        #     raise StandardError('Workspace defined outside the Instance Scratch Area, and clearws is set to True. '
+        #                         'All files within the provided path will be removed. '
+        #                         'Set the iagree argument to True to accept responsibility for what you\'re doing.')
+        raise NotImplementedError("Workspace must be relative to and under INSTANCE_ROOT/scratch")
     else:
-        workspace = os.path.join(INSTANCE_ROOT, 'scratch', workspace)
+        workspace = workspace_fs.makeopendir(workspace, recursive=True)
     if clearws is True:
-        glb = os.path.join(workspace, '*')
-        rf = glob.glob(glb)
-        for f in rf:
-            # This recursively nukes any folders that may be there. This is,
-            # again, not overly safe. Consider not doing it.
-            if os.path.isdir(f):
-                shutil.rmtree(f)
-            os.remove(f)
+        for p in workspace.listdir(dirs_only=True):
+            workspace.removedir(p, force=True)
+        for p in workspace.listdir(files_only=True):
+            workspace.remove(p)
     if setwsno is True:
-        with open(os.path.join(workspace, 'wsno'), 'w') as f:
+        with workspace.open('wsno', 'wb') as f:
             f.write(serialno)
     for doc in controller.get_sno_documents(serialno=serialno, session=session):
         docname = os.path.split(doc.docpath)[1]
         if docname.startswith(serialno):
             if not os.path.splitext(docname)[0] == serialno:
                 docname = docname[len(serialno) + 1:]
-        shutil.copy(os.path.join(DOCSTORE_ROOT, doc.docpath),
-                    os.path.join(workspace, docname))
+        copyfile(docstore_fs, doc.docpath, workspace, docname)
 
 
 @with_db
 def delete_document(docpath, session=None):
     deregister_document(docpath=docpath, session=session)
-    os.remove(os.path.join(DOCSTORE_ROOT, docpath))
+    docstore_fs.remove(docpath)
 
 
 @with_db
@@ -99,10 +101,10 @@ def insert_document(sno, docpath, series):
         fname = sno + '-' + fname
     if series is None:
         series = serialnos.get_series(sno)
-    storepath = os.path.join(DOCSTORE_ROOT, series.replace('/', os.path.sep), fname)
-    if not os.path.exists(os.path.dirname(storepath)):
-        os.makedirs(os.path.dirname(storepath))
-    shutil.copyfile(docpath, storepath)
+    storepath = path.join(series, fname)
+    if not docstore_fs.exists(path.dirname(storepath)):
+        docstore_fs.makedir(path.dirname(storepath), recursive=True)
+    copyfile(local_fs, docpath, docstore_fs, storepath)
     return storepath
 
 
@@ -119,7 +121,6 @@ def register_document(serialno=None, docpath=None, doctype=None, efield=None, se
     # WARNING : This writes the file before actually checking that all is ok. This
     #           may not be a very safe approach.
     storepath = insert_document(serialno, docpath, series)
-    storepath = os.path.relpath(storepath, DOCSTORE_ROOT)
     controller.register_document(serialno=serialno, docpath=storepath, doctype=doctype,
                                  efield=efield, session=session)
 
