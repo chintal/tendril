@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-The Filesystem Utils Module (:mod:`tendril.utils.fs`)
-=====================================================
+The Filesystem Utils Module (:mod:`tendril.utils.fsutils`)
+==========================================================
 
 This module provides utilities to deal with filesystems. For the most part,
 this module basically proxies specific requests to various other third-party
@@ -144,7 +144,7 @@ def get_path_breadcrumbs(path, base=None, rootst='Root'):
     return crumbs
 
 
-def get_folder_mtime(folder):
+def get_folder_mtime(folder, fs=None):
     """
     Given the path to a certain filesystem ``folder``, this function returns
     a :class:`datetime.datetime` instance representing the time of the latest
@@ -152,24 +152,41 @@ def get_folder_mtime(folder):
 
     :param folder: The path to the ``folder``, compatible with :mod:`os.path`
     :type folder: str
+    :param fs: The pyfilesystem to use. (Default) None for local fs.
+    :type fs: :class:`fs.base.FS`
     :return: The time of the latest change within the ``folder``
     :rtype: :class:`datetime.datetime`
 
     .. seealso:: :func:`get_file_mtime`
 
     """
-    filelist = [os.path.join(folder, f) for f in os.listdir(folder)]
     last_change = None
-    for f in filelist:
-        fct = get_file_mtime(f)
-        if last_change is None:
-            last_change = fct
-        elif fct is not None and last_change < fct:
-            last_change = fct
+    if fs is None:
+        filelist = [os.path.join(folder, f) for f in os.listdir(folder)]
+        for f in filelist:
+            if os.path.isfile(f):
+                fct = get_file_mtime(f)
+            elif os.path.isdir(f):
+                fct = get_folder_mtime(f)
+            else:
+                raise OSError("Not file, not directory : " + f)
+            if fct is not None and (last_change is None or fct > last_change):
+                last_change = fct
+    else:
+        filelist = fs.listdir(path=folder, files_only=True, full=True)
+        dirlist = fs.listdir(path=folder, dirs_only=True, full=True)
+        for f in filelist:
+            fct = get_file_mtime(f, fs)
+            if last_change is None or fct > last_change:
+                last_change = fct
+        for d in dirlist:
+            fct = get_folder_mtime(d, fs)
+            if last_change is None or fct > last_change:
+                last_change = fct
     return last_change
 
 
-def get_file_mtime(f):
+def get_file_mtime(f, fs=None):
     """
     Given the path to a certain filesystem ``file``, this function returns
     a :class:`datetime.datetime` instance representing the time of the latest
@@ -177,16 +194,21 @@ def get_file_mtime(f):
 
     :param f: The path to the ``file``, compatible with :mod:`os.path`
     :type f: str
+    :param fs: The pyfilesystem to use. (Default) None for local fs.
+    :type fs: :class:`fs.base.FS`
     :return: The time of the latest change within the ``folder``
     :rtype: :class:`datetime.datetime`
 
     .. seealso:: :func:`get_folder_mtime`
 
     """
-    try:
-        return datetime.fromtimestamp(os.path.getmtime(f))
-    except OSError:
-        return None
+    if fs is None:
+        try:
+            return datetime.fromtimestamp(os.path.getmtime(f))
+        except OSError:
+            return None
+    else:
+        return fs.getinfo(f)['modified_time']
 
 
 def get_file_hash(filepath, hasher=None, blocksize=65536):
