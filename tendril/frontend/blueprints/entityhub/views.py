@@ -25,6 +25,7 @@ from flask_user import login_required
 from . import entityhub as blueprint
 
 from tendril.entityhub import projects as ehprojects
+from tendril.entityhub import products as ehproducts
 from tendril.gedaif.conffile import ConfigsFile
 
 from tendril.utils.fsutils import Crumb
@@ -113,6 +114,31 @@ def projects():
              }
     return render_template('entityhub_projects.html', stage=stage,
                            pagetitle="gEDA Projects")
+
+
+@blueprint.route('/products/<productname>')
+@blueprint.route('/products/')
+@login_required
+def products(productname=None):
+    if productname is None:
+        stage_products = sorted(ehproducts.productlib,
+                                key=lambda x: x.name)
+        stage = {'products': stage_products,
+                 'crumbroot': '/entityhub',
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Products", path="products/")]
+                 }
+        return render_template('entityhub_products.html', stage=stage,
+                               pagetitle="Products")
+    else:
+        stage = {'product': ehproducts.get_product_by_ident(productname),
+                 'crumbroot': '/entityhub',
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Products", path="products/"),
+                                 Crumb(name=productname, path="pcbs/" + productname)],
+                 }
+        return render_template('entityhub_product_detail.html', stage=stage,
+                               pagetitle="Products")
 
 
 @blueprint.route('/')
