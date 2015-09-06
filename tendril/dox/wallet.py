@@ -37,10 +37,18 @@ certificates, so on.
 
 """
 
-import os
+from fs.opener import fsopendir
+from fs.utils import copyfile
+from fs import path
+from fs.errors import NoSysPathError
 
 from tendril.utils.config import DOCUMENT_WALLET
 from tendril.utils.config import DOCUMENT_WALLET_ROOT
+
+from tendril.utils.fsutils import temp_fs
+
+wallet_fs = fsopendir(DOCUMENT_WALLET_ROOT)
+wallet_temp_fs = temp_fs.makeopendir('wallet')
 
 
 def get_document_path(key):
@@ -48,11 +56,20 @@ def get_document_path(key):
     Returns the absolute path to the document in the wallet referred to
     by the ``key``.
 
+    If the wallet fs root is not an OS filesystem, then it copies the
+    wallet document into the temporary folder and returns the path to it.
+
     :param key: Key of the document you want.
     :return: The absolute path to the document.
     """
     if key in DOCUMENT_WALLET.keys():
-        return os.path.join(DOCUMENT_WALLET_ROOT, DOCUMENT_WALLET[key])
+        try:
+            return wallet_fs.getsyspath(DOCUMENT_WALLET[key])
+        except NoSysPathError:
+            if not wallet_temp_fs.exists(DOCUMENT_WALLET[key]):
+                copyfile(wallet_fs, DOCUMENT_WALLET[key],
+                         wallet_temp_fs, DOCUMENT_WALLET[key])
+            return wallet_temp_fs.getsyspath(DOCUMENT_WALLET[key])
     else:
         raise ValueError
 
@@ -74,5 +91,5 @@ def is_in_wallet(fpath):
     :return: True if the document is in the wallet, False if not.
 
     """
-    if DOCUMENT_WALLET_ROOT in os.path.split(fpath)[0]:
+    if DOCUMENT_WALLET_ROOT in path.split(fpath)[0]:
         return True
