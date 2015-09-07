@@ -61,6 +61,9 @@ def cards(cardname=None):
             barepcb = gcf.configdata['pcbname']
         elif gcf.is_cable:
             barepcb = gcf.configdata['cblname']
+        else:
+            raise ValueError("Doesn't seem to be a card or a cable : " +
+                             cardname)
         stage = {'name': cardname,
                  'card': stage_card,
                  'barepcb': barepcb,

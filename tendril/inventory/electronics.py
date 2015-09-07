@@ -19,9 +19,6 @@ Electronics Inventory module documentation (:mod:`inventory.electronics`)
 =========================================================================
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import csv
 
@@ -32,6 +29,8 @@ from tendril.conventions.electronics import fpiswire_ident
 import acquire
 from db.controller import get_inventorylocationcode
 
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 inventory_locations = []
 
@@ -166,6 +165,9 @@ class InventoryLocation(object):
 
     def get_reservation_gen(self):
         return self._reservation_gen()
+
+    def commit_reservations(self):
+        pass
 
 
 def init_inventory_locations():

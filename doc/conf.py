@@ -58,7 +58,7 @@ intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
                        'sqlalchemy': ('http://docs.sqlalchemy.org/en/rel_1_0/', None),
                        'jinja2': ('http://jinja.pocoo.org/docs/dev/', None),
                        'matplotlib': ('http://matplotlib.org', None),
-                       'fs': ('http://docs.pyfilesystem.org/en/latest/index.html', None)
+                       'fs': ('http://docs.pyfilesystem.org/en/latest', None)
                        }
 
 # Add any paths that contain templates here, relative to this directory.

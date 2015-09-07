@@ -19,9 +19,6 @@ Inventory Acquire Module documentation (:mod:`inventory.acquire`)
 =================================================================
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
-
 import os
 import csv
 import re
@@ -33,6 +30,9 @@ from tendril.utils import config
 
 from tendril.gedaif import gsymlib
 from tendril.entityhub import transforms
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEBUG)
 
 
 class InventoryReaderBase(object):
@@ -138,8 +138,8 @@ def get_reader(elec_inven_data_idx):
     if reader is not None:
         return reader
     else:
-        logger.error("Could not find reader for: ELECTRONICS_INVENTORY_DATA."
-                     + str(elec_inven_data_idx))
+        logger.error("Could not find reader for: ELECTRONICS_INVENTORY_DATA." +
+                     str(elec_inven_data_idx))
 
 
 def gen_canonical_transform(elec_inven_data_idx, regen=True):
