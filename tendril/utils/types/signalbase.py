@@ -23,6 +23,7 @@ from tendril.utils.types.time import TimeDelta
 
 from tendril.utils.types.unitbase import Percentage
 
+from decimal import Decimal
 from collections import deque
 import copy
 
@@ -169,6 +170,8 @@ class SignalWave(SignalBase):
 
     @property
     def mean(self):
+        if self.unitclass == int:
+            return int(round(float(sum([x[1].value for x in self._points])) / len(self._points)))
         return sum([x[1].value for x in self._points]) / len(self._points)
 
     @property

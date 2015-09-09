@@ -46,7 +46,7 @@ from math import floor
 from decimal import Decimal
 import numbers
 
-round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
+round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1)) if x else 0
 
 
 class UnitBase(object):

@@ -74,6 +74,10 @@ def get_test_suite_objects(serialno=None, order_by='FILE_ORDER', session=None):
         suite_order = [x[0] for x in file_order]
         test_order = {x[0]: x[1] for x in file_order}
 
+    elif order_by == 'DONT_CARE':
+        suite_order = []
+        test_order = {}
+
     else:
         raise ValueError('Unknown order_by heuristic : ' + order_by)
 

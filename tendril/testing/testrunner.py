@@ -250,7 +250,7 @@ def run_electronics_test(serialno, devicetype, projectfolder, incremental=True):
                 latest = controller.get_latest_test_suite(serialno=serialno,
                                                           suite_class=repr(suite.__class__),
                                                           descr=suite.desc)
-                if latest.passed and \
+                if latest and latest.passed and \
                         latest.created_at.floor('day') == arrow.utcnow().floor('day'):
                     suite_needs_be_run = False
                     suite.destroy()
