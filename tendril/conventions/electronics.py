@@ -32,9 +32,11 @@ DEVICE_CLASSES_DOC = [
     ('RES ARRAY THRU', 'THRU Resistor Arrays'),
     ('RES ARRAY SMD', 'SMD Resistor Arrays'),
     ('POT TRIM', 'Trimpots'),
+    ('POT DIAL', 'Dial Pots'),
     ('VARISTOR', 'Varistors and MOVs'),
     ('CAP CER SMD', 'SMD Ceramic Capacitors'),
     ('CAP TANT SMD', 'SMD Tantalum Capacitors'),
+    ('CAP TANT THRU', 'THRU Tantalum Capacitors'),
     ('CAP CER THRU', 'THRU Ceramic Capacitors'),
     ('CAP ELEC THRU', 'THRU Electrolytic Capacitors'),
     ('CAP POLY THRU', 'THRU Poly Capacitors'),
@@ -69,6 +71,8 @@ DEVICE_CLASSES_DOC = [
     ('MODULE', 'Modules'),
     ('PCB', 'Printed Circuit Board'),
     ('BUZZER', 'Buzzers'),
+    ('CONN CIRCULAR', 'Circular Connectors'),
+    ('CONN BNC', 'BNC Connectors'),
     ('CONN BANANA', 'Banana Connectors'),
     ('CONN BERG STRIP', 'Berg Strips'),
     ('CONN TERMINAL BLOCK', 'Terminal Blocks, usually single-part'),
@@ -101,7 +105,6 @@ DEVICE_CLASSES_DOC = [
     ('CABLE SIP SSC', 'Prefabricated SIP Cables'),
     ('CABLE MARKER', 'Cable Markers'),
     ('CABLE ROUND SHLD', 'Round Shielded Cables'),
-    ('CONN CIRCULAR', 'Circular Connectors'),
     ('WIRE INSULATED', 'Insulated Wires'),
     ('WIRE THERMOCOUPLE', 'Thermocouple Wires'),
     ('SLEEVE SHRINK', 'Heat shrinking sleeves'),
@@ -109,10 +112,12 @@ DEVICE_CLASSES_DOC = [
     ('THIMBLE', 'Thimbles'),
     ('FUSE HOLDER', 'Fuse Holders'),
     ('FUSE', 'Fuses'),
+    ('FAN', 'Fans'),
     ('SOCKET POWER', 'Power Sockets'),
     ('POWER CORD', 'Power Cords'),
     ('USB CABLE', 'USB Cables'),
-    ('RTD', 'Temperature Dependent Resistors')
+    ('RTD', 'Temperature Dependent Resistors'),
+    ('SOCKET ZIF', 'Zero Insertion Force IC Sockets')
 ]
 
 
