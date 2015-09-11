@@ -115,6 +115,11 @@ class LabelCW1(LabelBase):
     lpp = 88
 
 
+class LabelCW3(LabelBase):
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW3_template.tex')
+    lpp = 288
+
+
 class LabelP1(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
     lpp = 88
@@ -128,6 +133,20 @@ class LabelP2(LabelBase):
 class LabelD1(LabelBase):
     templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'CW1_template.tex')
     lpp = 88
+
+
+class LabelCable1(LabelCW3):
+    def __init__(self, code, ident, sno, **kwargs):
+        super(LabelCable1, self).__init__(code, ident, sno)
+        self._desc = kwargs['desc']
+
+    @property
+    def desc(self):
+        return self._desc
+
+    @property
+    def ident(self):
+        return self._ident
 
 
 class LabelBox1(LabelBase):
@@ -230,6 +249,8 @@ def get_labelbase(code):
     # TODO change this dispatch to use introspection instead
     if code == 'CW1':
         return LabelCW1
+    elif code == 'CW3':
+        return LabelCW3
     elif code == 'D1':
         return LabelD1
     elif code == 'P1':
@@ -246,6 +267,8 @@ def get_labelbase(code):
         return LabelBox2
     elif code == 'LPACK2':
         return LabelPack2
+    elif code == 'LCABLE1':
+        return LabelCable1
     else:
         return LabelBase
 
