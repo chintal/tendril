@@ -42,6 +42,8 @@ import tendril.inventory.guidelines
 
 from tendril.utils.config import INSTANCE_ROOT
 
+import re
+
 
 if __name__ == '__main__':
 
@@ -80,7 +82,9 @@ if __name__ == '__main__':
         IMMEDIATE_EARMARKS = data['immediate']
 
     # Define base transforms for external data
-    base_tf = tendril.inventory.electronics.inventory_locations[0]._reader.tf
+    base_tf_0 = tendril.inventory.electronics.inventory_locations[0]._reader.tf
+    base_tf_1 = tendril.inventory.electronics.inventory_locations[1]._reader.tf
+    base_tf_2 = tendril.inventory.electronics.inventory_locations[2]._reader.tf
 
     if LOAD_PRESHORT is True:
         # Load Preshort File
@@ -91,24 +95,45 @@ if __name__ == '__main__':
                                                                                os.path.join(INSTANCE_ROOT, 'scratch'),
                                                                                'PRESHORT', None)
                 obom = tendril.boms.outputbase.OutputBom(obom_descriptor)
-
+                rex_qty = re.compile(ur'^-(?P<qty>[\d]+)\s+(qty)?$')
                 reader = csv.reader(f)
                 for line in reader:
                     line = [elem.strip() for elem in line]
-                    if line[0] == 'S.No.':
+                    if line[0] == 'Device':
+                        header = line
                         continue
-                    if line[1] == line[2] == line[3]:
-                        continue
-                    if line[1] == 'Electricals':
-                        break
-                    if base_tf.has_contextual_repr(line[1]):
-                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf.get_canonical_repr(line[1]))
-                        item = tendril.boms.electronics.EntityElnComp()
-                        item.define('Undef', device, value, footprint)
-                        for i in range(int(line[2]) + 1):
-                            obom.insert_component(item)
+                    cident = line[0].strip()
+                    try:
+                        qty = int(rex_qty.match(line[1].strip()).group('qty'))
+                    except AttributeError:
+                        print line, line[1]
+                        raise
+                    if base_tf_0.has_contextual_repr(cident):
+                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_0.get_canonical_repr(cident))
+                    elif base_tf_1.has_contextual_repr(cident):
+                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_1.get_canonical_repr(cident))
+                    elif base_tf_2.has_contextual_repr(cident):
+                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_2.get_canonical_repr(cident))
                     else:
-                        print line[1], 'No'
+                        logger.info('NOT HANDLED : {0}'.format(line[0]))
+                        continue
+
+                    item = tendril.boms.electronics.EntityElnComp()
+                    item.define('Undef', device, value, footprint)
+                    logger.debug("Inserting : {0:4} {1}".format(str(qty), str(item.ident)))
+                    for i in range(qty + 1):
+                        obom.insert_component(item)
+
+                    item = tendril.boms.electronics.EntityElnComp()
+                    item.define('Undef', device, value, footprint)
+                    for i in range(qty + 1):
+                        obom.insert_component(item)
+
+                    item = tendril.boms.electronics.EntityElnComp()
+                    item.define('Undef', device, value, footprint)
+                    for i in range(qty + 1):
+                        obom.insert_component(item)
+
                 logger.info('Inserting PRESHORT Bom')
                 IMMEDIATE_EARMARKS.append(obom.descriptor.configname)
                 bomlist.append(obom)
@@ -151,9 +176,9 @@ if __name__ == '__main__':
                             continue
                         if line[0] == 'END':
                             break
-                        if not base_tf.has_contextual_repr(line[0]):
+                        if not base_tf_0.has_contextual_repr(line[0]):
                             print line[0] + ' Possibly not recognized'
-                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf.get_canonical_repr(line[0]))
+                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_0.get_canonical_repr(line[0]))
                         # print base_tf.get_canonical_repr(line[0])
                         item = tendril.boms.electronics.EntityElnComp()
                         item.define('Undef', device, value, footprint)
@@ -169,16 +194,16 @@ if __name__ == '__main__':
                             IMMEDIATE_EARMARKS.append(obom.descriptor.configname)
                         bomlist.append(obom)
 
-
     # Generate Tendril Requisitions
-    logger.info('Generating Card BOMs')
-    for k, v in data['cards'].iteritems():
-        bom = tendril.boms.electronics.import_pcb(projects.cards[k])
-        obom = bom.create_output_bom(k)
-        obom.multiply(v)
-        logger.info('Inserting Card Bom : ' + obom.descriptor.configname +
-                    ' x' + str(obom.descriptor.multiplier))
-        bomlist.append(obom)
+    if isinstance(data['cards'], dict):
+        logger.info('Generating Card BOMs')
+        for k, v in data['cards'].iteritems():
+            bom = tendril.boms.electronics.import_pcb(projects.cards[k])
+            obom = bom.create_output_bom(k)
+            obom.multiply(v)
+            logger.info('Inserting Card Bom : ' + obom.descriptor.configname +
+                        ' x' + str(obom.descriptor.multiplier))
+            bomlist.append(obom)
 
     cobom = tendril.boms.outputbase.CompositeOutputBom(bomlist)
     if PRIORITIZE is True:
@@ -306,7 +331,7 @@ if __name__ == '__main__':
     tendril.sourcing.electronics.order.collapse()
     tendril.sourcing.electronics.order.rebalance()
     tendril.sourcing.electronics.order.generate_orders(orders_path)
-    tendril.sourcing.electronics.order.dump_to_file(os.path.join(orderfolder, 'shortage.csv'), include_others=False)
+    tendril.sourcing.electronics.order.dump_to_file(os.path.join(orderfolder, 'shortage.csv'), include_others=True)
     tendril.inventory.electronics.export_reservations(reservations_path)
 
     if IS_INDICATIVE:
