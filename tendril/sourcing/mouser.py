@@ -97,7 +97,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
             self.vpno = mouserpartno
         else:
             logger.error("Not enough information to create a Mouser Part")
-        self.temp = self._get_data()
+        self._get_data()
 
     def _get_data(self):
         soup, url = self._get_product_soup()
@@ -110,7 +110,6 @@ class MouserElnPart(vendors.VendorElnPartBase):
             self.vpartdesc = self._get_description(soup)
             self.vqtyavail = self._get_avail_qty(soup)
             self.package = self._get_package(soup)
-            return soup
         except AttributeError:
             logger.error("Failed to acquire part information : " + self.vpno + url)
             # TODO raise AttributeError
@@ -119,7 +118,6 @@ class MouserElnPart(vendors.VendorElnPartBase):
         start_url = urlparse.urljoin(self.url_base,
                                      '/_/?Keyword={0}&FS=True'.format(
                                         urllib.quote_plus(self.vpno)))
-        print start_url
         page = www.urlopen(start_url)
         if page is None:
             logger.error("Unable to open Mouser product start page : " + self.vpno)
@@ -127,9 +125,18 @@ class MouserElnPart(vendors.VendorElnPartBase):
         if 'ProductDetail' in page.geturl():
             logger.debug("Got product page : " + page.geturl())
             soup = BeautifulSoup(page)
-            return soup, start_url
+            return soup, page.geturl()
         else:
-            raise NotImplementedError('Got search page instead : ' + self.vpno)
+            soup = BeautifulSoup(page)
+            stable = soup.find('table',
+                               id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid'))
+            srow = stable.find('tr', {'data-partnumber' : self.vpno},
+                               class_=re.compile(r'SearchResultsRow'))
+            link = srow.find('a', id=re.compile(r'lnkMouserPartNumber'))
+            href = urlparse.urljoin(page.geturl(), link.attrs['href'])
+            product_page = www.urlopen(href)
+            soup = BeautifulSoup(product_page)
+            return soup, product_page.geturl()
 
     def _get_prices(self, soup):
         ptable = soup.find(id='ctl00_ContentMain_divPricing')
@@ -140,19 +147,23 @@ class MouserElnPart(vendors.VendorElnPartBase):
         for row in rows:
             moq_text = row.find(id=re.compile('lnkQuantity')).text
             rex_qtyrange = re.compile(ur'SelectMiniReelQuantity\(((?P<minq>\d+),(?P<maxq>\d+))\)')
-            m = rex_qtyrange.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])
+            rex_qty = re.compile(ur'SelectQuantity\((?P<minq>\d+)\)')
+            m = rex_qty.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])
+            maxq = None
             if m is None:
-                print row.find('a', id=re.compile('lnkQuantity')).attrs['href']
-                raise ValueError("Error parsing qty range while acquiring moq for " + self.vpno)
+                m = rex_qtyrange.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])
+                if m is None:
+                    print row.find('a', id=re.compile('lnkQuantity')).attrs['href']
+                    raise ValueError("Error parsing qty range while acquiring moq for " + self.vpno)
+                maxq = locale.atoi(m.group('maxq'))
             minq = locale.atoi(m.group('minq'))
-            maxq = locale.atoi(m.group('maxq'))
             price_text = row.find(id=re.compile('lblPrice')).text
             try:
                 moq = locale.atoi(moq_text)
                 if moq != minq:
                     raise ValueError("minq {0} does not match moq {1} for {2}".format(
                         str(minq), str(moq), self.vpno))
-                if minq != maxq:
+                if not maxq or minq != maxq:
                     oqmultiple = 1
                 else:
                     oqmultiple = minq
@@ -193,7 +204,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
     @staticmethod
     def _get_datasheet_link(soup):
         datasheet_div = soup.find('div', id=re.compile('divCatalogDataSheet'))
-        datasheet_link = datasheet_div.find_all('a')[0].attrs['href']
+        datasheet_link = datasheet_div.find_all('a', text=re.compile('Data Sheet'))[0].attrs['href']
         return datasheet_link.strip().encode('ascii', 'replace')
 
     @staticmethod
