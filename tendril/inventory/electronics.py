@@ -118,8 +118,8 @@ class InventoryLocation(object):
                 avail_qty += line.avail_qty
         if is_here:
             logger.debug("Found " + ident + " in " + self._dname + " : " + str(avail_qty))
-            if fpiswire_ident(ident):
-                avail_qty = Length(str(avail_qty)+'m')
+            # if fpiswire_ident(ident):
+            #     avail_qty = Length(str(avail_qty)+'m')
             return avail_qty
         else:
             return None

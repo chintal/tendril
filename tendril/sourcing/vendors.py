@@ -349,6 +349,10 @@ class VendorPrice(object):
         return currency.CurrencyValue(self.unit_price._val * qty,
                                       self.unit_price._currency_def)
 
+    def __repr__(self):
+        return '<VendorPrice {2} @{0}({1})>'.format(
+            self.moq, self.oqmultiple, self.unit_price)
+
 
 class VendorPartBase(object):
     def __init__(self, ident, vendor):

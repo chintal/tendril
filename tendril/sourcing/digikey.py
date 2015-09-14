@@ -19,9 +19,6 @@ Digi-Key Sourcing Module documentation (:mod:`sourcing.digikey`)
 ================================================================
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import locale
 import re
 import os
@@ -40,6 +37,9 @@ from tendril.utils.types import currency
 import tendril.conventions.electronics
 
 from tendril.utils.config import INSTANCE_ROOT
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
