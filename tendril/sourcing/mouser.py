@@ -109,9 +109,12 @@ class VendorMouser(vendors.VendorBase):
             pno_cell = pdtable.find('div', id='divMouserPartNum')
             pno = pno_cell.text.encode('ascii', 'replace').strip()
             mfgpno = soup.find('div', id='divManufacturerPartNum').text.strip()
-            package = soup.find(
-                'span', text=re.compile('Package / Case')
-            ).parent.find_next_sibling().text.strip().encode('ascii', 'replace')
+            try:
+                package = soup.find(
+                    'span', text=re.compile('Package / Case')
+                ).parent.find_next_sibling().text.strip().encode('ascii', 'replace')
+            except AttributeError:
+                package = None
             # TODO Implement these
             ns = False
             part = (pno, mfgpno, package, ns)
@@ -149,6 +152,10 @@ class VendorMouser(vendors.VendorBase):
         # TO-220-FP-3
         # TO-220-3 FP
         (re.compile(ur'^TO-?220(-3)?[- ](FP)(-3)?$'), 'TO220 FP', []),
+        # PDIP-6
+        # DIP6 (Normalized)
+        # PDIP-6 Gull Wing
+        (re.compile(ur'^P?DIP-?(?P<pinc>\d+)( Gull Wing)?$'), 'DIP{}', ['pinc'])
     ]
 
     def _standardize_package(self, package):
@@ -191,6 +198,12 @@ class VendorMouser(vendors.VendorBase):
         pno = self._get_resultpage_row_pno(row)
         unitp = self._get_resultpage_row_unitp(row)
         package = self._get_resultpage_row_package(row, header)
+        if not package:
+            try:
+                vpart = MouserElnPart(pno)
+                package = self._standardize_package(vpart.package)
+            except:
+                pass
         minqty = self._get_resultpage_row_minqty(row)
         mfgpno = self._get_resultpage_row_mfgpno(row)
         if minqty == -1:
@@ -331,7 +344,7 @@ class VendorMouser(vendors.VendorBase):
 
     def _get_cat_soup(self, soup, device, url, ident, i=0):
         # TODO rewrite this fuction from scratch
-        print url
+        # print url
         ctable = soup.find('div', id='CategoryControlTop')
         sctable = soup.find('table', id='tblSplitCategories')
         if not ctable and not sctable:
@@ -354,21 +367,18 @@ class VendorMouser(vendors.VendorBase):
                         cat_links = cat_dict[title]
                         break
                 if not cat_links:
-                    # print 'Skipping Title ' + cat_title
                     continue
                 for catstring in catstrings:
                     if catstring in cat_links.keys():
                         newurl = urlparse.urljoin(url, cat_links[catstring])
                         break
                 if not newurl:
-                    # print 'Did not find link for Title ' + cat_title
                     continue
                 soup = www.get_soup(newurl)
                 ctable = soup.find('div', id='CategoryControlTop')
                 if ctable:
-                    soups = self._get_cat_soup(soup, device, url, ident, i=i+1)
+                    soups = self._get_cat_soup(soup, device, newurl, ident, i=i+1)
                     for soup in soups:
-                        # print i, "Returning upstream soup"
                         yield soup
                 else:
                     yield soup
@@ -386,16 +396,26 @@ class VendorMouser(vendors.VendorBase):
                     soup = www.get_soup(newurl)
                     ctable = soup.find('div', id='CategoryControlTop')
                     if ctable:
-                        soups = self._get_cat_soup(soup, device, url, ident, i=i+1)
+                        soups = self._get_cat_soup(soup, device, newurl, ident, i=i+1)
                         for soup in soups:
-                            # print i, "Returning upstream soup"
                             yield soup
             elif i == 1:
                 if subcatstrings == 'all':
                     for cat_link in cat_links:
                         newurl = urlparse.urljoin(url, cat_links[cat_link])
                         soup = www.get_soup(newurl)
-                        # print i, "Returning new soup to downstream"
+                        ctable = soup.find('div', id='CategoryControlTop')
+                        if ctable:
+                            soups = self._get_cat_soup(soup, device, newurl, ident, i=i+1)
+                            for soup in soups:
+                                yield soup
+                        else:
+                            yield soup
+            elif i > 1:
+                if subcatstrings == 'all':
+                    for cat_link in cat_links:
+                        newurl = urlparse.urljoin(url, cat_links[cat_link])
+                        soup = www.get_soup(newurl)
                         yield soup
 
     def _process_cat_soup(self, soup):
@@ -439,11 +459,9 @@ class VendorMouser(vendors.VendorBase):
             strategy = '.' + strategy
         if not len(parts):
             return None, strategy + ':NO_RESULTS:COLLECTED'
-        self._prefilter_parts(parts, value)
+        parts = self._prefilter_parts(parts, value)
         if not len(parts):
             return None, strategy + ':NO_RESULTS:PREFILTER'
-        for part in parts:
-            print part
         result, pnos, lstrategy = self._filter_results(parts, value, footprint)
         if pnos:
             pnos = list(set(pnos))
@@ -485,7 +503,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
 
     def _get_product_soup(self):
         start_url = urlparse.urljoin(self.url_base,
-                                     '/_/?Keyword={0}&FS=True'.format(
+                                     '/Search/Refine.aspx?Keyword={0}&FS=True'.format(
                                         urllib.quote_plus(self.vpno)))
         page = www.urlopen(start_url)
         if page is None:
@@ -526,7 +544,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
             if m is None:
                 m = rex_qtyrange.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])
                 if m is None:
-                    print row.find('a', id=re.compile('lnkQuantity')).attrs['href']
+                    # print row.find('a', id=re.compile('lnkQuantity')).attrs['href']
                     raise ValueError("Error parsing qty range while acquiring moq for " + self.vpno)
                 maxq = locale.atoi(m.group('maxq'))
             minq = locale.atoi(m.group('minq'))
@@ -571,6 +589,8 @@ class MouserElnPart(vendors.VendorElnPartBase):
     @staticmethod
     def _get_package(soup):
         n = soup.find('span', text=re.compile('Package / Case'))
+        if not n:
+            return ''
         try:
             package_cell = n.parent.find_next_sibling()
             package = package_cell.text.strip().encode('ascii', 'replace')
@@ -581,6 +601,8 @@ class MouserElnPart(vendors.VendorElnPartBase):
     @staticmethod
     def _get_datasheet_link(soup):
         datasheet_div = soup.find('div', id=re.compile('divCatalogDataSheet'))
+        if not datasheet_div:
+            return
         datasheet_link = datasheet_div.find_all('a', text=re.compile('Data Sheet'))[0].attrs['href']
         return datasheet_link.strip().encode('ascii', 'replace')
 

@@ -201,7 +201,11 @@ def export_vendor_map_audit(vendor_obj):
         nvpnos = len(idents)
 
         for pidx, vpno in enumerate(mapobj.get_all_partnos(ident)):
-            vp = vendor_obj.get_vpart(vpno, ident)
+            try:
+                vp = vendor_obj.get_vpart(vpno, ident)
+            except:
+                print "Error while getting part {0} from {1}".format(vpno, vendor_obj.name)
+                raise
             try:
                 assert isinstance(vp, vendors.VendorElnPartBase)
                 outw.writerow([vp.ident, vp.vpno, vp.mpartno, vp.package, vp.vpartdesc,
