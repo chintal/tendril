@@ -215,7 +215,6 @@ if __name__ == '__main__':
         logger.info('Exporting Composite Output BOM to File : ' + os.linesep + os.path.join(orderfolder, 'cobom.csv'))
         cobom.dump(f)
 
-
     orders_path = os.path.join(orderfolder, 'purchase-orders')
     if not os.path.exists(orders_path):
         os.makedirs(orders_path)

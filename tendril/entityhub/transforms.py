@@ -30,30 +30,30 @@ class TransformFile(object):
         with open(tfpath) as f:
             rdr = csv.reader(f)
             for row in rdr:
-                self._transform[row[0]] = row[1]
-                self._ideal[row[0]] = row[2]
+                self._transform[row[0].strip()] = row[1].strip()
+                self._ideal[row[0].strip()] = row[2].strip()
                 try:
-                    self._status[row[0]] = row[3]
+                    self._status[row[0].strip()] = row[3].strip()
                 except IndexError:
-                    self._status[row[0]] = ''
+                    self._status[row[0].strip()] = ''
 
     def get_canonical_repr(self, contextual):
-        return self._transform[contextual]
+        return self._transform[contextual.strip()]
 
     def get_ideal_repr(self, contextual):
-        return self._ideal[contextual]
+        return self._ideal[contextual.strip()]
 
     def get_status(self, contextual):
-        return self._status[contextual]
+        return self._status[contextual.strip()]
 
     def get_contextual_repr(self, canonical):
         for (k, v) in self._transform:
-            if v == canonical:
+            if v == canonical.strip():
                 return k
         return None
 
     def has_contextual_repr(self, contextual):
-        if contextual in self._transform.keys():
+        if contextual.strip() in self._transform.keys():
             return True
         else:
             return False
