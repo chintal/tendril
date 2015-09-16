@@ -27,27 +27,35 @@ import locale
 import re
 import urllib
 import urlparse
+import HTMLParser
 import traceback
 
 from bs4 import BeautifulSoup
 
 import vendors
 from tendril.utils import www
-from tendril.utils.types import currency
 from tendril.conventions import electronics
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+html_parser = HTMLParser.HTMLParser()
 
 
 class VendorMouser(vendors.VendorBase):
     def __init__(self, name, dname, pclass, mappath=None, currency_code=None, currency_symbol=None, ):
         self.url_base = 'http://www.mouser.in/'
-        self._devices = ['IC SMD']
+        self._devices = ['IC SMD',
+                         'IC THRU',
+                         'IC PLCC',
+                         ]
         self._ndevices = []
         self._searchpages_filters = {}
+        if not currency_code:
+            currency_code = 'USD'
+        if not currency_symbol:
+            currency_symbol = 'US$'
         super(VendorMouser, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)
@@ -66,20 +74,367 @@ class VendorMouser(vendors.VendorBase):
             if device.startswith('RES') or device.startswith('POT') or \
                     device.startswith('CAP') or device.startswith('CRYSTAL'):
                 if electronics.check_for_std_val(ident) is False:
-                    return self._get_search_vpnos(device, value, footprint)
+                    return self._get_search_vpnos(device, value, footprint, ident)
                 try:
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
-                    logger.warning(ident + ' :: DK Search for ' + device + ' Not Implemented')
+                    logger.warning(ident + ' :: Mouser Search for ' + device + ' Not Implemented')
                     return None, 'NOT_IMPL'
             if device in self._devices:
-                return self._get_search_vpnos(device, value, footprint)
+                return self._get_search_vpnos(device, value, footprint, ident)
             else:
                 return None, 'FILTER_NODEVICE'
         except Exception:
             logger.error(traceback.format_exc())
             logger.error('Fatal Error searching for : ' + ident)
             return None, None
+
+    @staticmethod
+    def _search_preprocess(device, value, footprint):
+        # Hail Mary
+        if footprint == 'TO-220':
+            footprint = 'TO220'
+        if footprint == 'TO-92':
+            footprint = 'TO92'
+        return device, value, footprint
+
+    @staticmethod
+    def _process_product_page(soup):
+        # beablock = soup.find('td', 'beablock-notice')
+        # if beablock is not None:
+        #     if beablock.text == u'\nObsolete item; call Digi-Key for more information.\n':
+        #         return False, None, 'OBSOLETE_NOTAVAIL'
+        pdtable = soup.find('div', id='product-desc')
+        if pdtable is not None:
+            pno_cell = pdtable.find('div', id='divMouserPartNum')
+            pno = pno_cell.text.encode('ascii', 'replace').strip()
+            return True, [pno], 'EXACT_MATCH'
+        else:
+            return False, None, ''
+
+    @staticmethod
+    def _get_resultpage_row_pno(row):
+        pno = row.attrs['data-partnumber'].encode('ascii', 'replace')
+        return pno
+
+    @staticmethod
+    def _get_resultpage_row_unitp(row):
+        unitp_cell = row.find('span', id=re.compile(r'lblPrice'))
+        unitp_string = unitp_cell.text.strip().encode('ascii', 'replace')
+        unitp = None
+        try:
+            unitp = locale.atof(unitp_string.replace('$', ''))
+        except ValueError:
+            pass
+        return unitp
+
+    norms = [
+        # SO8
+        # SO-8
+        # SOIC-Narrow-8
+        # SOIC8 (Normalized)
+        # SOIC-8
+        (re.compile(ur'^(SO(IC)?(-Narrow)?-?(?P<pinc>[\d]+))$'), 'SOIC{0}', ['pinc']),
+        # TO220 (Normalized)
+        # TO-220
+        # TO-220-3
+        (re.compile(ur'^TO-?220(-3)?$'), 'TO220', []),
+        # TO-220-FP-3
+        # TO-220-3 FP
+        (re.compile(ur'^TO-?220(-3)?[- ](FP)(-3)?$'), 'TO220 FP', []),
+    ]
+
+    def _standardize_package(self, package):
+        # Mouser does not standardize packages, and results in
+        # plenty of false negatives.
+        for norm in self.norms:
+            m = norm[0].match(package)
+            if m:
+                params = [m.group(var) for var in norm[2]]
+                package = norm[1].format(*params)
+        return package
+
+    def _get_resultpage_row_package(self, row, header):
+        try:
+            header.index('Package / Case')
+        except ValueError:
+            return None
+        try:
+            package_col = header.index('Package / Case') + 1
+            package = row.contents[package_col].text.strip()
+        except (TypeError, AttributeError):
+            package = None
+        return self._standardize_package(package)
+
+    @staticmethod
+    def _get_resultpage_row_minqty(row):
+        mq_cell = row.find('a', id=re.compile(r'lnkQuantity'))
+        mq_string = mq_cell.text.strip().encode('ascii', 'replace')
+        mq = None
+        try:
+            mq = locale.atof(mq_string.replace(':', ''))
+        except ValueError:
+            pass
+        if mq_string == 'Not Available':
+            return -1
+        return mq
+
+    @staticmethod
+    def _get_resultpage_row_mfgpno(row):
+        return row.find('a', id=re.compile(r'MfrPartNumberLink')).text
+
+    def _process_resultpage_row(self, row, header):
+        pno = self._get_resultpage_row_pno(row)
+        unitp = self._get_resultpage_row_unitp(row)
+        package = self._get_resultpage_row_package(row, header)
+        minqty = self._get_resultpage_row_minqty(row)
+        mfgpno = self._get_resultpage_row_mfgpno(row)
+        if minqty == -1:
+            ns = True
+        else:
+            ns = False
+        return pno, mfgpno, package, ns, unitp
+
+    def _get_resultpage_parts(self, soup):
+        ptable = soup.find('table',
+                           id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid'))
+        if ptable is None:
+            return False, None, 'NO_RESULTS:3'
+        header_row = ptable.find('tr', class_=re.compile(r'SearchResultColumnHeading')).find_all('th')
+        header = [x.text.strip() for x in header_row]
+        rows = ptable.find_all('tr', class_=re.compile(r'SearchResultsRow'))
+        if not rows:
+            return False, None, 'NO_RESULTS:1'
+        parts = []
+        for row in rows:
+            pno, mfgpno, package, ns, unitp = self._process_resultpage_row(row, header)
+            if unitp is not None:
+                parts.append((pno, mfgpno, package, ns))
+        check_package = ''
+        for part in parts:
+            if part[2] is None:
+                check_package = 'Wpack'
+        return True, parts, check_package
+
+    @staticmethod
+    def _find_exact_match_package(parts, value):
+        for pno, mfgpno, package, ns in parts:
+            if mfgpno == value:
+                return True, package, 'EXACT_MATCH_FFP'
+        return False, None, None
+
+    @staticmethod
+    def _find_consensus_package(parts):
+        cpackage = parts[0][2]
+        for pno, mfgpno, package, ns in parts:
+            if package != cpackage:
+                cpackage = None
+        if cpackage is not None:
+            return True, cpackage, 'CONSENSUS_FP_MATCH'
+        return False, None, None
+
+    @staticmethod
+    def _filter_results_unfiltered(parts):
+        pnos = []
+        strategy = 'UNFILTERED'
+        for pno, mfgpno, package, ns in parts:
+            if not ns:
+                pnos.append(pno)
+        if len(pnos) == 0:
+            strategy += '_ALLOW_NS'
+            for pno, mfgpno, package, ns in parts:
+                pnos.append(pno)
+        return True, pnos, strategy
+
+    @staticmethod
+    def _filter_results_byfootprint(parts, footprint):
+        pnos = []
+        strategy = 'HAIL MARY'
+        for pno, mfgpno, package, ns in parts:
+            if footprint in package:
+                if not ns:
+                    pnos.append(pno)
+        if len(pnos) == 0:
+            strategy += ' ALLOW NS'
+            for pno, mfgpno, package, ns in parts:
+                if footprint in package:
+
+                    pnos.append(pno)
+        return True, pnos, strategy
+
+    @staticmethod
+    def _filter_results_bycpackage(parts, cpackage, strategy):
+        pnos = []
+        for pno, mfgpno, package, ns in parts:
+            if package == cpackage:
+                if not ns:
+                    pnos.append(pno)
+        if len(pnos) == 0:
+            strategy += '_ALLOW_NS'
+            for pno, mfgpno, package, ns in parts:
+                if package == cpackage:
+                    pnos.append(pno)
+        return True, pnos, strategy
+
+    def _filter_results(self, parts, value, footprint):
+        parts = [part for part in parts if value.upper() in part[1].upper()]
+        if not len(parts):
+            return True, None, 'NO_NAME_MATCH'
+        if parts[0][2] is None or footprint is None:
+            # No package, so no basis to filter
+            result, pnos, strategy = self._filter_results_unfiltered(parts)
+            return True, pnos, strategy
+
+        # Find Exact Match Package
+        result, cpackage, strategy = self._find_exact_match_package(parts, value)
+        if result is False:
+            # Did not find an exact match package. Check for consensus package instead.
+            result, cpackage, strategy = self._find_consensus_package(parts)
+            if result is False:
+                # No exact match, no consensus on package
+                result, pnos, strategy = self._filter_results_byfootprint(parts, footprint)
+                return True, pnos, strategy
+
+        # cpackage exists
+        result, pnos, strategy = self._filter_results_bycpackage(parts, cpackage, strategy)
+
+        if len(pnos) == 0:
+            pnos = None
+
+        return True, pnos, strategy
+
+    def _process_results_page(self, soup, value, footprint):
+        result, parts, strategy = self._get_resultpage_parts(soup)
+        if result is False:
+            return False, None, strategy
+        if parts is None:
+            raise Exception
+        if len(parts) == 0:
+            return False, None, 'NO_RESULTS:2'
+        wpack = strategy
+        result, pnos, strategy = self._filter_results(parts, value, footprint)
+        return result, pnos, ' '.join([strategy, wpack])
+
+    @staticmethod
+    def _get_device_catstrings(device):
+        if device.startswith('IC'):
+            titles = ['Semiconductors']
+            catstrings = ['Integrated Circuits - ICs']
+            subcatstrings = 'all'
+        else:
+            return False, None, None
+        return True, catstrings, subcatstrings, titles
+
+    def _get_cat_soup(self, soup, device, url, ident, i=0):
+        # TODO rewrite this fuction from scratch
+        ctable = soup.find('div', id='CategoryControlTop')
+        sctable = soup.find('table', id='tblSplitCategories')
+        if not ctable and not sctable:
+            # print i, "Returning original soup"
+            yield soup
+        elif sctable:
+            cat_dict = {}
+            cat_title_divs = sctable.find_all('div', class_='catTitleNoBorder')
+            for title_div in cat_title_divs:
+                newurl = None
+                cat_title = title_div.text.strip()
+                subcatlist = title_div.find_next_siblings('ul', class_='sub-cats', limit=1)[0]
+                subcats = subcatlist.find_all('a', attrs={'itemprop': 'significantLink'})
+                subcat_links = {x.text: x.attrs['href'] for x in subcats}
+                cat_dict[cat_title] = subcat_links
+                res, catstrings, subcatstrings, titles = self._get_device_catstrings(device)
+                cat_links = None
+                for title in titles:
+                    if title in cat_dict.keys():
+                        cat_links = cat_dict[title]
+                        break
+                if not cat_links:
+                    # print 'Skipping Title ' + cat_title
+                    continue
+                for catstring in catstrings:
+                    if catstring in cat_links.keys():
+                        newurl = urlparse.urljoin(url, cat_links[catstring])
+                        break
+                if not newurl:
+                    # print 'Did not find link for Title ' + cat_title
+                    continue
+                soup = www.get_soup(newurl)
+                ctable = soup.find('div', id='CategoryControlTop')
+                if ctable:
+                    soups = self._get_cat_soup(soup, device, url, ident, i=i+1)
+                    for soup in soups:
+                        # print i, "Returning upstream soup"
+                        yield soup
+                else:
+                    yield soup
+        elif ctable:
+            cats = ctable.find_all('a', attrs={'itemprop': 'significantLink'})
+            cat_links = {x.text: x.attrs['href'] for x in cats}
+            res, catstrings, subcatstrings, titles = self._get_device_catstrings(device)
+            newurl = None
+            if i == 0:
+                for catstring in catstrings:
+                    if catstring in cat_links.keys():
+                        newurl = urlparse.urljoin(url, cat_links[catstring])
+                        break
+                if newurl:
+                    soup = www.get_soup(newurl)
+                    ctable = soup.find('div', id='CategoryControlTop')
+                    if ctable:
+                        soups = self._get_cat_soup(soup, device, url, ident, i=i+1)
+                        for soup in soups:
+                            # print i, "Returning upstream soup"
+                            yield soup
+            elif i == 1:
+                if subcatstrings == 'all':
+                    for cat_link in cat_links:
+                        newurl = urlparse.urljoin(url, cat_links[cat_link])
+                        soup = www.get_soup(newurl)
+                        # print i, "Returning new soup to downstream"
+                        yield soup
+
+    def _process_cat_soup(self, soup, device, value, footprint):
+        ptable = soup.find('table',
+                           id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid'))
+        if ptable is None:
+            # check for single product page
+            result, pnos, strategy = self._process_product_page(soup)
+            if result is True:
+                return True, pnos, strategy
+
+            # check for no results
+            nr_span = soup.find('span', class_='NRSearchMsg')
+            if nr_span:
+                nr_text = nr_span.text.strip()
+                if nr_text == 'did not return any results.':
+                    return True, None, 'NO_RESULTS_PAGE'
+
+            raise NotImplementedError("Expecting a results page or products page, not whatever this is")
+        return self._process_results_page(soup, value, footprint)
+
+    def _get_search_vpnos(self, device, value, footprint, ident):
+        if value.strip() == '':
+            return None, 'NOVALUE'
+        device, value, footprint = self._search_preprocess(device, value, footprint)
+        url = urlparse.urljoin(self.url_base,
+                               "Search/Refine.aspx?Keyword={0}&Stocked=True".format(
+                                   urllib.quote_plus(value)))
+        soup = www.get_soup(url)
+        if soup is None:
+            return None, 'URL_FAIL'
+
+        pnos = []
+        strategy = ''
+        for soup in self._get_cat_soup(soup, device, url, ident):
+            result, lpnos, lstrategy = self._process_cat_soup(soup, device, value, footprint)
+            if result:
+                if lpnos:
+                    pnos.extend(lpnos)
+                strategy += ', ' + lstrategy
+            strategy = '.' + strategy
+        pnos = list(set(pnos))
+        pnos = map(lambda x: html_parser.unescape(x), pnos)
+        return pnos, strategy
 
 
 class MouserElnPart(vendors.VendorElnPartBase):
@@ -130,7 +485,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
             soup = BeautifulSoup(page)
             stable = soup.find('table',
                                id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid'))
-            srow = stable.find('tr', {'data-partnumber' : self.vpno},
+            srow = stable.find('tr', {'data-partnumber': self.vpno},
                                class_=re.compile(r'SearchResultsRow'))
             link = srow.find('a', id=re.compile(r'lnkMouserPartNumber'))
             href = urlparse.urljoin(page.geturl(), link.attrs['href'])
@@ -148,7 +503,11 @@ class MouserElnPart(vendors.VendorElnPartBase):
             moq_text = row.find(id=re.compile('lnkQuantity')).text
             rex_qtyrange = re.compile(ur'SelectMiniReelQuantity\(((?P<minq>\d+),(?P<maxq>\d+))\)')
             rex_qty = re.compile(ur'SelectQuantity\((?P<minq>\d+)\)')
-            m = rex_qty.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])
+            try:
+                m = rex_qty.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])
+            except KeyError:
+                # TODO make sure this holds
+                continue
             maxq = None
             if m is None:
                 m = rex_qtyrange.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])
@@ -172,7 +531,11 @@ class MouserElnPart(vendors.VendorElnPartBase):
             try:
                 price = locale.atof(price_text.replace('$', ''))
             except ValueError:
-                raise ValueError(price_text + " found while acquiring price for " + self.vpno)
+                if price_text.strip() == 'Quote':
+                    # TODO handle this somehow?
+                    continue
+                else:
+                    raise ValueError(price_text + " found while acquiring price for " + self.vpno)
             price_obj = vendors.VendorPrice(moq,
                                             price,
                                             self._vendor.currency,

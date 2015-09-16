@@ -19,13 +19,11 @@ Electronics Sourcing module documentation (:mod:`sourcing.electronics`)
 =======================================================================
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import vendors
 import orders
 
 import digikey
+import mouser
 import csil
 import pricelist
 
@@ -42,6 +40,9 @@ import tendril.entityhub.maps
 
 import os
 import csv
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 def gen_vendor_mapfile(vendor_obj):
@@ -141,6 +142,15 @@ def init_vendors():
                                                    'US$'
                                                    )
                 logger.info("Created DK Vendor Object : " + vendor['dname'])
+            if vendor['name'] == 'mouser':
+                vendor_obj = mouser.VendorMouser(vendor['name'],
+                                                 vendor['dname'],
+                                                 'electronics',
+                                                 mappath,
+                                                 'USD',
+                                                 'US$'
+                                                 )
+                logger.info("Created Mouser Vendor Object : " + vendor['dname'])
             if vendor['type'] == 'pricelist':
                 vendor_obj = pricelist.VendorPricelist(vendor['name'],
                                                        vendor['dname'],

@@ -23,5 +23,6 @@ import tendril.sourcing.electronics
 
 
 if __name__ == '__main__':
-    for vendor in tendril.sourcing.electronics.vendor_list:
-        tendril.sourcing.electronics.gen_vendor_mapfile(vendor)
+    tendril.sourcing.electronics.gen_vendor_mapfile(tendril.sourcing.electronics.vendor_list[1])
+    # for vendor in tendril.sourcing.electronics.vendor_list:
+    #     tendril.sourcing.electronics.gen_vendor_mapfile(vendor)
