@@ -108,7 +108,14 @@ class VendorMouser(vendors.VendorBase):
         if pdtable is not None:
             pno_cell = pdtable.find('div', id='divMouserPartNum')
             pno = pno_cell.text.encode('ascii', 'replace').strip()
-            return True, [pno], 'EXACT_MATCH'
+            mfgpno = soup.find('div', id='divManufacturerPartNum').text.strip()
+            package = soup.find(
+                'span', text=re.compile('Package / Case')
+            ).parent.find_next_sibling().text.strip().encode('ascii', 'replace')
+            # TODO Implement these
+            ns = False
+            part = (pno, mfgpno, package, ns)
+            return True, [part], 'EXACT_MATCH'
         else:
             return False, None, ''
 
@@ -145,8 +152,8 @@ class VendorMouser(vendors.VendorBase):
     ]
 
     def _standardize_package(self, package):
-        # Mouser does not standardize packages, and results in
-        # plenty of false negatives.
+        # Mouser does not standardize packages,
+        # and results in plenty of false negatives.
         for norm in self.norms:
             m = norm[0].match(package)
             if m:
@@ -159,11 +166,8 @@ class VendorMouser(vendors.VendorBase):
             header.index('Package / Case')
         except ValueError:
             return None
-        try:
-            package_col = header.index('Package / Case') + 1
-            package = row.contents[package_col].text.strip()
-        except (TypeError, AttributeError):
-            package = None
+        package_col = header.index('Package / Case') + 1
+        package = row.contents[package_col].text.strip()
         return self._standardize_package(package)
 
     @staticmethod
@@ -210,11 +214,11 @@ class VendorMouser(vendors.VendorBase):
             pno, mfgpno, package, ns, unitp = self._process_resultpage_row(row, header)
             if unitp is not None:
                 parts.append((pno, mfgpno, package, ns))
-        check_package = ''
-        for part in parts:
-            if part[2] is None:
-                check_package = 'Wpack'
-        return True, parts, check_package
+        # check_package = ''
+        # for part in parts:
+        #     if part[2] is None:
+        #         check_package = 'Wpack'
+        return True, parts, ''
 
     @staticmethod
     def _find_exact_match_package(parts, value):
@@ -258,7 +262,6 @@ class VendorMouser(vendors.VendorBase):
             strategy += ' ALLOW NS'
             for pno, mfgpno, package, ns in parts:
                 if footprint in package:
-
                     pnos.append(pno)
         return True, pnos, strategy
 
@@ -277,9 +280,6 @@ class VendorMouser(vendors.VendorBase):
         return True, pnos, strategy
 
     def _filter_results(self, parts, value, footprint):
-        parts = [part for part in parts if value.upper() in part[1].upper()]
-        if not len(parts):
-            return True, None, 'NO_NAME_MATCH'
         if parts[0][2] is None or footprint is None:
             # No package, so no basis to filter
             result, pnos, strategy = self._filter_results_unfiltered(parts)
@@ -303,7 +303,12 @@ class VendorMouser(vendors.VendorBase):
 
         return True, pnos, strategy
 
-    def _process_results_page(self, soup, value, footprint):
+    @staticmethod
+    def _prefilter_parts(parts, value):
+        parts = [part for part in parts if value.upper() in part[1].upper()]
+        return parts
+
+    def _process_results_page(self, soup):
         result, parts, strategy = self._get_resultpage_parts(soup)
         if result is False:
             return False, None, strategy
@@ -311,9 +316,8 @@ class VendorMouser(vendors.VendorBase):
             raise Exception
         if len(parts) == 0:
             return False, None, 'NO_RESULTS:2'
-        wpack = strategy
-        result, pnos, strategy = self._filter_results(parts, value, footprint)
-        return result, pnos, ' '.join([strategy, wpack])
+        # result, pnos, strategy = self._filter_results(parts, value, footprint)
+        return result, parts, strategy
 
     @staticmethod
     def _get_device_catstrings(device):
@@ -327,6 +331,7 @@ class VendorMouser(vendors.VendorBase):
 
     def _get_cat_soup(self, soup, device, url, ident, i=0):
         # TODO rewrite this fuction from scratch
+        print url
         ctable = soup.find('div', id='CategoryControlTop')
         sctable = soup.find('table', id='tblSplitCategories')
         if not ctable and not sctable:
@@ -393,7 +398,7 @@ class VendorMouser(vendors.VendorBase):
                         # print i, "Returning new soup to downstream"
                         yield soup
 
-    def _process_cat_soup(self, soup, device, value, footprint):
+    def _process_cat_soup(self, soup):
         ptable = soup.find('table',
                            id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid'))
         if ptable is None:
@@ -410,7 +415,7 @@ class VendorMouser(vendors.VendorBase):
                     return True, None, 'NO_RESULTS_PAGE'
 
             raise NotImplementedError("Expecting a results page or products page, not whatever this is")
-        return self._process_results_page(soup, value, footprint)
+        return self._process_results_page(soup)
 
     def _get_search_vpnos(self, device, value, footprint, ident):
         if value.strip() == '':
@@ -423,18 +428,27 @@ class VendorMouser(vendors.VendorBase):
         if soup is None:
             return None, 'URL_FAIL'
 
-        pnos = []
+        parts = []
         strategy = ''
         for soup in self._get_cat_soup(soup, device, url, ident):
-            result, lpnos, lstrategy = self._process_cat_soup(soup, device, value, footprint)
+            result, lparts, lstrategy = self._process_cat_soup(soup)
             if result:
-                if lpnos:
-                    pnos.extend(lpnos)
+                if lparts:
+                    parts.extend(lparts)
                 strategy += ', ' + lstrategy
             strategy = '.' + strategy
-        pnos = list(set(pnos))
-        pnos = map(lambda x: html_parser.unescape(x), pnos)
-        return pnos, strategy
+        if not len(parts):
+            return None, strategy + ':NO_RESULTS:COLLECTED'
+        self._prefilter_parts(parts, value)
+        if not len(parts):
+            return None, strategy + ':NO_RESULTS:PREFILTER'
+        for part in parts:
+            print part
+        result, pnos, lstrategy = self._filter_results(parts, value, footprint)
+        if pnos:
+            pnos = list(set(pnos))
+            pnos = map(lambda x: html_parser.unescape(x), pnos)
+        return pnos, ':'.join([strategy, lstrategy])
 
 
 class MouserElnPart(vendors.VendorElnPartBase):
