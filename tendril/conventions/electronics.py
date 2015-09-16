@@ -225,6 +225,7 @@ def parse_ident(ident):
     for st in DEVICE_CLASSES:
         if ident.startswith(st):
             device = st
+            break
     if device is not None:
         ident = ident[len(device):]
     parts = ident.split()

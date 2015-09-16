@@ -49,6 +49,24 @@ class VendorMouser(vendors.VendorBase):
         self._devices = ['IC SMD',
                          'IC THRU',
                          'IC PLCC',
+                         'FERRITE BEAD SMD',
+                         'TRANSISTOR THRU',
+                         'TRANSISTOR SMD',
+                         'CONN DF13',
+                         'CONN DF13 HOUS',
+                         # 'CONN DF13 WIRE',
+                         'CONN DF13 CRIMP',
+                         'DIODE SMD',
+                         'DIODE THRU',
+                         'VARISTOR',
+                         'BRIDGE RECTIFIER',
+                         'RES SMD',
+                         'RES THRU',
+                         'CAP CER SMD',
+                         'CAP TANT SMD',
+                         'TRANSFORMER SMD',
+                         'INDUCTOR SMD',
+                         'CRYSTAL AT'
                          ]
         self._ndevices = []
         self._searchpages_filters = {}
@@ -78,7 +96,8 @@ class VendorMouser(vendors.VendorBase):
                 try:
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
-                    logger.warning(ident + ' :: Mouser Search for ' + device + ' Not Implemented')
+                    # TODO This warning is necessary. Restore it when implemented.
+                    # logger.warning(ident + ' :: Mouser Search for ' + device + ' Not Implemented')
                     return None, 'NOT_IMPL'
             if device in self._devices:
                 return self._get_search_vpnos(device, value, footprint, ident)
@@ -139,6 +158,7 @@ class VendorMouser(vendors.VendorBase):
         return unitp
 
     norms = [
+        # --- Standard Cases --- #
         # SO8
         # SO-8
         # SOIC-Narrow-8
@@ -154,8 +174,17 @@ class VendorMouser(vendors.VendorBase):
         (re.compile(ur'^TO-?220(-3)?[- ](FP)(-3)?$'), 'TO220 FP', []),
         # PDIP-6
         # DIP6 (Normalized)
+        (re.compile(ur'^P?DIP-?(?P<pinc>\d+)$'), 'DIP{0}', ['pinc']),
+
+        # --- Somewhat Special Cases --- #
         # PDIP-6 Gull Wing
-        (re.compile(ur'^P?DIP-?(?P<pinc>\d+)( Gull Wing)?$'), 'DIP{}', ['pinc'])
+        # SMT6 (Normalized)
+        (re.compile(ur'^P?DIP-?(?P<pinc>\d+)( Gull Wing)$'), 'SMT{0}', ['pinc']),
+
+        # --- Very Special Cases --- #
+        # SOIC4
+        # TO-269AA (Normalized)
+        (re.compile(ur'^(SOIC-?4)|(TO-?269-?AA)$'), 'TO-269AA', []),
     ]
 
     def _standardize_package(self, package):
@@ -202,7 +231,7 @@ class VendorMouser(vendors.VendorBase):
             try:
                 vpart = MouserElnPart(pno)
                 package = self._standardize_package(vpart.package)
-            except:
+            except AttributeError:
                 pass
         minqty = self._get_resultpage_row_minqty(row)
         mfgpno = self._get_resultpage_row_mfgpno(row)
@@ -335,8 +364,26 @@ class VendorMouser(vendors.VendorBase):
     @staticmethod
     def _get_device_catstrings(device):
         if device.startswith('IC'):
+            titles = ['Semiconductors', 'Sensors']
+            catstrings = ['Integrated Circuits - ICs',
+                          'Temperature Sensors']
+            subcatstrings = 'all'
+        elif device.startswith('DIODE'):
             titles = ['Semiconductors']
-            catstrings = ['Integrated Circuits - ICs']
+            catstrings = ['Discrete Semiconductors',
+                          'Diodes & Rectifiers',
+                          'Rectifiers',
+                          'Schottky Diodes & Rectifiers',
+                          'TVS Diodes']
+            subcatstrings = 'all'
+        elif device.startswith('BRIDGE RECTIFIER'):
+            titles = ['Semiconductors']
+            catstrings = ['Discrete Semiconductors',
+                          'Bridge Rectifiers']
+            subcatstrings = 'all'
+        elif device.startswith('RES THRU'):
+            titles = ['Passive Components']
+            catstrings = ['Through Hole Resistors']
             subcatstrings = 'all'
         else:
             return False, None, None
@@ -344,11 +391,9 @@ class VendorMouser(vendors.VendorBase):
 
     def _get_cat_soup(self, soup, device, url, ident, i=0):
         # TODO rewrite this fuction from scratch
-        # print url
         ctable = soup.find('div', id='CategoryControlTop')
         sctable = soup.find('table', id='tblSplitCategories')
         if not ctable and not sctable:
-            # print i, "Returning original soup"
             yield soup
         elif sctable:
             cat_dict = {}
@@ -399,6 +444,8 @@ class VendorMouser(vendors.VendorBase):
                         soups = self._get_cat_soup(soup, device, newurl, ident, i=i+1)
                         for soup in soups:
                             yield soup
+                    else:
+                        yield soup
             elif i == 1:
                 if subcatstrings == 'all':
                     for cat_link in cat_links:
@@ -417,6 +464,8 @@ class VendorMouser(vendors.VendorBase):
                         newurl = urlparse.urljoin(url, cat_links[cat_link])
                         soup = www.get_soup(newurl)
                         yield soup
+        else:
+            raise Exception
 
     def _process_cat_soup(self, soup):
         ptable = soup.find('table',
@@ -468,13 +517,16 @@ class VendorMouser(vendors.VendorBase):
             pnos = map(lambda x: html_parser.unescape(x), pnos)
         return pnos, ':'.join([strategy, lstrategy])
 
+    @staticmethod
+    def _get_searchurl_crystal():
+        return 'http://www.mouser.in/Passive-Components/Frequency-Control-Timing-Devices/Crystals/_/N-6zu9f/'
+
+    def _get_pas_vpnos(self, device, value, footprint):
+        raise NotImplementedError
+
 
 class MouserElnPart(vendors.VendorElnPartBase):
     def __init__(self, mouserpartno, ident=None, vendor=None):
-        """
-
-        :type vendor: VendorDigiKey
-        """
         if vendor is None:
             vendor = VendorMouser('mouser', 'transient', 'electronics',
                                   currency_code='USD', currency_symbol='US$')

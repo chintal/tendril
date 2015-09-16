@@ -74,7 +74,7 @@ def gen_vendor_mapfile(vendor_obj):
                         vpnos = [('@AG@' + vpno) for vpno in vpnos]
                     else:
                         # TODO Fix this error (hack around progressbar issue)
-                        if strategy not in ['NODEVICE', 'NOVALUE']:
+                        if strategy not in ['NODEVICE', 'NOVALUE', 'NOT_IMPL']:
                             logger.warning("Could not find matches for : " + symbol.ident +
                                            '::' + str(strategy) + '\n\n\n')
                         vpnos = []
