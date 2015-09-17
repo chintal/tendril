@@ -57,6 +57,7 @@ class VendorTI(vendors.VendorBase):
         if not currency_symbol:
             currency_symbol = 'US$'
         super(VendorTI, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
+        self._vpart_class = TIElnPart
         self.add_order_baseprice_component("Shipping Cost", 7)
         self.add_order_additional_cost_component("Customs", 12.85)
 
@@ -283,11 +284,9 @@ class TIElnPart(vendors.VendorElnPartBase):
         if vendor is None:
             vendor = VendorTI('ti', 'transient', 'electronics',
                               currency_code='USD', currency_symbol='US$')
-        super(TIElnPart, self).__init__(ident, vendor)
+        super(TIElnPart, self).__init__(tipartno, ident, vendor)
         self.url_base = vendor.url_base
-        if tipartno is not None:
-            self.vpno = tipartno
-        else:
+        if not self._vpno:
             logger.error("Not enough information to create a TI Part")
         self._get_data()
 

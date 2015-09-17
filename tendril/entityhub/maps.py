@@ -45,7 +45,9 @@ class MapFile(object):
                         self._umap[row[0]].append(elem)
 
     def get_idents(self):
-        return self._map.keys()
+        for key in sorted(self._map.keys()):
+            if len(self._map[key]) or len(self._umap[key]):
+                yield key
 
     def get_upartnos(self, canonical):
         return self._umap[canonical]

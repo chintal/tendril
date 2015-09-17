@@ -57,6 +57,7 @@ class VendorPricelist(vendors.VendorBase):
             if "effectivefactor" in self._pricelist["vendorinfo"]:
                 self.add_order_additional_cost_component("Unspecified",
                                                          self._pricelist["vendorinfo"]["effectivefactor"] * 100)
+        self._vpart_class = PricelistPart
         try:
             self.add_order_baseprice_component("Shipping Cost", self._pricelist["vendorinfo"]["shippingcost"])
         except KeyError:
@@ -209,8 +210,7 @@ class VendorPricelist(vendors.VendorBase):
 class PricelistPart(vendors.VendorPartBase):
     def __init__(self, vp_dict, ident, vendor):
         self._vendor = vendor
-        super(PricelistPart, self).__init__(ident, vendor)
-        self.vpno = vp_dict['vpno'].strip()
+        super(PricelistPart, self).__init__(vp_dict['vpno'].strip(), ident, vendor)
         if 'pkgqty' in vp_dict.keys():
             self.pkgqty = vp_dict['pkgqty']
         if 'availqty' in vp_dict.keys():

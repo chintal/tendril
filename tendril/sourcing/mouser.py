@@ -75,6 +75,7 @@ class VendorMouser(vendors.VendorBase):
         if not currency_symbol:
             currency_symbol = 'US$'
         super(VendorMouser, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
+        self._vpart_class = MouserElnPart
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)
 
@@ -530,11 +531,9 @@ class MouserElnPart(vendors.VendorElnPartBase):
         if vendor is None:
             vendor = VendorMouser('mouser', 'transient', 'electronics',
                                   currency_code='USD', currency_symbol='US$')
-        super(MouserElnPart, self).__init__(ident, vendor)
+        super(MouserElnPart, self).__init__(mouserpartno, ident, vendor)
         self.url_base = vendor.url_base
-        if mouserpartno is not None:
-            self.vpno = mouserpartno
-        else:
+        if not self._vpno:
             logger.error("Not enough information to create a Mouser Part")
         self._get_data()
 

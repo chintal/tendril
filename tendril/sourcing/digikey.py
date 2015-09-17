@@ -72,6 +72,7 @@ class VendorDigiKey(vendors.VendorBase):
         self._ndevices = ['CONN INTERBOARD']
         self._searchpages_filters = {}
         super(VendorDigiKey, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
+        self._vpart_class = DigiKeyElnPart
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)
 
@@ -693,10 +694,8 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
         if vendor is None:
             vendor = VendorDigiKey('digikey', 'transient', 'electronics')
             vendor.currency = currency.CurrencyDefinition('USD', 'US$')
-        super(DigiKeyElnPart, self).__init__(ident, vendor)
-        if dkpartno is not None:
-            self.vpno = dkpartno
-        else:
+        super(DigiKeyElnPart, self).__init__(dkpartno, ident, vendor)
+        if not self._vpno:
             logger.error("Not enough information to create a Digikey Part")
         self._get_data()
 

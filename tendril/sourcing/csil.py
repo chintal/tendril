@@ -289,6 +289,7 @@ class VendorCSIL(vendors.VendorBase):
         self._password = password
         self._devices = ['PCB']
         super(VendorCSIL, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
+        self._vpart_class = CSILPart
         self.add_order_additional_cost_component("Excise (12.5\%)", 12.5)
         self.add_order_additional_cost_component("CST (5\%)", 5.625)
 
@@ -347,7 +348,7 @@ class CSILPart(vendors.VendorPartBase):
         self._vendor = vendor
         if ident is None:
             ident = self._vendor.map.get_canonical(vpartno)
-        super(CSILPart, self).__init__(ident, vendor)
+        super(CSILPart, self).__init__(vpartno, ident, vendor)
         if vpartno is not None:
             self.vpno = vpartno
         else:

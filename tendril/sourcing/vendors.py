@@ -151,6 +151,7 @@ class VendorBase(object):
         self._order = None
         self._orderbasecosts = []
         self._orderadditionalcosts = []
+        self._vpart_class = VendorPartBase
         if mappath is not None:
             self.map = mappath
 
@@ -192,6 +193,19 @@ class VendorBase(object):
         :type currency_def: utils.currency.CurrencyDefinition
         """
         self._currency = currency_def
+
+    def get_idents(self):
+        for ident in self._map.get_idents():
+            yield ident
+
+    def get_all_vpnos(self):
+        for ident in self.get_idents():
+            for vpno in self._map.get_all_partnos(ident):
+                yield ident, vpno
+
+    def get_all_vparts(self):
+        for ident, vpno in self.get_all_vpnos():
+            yield self._vpart_class(vpno, ident=ident, vendor=self)
 
     def get_vpnos(self, ident):
         return self._map.get_partnos(ident)
@@ -355,8 +369,8 @@ class VendorPrice(object):
 
 
 class VendorPartBase(object):
-    def __init__(self, ident, vendor):
-        self._vpno = None
+    def __init__(self, vpno, ident, vendor):
+        self._vpno = vpno
         self._vqtyavail = None
         self._manufacturer = None
         self._mpartno = None
@@ -450,12 +464,12 @@ class VendorPartBase(object):
         return rprice, rnextprice
 
     def __repr__(self):
-        return self.vpno + ' ' + str(self._vpartdesc) + ' ' + str(self.abs_moq) + '\n'
+        return '<{0} {1} {2}>'.format(self.__class__, self.vpno,  str(self._vpartdesc))
 
 
 class VendorElnPartBase(VendorPartBase):
-    def __init__(self, ident, vendor):
-        super(VendorElnPartBase, self).__init__(ident, vendor)
+    def __init__(self, vpno, ident, vendor):
+        super(VendorElnPartBase, self).__init__(vpno, ident, vendor)
         self._package = None
         self._datasheet = None
 
