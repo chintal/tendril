@@ -19,10 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import yaml
 import csv
 import os
@@ -44,6 +40,8 @@ from tendril.utils.config import INSTANCE_ROOT
 
 import re
 
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 if __name__ == '__main__':
 
@@ -121,16 +119,6 @@ if __name__ == '__main__':
                     item = tendril.boms.electronics.EntityElnComp()
                     item.define('Undef', device, value, footprint)
                     logger.debug("Inserting : {0:4} {1}".format(str(qty), str(item.ident)))
-                    for i in range(qty + 1):
-                        obom.insert_component(item)
-
-                    item = tendril.boms.electronics.EntityElnComp()
-                    item.define('Undef', device, value, footprint)
-                    for i in range(qty + 1):
-                        obom.insert_component(item)
-
-                    item = tendril.boms.electronics.EntityElnComp()
-                    item.define('Undef', device, value, footprint)
                     for i in range(qty + 1):
                         obom.insert_component(item)
 

@@ -23,6 +23,5 @@ import tendril.sourcing.electronics
 
 
 if __name__ == '__main__':
-    tendril.sourcing.electronics.export_vendor_map_audit(tendril.sourcing.electronics.vendor_list[1])
-    # for vendor in tendril.sourcing.electronics.vendor_list:
-    #     tendril.sourcing.electronics.export_vendor_map_audit(vendor)
+    for vendor in tendril.sourcing.electronics.vendor_list:
+        tendril.sourcing.electronics.export_vendor_map_audit(vendor)

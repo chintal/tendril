@@ -166,7 +166,7 @@ def gen_canonical_transform(elec_inven_data_idx, regen=True):
                                rdr.tf.get_canonical_repr(line[0]),
                                rdr.tf.get_ideal_repr(line[0]),
                                rdr.tf.get_status(line[0]),
-                               in_symlib))
+                               in_symlib,))
             else:
                 if gsymlib.is_recognized(line[0]):
                     in_symlib = True

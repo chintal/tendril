@@ -51,9 +51,8 @@ class CompositeOrderElem(object):
             self._sources = None
             self._selsource = None
 
-    @staticmethod
-    def get_eff_acq_price(source):
-        return source[2] * source[5].unit_price.native_value
+    def get_eff_acq_price(self, source):
+        return (self._shortage + (source[2] - self._shortage)/2) * source[5].unit_price.native_value
 
     @property
     def ident(self):

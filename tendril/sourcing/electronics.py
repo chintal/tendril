@@ -24,6 +24,7 @@ import orders
 
 import digikey
 import mouser
+import ti
 import csil
 import pricelist
 
@@ -151,6 +152,15 @@ def init_vendors():
                                                  'US$'
                                                  )
                 logger.info("Created Mouser Vendor Object : " + vendor['dname'])
+            if vendor['name'] == 'ti':
+                vendor_obj = ti.VendorTI(vendor['name'],
+                                         vendor['dname'],
+                                         'electronics',
+                                         mappath,
+                                         'USD',
+                                         'US$'
+                                         )
+                logger.info("Created TI Vendor Object : " + vendor['dname'])
             if vendor['type'] == 'pricelist':
                 vendor_obj = pricelist.VendorPricelist(vendor['name'],
                                                        vendor['dname'],
@@ -227,7 +237,7 @@ class SourcingException(Exception):
     pass
 
 
-def get_eff_acq_price(vsinfo):
+def get_eff_acq_price(vsinfo, qty):
     return vsinfo[2] * vsinfo[5].unit_price.native_value
 
 
@@ -246,7 +256,7 @@ def get_sourcing_information(ident, qty, avendors=vendor_list, allvendors=False)
     if allvendors is False:
         selsource = sources[0]
         for vsinfo in sources:
-            if get_eff_acq_price(vsinfo) < get_eff_acq_price(selsource):
+            if get_eff_acq_price(vsinfo, qty) < get_eff_acq_price(selsource, qty):
                 selsource = vsinfo
         return selsource
     else:
