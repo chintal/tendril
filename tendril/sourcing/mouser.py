@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Mouser Sourcing Module documentation (:mod:`sourcing.digikey`)
-==============================================================
+Mouser Sourcing Module documentation (:mod:`sourcing.mouser`)
+=============================================================
 """
 
 import locale

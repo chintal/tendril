@@ -1,5 +1,5 @@
 
-.. automodule:: tendril.sourcing.csil
+.. automodule:: tendril.sourcing.mouser
     :members:
     :undoc-members:
     :show-inheritance:
