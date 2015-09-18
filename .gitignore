@@ -1,3 +1,4 @@
+/profiling/*/*/*.profile*
 /tendril.egg-info
 /dist
 /build
