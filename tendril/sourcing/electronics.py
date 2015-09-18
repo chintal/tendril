@@ -199,18 +199,15 @@ def export_vendor_map_audit(vendor_obj):
         vendor_obj = vendor_list[vendor_obj]
     mapobj = vendor_obj.map
     assert isinstance(mapobj, tendril.entityhub.maps.MapFile)
-
     outp = os.path.join(config.vendor_map_audit_folder, vendor_obj.name + '-electronics-audit.csv')
     outf = fsutils.VersionedOutputFile(outp)
     outw = csv.writer(outf)
     pb = ProgressBar('red', block='#', empty='.')
-    idents = mapobj.get_idents()
-    nidents = len(idents)
-    idents.sort()
-    for iidx, ident in enumerate(idents):
-        nvpnos = len(idents)
-
-        for pidx, vpno in enumerate(mapobj.get_all_partnos(ident)):
+    total = mapobj.length()
+    count = 0
+    for ident in mapobj.get_idents():
+        for vpno in mapobj.get_all_partnos(ident):
+            count += 1
             try:
                 vp = vendor_obj.get_vpart(vpno, ident)
             except:
@@ -224,9 +221,8 @@ def export_vendor_map_audit(vendor_obj):
                 outw.writerow([vp.ident, vp.vpno, vp.mpartno, None, vp.vpartdesc,
                                vp.manufacturer, vp.vqtyavail, vp.abs_moq])
 
-            percentage = (iidx + (1.00 * pidx / nvpnos)) * 100.00 / nidents
+            percentage = count * 100.00 / total
             pb.render(int(percentage), "\n%f%% %s;%s\nGenerating Vendor Map Audit" % (percentage, ident, vpno))
-
     outf.close()
     logger.info("Written Vendor Map Audit to File : " + vendor_obj.name)
 

@@ -27,6 +27,7 @@ class MapFile(object):
         self._map = {}
         self._umap = {}
         self._strategy = {}
+        self._len = 0
         with open(mappath) as f:
             rdr = csv.reader(f)
             for row in rdr:
@@ -38,6 +39,7 @@ class MapFile(object):
                 self._umap[row[0]] = []
                 for elem in vals:
                     assert isinstance(elem, str)
+                    self._len += 1
                     if elem.startswith('@AG@'):
                         elem = elem[4:]
                         self._map[row[0]].append(elem)
@@ -86,3 +88,6 @@ class MapFile(object):
 
     def get_user_map(self):
         return self._umap
+
+    def length(self):
+        return self._len
