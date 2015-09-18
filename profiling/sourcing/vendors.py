@@ -22,12 +22,10 @@
 Docstring for vendors
 """
 
-import cProfile
-import pstats
-import itertools
 import os
 import inspect
-from subprocess import Popen, PIPE
+
+from ..profiler import do_profile
 
 from tendril.sourcing import electronics
 
@@ -35,34 +33,31 @@ SCRIPT_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 SCRIPT_FOLDER = os.path.normpath(os.path.join(SCRIPT_PATH, os.pardir))
 
 
-def profile_vendor(vobj):
-    for ident in itertools.islice(vobj.get_all_vparts(), 20):
+@do_profile
+def profile_vendor_get_part(vobj):
+    for ident in vobj.get_all_vparts():
         print ident
 
 
+@do_profile
+def profile_vendor_genvmap(vobj):
+    electronics.gen_vendor_mapfile(vobj)
+
+
+@do_profile
+def profile_vendor_genvmapaudit(vobj):
+    electronics.export_vendor_map_audit(vobj)
+
+
 def main():
+    profilers = [('get_part', profile_vendor_get_part),
+                 ('genvmap', profile_vendor_genvmap),
+                 ('genvmapaudit', profile_vendor_genvmapaudit),
+                 ]
     for vendor in electronics.vendor_list:
-        vname = vendor._name
-
-        raw_fn = str('{0}.profile'.format(vname))
-        stats_fn = str('{0}.profile.stats'.format(vname))
-        svg_fn = str('{0}.profile.svg'.format(vname))
-
-        cProfile.runctx('profile_vendor(vendor)',
-                        globals(), locals(), filename=raw_fn)
-
-        with open(stats_fn, 'w') as f:
-            stats = pstats.Stats(raw_fn, stream=f)
-            stats.strip_dirs().sort_stats('cumulative').print_stats()
-
-        gprof_cmd = 'gprof2dot -f pstats {0}'.format(raw_fn).split(' ')
-        dot_cmd = 'dot -Tsvg -o {0}'.format(svg_fn).split(' ')
-
-        gprof_process = Popen(gprof_cmd, stdout=PIPE, cwd=SCRIPT_FOLDER)
-        dot_process = Popen(dot_cmd, stdin=gprof_process.stdout, stdout=PIPE, cwd=SCRIPT_FOLDER)
-
-        gprof_process.stdout.close()  # enable write error in dd if ssh dies
-        out, err = dot_process.communicate()
+        for profiler in profilers:
+            folder = os.path.join(SCRIPT_FOLDER, profiler[0])
+            profiler[1](vendor._name, folder, vobj=vendor)
 
 
 if __name__ == '__main__':
