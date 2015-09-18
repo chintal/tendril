@@ -13,7 +13,7 @@ Tendril documentation
    :maxdepth: 4
 
    userdoc/userdoc
-   devdoc/todo
+   devdoc/devdoc
    apidoc/tendril
    other
 

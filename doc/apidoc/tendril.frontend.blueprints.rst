@@ -9,6 +9,7 @@ Subpackages
     tendril.frontend.blueprints.conventions
     tendril.frontend.blueprints.entityhub
     tendril.frontend.blueprints.gsymlib
+    tendril.frontend.blueprints.vendors
 
 Submodules
 ----------
