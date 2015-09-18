@@ -538,7 +538,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
         self._get_data()
 
     def _get_data(self):
-        soup, url = self._get_product_soup()
+        soup = self._get_product_soup()
         for price in self._get_prices(soup):
             self.add_price(price)
         try:
@@ -549,32 +549,30 @@ class MouserElnPart(vendors.VendorElnPartBase):
             self.vqtyavail = self._get_avail_qty(soup)
             self.package = self._get_package(soup)
         except AttributeError:
-            logger.error("Failed to acquire part information : " + self.vpno + url)
+            logger.error("Failed to acquire part information : " + self.vpno)
             # TODO raise AttributeError
 
     def _get_product_soup(self):
         start_url = urlparse.urljoin(self.url_base,
                                      '/Search/Refine.aspx?Keyword={0}&FS=True'.format(
                                         urllib.quote_plus(self.vpno)))
-        page = www.urlopen(start_url)
-        if page is None:
+        soup = www.get_soup(start_url)
+        url = www.get_actual_url(start_url)
+        # TODO start_url may not be the actual URL. Handle this or remove the redirect handler.
+        if soup is None:
             logger.error("Unable to open Mouser product start page : " + self.vpno)
             return
-        if 'ProductDetail' in page.geturl():
-            logger.debug("Got product page : " + page.geturl())
-            soup = BeautifulSoup(page)
-            return soup, page.geturl()
+        if soup.find('div', id='productdetail-box1'):
+            return soup
         else:
-            soup = BeautifulSoup(page)
             stable = soup.find('table',
                                id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid'))
             srow = stable.find('tr', {'data-partnumber': self.vpno},
                                class_=re.compile(r'SearchResultsRow'))
             link = srow.find('a', id=re.compile(r'lnkMouserPartNumber'))
-            href = urlparse.urljoin(page.geturl(), link.attrs['href'])
-            product_page = www.urlopen(href)
-            soup = BeautifulSoup(product_page)
-            return soup, product_page.geturl()
+            href = urlparse.urljoin(url, link.attrs['href'])
+            soup = www.get_soup(href)
+            return soup
 
     def _get_prices(self, soup):
         ptable = soup.find(id='ctl00_ContentMain_divPricing')

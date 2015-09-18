@@ -702,11 +702,10 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
     def _get_data(self):
         url = ('http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail?name='
                + urllib.quote_plus(self.vpno))
-        page = www.urlopen(url)
-        if page is None:
+        soup = www.get_soup(url)
+        if soup is None:
             logger.error("Unable to open DigiKey product page : " + self.vpno)
             return
-        soup = BeautifulSoup(page)
 
         for price in self._get_prices(soup):
             self.add_price(price)

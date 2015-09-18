@@ -50,6 +50,14 @@ def profile_vendor_genvmapaudit(vobj):
 
 
 def main():
+
+    # TODO
+    # Maybe set this up to invalidate caches first,
+    # and run profiling with and without caches.
+
+    # TODO
+    # Record total runtime and such, perhaps?
+
     profilers = [('get_part', profile_vendor_get_part),
                  ('genvmap', profile_vendor_genvmap),
                  ('genvmapaudit', profile_vendor_genvmapaudit),

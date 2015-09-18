@@ -291,7 +291,7 @@ class TIElnPart(vendors.VendorElnPartBase):
         self._get_data()
 
     def _get_data(self):
-        soup, url = self._get_product_soup()
+        soup = self._get_product_soup()
         for price in self._get_prices(soup):
             self.add_price(price)
         try:
@@ -301,7 +301,7 @@ class TIElnPart(vendors.VendorElnPartBase):
             self.vpartdesc = self._get_description(soup)
             self.package = self._get_package(soup)
         except AttributeError:
-            logger.error("Failed to acquire part information : " + self.vpno + url)
+            logger.error("Failed to acquire part information : " + self.vpno)
             # TODO raise AttributeError
 
     def _get_product_soup(self):
@@ -329,14 +329,11 @@ class TIElnPart(vendors.VendorElnPartBase):
         if not product_url:
             raise ValueError("Exact match not found for " + self.vpno)
 
-        page = www.urlopen(product_url)
-        if page is None:
+        soup = www.get_soup(product_url)
+        if soup is None:
             logger.error("Unable to open TI product page : " + self.vpno)
             return
-
-        logger.debug("Got product page : " + page.geturl())
-        soup = BeautifulSoup(page)
-        return soup, page.geturl()
+        return soup
 
     rex_price = re.compile(ur'^((?P<start>\d+)-)?(?P<end>\d+)$')
 

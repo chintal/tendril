@@ -19,17 +19,37 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for run
+Docstring for gsymlib
 """
 
-import sourcing.vendors
-import gedaif.gsymlib
+import os
+import inspect
+
+from ..profiler import do_profile
+
+SCRIPT_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
+SCRIPT_FOLDER = os.path.normpath(os.path.join(SCRIPT_PATH, os.pardir))
 
 
-def run():
-    sourcing.vendors.main()
-    gedaif.gsymlib.main()
+@do_profile
+def generate_gsymlib():
+    from tendril.gedaif import gsymlib
+
+
+def main():
+
+    # TODO
+    # Maybe set this up to invalidate caches first,
+    # and run profiling with and without caches.
+
+    # TODO
+    # Record total runtime and such, perhaps?
+
+    profilers = [('gsymlib', generate_gsymlib)]
+    for profiler in profilers:
+        folder = os.path.join(SCRIPT_FOLDER, profiler[0])
+        profiler[1]('gsymlib', folder)
 
 
 if __name__ == '__main__':
-    run()
+    main()

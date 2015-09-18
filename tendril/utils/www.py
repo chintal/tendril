@@ -65,9 +65,6 @@ the replicator isn't actually going to be hit.
 
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 from config import NETWORK_PROXY_TYPE
 from config import NETWORK_PROXY_IP
 from config import NETWORK_PROXY_PORT
@@ -88,10 +85,20 @@ from config import INSTANCE_CACHE
 from bs4 import BeautifulSoup
 import urllib2
 
+import os
 import time
 import pickle
 import atexit
-import os
+import tempfile
+from hashlib import md5
+
+from fs.opener import fsopendir
+from fs.utils import movefile
+from tendril.utils.fsutils import temp_fs
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
+
+WWW_CACHE = os.path.join(INSTANCE_CACHE, 'soupcache')
 
 
 def strencode(string):
@@ -169,6 +176,15 @@ class CachingRedirectHandler(urllib2.HTTPRedirectHandler):
             self, req, fp, code, msg, headers)
         result.status = code
         return result
+
+
+def get_actual_url(url):
+    if not ENABLE_REDIRECT_CACHING:
+        return url
+    else:
+        while url in redirect_cache.keys():
+            url = redirect_cache[url]
+        return url
 
 
 def _test_opener(openr):
@@ -283,9 +299,7 @@ def urlopen(url):
 
     """
     retries = 5
-    if ENABLE_REDIRECT_CACHING is True:
-        while url in redirect_cache.keys():
-            url = redirect_cache[url]
+    url = get_actual_url(url)
     if TRY_REPLICATOR_CACHE_FIRST is True:
         try:
             page = replicator_opener.open(url)
@@ -332,12 +346,56 @@ def urlopen(url):
     return None
 
 
+class WWWCachedFetcher:
+    # TODO improve this to use / provide a decent caching layer.
+    # Overall, caching should look something like this :
+    # - WWWCacheFetcher / this layer provides short term (~5 days)
+    #   caching, aggressively expriring whatever is here.
+    # - RedirectCacheHandler is something of a special case, handling
+    #   redirects which otherwise would be incredibly expensive.
+    #   Unfortunately, this layer is also the dumbest cacher, and
+    #   does not expire anything, ever. To 'invalidate' something in
+    #   this cache, the entire cache needs to be nuked. It may be
+    #   worthwhile to consider moving this to redis instead.
+    # - http-replicator provides an underlying caching layer which
+    #   is HTTP1.1 compliant.
+
+    def __init__(self, cache_dir=WWW_CACHE):
+        self.cache_fs = fsopendir(cache_dir)
+
+    def fetch(self, url, max_age=500000):
+        # Use MD5 hash of the URL as the filename
+        filepath = md5(url).hexdigest()
+        if self.cache_fs.exists(filepath):
+            # TODO This seriously needs cleaning up.
+            if int(time.time()) - \
+                    int(time.mktime(self.cache_fs.getinfo(filepath)['modified_time'].timetuple())) < \
+                    max_age:
+                return self.cache_fs.open(filepath).read()
+        # Retrieve over HTTP and cache, using rename to avoid collisions
+        data = urlopen(url).read()
+        fd, temppath = tempfile.mkstemp()
+        fp = os.fdopen(fd, 'w')
+        fp.write(data)
+        fp.close()
+        # This can be pretty expensive if the move is across a real filesystem
+        # boundary. We should instead use a temporary file in the cache_fs itself
+        movefile(temp_fs, temp_fs.unsyspath(temppath),
+                 self.cache_fs, filepath)
+        return data
+
+cached_fetcher = WWWCachedFetcher()
+
+
 def get_soup(url):
     """
     Gets a :mod:`bs4` parsed soup for the ``url`` specified by the parameter.
     The :mod:`lxml` parser is used.
+
+    This function returns a soup constructed of the cached page if one
+    exists and is valid, or obtains one and dumps it into the cache if it doesn't.
     """
-    page = urlopen(url)
+    page = cached_fetcher.fetch(url)
     if page is None:
         return None
     soup = BeautifulSoup(page, 'lxml')
