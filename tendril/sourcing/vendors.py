@@ -205,7 +205,7 @@ class VendorBase(object):
 
     def get_all_vparts(self):
         for ident, vpno in self.get_all_vpnos():
-            yield self._vpart_class(vpno, ident=ident, vendor=self)
+            yield self.get_vpart(vpartno=vpno, ident=ident)
 
     def get_vpnos(self, ident):
         return self._map.get_partnos(ident)

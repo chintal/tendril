@@ -27,9 +27,6 @@ with :mod:`sqlalchemy`
 
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -37,14 +34,15 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import Column, Integer
 from sqlalchemy_utils import ArrowType
 
-
-log.logging.getLogger('sqlalchemy.engine').setLevel(log.WARNING)
-
 from contextlib import contextmanager
 import functools
 import arrow
 
 from tendril.utils.config import DB_URI
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
+log.logging.getLogger('sqlalchemy.engine').setLevel(log.WARNING)
 
 
 def init_db_engine():
