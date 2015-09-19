@@ -19,7 +19,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for gsymlib
+gedaif.gsymlib Profiling
+------------------------
+
+This file runs profiling on :mod:`tendril.gedaif.gsymlib`.
 """
 
 import os
@@ -33,10 +36,33 @@ SCRIPT_FOLDER = os.path.normpath(os.path.join(SCRIPT_PATH, os.pardir))
 
 @do_profile
 def generate_gsymlib():
+    """
+    Profiles gsymlib generation.
+
+    When the ``gsymlib`` module is loaded, it automatically generates the gEDA symbol
+    library from the library on the filesystem. This function performs the import and
+    profiles all the actions that happen on import.
+
+
+    :download:`Raw execution profile <../../../profiling/gedaif/gsymlib/gsymlib.profile>`
+    :download:`SVG of execution profile <../../../profiling/gedaif/gsymlib/gsymlib.profile.svg>`
+
+    .. rubric:: Execution Profile
+
+    .. image:: ../../../profiling/gedaif/gsymlib/gsymlib.profile.svg
+
+    .. rubric:: pstats Output
+
+    .. literalinclude:: ../../../profiling/gedaif/gsymlib/gsymlib.profile.stats
+
+    """
     from tendril.gedaif import gsymlib
 
 
 def main():
+    """
+    The main function for this profiler module.
+    """
 
     # TODO
     # Maybe set this up to invalidate caches first,

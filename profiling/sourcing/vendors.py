@@ -19,8 +19,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for vendors
+sourcing.vendors Profiling
+--------------------------
+
+This file generates execution profiles for :mod:`tendril.sourcing.vendors`
+and subclasses thereof.
 """
+
 
 import os
 import inspect
@@ -34,23 +39,52 @@ SCRIPT_FOLDER = os.path.normpath(os.path.join(SCRIPT_PATH, os.pardir))
 
 
 @do_profile
-def profile_vendor_get_part(vobj):
-    for ident in vobj.get_all_vparts():
-        print ident
-
-
-@do_profile
 def profile_vendor_genvmap(vobj):
+    """
+    This function profiles vendor map file generation for the given vendor.
+    This corresponds to the execution profile for searching for a part from
+    the vendor.
+
+    """
     electronics.gen_vendor_mapfile(vobj)
 
 
 @do_profile
 def profile_vendor_genvmapaudit(vobj):
+    """
+    This function profiles vendor map audit file generation for the given vendor.
+    This corresponds to the execution profile for retrieving a part from the
+    vendor.
+
+    """
     electronics.export_vendor_map_audit(vobj)
 
 
-def main():
+@do_profile
+def profile_vendor_get_part(vobj):
+    """
+    This function profiles :func:`tendril.sourcing.vendors.VendorBase.get_all_vparts`
+    execution for the given vendor.
 
+    """
+    for ident in vobj.get_all_vparts():
+        print ident
+
+
+def main():
+    """
+    The main function for this profiler module. Generates all three profiles
+    for every configured vendor.
+
+    .. toctree::
+
+        profiling.sourcing.vendors.digikey
+        profiling.sourcing.vendors.mouser
+        profiling.sourcing.vendors.ti
+        profiling.sourcing.vendors.csil
+        profiling.sourcing.vendors.pricelist
+
+    """
     # TODO
     # Maybe set this up to invalidate caches first,
     # and run profiling with and without caches.

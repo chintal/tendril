@@ -19,5 +19,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for __init__.py
+gedaif Components Profiling
+===========================
+
+.. toctree::
+
+   profiling.gedaif.gsymlib
+
 """
