@@ -38,8 +38,8 @@ SCRIPT_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 SCRIPT_FOLDER = os.path.normpath(os.path.join(SCRIPT_PATH, os.pardir))
 
 
-@do_profile
-def profile_vendor_genvmap(vobj):
+@do_profile(os.path.join(SCRIPT_FOLDER, 'genvmap'))
+def profile_vendor_genvmap(vobj, name):
     """
     This function profiles vendor map file generation for the given vendor.
     This corresponds to the execution profile for searching for a part from
@@ -49,8 +49,8 @@ def profile_vendor_genvmap(vobj):
     electronics.gen_vendor_mapfile(vobj)
 
 
-@do_profile
-def profile_vendor_genvmapaudit(vobj):
+@do_profile(os.path.join(SCRIPT_FOLDER, 'genvmapaudit'))
+def profile_vendor_genvmapaudit(vobj, name):
     """
     This function profiles vendor map audit file generation for the given vendor.
     This corresponds to the execution profile for retrieving a part from the
@@ -60,8 +60,8 @@ def profile_vendor_genvmapaudit(vobj):
     electronics.export_vendor_map_audit(vobj)
 
 
-@do_profile
-def profile_vendor_get_part(vobj):
+@do_profile(os.path.join(SCRIPT_FOLDER, 'get_part'))
+def profile_vendor_get_part(vobj, name):
     """
     This function profiles :func:`tendril.sourcing.vendors.VendorBase.get_all_vparts`
     execution for the given vendor.
@@ -92,14 +92,13 @@ def main():
     # TODO
     # Record total runtime and such, perhaps?
 
-    profilers = [('get_part', profile_vendor_get_part),
-                 ('genvmap', profile_vendor_genvmap),
-                 ('genvmapaudit', profile_vendor_genvmapaudit),
+    profilers = [profile_vendor_genvmap,
+                 profile_vendor_genvmapaudit,
+                 profile_vendor_get_part,
                  ]
     for vendor in electronics.vendor_list:
         for profiler in profilers:
-            folder = os.path.join(SCRIPT_FOLDER, profiler[0])
-            profiler[1](vendor._name, folder, vobj=vendor)
+            profiler(vendor, vendor._name)
 
 
 if __name__ == '__main__':

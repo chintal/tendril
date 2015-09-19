@@ -29,38 +29,45 @@ import pstats
 from subprocess import Popen, PIPE
 
 
-def do_profile(func):
-    @functools.wraps(func)
-    def inner(name, folder, *args, **kwargs):
+def do_profile(folder, name=None):
+    def wrap(func):
+        @functools.wraps(func)
+        def inner(*args, **kwargs):
+            if name:
+                lname = name
+            else:
+                lname = args[-1]
 
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+            if not os.path.exists(folder):
+                os.makedirs(folder)
 
-        raw_fn = str('{0}.profile'.format(name))
-        raw_fn = os.path.join(folder, raw_fn)
-        stats_fn = str('{0}.profile.stats'.format(name))
-        stats_fn = os.path.join(folder, stats_fn)
-        svg_fn = str('{0}.profile.svg'.format(name))
-        svg_fn = os.path.join(folder, svg_fn)
+            raw_fn = str('{0}.profile'.format(lname))
+            raw_fn = os.path.join(folder, raw_fn)
+            stats_fn = str('{0}.profile.stats'.format(lname))
+            stats_fn = os.path.join(folder, stats_fn)
+            svg_fn = str('{0}.profile.svg'.format(lname))
+            svg_fn = os.path.join(folder, svg_fn)
 
-        profile = cProfile.Profile()
-        try:
-            profile.enable()
-            result = func(*args, **kwargs)
-            profile.disable()
-        finally:
-            profile.dump_stats(raw_fn)
+            profile = cProfile.Profile()
+            try:
+                profile.enable()
+                result = func(*args, **kwargs)
+                profile.disable()
+            finally:
+                profile.dump_stats(raw_fn)
 
-        with open(stats_fn, 'w') as f:
-            stats = pstats.Stats(raw_fn, stream=f)
-            stats.strip_dirs().sort_stats('cumulative').print_stats()
+            with open(stats_fn, 'w') as f:
+                stats = pstats.Stats(raw_fn, stream=f)
+                stats.strip_dirs().sort_stats('cumulative').print_stats()
 
-        gprof_cmd = 'gprof2dot -f pstats {0}'.format(raw_fn).split(' ')
-        dot_cmd = 'dot -Tsvg -o {0}'.format(svg_fn).split(' ')
+            gprof_cmd = 'gprof2dot -f pstats {0}'.format(raw_fn).split(' ')
+            dot_cmd = 'dot -Tsvg -o {0}'.format(svg_fn).split(' ')
 
-        gprof_process = Popen(gprof_cmd, stdout=PIPE, cwd=folder)
-        dot_process = Popen(dot_cmd, stdin=gprof_process.stdout, stdout=PIPE, cwd=folder)
+            gprof_process = Popen(gprof_cmd, stdout=PIPE, cwd=folder)
+            dot_process = Popen(dot_cmd, stdin=gprof_process.stdout, stdout=PIPE, cwd=folder)
 
-        gprof_process.stdout.close()
-        dot_process.communicate()
-    return inner
+            gprof_process.stdout.close()
+            dot_process.communicate()
+            return result
+        return inner
+    return wrap

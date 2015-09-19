@@ -34,7 +34,7 @@ SCRIPT_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 SCRIPT_FOLDER = os.path.normpath(os.path.join(SCRIPT_PATH, os.pardir))
 
 
-@do_profile
+@do_profile(os.path.join(SCRIPT_FOLDER, 'gsymlib'), 'gsymlib')
 def generate_gsymlib():
     """
     Profiles gsymlib generation.
@@ -71,10 +71,9 @@ def main():
     # TODO
     # Record total runtime and such, perhaps?
 
-    profilers = [('gsymlib', generate_gsymlib)]
+    profilers = [generate_gsymlib]
     for profiler in profilers:
-        folder = os.path.join(SCRIPT_FOLDER, profiler[0])
-        profiler[1]('gsymlib', folder)
+        profiler()
 
 
 if __name__ == '__main__':

@@ -27,8 +27,8 @@ import gedaif.gsymlib
 
 
 def run():
-    sourcing.vendors.main()
     gedaif.gsymlib.main()
+    sourcing.vendors.main()
 
 
 if __name__ == '__main__':
