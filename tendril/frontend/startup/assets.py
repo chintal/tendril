@@ -31,9 +31,7 @@ bundles = {
     'base_css': Bundle(
         'css/normalize.css',
         'css/foundation.css',
-        'css/foundation-icons.css',
         'css/colors.css',
-        'css/tendril.css',
         output='gen/base.css',
         filters='cssmin'),
 
@@ -51,6 +49,7 @@ bundles = {
         'js/foundation/foundation.magellan.js',
         'js/foundation/foundation.equalizer.js',
         'js/foundation/foundation.alert.js',
+        'js/foundation/foundation.tooltip.js',
         'js/vendor/stickyFooter.js',
         output='gen/foundation.js',
         filters='jsmin'),
@@ -80,6 +79,11 @@ bundles = {
         'js/datatables/dataTables.keyTable.js',
         output='gen/datatables.js',
         filters='jsmin'),
+    
+    'tendril_css': Bundle(
+        'css/tendril.css',
+        output='gen/tendril.css',
+        filters='cssmin'),
 }
 
 

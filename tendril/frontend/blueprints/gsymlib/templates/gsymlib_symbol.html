@@ -32,12 +32,12 @@
             <li class="bullet-item">
                 {% if stage.symbol.is_virtual %}
                 <a href="/gsymlib/detail/{{ stage.symbol.fname[:-4] }}.gen">
-                    <img src="/static/img/icon_one_to_many.png" height="32">  Generator
+                    <img src="/static/images/icon_one_to_many.png" height="32">  Generator
                 </a>
                 {% endif %}
                 {% if stage.symbol.datasheet_url %}
                 <a target="_blank" href="{{stage.symbol.datasheet_url}}">
-                    <img src="/static/img/pdf.png">  Datasheet
+                    <img src="/static/images/pdf.png">  Datasheet
                 </a>
                 {% endif %}
             </li>

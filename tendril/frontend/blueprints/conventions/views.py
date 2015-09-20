@@ -95,11 +95,23 @@ def motif_description(motifname=None):
                            pagetitle='MOTIF ' + motifname)
 
 
+def get_devices():
+    rval = []
+    for device, desc in electronics.DEVICE_CLASSES_DOC:
+        rval.append((device,
+                     electronics.fpiswire(device),
+                     electronics.fpismodlen(device),
+                     electronics.no_fp(device),
+                     desc))
+    return rval
+
+
 @blueprint.route('/', methods=['GET'])
 @login_required
 def main():
+
     stage = {'motifs': get_motifs(),
-             'devices': electronics.DEVICE_CLASSES,
+             'devices': get_devices(),
              'guidelines': guidelines.electronics_qty.get_guideline_table()}
     if request.method == 'GET':
         stage.update(get_iec60063_params())

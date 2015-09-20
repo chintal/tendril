@@ -42,7 +42,25 @@
 <h3> Recognized Device Classes </h3>
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4 columns">
     {% for device in stage.devices %}
-    <li> <div class="panel text-center radius">{{ device }}</div>  </li>
+    <li> 
+        <div>
+            <span data-tooltip aria-haspopup="true" class="has-tip" title="{{ device[4] }}">
+                <div class="panel taggable text-center radius">
+                    {{ device[0] }}
+                </div>
+            </span>
+            {% if device[1] %}
+                <span class="right label radius warning">FP is Wire</span>
+            {% endif %}
+            {% if device[2] %}
+                <span class="right label radius info">FP is Modlen</span>
+            {% endif %}
+            {% if device[3] %}
+                <span class="right label radius alert">No FP</span>
+            {% endif %}
+        </div>
+    </li>
+    
     {% endfor %}
 </ul>
 </div>
@@ -85,19 +103,13 @@
         $(document).ready( function () {
             var table = $('#inv_gl_table').DataTable({
                 /* Disable initial sort */
-                "bAutoWidth": false,
                 "aaSorting": [],
-                buttons: [
-                    'copy', 'csv', 'excel', 'pdf', 'print'
-                ],
-                responsive: true,
+                {% include 'parts/datatable_defaults.html' %}    
             });
             table.buttons().container()
                 .appendTo( '#inv_gl_table_wrapper .small-12.medium-6.columns:eq(0)' );
         });
     </script>
-    <div class="small-12 columns">
-    </div>
 </div>
 
 <!-- iec60063 -->
@@ -126,10 +138,13 @@
         <div class="small-12 large-3 columns">
         <label> Series
             <select id="series" name="series">
-              <option {% if stage.iec60063series=='E24' %} selected {% endif %} value="E24">E24</option>
-              <option {% if stage.iec60063series=='E12' %} selected {% endif %}value="E12">E12</option>
-              <option {% if stage.iec60063series=='E6' %} selected {% endif %}value="E6">E6</option>
-              <option {% if stage.iec60063series=='E3' %} selected {% endif %}value="E3">E3</option>
+                <option {% if stage.iec60063series=='E192' %} selected {% endif %} value="E192">E192</option>
+                <option {% if stage.iec60063series=='E96' %} selected {% endif %} value="E96">E96</option>
+                <option {% if stage.iec60063series=='E48' %} selected {% endif %} value="E48">E48</option>
+                <option {% if stage.iec60063series=='E24' %} selected {% endif %} value="E24">E24</option>
+                <option {% if stage.iec60063series=='E12' %} selected {% endif %}value="E12">E12</option>
+                <option {% if stage.iec60063series=='E6' %} selected {% endif %}value="E6">E6</option>
+                <option {% if stage.iec60063series=='E3' %} selected {% endif %}value="E3">E3</option>
             </select>
         </label>
         </div>

@@ -14,9 +14,13 @@
       {% assets "datatables_css" %}
           <link rel="stylesheet" href="{{ ASSET_URL }}" />
       {% endassets %}
+      {% assets "tendril_css" %}
+          <link rel="stylesheet" href="{{ ASSET_URL }}" />
+      {% endassets %}
       {% assets "base_js" %}
           <script type="text/javascript" src="{{ ASSET_URL }}"></script>
       {% endassets %}
+      <link rel="stylesheet" href="/static/icons/foundation-icons.css" />
   </head>
 <body>
     <div class="sticky">
@@ -24,7 +28,7 @@
         <ul class="title-area">
 	        <li class="name">
 	            <h1><a href="{{ url_for('home_page') }}">
-                    <img src="/static/img/tendril-favicon_256px.png" height="30" width="30">
+                    <img src="/static/images/tendril-favicon_256px.png" height="30" width="30">
                     Tendril</a>
                 </h1>
 	        </li>
@@ -62,13 +66,13 @@
         </ul>
         </section>
     </nav>
-    
+
     {% block breadcrumbs %}
-        {% include 'base_templates/breadcrumbs.html' %}    
+        {% include 'parts/breadcrumbs.html' %}
     {% endblock %}
-    
+
     {% block magellan %}{% endblock %}
-    
+
     </div>
 
     <div class="row">
@@ -128,11 +132,11 @@
     {% assets "foundation_js" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
-    
+
     {% assets "datatables_js" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
-    
+
     <script type="text/javascript">
     $(document).foundation({
         equalizer : {

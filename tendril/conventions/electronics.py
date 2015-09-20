@@ -154,6 +154,13 @@ fpismodlen_strs = [
 ]
 
 
+def no_fp(device):
+    for st in nofp_strs:
+        if device.startswith(st):
+            return True
+    return False
+
+
 def fpismodlen(device):
     for st in fpismodlen_strs:
         if device.startswith(st):
@@ -205,9 +212,8 @@ def ident_transform(device, value, footprint, tf=None):
     if device is None:
         logging.critical("Malformed ident : " + ident)
     else:
-        for st in nofp_strs:
-            if device.startswith(st):
-                ident = device + " " + value
+        if no_fp(device):
+            ident = device + " " + value
     if tf is None:
         return ident
     else:
