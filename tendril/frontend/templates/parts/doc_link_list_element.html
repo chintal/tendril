@@ -3,7 +3,7 @@
     Released under the MIT license
 #}
 <a href="{{ doc.exposed_url }}" target="_blank">
-    <li class="small-12 small-centered columns panel radius active-tb">
+    <li class="small-12 small-centered columns panel radius active-tb shadow mrgn-20-top">
         <div class="row small-collapse medium-uncollapse">
         <div class="show-for-medium-up medium-2 columns text-center"><i class="fi-download icon"></i></div>
         <div class="small-9 medium-8 columns text-center">{{ doc.desc }}</div>
@@ -16,6 +16,12 @@
         {% endif %}
         {% if doc.filetype == 'yaml' %}
             <img src="/static/images/yaml.png">
+        {% endif %}
+        {% if doc.filetype == 'zip' %}
+            <img src="/static/images/zip.png">
+        {% endif %}
+        {% if doc.filetype == 'dxf' %}
+            <img src="/static/images/dxf.png">
         {% endif %}
         </div>
         </div>

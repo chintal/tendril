@@ -10,6 +10,7 @@
 <div data-magellan-expedition="sticky">
     <dl class="sub-nav">
         <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
+        <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
         <dd data-magellan-arrival="configurations"><a href="#configurations">Configurations</a></dd>
     </dl>
 </div>
@@ -18,10 +19,11 @@
 
 {% block main %}
 
-<div class="row" data-magellan-destination="details">
+<div class="row">
+<div class="small-12 medium-6 columns" data-magellan-destination="details">
 <h3> PCB Details </h3>
 <a name="details"></a>
-        <ul class="small-12 medium-6 pricing-table shadow mrgn-20-top">
+        <ul class="pricing-table shadow mrgn-20-top">
             <li class="price autoscale "> {{ stage.name }} </li>
             <li class="description"> {{ stage.configdata.description() }} </li>
             <li class="title"> PCB Details </li>
@@ -75,9 +77,23 @@
         </ul>
 </div>
 
-<!-- Rendering of Image -->
-<!-- Gerber Download Link -->
-<!-- Pricing Information -->
+<!-- Documentation -->
+    <!-- TODO : The following sections were originally intended. If rendering those
+                is feasible, it may be preferable to including the corresponding PDF 
+                links. -->
+    <!-- Rendering of Image -->
+    <!-- Pricing Information -->
+<div class="small-12 medium-6 columns">
+<h3> Documentation </h3>
+<a name="documentation"></a>
+    <ul style="list-style-type: none;">
+        {% for doc in stage.docs %}
+            {% include 'parts/doc_link_list_element.html' %}
+        {% endfor %}
+    </ul>
+</div>
+</div>
+
 <!-- Inventory Information -->
 <!-- Product Utilization Information -->
 

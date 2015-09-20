@@ -543,7 +543,7 @@ def gen_pcb_dxf(projfolder):
 
     .. rubric:: Paths
 
-    * Output File :  ``<projectfolder>/pcb/<pcbfile>-pdf.pdf``
+    * Output File :  ``<projectfolder>/pcb/<pcbfile>.dxf``
     * Source Files : The project's `.pcb` file.
 
     """
@@ -681,16 +681,54 @@ def generate_docs(projfolder):
 def get_docs_list(projfolder, cardname=None):
     configfile = conffile.ConfigsFile(projfolder)
     namebase = configfile.configdata['pcbname']
+    is_cable = False
     if namebase is None:
         try:
             namebase = configfile.configdata['cblname']
+            is_cable = True
         except KeyError:
             logger.error("Project does not have a known identifier. Skipping : " + projfolder)
             return
     project_doc_folder = get_project_doc_folder(projfolder)
     if not cardname:
         # Get all docs linked to the project
-        pass
+        rval = [ExposedDocument('Project Master Doc',
+                                path.join(project_doc_folder,
+                                          namebase + '-masterdoc.pdf'),
+                                refdoc_fs),
+                ExposedDocument(namebase + ' Schematic (Full)',
+                                path.join(project_doc_folder,
+                                          namebase + '-schematic.pdf'),
+                                refdoc_fs),
+                ExposedDocument('Composite Bom (All Configs)',
+                                path.join(project_doc_folder,
+                                          'confdocs',
+                                          'conf-boms.csv'),
+                                refdoc_fs),
+                ]
+        if is_cable:
+            return rval
+        gpf = projfile.GedaProjectFile(configfile.projectfolder)
+        rval.extend([ExposedDocument(namebase + ' PCB Layers',
+                                     path.join(project_doc_folder,
+                                               namebase + '-pcb.pdf'),
+                                     refdoc_fs),
+                     ExposedDocument(namebase + ' PCB Pricing',
+                                     path.join(project_doc_folder,
+                                               namebase + '-pricing.pdf'),
+                                     refdoc_fs),
+                     # TODO This needs to be fixed.
+                     ExposedDocument(namebase + ' PCB DXF',
+                                     path.join(projfolder, 'pcb',
+                                               gpf.pcbfile + '.dxf'),
+                                     refdoc_fs),
+                     # TODO This needs to be fixed.
+                     ExposedDocument(namebase + ' PCB Gerber',
+                                     path.join(projfolder,
+                                               gpf.pcbfile + '-gerber.zip'),
+                                     refdoc_fs),
+                     ])
+        return rval
     else:
         cardname = cardname.strip()
         rval = [ExposedDocument(cardname + ' Doc',
@@ -708,7 +746,11 @@ def get_docs_list(projfolder, cardname=None):
                 ExposedDocument('Composite Bom (All Configs)',
                                 path.join(project_doc_folder,
                                           'confdocs',
-                                          'codom.csv'),
+                                          'conf-boms.csv'),
+                                refdoc_fs),
+                ExposedDocument('Project Master Doc',
+                                path.join(project_doc_folder,
+                                          cardname + '-masterdoc.pdf'),
                                 refdoc_fs),
                 ]
         return rval

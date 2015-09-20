@@ -109,6 +109,7 @@ def pcbs(pcbname=None):
     else:
         stage = {'name': pcbname,
                  'configdata': ConfigsFile(ehprojects.pcbs[pcbname]),
+                 'docs': get_docs_list(ehprojects.pcbs[pcbname]),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Bare PCBs", path="pcbs/"),
