@@ -79,6 +79,9 @@ def init_app(app, db):
     from tendril.frontend.users import views  # noqa
 
     # Register blueprints
+    from tendril.frontend.blueprints.expose import expose
+    app.register_blueprint(expose, url_prefix='/expose')
+
     from tendril.frontend.blueprints.doc import doc
     app.register_blueprint(doc, url_prefix='/doc')
 

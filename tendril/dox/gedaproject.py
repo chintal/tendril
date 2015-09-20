@@ -83,6 +83,7 @@ import render
 from fs import path
 from fs.utils import copyfile
 
+from docstore import ExposedDocument
 from docstore import refdoc_fs
 
 from tendril.utils.config import PROJECTS_ROOT
@@ -675,6 +676,42 @@ def generate_docs(projfolder):
         gen_pcb_gbr(projfolder)
         gen_pcb_dxf(projfolder)
         gen_pcbpricing(projfolder, namebase)
+
+
+def get_docs_list(projfolder, cardname=None):
+    configfile = conffile.ConfigsFile(projfolder)
+    namebase = configfile.configdata['pcbname']
+    if namebase is None:
+        try:
+            namebase = configfile.configdata['cblname']
+        except KeyError:
+            logger.error("Project does not have a known identifier. Skipping : " + projfolder)
+            return
+    project_doc_folder = get_project_doc_folder(projfolder)
+    if not cardname:
+        # Get all docs linked to the project
+        pass
+    else:
+        cardname = cardname.strip()
+        rval = [ExposedDocument(cardname + ' Doc',
+                                path.join(project_doc_folder,
+                                          'confdocs', cardname + '-doc.pdf'),
+                                refdoc_fs),
+                ExposedDocument(cardname + ' Reference BOM',
+                                path.join(project_doc_folder,
+                                          'confdocs', cardname + '-bom.pdf'),
+                                refdoc_fs),
+                ExposedDocument(cardname + ' Schematic (Full)',
+                                path.join(project_doc_folder,
+                                          namebase + '-schematic.pdf'),
+                                refdoc_fs),
+                ExposedDocument('Composite Bom (All Configs)',
+                                path.join(project_doc_folder,
+                                          'confdocs',
+                                          'codom.csv'),
+                                refdoc_fs),
+                ]
+        return rval
 
 
 if __name__ == "__main__":

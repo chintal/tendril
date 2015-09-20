@@ -26,6 +26,9 @@ from . import entityhub as blueprint
 
 from tendril.entityhub import projects as ehprojects
 from tendril.entityhub import products as ehproducts
+
+from tendril.boms.electronics import import_pcb
+from tendril.dox.gedaproject import get_docs_list
 from tendril.gedaif.conffile import ConfigsFile
 
 from tendril.utils.fsutils import Crumb
@@ -55,8 +58,13 @@ def cards(cardname=None):
         return render_template('entityhub_cards.html', stage=stage,
                                pagetitle="Cards")
     else:
-        gcf = ConfigsFile(ehprojects.cards[cardname])
+        cardfolder = ehprojects.cards[cardname]
+        gcf = ConfigsFile(cardfolder)
         stage_card = gcf.configuration(cardname)
+        stage_bom = import_pcb(cardfolder)
+        stage_bom.configure_motifs(cardname)
+        stage_docs = get_docs_list(cardfolder, cardname)
+
         if gcf.is_pcb:
             barepcb = gcf.configdata['pcbname']
         elif gcf.is_cable:
@@ -66,6 +74,9 @@ def cards(cardname=None):
                              cardname)
         stage = {'name': cardname,
                  'card': stage_card,
+                 'bom': stage_bom,
+                 'refbom': stage_bom.create_output_bom(cardname),
+                 'docs': stage_docs,
                  'barepcb': barepcb,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
@@ -73,7 +84,7 @@ def cards(cardname=None):
                                  Crumb(name=cardname, path="cards/"+cardname)]
                  }
         return render_template('entityhub_card_detail.html', stage=stage,
-                               pagetitle="Card Details")
+                               pagetitle=cardname + " Card Details")
 
 
 @blueprint.route('/pcbs/<pcbname>')
