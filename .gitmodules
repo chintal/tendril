@@ -1,0 +1,3 @@
+[submodule "tendril/frontend/static"]
+	path = tendril/frontend/static
+	url = https://github.com/chintal/tendril-frontend-static.git
