@@ -11,6 +11,9 @@
       {% assets "base_css" %}
           <link rel="stylesheet" href="{{ ASSET_URL }}" />
       {% endassets %}
+      {% assets "datatables_css" %}
+          <link rel="stylesheet" href="{{ ASSET_URL }}" />
+      {% endassets %}
       {% assets "base_js" %}
           <script type="text/javascript" src="{{ ASSET_URL }}"></script>
       {% endassets %}
@@ -59,19 +62,13 @@
         </ul>
         </section>
     </nav>
-    {% if stage and stage.breadcrumbs %}
-    <ul class="breadcrumbs">
-        {% for crumb in stage.breadcrumbs %}
-        <li {% if loop.last %} class="current" {% endif %}>
-            <a href=" {{ stage.crumbroot }}/{{ crumb.path }}">{{ crumb.name }}</a>
-        </li>
-        {% endfor %}
-        {%  if pagetitle %}
-        <li class="right current show-for-medium-up"> {{ pagetitle }} </li>
-        {% endif %}
-    </ul>
-    {% endif %}
+    
+    {% block breadcrumbs %}
+        {% include 'base_templates/breadcrumbs.html' %}    
+    {% endblock %}
+    
     {% block magellan %}{% endblock %}
+    
     </div>
 
     <div class="row">
@@ -131,7 +128,12 @@
     {% assets "foundation_js" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
-    <script>
+    
+    {% assets "datatables_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+    
+    <script type="text/javascript">
     $(document).foundation({
         equalizer : {
             // Specify if Equalizer should make elements equal height once they become stacked.

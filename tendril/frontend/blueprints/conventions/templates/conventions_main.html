@@ -52,37 +52,51 @@
 <a name="invguidelines"></a>
 <h3> Inventory Guidelines </h3>
     <div class="small-12 columns">
-        <table class="responsive">
+        <table id="inv_gl_table" class="display" data-paging='false'>
             <thead>
             <tr>
-                <th>ID</th>
-                <th>Min Order Qty</th>
-                <th>Order Qty Multiple</th>
-                <th>Baseline Qty</th>
-                <th>Min Excess %</th>
-                <th>Mix Excess Qty</th>
-                <th>Max Excess Qty</th>
+                <th class="all">ID</th>
+                <th class="min-tablet-p text-center">Min Order Qty</th>
+                <th class="min-tablet-p text-center">Order Qty Multiple</th>
+                <th class="min-tablet-p text-center">Baseline Qty</th>
+                <th class="min-tablet-p text-center">Min Excess %</th>
+                <th class="min-tablet-p text-center">Min Excess Qty</th>
+                <th class="min-tablet-p text-center">Max Excess Qty</th>
             </tr>
             </thead>
             <tbody>
             {% for name, rows in stage.guidelines.iteritems() %}
-
-            <tr><td><b>{{ name|upper }}</b></td> <td> </td><td> </td><td> </td><td> </td><td> </td><td class="text-right"> {{ name|upper }} </td> </tr>
-
-            {% for row in rows %}
-            <tr>
-                <td> {{ row.id }} </td>
-                <td class="text-center"> {{ row.oqty_min }} </td>
-                <td class="text-center"> {{ row.oqty_multiple }} </td>
-                <td class="text-center"> {{ row.baseline_qty }} </td>
-                <td class="text-center"> {{ row.excess_min_pc }} </td>
-                <td class="text-center"> {{ row.excess_min_qty }} </td>
-                <td class="text-center"> {{ row.excess_max_qty }} </td>
-            </tr>
-            {% endfor %}
+                {% for row in rows %}
+                    <tr>
+                        <td> {{ row.id }} </td>
+                        <td class="text-center"> {{ row.oqty_min }} </td>
+                        <td class="text-center"> {{ row.oqty_multiple }} </td>
+                        <td class="text-center"> {{ row.baseline_qty }} </td>
+                        <td class="text-center"> {{ row.excess_min_pc }} </td>
+                        <td class="text-center"> {{ row.excess_min_qty }} </td>
+                        <td class="text-center"> {{ row.excess_max_qty }} </td>
+                    </tr>
+                {% endfor %}
             {% endfor %}
             </tbody>
         </table>
+    </div>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#inv_gl_table').DataTable({
+                /* Disable initial sort */
+                "bAutoWidth": false,
+                "aaSorting": [],
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ],
+                responsive: true,
+            });
+            table.buttons().container()
+                .appendTo( '#inv_gl_table_wrapper .small-12.medium-6.columns:eq(0)' );
+        });
+    </script>
+    <div class="small-12 columns">
     </div>
 </div>
 

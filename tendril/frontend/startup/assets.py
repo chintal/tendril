@@ -32,7 +32,6 @@ bundles = {
         'css/normalize.css',
         'css/foundation.css',
         'css/foundation-icons.css',
-        'css/responsive-tables.css',
         'css/colors.css',
         'css/tendril.css',
         output='gen/base.css',
@@ -41,6 +40,7 @@ bundles = {
     'base_js': Bundle(
         'js/vendor/modernizr.js',
         'js/vendor/jquery.js',
+        'js/vendor/jquery.textfill.js',
         output='gen/base.js',
         filters='jsmin'),
 
@@ -52,10 +52,34 @@ bundles = {
         'js/foundation/foundation.equalizer.js',
         'js/foundation/foundation.alert.js',
         'js/vendor/stickyFooter.js',
-        'js/vendor/responsive-tables.js',
-        'js/vendor/jquery.textfill.js',
         output='gen/foundation.js',
-        filters='jsmin')
+        filters='jsmin'),
+    
+    'datatables_css': Bundle(
+        'css/datatables/dataTables.foundation.css',
+        'css/datatables/responsive.foundation.css',
+        'css/datatables/buttons.foundation.css',
+        'css/datatables/select.foundation.css',
+        'css/datatables/keyTable.foundation.css',
+        output='gen/datatables.css',
+        filters='cssmin'),
+    
+    'datatables_js': Bundle(
+        'js/datatables/jquery.dataTables.js',
+        'js/datatables/dataTables.foundation.js',
+        'js/datatables/dataTables.responsive.js',
+        'js/datatables/jszip.js',
+        'js/datatables/pdfmake.js',
+        'js/datatables/vfs_fonts.js',
+        'js/datatables/dataTables.buttons.js',
+        'js/datatables/buttons.print.js',
+        'js/datatables/buttons.html5.js',
+        'js/datatables/buttons.colVis.js',
+        'js/datatables/buttons.foundation.js',
+        'js/datatables/dataTables.select.js',
+        'js/datatables/dataTables.keyTable.js',
+        output='gen/datatables.js',
+        filters='jsmin'),
 }
 
 
