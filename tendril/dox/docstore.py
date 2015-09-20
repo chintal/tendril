@@ -20,7 +20,6 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import os
-import urlparse
 from fs.opener import fsopendir
 from fs.utils import copyfile
 from fs import path
@@ -68,15 +67,24 @@ class ExposedDocument(object):
 
     def _get_fs_prefix(self):
         if self.fs == refdoc_fs:
-            self._prefix = path.join('/expose', REFDOC_PREFIX)
+            self._prefix = os.path.join('/expose', REFDOC_PREFIX)
         elif self.fs == docstore_fs:
-            self._prefix = path.join('/expose', DOCSTORE_PREFIX)
+            self._prefix = os.path.join('/expose', DOCSTORE_PREFIX)
         elif self.fs == wallet_fs:
-            self._prefix = path.join('/expose', DOCUMENT_WALLET_PREFIX)
+            self._prefix = os.path.join('/expose', DOCUMENT_WALLET_PREFIX)
 
     @property
     def exposed_url(self):
-        return path.join(self._prefix, self.path)
+        return os.path.join(self._prefix, self.path)
+
+    @property
+    def filetype(self):
+        ext = os.path.splitext(self.path)[1]
+        if not ext:
+            return None
+        return ext.strip('.').lower()
+
+
 
 
 @with_db

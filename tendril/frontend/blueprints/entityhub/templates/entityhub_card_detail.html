@@ -97,9 +97,7 @@
 <a name="documentation"></a>
     <ul style="list-style-type: none;">
         {% for doc in stage.docs %}
-        <li class="small-12 columns panel radius text-center">
-            <a href="{{ doc.exposed_url }}" target="_blank">{{ doc.desc }}</a>
-        </li>
+            {% include 'parts/doc_link_list_element.html' %}
         {% endfor %}
     </ul>
 </div>
