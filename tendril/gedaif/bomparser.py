@@ -21,12 +21,14 @@ gEDA BOM Parser module documentation (:mod:`gedaif.bomparser`)
 
 import subprocess
 import os
+import shutil
 
 from tendril.conventions.motifs import create_motif_object
 
 import tendril.gedaif.projfile
 import tendril.gedaif.conffile
 
+from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.fsutils import TEMPDIR
 from tendril.utils import log
 logger = log.get_logger(__name__, level=log.WARNING)
@@ -57,23 +59,39 @@ class GedaBomParser(object):
         self.projectfolder = os.path.normpath(projectfolder)
         self._gpf = tendril.gedaif.projfile.GedaProjectFile(self.projectfolder)
 
-        self._namebase = os.path.split(self.projectfolder)[1]
+        self._namebase = os.path.relpath(self.projectfolder, PROJECTS_ROOT)
         self._basefolder = 'schematic'
 
-        self._temp_bom_path = os.path.join(TEMPDIR, self._namebase,
-                                           self._basefolder, "tempbom.net")
+        self._temp_folder = os.path.join(TEMPDIR, self._namebase,
+                                         self._basefolder)
+        self._temp_bom_path = os.path.join(self._temp_folder,
+                                           "tempbom.net")
+        self._get_temp_schematic()
+        self._transform_schematic()
         self.generate_temp_bom(backend)
         self.prep_temp_bom()
 
+    def _get_temp_schematic(self):
+        self.schpaths = []
+        if not os.path.exists(self._temp_folder):
+            os.makedirs(self._temp_folder)
+        for schpath in self._gpf.schpaths:
+            tschpath = os.path.join(self._temp_folder, os.path.split(schpath)[1])
+            shutil.copy(schpath, tschpath)
+            self.schpaths.append(tschpath)
+
+    def _transform_schematic(self):
+        pass
+
     def generate_temp_bom(self, backend):
-        cmd = "gnetlist"
-        subprocess.call(cmd.split() +
-                        ['-o', self._temp_bom_path] +
-                        ['-g', backend] +
-                        ['-Oattrib_file=' + os.path.join(self.projectfolder, self._basefolder, 'attribs')] +
-                        self._gpf.schpaths,
+        cmd = ["gnetlist",
+               '-o', self._temp_bom_path,
+               '-g', backend,
+               '-Oattrib_file=' + os.path.join(self.projectfolder, self._basefolder, 'attribs')]
+        cmd.extend(self.schpaths)
+        subprocess.call(cmd,
                         stdout=FNULL,
-                        stderr=subprocess.STDOUT)
+                        stderr=subprocess.STDOUT,)
 
     def prep_temp_bom(self):
         self.temp_bom = open(self._temp_bom_path, 'r')
@@ -82,6 +100,8 @@ class GedaBomParser(object):
 
     def delete_temp_bom(self):
         os.remove(self._temp_bom_path)
+        for tschpath in self.schpaths:
+            os.remove(tschpath)
 
     def get_lines(self):
         for line in self.temp_bom:
