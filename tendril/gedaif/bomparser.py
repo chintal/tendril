@@ -22,15 +22,15 @@ gEDA BOM Parser module documentation (:mod:`gedaif.bomparser`)
 import subprocess
 import os
 
-from tendril.utils import log
-logger = log.get_logger(__name__, level=log.WARNING)
-
-
 from tendril.conventions.motifs import create_motif_object
-
 
 import tendril.gedaif.projfile
 import tendril.gedaif.conffile
+
+from tendril.utils.fsutils import TEMPDIR
+from tendril.utils import log
+logger = log.get_logger(__name__, level=log.WARNING)
+
 
 FNULL = open(os.devnull, 'w')
 
@@ -57,9 +57,11 @@ class GedaBomParser(object):
         self.projectfolder = os.path.normpath(projectfolder)
         self._gpf = tendril.gedaif.projfile.GedaProjectFile(self.projectfolder)
 
+        self._namebase = os.path.split(self.projectfolder)[1]
         self._basefolder = 'schematic'
 
-        self._temp_bom_path = os.path.join(self.projectfolder, self._basefolder, "tempbom.net")
+        self._temp_bom_path = os.path.join(TEMPDIR, self._namebase,
+                                           self._basefolder, "tempbom.net")
         self.generate_temp_bom(backend)
         self.prep_temp_bom()
 

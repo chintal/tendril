@@ -78,6 +78,9 @@ def init_app(app, db):
     from tendril.frontend.pages import views  # noqa
     from tendril.frontend.users import views  # noqa
 
+    # Enable xsendfile
+    app.use_x_sendfile = True
+
     # Register blueprints
     from tendril.frontend.blueprints.expose import expose
     app.register_blueprint(expose, url_prefix='/expose')

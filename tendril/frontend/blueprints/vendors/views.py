@@ -28,3 +28,4 @@ from flask_user import login_required
 from . import vendors as blueprint
 
 from tendril.utils.fsutils import Crumb
+

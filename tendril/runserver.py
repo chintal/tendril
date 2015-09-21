@@ -22,38 +22,10 @@ See the COPYING, README, and INSTALL files for more information
 from tendril.frontend.app import app, db
 from tendril.frontend.startup.init_app import init_app
 
-import os
-import atexit
-from tendril.utils.config import INSTANCE_ROOT
 
-from tendril.dox.docstore import instance_assets_fs
-
-
-def mount():
-    # mount exposed filesystems
-    expose_path = os.path.join(INSTANCE_ROOT, 'mp_exposed')
-    if not os.path.exists(expose_path):
-        os.makedirs(expose_path)
-        print "Mounting exposed filesystems", expose_path
-        from fs.expose import fuse
-        expose_mp = fuse.mount(instance_assets_fs, expose_path)
-        atexit.register(unmount, expose_mp)
-    else:
-        # Assume the filesystem is already mounted. Don't
-        # use this in any kind of production whatsoever.
-        pass
-
-
-def unmount(mp):
-    mpath = mp.path
-    print "Unmounting exposed filesystems", mpath
-    mp.unmount()
-    os.rmdir(mpath)
-
-
-mount()
 init_app(app, db)
 
 
 if __name__ == '__main__':
+    app.use_x_sendfile = False
     app.run(debug=True, host='0.0.0.0')

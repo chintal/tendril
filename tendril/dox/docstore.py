@@ -40,22 +40,11 @@ from wallet import wallet_fs
 
 from tendril.utils import log
 
-from fs.wrapfs.readonlyfs import ReadOnlyFS
-from fs.mountfs import MountFS
-
 logger = log.get_logger(__name__, log.INFO)
 docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
 workspace_fs = fsopendir(os.path.join(INSTANCE_ROOT, 'scratch'), create_dir=True)
 refdoc_fs = fsopendir(REFDOC_ROOT)
 local_fs = fsopendir('/')
-
-# TODO Remove this?
-# Mount filesystems to expose.
-rw_instance_assets_fs = MountFS()
-instance_assets_fs = ReadOnlyFS(rw_instance_assets_fs)
-rw_instance_assets_fs.mountdir(REFDOC_PREFIX, refdoc_fs)
-rw_instance_assets_fs.mountdir(DOCSTORE_PREFIX, docstore_fs)
-rw_instance_assets_fs.mountdir(DOCUMENT_WALLET_PREFIX, wallet_fs)
 
 
 class ExposedDocument(object):

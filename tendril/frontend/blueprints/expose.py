@@ -25,17 +25,30 @@ Docstring for expose
 import os
 
 from flask import Blueprint
+from flask import send_file
 from flask_user import login_required
 
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.utils.config import DOCSTORE_ROOT
+from tendril.utils.config import DOCSTORE_PREFIX
+from tendril.utils.config import DOCUMENT_WALLET_ROOT
+from tendril.utils.config import DOCUMENT_WALLET_PREFIX
+from tendril.utils.config import REFDOC_ROOT
+from tendril.utils.config import REFDOC_PREFIX
 
-
-expose = Blueprint('expose', __name__,
-                   static_folder=os.path.join(INSTANCE_ROOT, 'mp_exposed'))
+expose = Blueprint('expose', __name__)
 
 
 @expose.route('/<path:path>')
 @login_required
 def static_proxy(path):
-    # send_static_file will guess the correct MIME type
-    return expose.send_static_file(path)
+    if path.startswith(DOCSTORE_PREFIX):
+        path = os.path.join(DOCSTORE_ROOT, path.split(os.path.sep, 1)[1])
+    elif path.startswith(DOCUMENT_WALLET_PREFIX):
+        path = os.path.join(DOCUMENT_WALLET_ROOT, path.split(os.path.sep, 1)[1])
+    elif path.startswith(REFDOC_PREFIX):
+        path = os.path.join(REFDOC_ROOT, path.split(os.path.sep, 1)[1])
+    else:
+        raise IOError('Unknown expose file : ' + path)
+    if not os.path.exists(path):
+        raise IOError('Expose file does not exist : ' + path)
+    return send_file(path)
