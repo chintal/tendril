@@ -41,4 +41,7 @@ def root():
 @login_required
 def static_proxy(path):
     # send_static_file will guess the correct MIME type
-    return doc.send_static_file(path)
+    if not path.endswith('/'):
+        return doc.send_static_file(path)
+    else:
+        return doc.send_static_file(os.path.join(path, 'index.html'))

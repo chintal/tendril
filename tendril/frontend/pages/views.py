@@ -20,15 +20,28 @@ import os
 from flask import render_template
 from flask import send_file
 from flask import send_from_directory
+from flask_user import login_required
 
 from tendril.frontend.app import app
 from tendril.utils.config import COMPANY_BLACK_LOGO_PATH
+
+from tendril.utils.fsutils import Crumb
 
 
 # The Home page is accessible to anyone
 @app.route('/')
 def home_page():
     return render_template('pages/home_page.html')
+
+
+@app.route('/sourcing/main.html')
+@login_required
+def landing_sourcing():
+    stage = {'crumbroot': '/sourcing',
+             'breadcrumbs': [Crumb(name="Sourcing", path="main.html")],
+             }
+    return render_template('pages/land_sourcing.html', stage=stage,
+                           pagetitle='Sourcing')
 
 
 @app.route('/instanceassets/logo.png')

@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
 # Copyright (C) 2015 Chintalagiri Shashank
 #
-# This file is part of tendril.
+# This file is part of Tendril.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,25 +14,14 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 """
-Docstring for views
+This file is part of tendril
+See the COPYING, README, and INSTALL files for more information
 """
 
-from flask import render_template
-from flask_user import login_required
+from flask import Blueprint
 
-from . import vendors as blueprint
+customs = Blueprint('customs', __name__,
+                    template_folder='templates')
 
-from tendril.utils.fsutils import Crumb
-
-
-@blueprint.route('/')
-@login_required
-def main():
-    stage = {'crumbroot': '/sourcing',
-             'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
-                             Crumb(name="Vendors", path="vendors/")],
-             }
-    return render_template('vendors_main.html', stage=stage,
-                           pagetitle='Vendors')
+import views  # noqa

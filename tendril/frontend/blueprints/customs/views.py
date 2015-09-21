@@ -25,7 +25,7 @@ Docstring for views
 from flask import render_template
 from flask_user import login_required
 
-from . import vendors as blueprint
+from . import customs as blueprint
 
 from tendril.utils.fsutils import Crumb
 
@@ -35,7 +35,7 @@ from tendril.utils.fsutils import Crumb
 def main():
     stage = {'crumbroot': '/sourcing',
              'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
-                             Crumb(name="Vendors", path="vendors/")],
+                             Crumb(name="Customs", path="customs/")],
              }
-    return render_template('vendors_main.html', stage=stage,
-                           pagetitle='Vendors')
+    return render_template('customs_main.html', stage=stage,
+                           pagetitle='Customs')

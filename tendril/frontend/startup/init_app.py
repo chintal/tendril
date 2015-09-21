@@ -97,6 +97,12 @@ def init_app(app, db):
     from tendril.frontend.blueprints.conventions import conventions
     app.register_blueprint(conventions, url_prefix='/conventions')
 
+    from tendril.frontend.blueprints.customs import customs
+    app.register_blueprint(customs, url_prefix='/sourcing/customs')
+
+    from tendril.frontend.blueprints.vendors import vendors
+    app.register_blueprint(vendors, url_prefix='/sourcing/vendors')
+
     return app
 
 
