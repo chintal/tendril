@@ -137,7 +137,38 @@ TODO
 Updating the Core
 -----------------
 
-TODO
+The core would only be updated from upstream by an instance administrator. Updating the
+core, especially in the present nascent state of the code (and consequently the API), is
+very liable to break things.
+
+The update should be run in a clone of your instance core. Assuming you're using the same
+clone as you did to create the fork to begin with, you already have the ``upstream`` remote
+setup and the ``upstream-master`` tracking branch.
+
+ 1. Fetch updates from upstream and merge into your remote tracking branch :
+
+    .. code-block:: bash
+
+        git checkout upstream-master
+        git pull
+
+ 2. Merge ``upstream-master`` into your ``master``. If you have customizations in place, you
+    should probably merge first into a temporary branch of your ``master`` and make sure nothing
+    breaks.
+
+    .. code-block:: bash
+
+        git checkout master
+        git merge upstream-master
+
+    .. hint:: This is a good place to run a full test suite and make sure nothing broke.
+
+ 3. Push the updates to your central core repository.
+
+    .. code-block:: bash
+
+        git push
+
 
 Contributing to Upstream
 ************************
