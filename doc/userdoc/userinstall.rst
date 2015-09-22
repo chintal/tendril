@@ -1,7 +1,12 @@
 
 
-Installation
-============
+User Installation
+=================
+
+This documents the installation process for setting up Tendril on a user's machine, given
+that a Tendril Deployment already exists for the context in which the user will use it. If you
+don't already have a Tendril Deployment for your organization, you should look at the Instance
+Deployment documentation first.
 
 For the moment, tendril is not designed to be installed to the system (/usr, /opt, etc). Such
 installation scripts may be developed for later versions.
@@ -103,7 +108,7 @@ details can be worked out, use the following checkouts:
             git clone git@gitlab.com:<org>/tendril.git
 
     2. Create a fork of the Organization's instance configuration. For example, clone
-       `gitlab.com/<org>/tendril-instance-<org>.git`_ into `gitlab.com/<username>/tendril-instance-<org>.git`_
+       ``gitlab.com/<org>/tendril-instance-<org>.git`` into ``gitlab.com/<username>/tendril-instance-<org>.git``
 
     2. Get your fork of the tendril instance configuration.
 
@@ -199,18 +204,17 @@ Installing the Dependencies
             on as needed. If another solution is to be used instead, appropriate changes should be made
             to :func:`utils.libreoffice.XLFile._make_csv_files` and :func:`utils.libreoffice.XLFile._parse_sscout`.
 
-            i. Install dependencies:
+            1. Install dependencies:
 
                 .. code-block:: bash
 
                     sudo apt-get install python-uno python-pip3
 
-            ii. Install the ``sofficehelpers`` package from PyPi:
+            2. Install the ``sofficehelpers`` package from PyPi:
 
                 .. code-block:: bash
 
                     pip3 install sofficehelpers
 
-
  3. Install packages required specifically for your instance. Look up your instance-specific
-    configuration to figure out what those are.
+    documentation and configurations to figure out what those are.
