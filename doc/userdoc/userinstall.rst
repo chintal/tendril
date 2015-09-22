@@ -25,8 +25,11 @@ may work, it's probably a good idea to avoid using Python versions < 2.7 with th
 of unit tests can be prepared and run.
 
 
+Basic Installation
+******************
+
 Setting up pyenv
-****************
+----------------
 
 ``pyenv`` is needed to easily set up multiple python versions on your computer. While not strictly
 necessary to run Tendril, this is a very strongly recommended step. It allows the following :
@@ -94,7 +97,7 @@ See `<http://davebehnke.com/python-pyenv-ubuntu.html>`_ for a more detailed expl
 
 
 Getting the Code
-****************
+----------------
 
 The code can be obtained from the version control system. For users, the specific instance of ``tendril``
 applicable to the organization should be checked out from the locally controlled repository. This repository
@@ -118,7 +121,7 @@ details can be worked out, use the following checkouts:
 
 
 Setting up virtualenv
-*********************
+---------------------
 See `<http://simononsoftware.com/virtualenv-tutorial-part-2/>`_ for a more detailed explanation.
 
  1. Install ``virtualenv`` from the standard repository.
@@ -171,7 +174,7 @@ See `<http://simononsoftware.com/virtualenv-tutorial-part-2/>`_ for a more detai
 
 
 Installing the Dependencies
-***************************
+---------------------------
 
  1. Install required python libraries (virtualenv should be active):
 
@@ -218,3 +221,25 @@ Installing the Dependencies
 
  3. Install packages required specifically for your instance. Look up your instance-specific
     documentation and configurations to figure out what those are.
+
+
+Maintaining the Installation
+****************************
+
+TODO
+
+Updating the Core
+-----------------
+
+TODO
+
+Updating the Instance Folder
+----------------------------
+
+TODO
+
+Contributing to the Instance
+****************************
+
+TODO
+

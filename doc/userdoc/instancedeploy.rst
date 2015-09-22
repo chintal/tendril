@@ -10,8 +10,11 @@ Instance deployment is the process you would have to go through to set up a
 Tendril instance for your organization, which will then provide the sandbox
 within which you can modify Tendril to suit your needs.
 
+Creating an Instance
+********************
+
 Instance Components
-*******************
+-------------------
 
 A tendril instance is a combination of atleast two elements:
 
@@ -40,9 +43,8 @@ In addition, various other resources will have to be setup, including:
 
  - Your ``projects`` hierarchy, presently expected to be a tree of SVN checkouts.
 
-
 Forking Tendril
-***************
+---------------
 
 While tendril is developed with the goal of having a process-agnostic core,
 it may well take some time to achieve the kind of separation that is desired.
@@ -122,8 +124,22 @@ of patches or as a pull request on github.
 
 
 Setting up the Instance Folder
-******************************
+------------------------------
 
 TODO
 
 
+Maintaining the Instance
+************************
+
+TODO
+
+Updating the Core
+-----------------
+
+TODO
+
+Contributing to Upstream
+************************
+
+TODO
