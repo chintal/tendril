@@ -9,10 +9,20 @@
 
 <p></p>
 
-<h2>Customs Invoices</h2>
+<h2> All Customs Document Sets</h2>
 
-{% for sno in stage.snos %}
-<a href="/sourcing/customs/invoice/{{ sno }}">{{ sno }}</a>
-{% endfor %}
+<div class="small-12 columns">
+    <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
+        {% for sno in stage.snos %}
+        <li>
+            <a href="/sourcing/customs/invoice/{{ sno.sno }}" 
+               class="small-12 columns button info radius active-tb shadow mrgn-20-top">
+                <div class="row text-center"><b>{{ sno.sno }}</b></div>
+                <div class="row text-center">{{ sno.efield }}</div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
 
 {% endblock %}

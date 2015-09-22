@@ -18,10 +18,11 @@
 
 <p></p>
 
-<h2>Customs Invoice {{ sno }}</h2>
+<h4>Customs Document Set</h4>
+<h3>{{ stage.sno.sno }} for {{ stage.sno.efield }}</h3>
 
 <div class="small-12 medium-6 columns">
-<h3> Associated Documents </h3>
+<h5> Associated Documents </h5>
 <a name="documentation"></a>
     <ul class="doclinklist">
         {% for doc in stage.docs %}
@@ -29,8 +30,5 @@
         {% endfor %}
     </ul>
 </div>
-</div>
-
-
 
 {% endblock %}
