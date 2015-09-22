@@ -3,9 +3,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import re
 import numpy
@@ -25,6 +22,9 @@ from tests import get_test_object
 from testrunner import get_electronics_test_suites
 
 from matplotlib import pyplot
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 rex_class = re.compile(ur'^<class \'(?P<cl>[a-zA-Z0-9.]+)\'>$')
 

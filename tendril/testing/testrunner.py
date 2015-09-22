@@ -16,9 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import sys
 import copy
 import os
@@ -42,10 +39,11 @@ from tendril.dox.docstore import register_document
 
 from testbase import TestSuiteBase
 from testbase import TestPrepUser
-
 from tests import get_test_object
-
 from db import controller
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 def add_prep_steps_from_cnf_prep(testobj, cnf_prep):

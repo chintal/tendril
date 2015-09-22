@@ -96,8 +96,21 @@ def get_docs_list_for_serialno(serialno):
     return rval
 
 
+def get_docs_list_for_doctype(doctype, limit=None):
+    documents = controller.get_doctype_documents(doctype=doctype, limit=limit)
+    rval = []
+    for document in documents:
+        rval.append(ExposedDocument(document.doctype,
+                                    document.docpath,
+                                    docstore_fs,
+                                    document.created_at))
+    return rval
+
+
 @with_db
-def copy_docs_to_workspace(serialno=None, workspace=None, clearws=False, setwsno=True, fs=None, session=None):
+def copy_docs_to_workspace(serialno=None, workspace=None,
+                           clearws=False, setwsno=True,
+                           fs=None, session=None):
     if serialno is None:
         raise AttributeError('serialno cannot be None')
     if fs is None:
@@ -151,7 +164,8 @@ def insert_document(sno, docpath, series):
 
 
 @with_db
-def register_document(serialno=None, docpath=None, doctype=None, efield=None, series=None, session=None):
+def register_document(serialno=None, docpath=None, doctype=None,
+                      efield=None, series=None, session=None):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
     if docpath is None:

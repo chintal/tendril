@@ -42,6 +42,15 @@ def get_sno_documents(serialno=None, session=None):
 
 
 @with_db
+def get_doctype_documents(doctype=None, limit=None, session=None):
+    q = session.query(DocStoreDocument).filter(DocStoreDocument.doctype == doctype)
+    q = q.order_by(desc(DocStoreDocument.created_at))
+    if limit:
+        q = q.limit(limit)
+    return q.all()
+
+
+@with_db
 def get_snos_by_document_doctype(doctype=None, series=None, limit=None, session=None):
     if doctype is None:
         raise AttributeError("doctype cannot be None")
