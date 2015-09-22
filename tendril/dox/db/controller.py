@@ -22,9 +22,6 @@
 Docstring for controller
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 from sqlalchemy.orm.exc import NoResultFound
 from tendril.utils.db import with_db
 from tendril.entityhub.db.model import SerialNumber
@@ -32,12 +29,31 @@ from tendril.entityhub import serialnos
 
 from model import DocStoreDocument
 
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
+
 
 @with_db
 def get_sno_documents(serialno=None, session=None):
     if not isinstance(serialno, SerialNumber):
         serialno = serialnos.get_serialno_object(sno=serialno, session=session)
     return session.query(DocStoreDocument).filter_by(serialno=serialno).all()
+
+
+@with_db
+def get_snos_by_document_doctype(doctype=None, series=None, session=None):
+    if doctype is None:
+        raise AttributeError("doctype cannot be None")
+    if series is not None and not isinstance(series, str):
+        raise AttributeError('series must be a string or None')
+
+    q = session.query(SerialNumber)
+    if series is not None:
+        q = q.filter(SerialNumber.sno.like('{0}%'.format(series)))
+
+    q = q.join(DocStoreDocument.serialno)
+    q = q.filter(DocStoreDocument.doctype == doctype)
+    return q.all()
 
 
 @with_db

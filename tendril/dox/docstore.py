@@ -48,10 +48,11 @@ local_fs = fsopendir('/')
 
 
 class ExposedDocument(object):
-    def __init__(self, desc, fspath, fs):
+    def __init__(self, desc, fspath, fs, ts=None):
         self.desc = desc
         self.path = fspath
         self.fs = fs
+        self.ts = ts
         self._get_fs_prefix()
 
     def _get_fs_prefix(self):
@@ -72,8 +73,6 @@ class ExposedDocument(object):
         if not ext:
             return None
         return ext.strip('.').lower()
-
-
 
 
 @with_db

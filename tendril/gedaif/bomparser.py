@@ -87,7 +87,10 @@ class GedaBomParser(object):
         cmd = ["gnetlist",
                '-o', self._temp_bom_path,
                '-g', backend,
-               '-Oattrib_file=' + os.path.join(self.projectfolder, self._basefolder, 'attribs')]
+               '-Oattrib_file=' + os.path.join(self.projectfolder,
+                                               self._basefolder,
+                                               'attribs')
+               ]
         cmd.extend(self.schpaths)
         subprocess.call(cmd,
                         stdout=FNULL,

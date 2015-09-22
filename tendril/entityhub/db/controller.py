@@ -22,15 +22,15 @@
 Docstring for controller.py
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 from sqlalchemy.orm.exc import NoResultFound
 
 from tendril.utils.db import with_db
 
 from model import SerialNumber
 from model import SerialNumberAssociation
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 @with_db
@@ -41,6 +41,13 @@ def get_all_serialnos(session=None):
 @with_db
 def get_serialnos_by_efield(efield=None, session=None):
     return session.query(SerialNumber).filter_by(efield=efield).all()
+
+
+@with_db
+def get_serialnos_by_series(series=None, session=None):
+    if not series or not isinstance(series, str):
+        raise ValueError('series should be a string, got : ' + repr(series))
+    return session.query(SerialNumber).filter(SerialNumber.sno.like('{0}%'.format(series))).all()
 
 
 @with_db

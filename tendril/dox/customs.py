@@ -62,7 +62,10 @@ import render
 import wallet
 import docstore
 
+from docstore import ExposedDocument
+
 from tendril.utils import pdf
+from tendril.utils.db import with_db
 from tendril.entityhub import serialnos
 
 from tendril.utils.config import COMPANY_GOVT_POINT
@@ -747,10 +750,35 @@ def generate_docs(invoice, target_folder=None, serialno=None, register=False, ef
     if target_folder is None:
         target_folder = invoice.source_folder
     files = gen_submitdocs(invoice, target_folder, serialno=serialno)
-    files.extend(gen_verificationdocs(invoice, target_folder, serialno=serialno))
-    files.extend(invoice.source_files)
+    files.extend(
+        gen_verificationdocs(invoice, target_folder, serialno=serialno)
+    )
+    files.extend(
+        invoice.source_files
+    )
     if register is True:
         for document in files:
-            docstore.register_document(serialno, docpath=document[0], doctype=document[1],
+            docstore.register_document(serialno, docpath=document[0],
+                                       doctype=document[1],
                                        efield=efield, series='PINV')
     return serialno
+
+
+@with_db
+def get_all_customs_invoice_serialnos(session=None):
+    snos = docstore.controller.get_snos_by_document_doctype(doctype='CUST-PRINTABLE-PP',
+                                                            series='PINV',
+                                                            session=session)
+    snos = [sno.sno for sno in snos]
+    return snos
+
+
+def get_customs_docs_list(serialno):
+    documents = docstore.controller.get_sno_documents(serialno=serialno)
+    rval = []
+    for document in documents:
+        rval.append(ExposedDocument(document.doctype,
+                                    document.docpath,
+                                    docstore.docstore_fs,
+                                    document.created_at))
+    return rval

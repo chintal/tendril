@@ -19,18 +19,16 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
-
 import idstring
 
 import tendril.utils.state
 from tendril.utils.db import with_db
 
-
 from db import controller
 from sqlalchemy.orm.exc import NoResultFound
 
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEBUG)
 
 nsno_table = tendril.utils.state.state_ds['nsno']
 

@@ -19,9 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import yaml
 import os
 
@@ -29,6 +26,9 @@ import vendors
 from tendril.gedaif import gsymlib
 from tendril.utils.types import currency
 from tendril.utils.config import CUSTOMSDEFAULTS_FOLDER
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class CustomsSection(object):
