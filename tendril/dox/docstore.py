@@ -86,6 +86,7 @@ def list_sno_documents(serialno=None, session=None):
 
 
 def get_docs_list_for_serialno(serialno):
+    # TODO This function can be deprecated
     documents = controller.get_sno_documents(serialno=serialno)
     rval = []
     for document in documents:
@@ -97,7 +98,21 @@ def get_docs_list_for_serialno(serialno):
 
 
 def get_docs_list_for_doctype(doctype, limit=None):
+    # TODO This function can be deprecated
     documents = controller.get_doctype_documents(doctype=doctype, limit=limit)
+    rval = []
+    for document in documents:
+        rval.append(ExposedDocument(document.doctype,
+                                    document.docpath,
+                                    docstore_fs,
+                                    document.created_at))
+    return rval
+
+
+def get_docs_list_for_sno_doctype(serialno, doctype, limit=None):
+    documents = controller.get_serialno_doctype_documents(serialno=serialno,
+                                                          doctype=doctype,
+                                                          limit=limit)
     rval = []
     for document in documents:
         rval.append(ExposedDocument(document.doctype,

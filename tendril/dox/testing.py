@@ -212,5 +212,12 @@ def render_device_summary(devicetype, include_failed=False, outfolder=None):
 
 
 def get_all_test_reports(limit=None):
-    return docstore.get_docs_list_for_doctype('TEST-RESULT', limit)
+    return docstore.get_docs_list_for_sno_doctype(serialno=None,
+                                                  doctype='TEST-RESULT',
+                                                  limit=limit)
 
+
+def get_latest_test_report(serialno=None):
+    return docstore.get_docs_list_for_sno_doctype(serialno=serialno,
+                                                  doctype='TEST-RESULT',
+                                                  limit=1)
