@@ -1,0 +1,18 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<p></p>
+
+<h2>Customs Invoices</h2>
+
+{% for sno in stage.snos %}
+<a href="/sourcing/customs/invoice/{{ sno }}">{{ sno }}</a>
+{% endfor %}
+
+{% endblock %}

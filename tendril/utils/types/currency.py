@@ -292,7 +292,7 @@ class CurrencyValue(object):
 
         :rtype: :class:`CurrencyValue`
         """
-        if other == 0:
+        if isinstance(other, numbers.Number) and other == 0:
             return self
         if not isinstance(other, CurrencyValue):
             raise NotImplementedError

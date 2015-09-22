@@ -57,6 +57,8 @@ produce the output files after constructing the appropriate stage.
 import os
 import datetime
 import copy
+import yaml
+import fs
 
 import render
 import wallet
@@ -67,6 +69,7 @@ from docstore import ExposedDocument
 from tendril.utils import pdf
 from tendril.utils.db import with_db
 from tendril.entityhub import serialnos
+from tendril.utils.fsutils import get_tempname
 
 from tendril.utils.config import COMPANY_GOVT_POINT
 
@@ -782,3 +785,44 @@ def get_customs_docs_list(serialno):
                                     docstore.docstore_fs,
                                     document.created_at))
     return rval
+
+
+def get_customs_invoice(serialno):
+    documents = docstore.controller.get_sno_documents(serialno=serialno)
+    inv_yaml = None
+    for document in documents:
+        if document.doctype == 'INVOICE-DATA-YAML':
+            inv_yaml = document.docpath
+    if not inv_yaml:
+        raise ValueError('Invoice data not found for : ' + serialno)
+    with docstore.docstore_fs.open(inv_yaml, 'r') as f:
+        inv_data = yaml.load(f)
+
+    inv_format = inv_data['invoice_format']
+
+    if inv_format == 'analogdevices':
+        from tendril.sourcing import pricelist
+        invoice_class = pricelist.AnalogDevicesInvoice
+    elif inv_format == 'digikey':
+        from tendril.sourcing import digikey
+        invoice_class = digikey.DigiKeyInvoice
+    else:
+        raise ValueError('Unrecognized Customs Invoice Format : ' +
+                         inv_format)
+
+    from tendril.sourcing import electronics
+    vobj = electronics.get_vendor_by_sname(inv_format)
+
+    workspace_name = get_tempname()
+    docstore.copy_docs_to_workspace(serialno=serialno,
+                                    workspace=workspace_name,
+                                    clearws=True)
+
+    return invoice_class(
+        vobj,
+        docstore.workspace_fs.getsyspath(
+            fs.path.join(workspace_name, 'inv_data.yaml')
+        )
+    )
+
+

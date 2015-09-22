@@ -27,6 +27,7 @@ from tendril.utils.db import with_db
 from tendril.entityhub.db.model import SerialNumber
 from tendril.entityhub import serialnos
 
+from sqlalchemy import desc
 from model import DocStoreDocument
 
 from tendril.utils import log
@@ -53,6 +54,7 @@ def get_snos_by_document_doctype(doctype=None, series=None, session=None):
 
     q = q.join(DocStoreDocument.serialno)
     q = q.filter(DocStoreDocument.doctype == doctype)
+    q = q.order_by(desc(SerialNumber.created_at))
     return q.all()
 
 

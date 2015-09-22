@@ -266,3 +266,10 @@ def get_vendor_by_name(name):
         if vendor.vendor_name == name:
             return vendor
     return None
+
+
+def get_vendor_by_sname(name):
+    for vendor in vendor_list:
+        if vendor._name == name:
+            return vendor
+    return None

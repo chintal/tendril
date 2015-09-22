@@ -8,20 +8,8 @@
         <div class="show-for-medium-up medium-2 columns text-center"><i class="fi-download icon"></i></div>
         <div class="small-9 medium-8 columns text-center">{{ doc.desc }}</div>
         <div class="small-3 medium-2 columns text-center">
-        {% if doc.filetype == 'pdf' %}
-            <img src="/static/images/pdf.png">
-        {% endif %}
-        {% if doc.filetype == 'csv' %}
-            <img src="/static/images/csv.png">
-        {% endif %}
-        {% if doc.filetype == 'yaml' %}
-            <img src="/static/images/yaml.png">
-        {% endif %}
-        {% if doc.filetype == 'zip' %}
-            <img src="/static/images/zip.png">
-        {% endif %}
-        {% if doc.filetype == 'dxf' %}
-            <img src="/static/images/dxf.png">
+        {% if doc.filetype %}
+            <img src="/static/images/{{ doc.filetype }}.png">
         {% endif %}
         </div>
         </div>
