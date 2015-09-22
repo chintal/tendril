@@ -128,6 +128,17 @@ Setting up the Instance Folder
 
 TODO
 
+Generating the Documentation
+----------------------------
+
+You should build a copy of the documentation for local use. Your tendril
+instance's frontend will serve this documentation to your users.
+
+    .. code-block:: bash
+
+        cd tendril/doc
+        make dirhtml
+
 
 Maintaining the Instance
 ************************
