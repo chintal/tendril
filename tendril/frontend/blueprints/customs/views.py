@@ -29,6 +29,7 @@ from . import customs as blueprint
 
 from tendril.dox import customs as dxcustoms
 from tendril.dox import docstore
+from tendril.entityhub import serialnos
 from tendril.utils.fsutils import Crumb
 
 
@@ -37,19 +38,20 @@ from tendril.utils.fsutils import Crumb
 @login_required
 def invoices(invoice_sno=None):
     if invoice_sno is None:
-        stage_snos = dxcustoms.get_all_customs_invoice_serialnos()
-        stage = {'snos': stage_snos,
+        snos = dxcustoms.get_all_customs_invoice_serialnos()
+        stage = {'snos': snos,
                  'crumbroot': '/sourcing',
                  'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
                                  Crumb(name="Customs", path="customs/"),
                                  Crumb(name="Invoices", path="customs/inv/")],
                  }
         return render_template('customs_invoices.html', stage=stage,
-                               pagetitle="Customs Invoices")
+                               pagetitle="Customs Document Sets")
     else:
+        sno = serialnos.get_serialno_object(sno=invoice_sno)
         docs = docstore.get_docs_list_for_serialno(invoice_sno)
         invoice = dxcustoms.get_customs_invoice(invoice_sno)
-        stage = {'sno': invoice_sno,
+        stage = {'sno': sno,
                  'docs': docs,
                  'invoice': invoice,
                  'crumbroot': '/sourcing',
@@ -59,13 +61,15 @@ def invoices(invoice_sno=None):
                                  Crumb(name=invoice_sno, path="customs/invoice/" + invoice_sno)],
                  }
         return render_template('customs_invoice_detail.html', stage=stage,
-                               pagetitle=invoice_sno + " Customs Invoice")
+                               pagetitle=invoice_sno + " Customs Document Set")
 
 
 @blueprint.route('/')
 @login_required
 def main():
-    stage = {'crumbroot': '/sourcing',
+    latest = dxcustoms.get_all_customs_invoice_serialnos(limit=5)
+    stage = {'latest': latest,
+             'crumbroot': '/sourcing',
              'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
                              Crumb(name="Customs", path="customs/")],
              }

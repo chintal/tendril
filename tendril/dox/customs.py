@@ -767,11 +767,11 @@ def generate_docs(invoice, target_folder=None, serialno=None, register=False, ef
 
 
 @with_db
-def get_all_customs_invoice_serialnos(session=None):
+def get_all_customs_invoice_serialnos(limit=None, session=None):
     snos = docstore.controller.get_snos_by_document_doctype(doctype='CUST-PRINTABLE-PP',
                                                             series='PINV',
+                                                            limit=limit,
                                                             session=session)
-    snos = [sno.sno for sno in snos]
     return snos
 
 
