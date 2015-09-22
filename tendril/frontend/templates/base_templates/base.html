@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+<html class="no-js" lang="en" xmlns="http://www.w3.org/1999/html">
+  <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title> {% if pagetitle %} {{ pagetitle }} | {% endif %} Tendril </title>
+      {% assets "base_css" %}
+          <link rel="stylesheet" href="{{ ASSET_URL }}" />
+      {% endassets %}
+      {% assets "datatables_css" %}
+          <link rel="stylesheet" href="{{ ASSET_URL }}" />
+      {% endassets %}
+      {% assets "tendril_css" %}
+          <link rel="stylesheet" href="{{ ASSET_URL }}" />
+      {% endassets %}
+      {% assets "base_js" %}
+          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      {% endassets %}
+      <link rel="stylesheet" href="/static/icons/foundation-icons.css" />
+  </head>
+<body>
+    <div class="sticky">
+    <nav class="top-bar" data-topbar role="navigation">
+        <ul class="title-area">
+	        <li class="name">
+	            <h1><a href="{{ url_for('home_page') }}">
+                    <img src="/static/images/tendril-favicon_256px.png" height="30" width="30">
+                    Tendril</a>
+                </h1>
+	        </li>
+	        <li class="toggle-topbar menu-icon">
+                <a href="#"><span>Menu</span></a>
+            </li>
+        </ul>
+        <section class="top-bar-section">
+	    <!-- Right Nav Section -->
+        <ul class="right">
+            <li class="has-form">
+              <div class="row collapse">
+                <div class="large-8 small-9 columns">
+                  <input type="text" placeholder="Find Stuff">
+                </div>
+                <div class="large-4 small-3 columns">
+                  <a href="#" class="alert button expand">Search</a>
+                </div>
+              </div>
+            </li>
+	        <li class="has-dropdown">
+	    	    {% if current_user.is_authenticated() %}
+                <a href="#">{{ current_user.full_name or current_user.user_auth.username }}</a>
+                <ul class="dropdown">
+		  		    <li><a href="{{ url_for('user_profile_page') }}">User Profile</a></li>
+                    <li><a href="{{ url_for('user.logout') }}">Log Out</a></li>
+				</ul>
+                {% else %}
+                <a href="{{ url_for('user.login') }}">Log In</a>
+                {% endif %}
+	        </li>
+	    </ul>
+	    <!-- Left Nav Section -->
+	    <ul class="left">
+        </ul>
+        </section>
+    </nav>
+
+    {% block breadcrumbs %}
+        {% include 'parts/breadcrumbs.html' %}
+    {% endblock %}
+
+    {% block magellan %}{% endblock %}
+
+    </div>
+
+    <div class="row">
+      <div class="small-10 large-6 small-centered columns">
+      {# One-time system messages called Flash messages #}
+      {% block flash_messages %}
+	  {%- with messages = get_flashed_messages(with_categories=true) -%}
+	      {% if messages %}
+		    {% for category, message in messages %}
+		      {% if category=='error' %}
+			    {% set category='danger' %}
+		      {% endif %}
+		      <div data-alert class="alert-box {{category}} radius">
+                  {{ message|safe }}
+                  <a href="#" class="close">⊗</a>
+              </div>
+		    {% endfor %}
+	      {% endif %}
+	  {%- endwith %}
+      {% endblock %}
+      </div>
+    </div>
+
+    <div class="row">
+
+    </div>
+
+    <div class="small-12 large-10 columns small-centered">
+        {% block main %}{% endblock %}
+    </div>
+
+    <div class="row">
+
+    </div>
+
+    <footer style="margin-top:1px;">
+    <div class="row">
+        <div class="small-12 large-10 columns small-centered" id="footer">
+        <div class="small-6 columns copyright">
+            <img src="/instanceassets/logo.png" style="max-height:36px;" class="left">
+            <span>
+            Copyright © 2015 Quazar Technologies Pvt. Ltd. All Rights Reserved. <br>
+            Powered by <a href="http://tendril.chintal.in" style="color:#84B33F; font-size:small;"> Tendril </a>
+            </span>
+        </div>
+        <div class="small-6 columns">
+          <ul>
+            <li class="first"><a href=" {{ url_for('home_page') }} ">Home</a></li>
+            <li><a href=" {{ url_for('doc.root') }} " target="_blank">Documentation</a></li>
+            <li><a href="https://github.com/chintal/tendril" target="_blank">Sources</a></li>
+          </ul>
+        </div>
+        </div>
+    </div>
+    </footer>
+
+    {% assets "foundation_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
+    {% assets "datatables_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
+    <script type="text/javascript">
+    $(document).foundation({
+        equalizer : {
+            // Specify if Equalizer should make elements equal height once they become stacked.
+            equalize_on_stack: false,
+            // Allow equalizer to resize hidden elements
+            act_on_hidden_el: false
+        }
+    });
+    $('.autoscale').textfill({
+        maxFontPixels: 28,
+    });
+    $(document).on('close.fndtn.alert', function(event) {
+        $(document).foundation('reflow');
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="motifs"><a href="#motifs">Motifs</a></dd>
+        <dd data-magellan-arrival="devices"><a href="#devices">Device Classes</a></dd>
+        <dd data-magellan-arrival="invguidelines"><a href="#invguidelines">Inventory Guidelines</a></dd>
+        <dd data-magellan-arrival="iec60063"><a href="#iec60063">IEC60063</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+{% block main %}
+
+<h2>Conventions</h2>
+
+
+<!--Motifs-->
+<div class="row" data-magellan-destination="motifs">
+<a name="motifs"></a>
+<h3> Motifs </h3>
+    <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
+        {% for motif in stage.motifs %}
+        <li><a href="/conventions/motif/{{ motif }}/" class="button square radius expand bg-t1" data-equalizer-watch>
+            <b> {{ motif }} </b></a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+
+<!-- Devices -->
+<div class="row" data-magellan-destination="devices">
+<a name="devices"></a>
+<h3> Recognized Device Classes </h3>
+<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4 columns">
+    {% for device in stage.devices %}
+    <li> 
+        <div>
+            <span data-tooltip aria-haspopup="true" class="has-tip" title="{{ device[4] }}">
+                <div class="panel taggable text-center radius">
+                    {{ device[0] }}
+                </div>
+            </span>
+            {% if device[1] %}
+                <span class="right label radius warning">FP is Wire</span>
+            {% endif %}
+            {% if device[2] %}
+                <span class="right label radius info">FP is Modlen</span>
+            {% endif %}
+            {% if device[3] %}
+                <span class="right label radius alert">No FP</span>
+            {% endif %}
+        </div>
+    </li>
+    
+    {% endfor %}
+</ul>
+</div>
+
+<!-- Inventory Guidelines -->
+<div class="row" data-magellan-destination="invguidelines">
+<a name="invguidelines"></a>
+<h3> Inventory Guidelines </h3>
+    <div class="small-12 columns">
+        <table id="inv_gl_table" class="display" data-paging='false'>
+            <thead>
+            <tr>
+                <th class="all">ID</th>
+                <th class="min-tablet-p text-center">Min Order Qty</th>
+                <th class="min-tablet-p text-center">Order Qty Multiple</th>
+                <th class="min-tablet-p text-center">Baseline Qty</th>
+                <th class="min-tablet-p text-center">Min Excess %</th>
+                <th class="min-tablet-p text-center">Min Excess Qty</th>
+                <th class="min-tablet-p text-center">Max Excess Qty</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for name, rows in stage.guidelines.iteritems() %}
+                {% for row in rows %}
+                    <tr>
+                        <td> {{ row.id }} </td>
+                        <td class="text-center"> {{ row.oqty_min }} </td>
+                        <td class="text-center"> {{ row.oqty_multiple }} </td>
+                        <td class="text-center"> {{ row.baseline_qty }} </td>
+                        <td class="text-center"> {{ row.excess_min_pc }} </td>
+                        <td class="text-center"> {{ row.excess_min_qty }} </td>
+                        <td class="text-center"> {{ row.excess_max_qty }} </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#inv_gl_table').DataTable({
+                /* Disable initial sort */
+                "aaSorting": [],
+                {% include 'parts/datatable_defaults.html' %}    
+            });
+            table.buttons().container()
+                .appendTo( '#inv_gl_table_wrapper .small-12.medium-6.columns:eq(0)' );
+        });
+    </script>
+</div>
+
+<!-- iec60063 -->
+<div class="row" data-magellan-destination="iec60063">
+<h3> IEC60063 Preferred Numbers </h3>
+<a name="iec60063"></a>
+
+<!--Form-->
+<div class="small-12 columns">
+<form action=" {{ request.path }}#iec60063 " method="GET">
+    <fieldset>
+        <legend>
+            Series Parameters
+        </legend>
+        <div class="small-12 large-3 columns">
+        <label> Type
+            <select id="type" name="type">
+              <option {% if stage.iec60063stype=='none' %} selected {% endif %} value="none">Numbers</option>
+              <option {% if stage.iec60063stype=='resistor' %} selected {% endif %} value="resistor">Resistors</option>
+              <option {% if stage.iec60063stype=='capacitor' %} selected {% endif %} value="capacitor">Capacitors</option>
+              <option {% if stage.iec60063stype=='inductor' %} selected {% endif %} value="inductor">Inductors</option>
+              <option {% if stage.iec60063stype=='zener' %} selected {% endif %} value="zener">Zener Diodes</option>
+            </select>
+        </label>
+        </div>
+        <div class="small-12 large-3 columns">
+        <label> Series
+            <select id="series" name="series">
+                <option {% if stage.iec60063series=='E192' %} selected {% endif %} value="E192">E192</option>
+                <option {% if stage.iec60063series=='E96' %} selected {% endif %} value="E96">E96</option>
+                <option {% if stage.iec60063series=='E48' %} selected {% endif %} value="E48">E48</option>
+                <option {% if stage.iec60063series=='E24' %} selected {% endif %} value="E24">E24</option>
+                <option {% if stage.iec60063series=='E12' %} selected {% endif %}value="E12">E12</option>
+                <option {% if stage.iec60063series=='E6' %} selected {% endif %}value="E6">E6</option>
+                <option {% if stage.iec60063series=='E3' %} selected {% endif %}value="E3">E3</option>
+            </select>
+        </label>
+        </div>
+        <div class="small-12 large-3 columns">
+        <label> Start
+            <input name="start" id="start" type="text" placeholder="Start"
+                   {% if stage.iec60063start %} value="{{ stage.iec60063start }}" {% endif %}/>
+        </label>
+        </div>
+        <div class="small-12 large-3 columns">
+        <label> End
+            <input name="end" id="end" type="text" placeholder="End"
+                   {% if stage.iec60063end %} value="{{ stage.iec60063end }}" {% endif %} />
+        </label>
+        </div>
+        <input type="submit" class="button small expand radius" value="Generate">
+    </fieldset>
+</form>
+</div>
+<!--Results-->
+<div class="small-12 columns">
+    <h4> IEC60063 {{ stage.iec60063series }} Values
+        {% if stage.iec60063stype %} for {{ stage.iec60063stype }}{% endif %}
+        {% if stage.iec60063start %} from {{ stage.iec60063start }}{% endif %}
+        {% if stage.iec60063end %} upto {{ stage.iec60063end }}{% endif %}
+    </h4>
+    <ul class="splist" style="list-style-type: none;">
+        {% for val in stage.iec60063vals %}
+        <li class="splist panel radius text-center"> {{ val }} </li>
+        {% endfor %}
+    </ul>
+</div>
+</div>
+
+{% endblock %}

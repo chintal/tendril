@@ -1,0 +1,121 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<div class="row">
+    <form action=" {{ request.path }} " method="GET">
+        <fieldset>
+            <legend> Display Options </legend>
+            <div class="row">
+            <div class="small-9 medium-3 large-2 columns text-right"> Flatten Folders </div>
+            <div class="small-3 medium-1 large-1 columns switch radius end">
+                <input id="flattenFolders" name="flattenFolders" type="checkbox" {% if stage.flatten_folders %} checked {% endif %} onchange="this.form.submit()">
+                <label for="flattenFolders"></label>
+            </div>
+            <div class="small-9 medium-3 large-2 columns text-right">Show Symbol Images</div>
+            <div class="small-3 medium-1 large-1 columns switch radius">
+                <input id="showImages" name="showImages" type="checkbox" {% if stage.show_images %} checked {% endif %} onchange="this.form.submit()">
+                <label for="showImages">
+                </label>
+            </div>
+            <div class="small-9 medium-3 large-2 columns text-right"> Resolve Generators </div>
+            <div class="small-3 medium-1 large-1 columns switch radius">
+                <input id="resolveGenerators" name="resolveGenerators" type="checkbox" {% if stage.resolve_generators %} checked {% endif %} onchange="this.form.submit()">
+                <label for="resolveGenerators">
+                </label>
+            </div>
+            <div class="small-9 medium-3 large-2 columns text-right"> Hide Generators </div>
+            <div class="small-3 medium-1 large-1 columns switch radius end">
+                <input id="hideGenerators" name="hideGenerators" type="checkbox" {% if stage.hide_generators %} checked {% endif %} onchange="this.form.submit()">
+                <label for="hideGenerators">
+                </label>
+            </div>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+{% if stage.subfolders %}
+    <h3> Subfolders of {{ stage.path }} </h3>
+    <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
+        {% for folder in stage.subfolders %}
+        <li>
+            <a href=" /gsymlib/{{folder.path}}?{{ stage.query_string }}" class="button square radius expand bg-t5" data-equalizer-watch>
+                {{folder.name}}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if stage.symbols %}
+    <h3> Symbols in {{ stage.path }} </h3>
+    <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4" data-equalizer>
+        {% for symbol in stage.symbols %}
+        <li>
+            <ul class="pricing-table active-tb shadow mrgn-20-top">
+                {% if symbol.generator %}
+                <a href = " /gsymlib/detail/{{symbol.genident|quote}} ">
+                <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.genident}}</span></li>
+                {% else %}
+                <a href = " {% if symbol.ident|strip %} /gsymlib/detail/{{symbol.ident|quote}} {% endif %}">
+                <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.value}}</span></li>
+                {% endif %}
+
+                <li class="title">{{symbol.ident}}</li>
+                {% if symbol.footprint %}
+                <li class="bullet-item">{{symbol.footprint}}</li>
+                {% endif %}
+                {% if stage.show_images %}
+                <li class="description"><img src="/gsymlib/gsymlib/{{symbol.img_repr_fname}}"></li>
+                {% endif %}
+                <li class="description">{{symbol.fname}}</li>
+                {% if symbol.description %}
+                <li class="description">{{symbol.description|unicode}}</li>
+                </a>
+                {% endif %}
+                {% if not symbol.sym_ok %}
+                  <span class="right label radius alert">Bad Symbol</span>
+                {% endif %}
+                {% if symbol.is_generator %}
+                  <span class="right label radius warning">Generator</span>
+                {% endif %}
+                {% if symbol.is_virtual %}
+                  <span class="right label radius success">Virtual</span>
+                {% endif %}
+                {% if symbol.is_deprecated %}
+                  <span class="right label radius alert">Deprecated</span>
+                {% endif %}
+                {% if symbol.is_experimental %}
+                  <span class="right label radius warning">Experimental</span>
+                {% endif %}
+                {% if symbol.is_wire %}
+                  <span class="right label radius info">Wire</span>
+                {% endif %}
+                {% if symbol.is_modlen %}
+                  <span class="right label radius info">Modlen</span>
+                {% endif %}
+            </ul>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!--<ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
+        {% for symbol in stage.symbols %}
+        <li>
+            <a href=" {{symbol.path}} " class="button square radius expand bg-t2" data-equalizer-watch>
+                {{symbol.ident}}
+
+            </a>
+        </li>
+        {% endfor %}
+    </ul>-->
+{% endif %}
+
+
+{% endblock %}

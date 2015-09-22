@@ -1,0 +1,34 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+{% block main %}
+
+<p></p>
+
+<h4>Customs Document Set</h4>
+<h3>{{ stage.sno.sno }} for {{ stage.sno.efield }}</h3>
+
+<div class="small-12 medium-6 columns">
+<h5> Associated Documents </h5>
+<a name="documentation"></a>
+    <ul class="doclinklist">
+        {% for doc in stage.docs %}
+            {% include 'parts/doc_link_list_element.html' %}
+        {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}

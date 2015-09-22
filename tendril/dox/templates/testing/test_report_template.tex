@@ -1,0 +1,161 @@
+%{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+%#}
+
+\documentclass[fontsize=8pt, BCOR=1.5cm, DIV=14, twoside, titlepage = false]{scrartcl}
+\usepackage[top=2cm, bottom=3cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{PTSansNarrow} 
+\renewcommand*\familydefault{\sfdefault} %% Only if the base font of the document is to be sans serif
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\usepackage{array}
+\usepackage{multicol}
+\usepackage{colortbl}
+\usepackage{tfrupee}
+\pdfmapfile{=tfrupee.map}
+\usepackage{lastpage}
+\usepackage{placeins}
+\usepackage{caption}
+\usepackage[margin=0pt,skip=0pt]{subcaption}
+
+\newcommand{\devicetype}{%{{stage.devicetype%}}}
+\newcommand{\sno}{%{{stage.sno%}}}
+\newcommand{\testdate}{%{{stage.testdate%}}}
+\newcommand{\svnrevision}{%{{stage.svnrevision%}}}
+
+\usepackage[%
+  automark,
+  headsepline,                %% Separation line below the header
+  footsepline,               %% Separation line above the footer
+  markuppercase
+]{scrpage2}
+
+\newcommand{\vcenteredinclude}[2]{\begingroup
+\setbox0=\hbox{\includegraphics[#1]{#2}}%
+\parbox{\wd0}{\box0}\endgroup}
+
+\renewcommand{\headfont}{\normalfont}
+\lehead{TCR \devicetype\ \sno}    %% Top left on even pages
+\lohead{\vcenteredinclude{width=0.2in}{%{{stage.logo%}}} \hspace{0.03in} \large %{{stage.company%}}\vspace{1mm}}    %% Top left on odd pages
+\rehead{\large %{{stage.company%}} \hspace{0.03in} \vcenteredinclude{width=0.2in}{%{{stage.logo%}}}\vspace{1mm}}    %% Top right on even pages
+\rohead{TCR \devicetype\ \sno}    %% Top right on odd pages
+\chead{}                       %% Top center
+
+\rofoot{Page \thepage\ of \pageref{LastPage}}
+\lefoot{Page \thepage\ of \pageref{LastPage}}
+\cfoot{\footnotesize\MakeUppercase{For raw test results, write to %{{stage.company_email%}}}}
+
+
+\title{Test \& Calibration Report}
+\author{}
+\date{}
+
+\makeatletter
+\renewcommand{\@maketitle}{\null\vskip 0.5em
+\begin{center}
+  \ifx\@subject\@empty \else
+    {\subject@font \@subject \par}
+  \fi
+  \titlefont\huge \@title\par
+\end{center}
+}
+\makeatother
+
+
+\makeatletter
+  \def\cleardoublepage{\clearpage%
+    \if@twoside
+      \ifodd\c@page\else
+	\section*{Notes}
+	\newpage
+	\if@twocolumn\hbox{}\newpage\fi
+      \fi
+    \fi
+  }
+\makeatother
+
+%opening
+\begin{document}
+\pagestyle{scrheadings}
+\maketitle
+\thispagestyle{scrheadings}
+\begin{center}
+ 
+\keepXColumns
+\renewcommand{\arraystretch}{1.3}
+
+\begin{tabularx}{1.0\textwidth}{>{\raggedleft\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedleft\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}}
+\small{Model:} & {\bfseries\large \devicetype} & \small{S.No.:} & {\bfseries\large \sno} \\
+\small{Test Definitions:}& {R\svnrevision\ CONFIG} & \small{Test Date:} & {\testdate} \\
+\small{Description:} & \multicolumn{3}{l}{ \parbox{0.7\textwidth}{%{{stage.desc%}}}} \\
+\end{tabularx}
+
+\keepXColumns
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{1.0\textwidth}{|>{\raggedleft\arraybackslash}p{0.01\textwidth}|>{\raggedleft\arraybackslash}p{0.13\textwidth}|>{\raggedright\arraybackslash}X|>{\centering\arraybackslash}p{0.16\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|}
+\hline
+%{ for suite in stage.suites %}
+\rowcolor[gray]{0.9} & \normalsize\textbf{%{{ suite.desc %}}} & \textbf{%{{ suite.title %}}} & {\footnotesize %{{ suite.ts %}}} & \textbf{%{{ suite.passed %}}} \tabularnewline\hline\nopagebreak[4]
+
+  %{ for test in suite.tests %}
+    %{{ loop.index %}} & %{{ test.desc %}} & %{{ test.title %}}\hfill %{ if test.instrument %}{\footnotesize Instrument: %{{ stage.instruments.get(test.instrument) %}}}%{ endif %} & {\footnotesize %{{ test.ts %}}} & %{{ test.passed %}} \tabularnewline\nopagebreak[4]
+    
+    %{ if test.lines|length > 0 and not test.passfailonly %}
+    &  &  \begin{tabular}{>{\centering\arraybackslash}p{0.25\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}}
+      
+      %{ for l in test.lines %}
+	\hline
+         {\small %{{ l.desc %}}} & %{ if l.expected %} {\small %{{ l.expected %}}} & \textbf{\small %{{ l.measured %}}} %{ else %} \multicolumn{2}{r}{\small %{{ l.measured %}}} %{ endif %} \tabularnewline %{ if not loop.last %}\nopagebreak[4]%{ endif %}
+      %{ endfor %}
+      \end{tabular}
+      &  &  \tabularnewline\nopagebreak[2]
+    %{ endif %}
+    \hline
+  %{ endfor %}
+
+%{ endfor %}
+\rowcolor[gray]{0.95} & \multicolumn{4}{l|}{\normalsize\textbf{Test Instruments}} \tabularnewline\hline\nopagebreak[4]
+%{ for instrument in stage.instruments|dictsort(False, 'value') %}
+  %{{ instrument.1 %}} & \multicolumn{4}{l|}{%{{ instrument.0 %}}} \tabularnewline %{ if not loop.last %}\nopagebreak[4]%{ endif %}
+%{ endfor %}
+\hline
+\end{tabularx}
+\end{center}
+
+%{ if stage.graphs|length > 0 %}
+  %{ for row in stage.graphs|batch(3) %}
+  \begin{figure}[ht!]
+  %{ if loop.index > 0 %} \ContinuedFloat %{ endif %}
+  %{ for column in row %}\begin{subfigure}[b]{0.33\textwidth}
+      \includegraphics[width=\linewidth]{%{{ column.0 %}}}
+      \caption{%{{ column.1 %}}}
+    \end{subfigure}\hspace{0.005\textwidth}%{ endfor %}%
+  \end{figure}
+  %{ endfor %}
+%{ endif %}
+
+\FloatBarrier
+
+\begin{table}[h]
+\begin{tabular}{>{\centering\arraybackslash}p{0.44\textwidth}>{\centering\arraybackslash}p{0.44\textwidth}}
+\hline
+  & \tabularnewline
+  Tested  &  Verified \tabularnewline
+  & \tabularnewline
+  & \tabularnewline
+  \footnotesize{(Retrieved Results)} & \footnotesize{} \tabularnewline
+  &  \tabularnewline
+  \footnotesize Date: \testdate & \footnotesize{for %{{stage.company%}}} \tabularnewline
+\end{tabular}
+\end{table}
+
+%{ if stage.evenpages == True %}
+\cleardoublepage
+%{ endif %} 
+\end{document}
+
+

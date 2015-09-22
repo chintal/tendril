@@ -1,0 +1,59 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+<div class="row"> <p></p></div>
+<div class="row">
+    <div class="small-12 large-6 columns">
+        <div class="panel radius">
+            <h1>User Profile</h1>
+            {% from "base_templates/form_macros.html" import render_field, render_submit_field %}
+
+                <form action="" method="POST" class="form" role="form">
+                {{ form.hidden_tag() }}
+                {{ render_field(form.full_name, tabindex=10) }}
+                {{ render_submit_field(form.submit, tabindex=20) }}
+                </form>
+
+        </div>
+        <div class="panel radius clearfix">
+            <h3>Roles</h3>
+
+            {% for role in current_user.roles %}
+                <div class="button round success right" style="margin:5px 5px 0 0"> {{ role.description or role.name }} </div>
+            {% endfor %}
+
+        </div>
+    </div>
+    <div class="hide-for-small-only medium-1 columns"><p></p></div>
+    <div class="small-12 large-5 columns">
+        <div class="panel radius">
+            <h3>{%trans%}Change Password{%endtrans%}</h3>
+
+                <form action="{{ url_for('user.change_password') }}" method="POST" class="form" role="form">
+                    {{ change_password_form.hidden_tag() }}
+                    {{ render_field(change_password_form.old_password, tabindex=30) }}
+                    {{ render_field(change_password_form.new_password, tabindex=40) }}
+                    {% if user_manager.enable_retype_password %}
+                        {{ render_field(change_password_form.retype_password, tabindex=50) }}
+                    {% endif %}
+                    {{ render_submit_field(change_password_form.submit, tabindex=60) }}
+                </form>
+
+        </div>
+        <div class="panel radius">
+            <h3>{%trans%}Change Username{%endtrans%}</h3>
+                <form action="{{ url_for('user.change_username') }}" method="POST" class="form" role="form">
+                    {{ change_username_form.hidden_tag() }}
+                    {{ render_field(change_username_form.new_username, tabindex=70) }}
+                    {{ render_field(change_username_form.old_password, tabindex=80) }}
+                    {{ render_submit_field(change_username_form.submit, tabindex=90) }}
+                </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

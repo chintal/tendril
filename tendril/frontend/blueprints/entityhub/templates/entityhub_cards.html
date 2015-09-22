@@ -1,0 +1,54 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="cards"><a href="#cards">Cards</a></dd>
+        <dd data-magellan-arrival="cables"><a href="#cables">Cables</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+
+{% block main %}
+<div class="row" data-magellan-destination="cards">
+<a name="cards"></a>
+<h3> All Cards </h3>
+<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
+    {% for card in stage.cards %}
+    <li>
+        <a href="{{ card.name }}">
+            <ul class="pricing-table active-tb shadow mrgn-20-top">
+                <li class="title autoscale"> {{ card.name }} </li>
+                <li class="description"> {{ card.detail.desc }} </li>
+            </ul>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+</div>
+
+<div class="row" data-magellan-destination="cables">
+<a name="cables"></a>
+<h3> All Cables </h3>
+<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
+    {% for card in stage.cables %}
+    <li>
+        <a href="{{ card.name }}">
+            <ul class="pricing-table active-tb shadow mrgn-20-top">
+                <li class="title autoscale"> {{ card.name }} </li>
+                <li class="description"> {{ card.detail.desc }} </li>
+            </ul>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+</div>
+
+{% endblock %}

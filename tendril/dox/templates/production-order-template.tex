@@ -1,0 +1,104 @@
+%{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+%#}
+
+\documentclass[fontsize = 9pt, BCOR=1.5cm, DIV=14, twoside, titlepage = false]{scrartcl}
+\usepackage[utf8]{inputenc}
+%\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\usepackage{array}
+\usepackage{multicol}
+\usepackage{colortbl}
+\usepackage{tfrupee}
+\pdfmapfile{=tfrupee.map}
+\usepackage{lastpage}
+\usepackage[lighttt]{lmodern}
+
+\newcommand{\sno}{%{{stage.sno%}}}
+
+\usepackage[%
+  automark,
+  headsepline,                %% Separation line below the header
+  footsepline,               %% Separation line above the footer
+  markuppercase
+]{scrpage2}
+
+\rehead{\includegraphics[width=0.12in]{%{{stage.logo%}}}\hspace{0.01in} \tt %{{stage.company%}}}    %% Top left on odd pages
+\lohead{\tt %{{stage.company%}}\hspace{0.1in}\includegraphics[width=0.12in]{%{{stage.logo%}}}}      %% Top right on even pages
+\rohead{{\small Production Order } \sno}    %% Top left on odd pages
+\lehead{{\small Production Order } \sno}    %% Top right on even pages
+\chead{}                       %% Top center
+\cfoot{Page \thepage\ of \pageref{LastPage}}
+
+\title{Production Order}
+\subtitle{%{{stage.title%}}}
+\author{}
+\date{}
+
+\makeatletter
+\renewcommand{\@maketitle}{
+\begin{center}
+  \ifx\@subject\@empty \else
+    {\subject@font \@subject \par}
+  \fi
+  \titlefont\huge \@title\par
+  \ifx\@subtitle\@empty \else
+    {\normalsize \@subtitle \par}
+  \fi
+\end{center}
+}
+\makeatother
+
+%opening
+\begin{document}
+\pagestyle{scrheadings}
+\maketitle
+\thispagestyle{scrheadings}
+\begin{center}
+
+\keepXColumns
+\renewcommand{\arraystretch}{1.35}
+\small
+\begin{tabularx}{1.0\textwidth}{>{\raggedleft\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedleft\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}}
+\small{Document No:} & {\tt\sno} & Date:& {\tt \today} \\
+\small{Sourcing Order(s):} & \parbox{0.25\textwidth}{\tt %{for so in stage.sourcing_orders %} %{{so%}} %{ if not loop.last %} \\ %{ endif %} %{ endfor %}} & Date: & {\tt } \\
+\small{Root Order(s):} & \multicolumn{3}{l}{\ttfamily \parbox{0.7\textwidth}{ %{for ro in stage.root_orders %} %{{ro.no%}} (%{{ro.desc%}}) %{ if not loop.last %} \\ %{ endif %} %{ endfor %} }} \\
+\end{tabularx}
+
+\normalsize
+\renewcommand{\arraystretch}{2}
+\begin{tabularx}{1.0\textwidth}{|c|>{\raggedright\arraybackslash}p{0.65\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|X|}
+\hline
+  %{ for card in stage.cards %}
+  {%{{ loop.index %}}.} & \parbox{0.60\textwidth}{ \vspace{.3\baselineskip} {\bfseries\ttfamily %{{ card.ident %}}} \\ {\small %{{ card.desc %}}} \vspace{.2\baselineskip}} & {\tt %{{ card.qty %}}} & \\\hline
+  %{ endfor %} 
+\end{tabularx}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{1.0\textwidth}{|c|>{\raggedright\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.13\textwidth}|>{\raggedright\arraybackslash}p{0.12\textwidth}|>{\raggedright\arraybackslash}p{0.12\textwidth}|>{\raggedright\arraybackslash}p{0.12\textwidth}|X|}
+  \hline
+  \rowcolor[gray]{0.9}\centering\textbf{\ttfamily IDX} & \centering\textbf{\ttfamily Card} & \centering\textbf{\ttfamily Serial No} &\centering\textbf{\ttfamily Production} & \centering\textbf{\ttfamily Testing} & \centering\textbf{\ttfamily Labelling} & \tabularnewline\hline
+  %{ for sno in stage.snos %}
+  \small{\ttfamily %{{loop.index%}}.} & \small{\tt %{{sno.ident|escape_latex%}}} & {\ttfamily\bfseries %{{sno.sno%}}} & {\tiny\ttfamily\bfseries %{{sno.prodst%}}} & {\tiny\ttfamily\bfseries %{{sno.testst%}}} & {\tiny\ttfamily\bfseries %{{sno.lblst%}}} & \tabularnewline\hline 
+  %{ endfor %} 
+  
+\end{tabularx}
+
+\end{center}
+
+\begin{tabularx}{1.0\textwidth}{|>{\centering\arraybackslash}p{0.44\textwidth}|>{\centering\arraybackslash}p{0.44\textwidth}|}
+\hline
+  \small Production Ordered & \small Production Complete\\
+  & \\
+  & \\
+  & \\
+  \small Date & \small Date \\
+\hline
+\end{tabularx}
+
+\end{document}
+
+

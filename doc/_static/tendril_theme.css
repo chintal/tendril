@@ -1,0 +1,26 @@
+
+a{
+    color: #84B33F;
+}
+
+a:hover{
+    color: #00BB27;
+}
+
+.rst-content a tt, .rst-content a tt, .rst-content a code{
+    color: #84B33F;
+}
+
+.wy-side-nav-search{
+    background-color: #ECECEC;
+    color: #84B33F;
+}
+
+.wy-side-nav-search > a, .wy-side-nav-search .wy-dropdown > a
+{
+    color: #84B33F;
+}
+
+.wy-nav-top{
+    background: #84B33F none repeat scroll 0% 0%;
+}

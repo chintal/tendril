@@ -1,0 +1,44 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<h3> All Bare PCBs </h3>
+<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
+    {% for pcb in stage.pcbs %}
+    <li>
+        <a href="/entityhub/pcbs/{{ pcb.name }}">
+        <ul class="pricing-table active-tb shadow mrgn-20-top">
+            <li class="price {% if stage.pcbs|length < 40 %} autoscale {% endif %}"> {{ pcb.name }} </li>
+            <li class="description"> {{ pcb.configdata.description() }} </li>
+            <li class="title"> PCB Details </li>
+            {% for descriptor in pcb.configdata.pcbdescriptors %}
+            <li class="bullet-item"> {{ descriptor }} </li>
+            {% endfor %}
+            <li class="title"> Configurations </li>
+            {% for configuration in pcb.configdata.configurations[:3] %}
+            <li class="bullet-item"> {{ configuration.configname }} </li>
+            {% endfor %}
+            {% if pcb.configdata.configurations|length > 3 %}
+            <li class="bullet-item"> And {{ pcb.configdata.configurations|length - 3 }} others.. </li>
+            {% endif %}
+            {% if pcb.configdata.status == 'Experimental' %}
+              <span class="right label radius warning">Experimental</span>
+            {% endif %}
+            {% if pcb.configdata.status == 'Active' %}
+              <span class="right label radius success">Active</span>
+            {% endif %}
+            {% if pcb.configdata.status == 'Deprecated' %}
+              <span class="right label radius alert">Deprecated</span>
+            {% endif %}
+        </ul>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

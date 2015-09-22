@@ -1,0 +1,158 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
+        <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
+        <dd data-magellan-arrival="refbom"><a href="#refbom">BOM</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+
+{% block main %}
+
+<div class="row">
+<div class="small-12 medium-6 columns" data-magellan-destination="details">
+<h3> Card Details </h3>
+<a name="details"></a>
+
+<!-- Some Simple Detail Table -->
+<ul class="pricing-table shadow mrgn-20-top">
+    <li class="price"> {{ stage.card.configname }} </li>
+    <li class="description"> {{ stage.card.desc }} </li>
+    {% if stage.card.grouplist %}
+    <li class="title"> Groups </li>
+    <li>
+    <ul class="small-block-grid-3 small-11 columns small-centered">
+            {% for group in stage.card.grouplist %}
+            <li class="bullet-item"> {{ group }} </li>
+            {% endfor %}
+    </ul>
+    </li>
+    {% endif %}
+    {% if stage.card.motiflist %}
+    <li class="title"> Motifs </li>
+    {% for k, v in stage.card.motiflist|dictsort %}
+    {% if v|length >2 %}
+    <li class="bullet-item"> <b>{{ k }}</b> </li>
+    <li>
+    <ul class="small-block-grid-3 small-11 columns small-centered">
+        {% for p, s in v|dictsort %}
+        <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
+        {% endfor %}
+    </ul>
+    </li>
+    {% else %}
+    <li>
+    <ul class="small-block-grid-3 small-11 columns small-centered">
+        <li class="bullet-item"> <b>{{ k }}</b> </li>
+        {% for p, s in v|dictsort %}
+        <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
+        {% endfor %}
+    </ul>
+    </li>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+
+    {% if stage.card.genlist %}
+    <li class="title"> Generators </li>
+    {% for k, v in stage.card.genlist|dictsort %}
+        <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
+    {% endfor %}
+    {% endif %}
+
+
+    {% if stage.card.sjlist %}
+    <li class="title"> SJs </li>
+    <li><ul class="small-block-grid-3 small-11 columns small-centered">
+    {% for k, v in stage.card.sjlist|dictsort %}
+        <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
+    {% endfor %}
+    </ul></li>
+    {% endif %}
+
+    <li class="title"> References </li>
+
+    {% if stage.barepcb %}
+    <li class="bullet-item">
+        <b> gEDA Project : </b>
+        <a href="/entityhub/pcbs/{{stage.barepcb}}">
+            {{ stage.barepcb }}
+        </a>
+    </li>
+    {% endif %}
+</ul>
+</div>
+<div class="small-12 medium-6 columns">
+<h3> Documentation </h3>
+<a name="documentation"></a>
+    <ul class="doclinklist">
+        {% for doc in stage.docs %}
+            {% include 'parts/doc_link_list_element.html' %}
+        {% endfor %}
+    </ul>
+</div>
+</div>
+<!-- Base PCB -->
+<!-- BOM -->
+<div class="row">
+<div class="small-12 medium-6 columns" data-magellan-destination="refbom">
+<h3> Reference BOM </h3>
+<a name="refbom"></a>
+
+    <div class="small-12 columns">
+        <table id="refbom_table" class="display" data-paging='false'>
+            <thead>
+            <tr>
+                <th class="all">Ident</th>
+                <th class="all">Quantity</th>
+                <th class="none">Refdes</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in stage.refbom.lines %}
+                <tr>
+                    <td> {{ row.ident }} </td>
+                    <td> {{ row.quantity }} </td>
+                    <td> 
+                        {% for refdes in row.refdeslist %}{{ refdes }}{% if not loop.last %}, {% endif %}{% endfor %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#refbom_table').DataTable({
+                /* Disable initial sort */
+                "aaSorting": [],
+                {% include 'parts/datatable_defaults.html' %}    
+            });
+            table.buttons().container()
+                .appendTo( '#refbom_table_wrapper .small-12.medium-6.columns:eq(0)' );
+        });
+    </script>
+    
+</div>
+
+
+    <!-- Test Protocols -->
+    <!-- Pricing -->
+    <!-- Inclusion Information -->
+    <!-- Serialnos Information > Each Pointing subsequently to  Test Results -->
+    <!-- Inventory Information -->
+    <!-- Utilization Information -->
+
+
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+%{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+%#}
+
+\documentclass[fontsize = 9pt, BCOR=1.5cm, DIV=14, twoside, titlepage = false, landscape]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\usepackage{array}
+\usepackage{multicol}
+\usepackage{colortbl}
+\usepackage{tfrupee}
+\pdfmapfile{=tfrupee.map}
+\usepackage{lastpage}
+\renewcommand{\ttdefault}{pcr}
+
+\newcommand{\pcbname}{%{{stage.pcbname%}} }
+\newcommand{\configname}{%{{stage.configname%}} }
+
+\usepackage[%
+  automark,
+  headsepline,                %% Separation line below the header
+  footsepline,               %% Separation line above the footer
+  markuppercase
+]{scrpage2}
+
+\lohead{\tt \configname  Reference BOM}    						            %% Top left on even pages
+\lehead{\includegraphics[width=0.12in]{%{{stage.logo%}}}\hspace{0.01in} \tt %{{stage.company%}}}    %% Top left on odd pages
+\rohead{\tt %{{stage.company%}}\hspace{0.1in}\includegraphics[width=0.12in]{%{{stage.logo%}}}}      %% Top right on even pages
+\rehead{\tt \configname  Reference BOM}    							    %% Top right on odd pages
+\chead{}                       									    %% Top center
+\rofoot{\tt Page \thepage\ of \pageref{LastPage}}
+\lefoot{\tt Page \thepage\ of \pageref{LastPage}}
+\cfoot{}
+
+
+\title{\configname  Reference BOM}
+\subtitle{}
+\author{}
+\date{}
+
+\makeatletter
+\renewcommand{\@maketitle}{\null\vskip 0em
+\begin{center}
+  \ifx\@subject\@empty \else
+    {\subject@font \@subject \par}
+  \fi
+  \titlefont\huge \@title\par
+\end{center}
+}
+\makeatother
+
+
+\makeatletter
+  \def\cleardoublepage{\clearpage%
+    \if@twoside
+      \ifodd\c@page\else
+	\section*{Notes}
+	\newpage
+	\if@twocolumn\hbox{}\newpage\fi
+      \fi
+    \fi
+  }
+\makeatother
+
+%opening
+\begin{document}
+\pagestyle{scrheadings}
+\maketitle
+\thispagestyle{scrheadings}
+\begin{center}
+%\small 
+\keepXColumns
+\renewcommand{\arraystretch}{1.1}
+\begin{tabularx}{1.0\textwidth}{>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|}
+  \hline
+  \multicolumn{11}{|c|}{\cellcolor[gray]{0.8}\normalsize\textbf{BOM}}\tabularnewline\hline
+  %{ for line in stage.lines %}
+  %{ if line.refdeslist|count > 6 %}
+  \rowcolor[gray]{0.9}\multicolumn{1}{|c|}{%{{loop.index%}}.} & \multicolumn{7}{l}{%{{line.ident%}}} & \multicolumn{3}{r|}{%{{line.quantity%}}} \\*\hline
+  %{ for refdes in line.refdeslist %} & %{{refdes%}} %{ if loop.last %} %{set llen = loop.index%9 %} %{ if llen == 0 %} %{set llen = 9 %} %{endif%} \\\hline %{ elif loop.index is divisibleby 9 %} \\*\cline{2-10}  %{ endif %} %{ endfor %}   
+  %{ else %}
+  \multicolumn{1}{|c|}{\cellcolor[gray]{0.9} %{{loop.index%}}.} & \multicolumn{%{{9-line.refdeslist|count%}}}{l|}{\cellcolor[gray]{0.9}\parbox{%{{0.07*(9-line.refdeslist|count)%}}\textwidth}{%{{line.ident%}}}} & %{ for refdes in line.refdeslist %} %{{refdes%}} & %{ endfor %} \multicolumn{1}{r|}{\cellcolor[gray]{0.9} %{{line.quantity%}}} \\\hline
+  %{ endif %} 
+  %{ endfor %} 
+\end{tabularx}
+
+\end{center}
+\cleardoublepage
+\end{document}
+
+
+
+  
+  
+  

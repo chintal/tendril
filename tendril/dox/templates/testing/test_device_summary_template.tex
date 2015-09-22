@@ -1,0 +1,138 @@
+%{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+%#}
+
+\documentclass[fontsize=8pt, BCOR=1.5cm, DIV=14, twoside, titlepage = false]{scrartcl}
+\usepackage[top=2cm, bottom=3cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{PTSansNarrow} 
+\renewcommand*\familydefault{\sfdefault} %% Only if the base font of the document is to be sans serif
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\usepackage{array}
+\usepackage{multicol}
+\usepackage{colortbl}
+\usepackage{tfrupee}
+\pdfmapfile{=tfrupee.map}
+\usepackage{lastpage}
+
+\usepackage{caption}
+\usepackage[margin=0pt,skip=0pt]{subcaption}
+
+\newcommand{\devicetype}{%{{stage.devicetype%}}}
+\newcommand{\svnrevision}{%{{stage.svnrevision%}}}
+
+\usepackage[%
+  automark,
+  headsepline,                %% Separation line below the header
+  footsepline,               %% Separation line above the footer
+  markuppercase
+]{scrpage2}
+
+\newcommand{\vcenteredinclude}[2]{\begingroup
+\setbox0=\hbox{\includegraphics[#1]{#2}}%
+\parbox{\wd0}{\box0}\endgroup}
+
+\renewcommand{\headfont}{\normalfont}
+\lehead{TEST SUMMARY \devicetype}    %% Top left on even pages
+\lohead{\vcenteredinclude{width=0.2in}{%{{stage.logo%}}} \hspace{0.03in} \large %{{stage.company%}}\vspace{1mm}}    %% Top left on odd pages
+\rehead{\large %{{stage.company%}} \hspace{0.03in} \vcenteredinclude{width=0.2in}{%{{stage.logo%}}}\vspace{1mm}}    %% Top right on even pages
+\rohead{TEST SUMMARY \devicetype}    %% Top right on odd pages
+\chead{}                       %% Top center
+
+\rofoot{Page \thepage\ of \pageref{LastPage}}
+\lefoot{Page \thepage\ of \pageref{LastPage}}
+\cfoot{}
+
+
+\title{Device Test Summary}
+\subject{\devicetype}
+\author{}
+\date{}
+
+\makeatletter
+\renewcommand{\@maketitle}{\null\vskip 0.5em
+\begin{center}
+  \ifx\@subject\@empty \else
+    {\subject@font \@subject \par}
+  \fi
+  \titlefont\huge \@title\par
+\end{center}
+}
+\makeatother
+
+
+\makeatletter
+  \def\cleardoublepage{\clearpage%
+    \if@twoside
+      \ifodd\c@page\else
+	\section*{Notes}
+	\newpage
+	\if@twocolumn\hbox{}\newpage\fi
+      \fi
+    \fi
+  }
+\makeatother
+
+%opening
+\begin{document}
+\pagestyle{scrheadings}
+\maketitle
+\thispagestyle{scrheadings}
+\begin{center}
+ 
+\keepXColumns
+\renewcommand{\arraystretch}{1.3}
+
+\begin{tabularx}{1.0\textwidth}{>{\raggedleft\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedleft\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}}
+\small{Model:} & {\bfseries\large \devicetype} & \small{Test Definitions:}& {R\svnrevision\ CONFIG} \\
+\small{Description:} & \multicolumn{3}{l}{ \parbox{0.7\textwidth}{%{{stage.desc%}}}} \\
+\end{tabularx}
+
+\keepXColumns
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{1.0\textwidth}{|>{\raggedleft\arraybackslash}p{0.01\textwidth}|>{\raggedleft\arraybackslash}p{0.13\textwidth}|>{\raggedright\arraybackslash}X|>{\raggedleft\arraybackslash}p{0.05\textwidth}|}
+\hline
+&  &  \begin{tabular}{>{\centering\arraybackslash}p{0.1\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}}
+         {\small Description} & {\small Expected} & \textbf{\small Mean} & {\small Std Deviation} & {\small Min} & {\small Max} \tabularnewline
+      \end{tabular} & {\small Passed} \tabularnewline
+%{ for suite in stage.collector.suites %}
+\rowcolor[gray]{0.9} & \normalsize\textbf{%{{ suite.desc %}}} & \textbf{%{{ suite.title %}}} & %{{ suite.passed_count %}}/%{{ suite.total_count %}} \tabularnewline\hline
+  %{ for test in suite.tests %}
+    %{{ loop.index %}} & %{{ test.desc %}} & %{{ test.title %}} & %{{ test.passed_count %}}/%{{ test.total_count %}} \tabularnewline
+    %{ if test.lines|length > 0 %}
+    &  &  \begin{tabular}{>{\centering\arraybackslash}p{0.1\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}|>{\centering\arraybackslash}p{0.13\linewidth}}
+      %{ for l in test.lines %}
+	\hline
+         {\small %{{ l.desc %}}} & {\small %{{ l.expected or '' %}}} & \textbf{\small %{{ l.measured %}}} & {\small %{{ l.std_dev or '' %}}} & {\small %{{ l.minp or '' %}}} & {\small %{{ l.maxp or '' %}}} \tabularnewline
+      %{ endfor %}
+      \end{tabular} & \tabularnewline
+    %{ endif %}
+    \hline
+  %{ endfor %}
+%{ endfor %}
+\hline
+\end{tabularx}
+\end{center}
+
+%{ if stage.graphs|length > 0 %}
+  %{ for row in stage.graphs|batch(2) %}
+  \begin{figure}[h!]
+  %{ if loop.index > 0 %} \ContinuedFloat %{ endif %}
+  %{ for column in row %}\begin{subfigure}[b]{0.49\textwidth}
+      \includegraphics[width=\linewidth]{%{{ column.0 %}}}
+      \caption{%{{ column.1 %}}}
+    \end{subfigure}\hspace{0.005\textwidth}%{ endfor %}%
+  \end{figure}
+  %{ endfor %}
+%{ endif %}
+
+%{ if stage.evenpages == True %}
+\cleardoublepage
+%{ endif %} 
+\end{document}
+
+

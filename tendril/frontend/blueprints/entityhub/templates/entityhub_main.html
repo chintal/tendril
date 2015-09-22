@@ -1,0 +1,59 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<p></p>
+
+<h2>Entity Hub</h2>
+
+<div class="row">
+    <div class="header panel radius">
+        <div class="sign small-10 medium-6 large-3 columns radius">
+            <h1> Definitions </h1>
+        </div>
+            <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
+                <li><a href="/entityhub/projects/" class="button square radius expand bg-t1" data-equalizer-watch>
+                    <b> gEDA Projects </b></a>
+                </li>
+                <li><a href="/entityhub/pcbs/" class="button square radius expand bg-t2" data-equalizer-watch>
+                    <b> Bare PCBs </b></a>
+                </li>
+                <li><a href="/entityhub/cards/" class="button square radius expand bg-t3" data-equalizer-watch>
+                    <b> Cards </b></a>
+                </li>
+                <li><a href="/entityhub/products/" class="button square radius expand bg-t4" data-equalizer-watch>
+                    <b> Products </b></a>
+                </li>
+                <li><a href="/entityhub/snoseries/" class="button square radius expand bg-t5" data-equalizer-watch>
+                    <b> Serial Series </b></a>
+                </li>
+        </ul>
+    </div>
+</div>
+
+<div class="row">
+    <div class="header panel radius">
+        <div class="sign small-10 medium-6 large-3 columns radius">
+            <h1> Instances </h1>
+        </div>
+            <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
+                <li><a href="/entityhub/cards/" class="button square radius expand bg-t3" data-equalizer-watch>
+                    <b> Cards </b></a>
+                </li>
+                <li><a href="/entityhub/products/" class="button square radius expand bg-t4" data-equalizer-watch>
+                    <b> Products </b></a>
+                </li>
+                <li><a href="/entityhub/serialnos/" class="button square radius expand bg-t5" data-equalizer-watch>
+                    <b> Serial Numbers </b></a>
+                </li>
+            </ul>
+    </div>
+</div>
+
+
+{% endblock %}

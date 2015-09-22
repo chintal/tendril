@@ -1,0 +1,88 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<h3> gEDA Symbol Details </h3>
+
+<!--Symbol Information-->
+<div class="row">
+    <div class="small-12 medium-6 large-4 columns">
+        <ul class="pricing-table shadow">
+            <li class="price autoscale">{{stage.symbol.value}}</li>
+            <li class="title">{{stage.symbol.ident}}</li>
+            {% if stage.symbol.footprint %}
+            <li class="bullet-item">{{stage.symbol.footprint}}</li>
+            {% endif %}
+            <li class="description">{{stage.symbol.fname}}</li>
+            <li class="description">
+                {% for path in stage.sympaths%}
+                    {% if loop.first %} <b> {% endif %}{{path}}{% if loop.first %} </b> {% endif %}
+                    {% if not loop.last %} <br> {% endif %}
+                {% endfor %}
+            </li>
+            {% if stage.symbol.description %}
+            <li class="description">{{stage.symbol.description|unicode}}</li>
+            {% endif %}
+
+            <li class="bullet-item">
+                {% if stage.symbol.is_virtual %}
+                <a href="/gsymlib/detail/{{ stage.symbol.fname[:-4] }}.gen">
+                    <img src="/static/images/icon_one_to_many.png" height="32">  Generator
+                </a>
+                {% endif %}
+                {% if stage.symbol.datasheet_url %}
+                <a target="_blank" href="{{stage.symbol.datasheet_url}}">
+                    <img src="/static/images/pdf.png">  Datasheet
+                </a>
+                {% endif %}
+            </li>
+
+            {% if not stage.symbol.sym_ok %}
+              <span class="right label radius alert">Bad Symbol</span>
+            {% endif %}
+            {% if stage.symbol.is_generator %}
+              <span class="right label radius warning">Generator</span>
+            {% endif %}
+            {% if stage.symbol.is_virtual %}
+              <span class="right label radius success">Virtual</span>
+            {% endif %}
+            {% if stage.symbol.is_deprecated %}
+              <span class="right label radius alert">Deprecated</span>
+            {% endif %}
+            {% if stage.symbol.is_experimental %}
+              <span class="right label radius warning">Experimental</span>
+            {% endif %}
+            {% if stage.symbol.is_wire %}
+              <span class="right label radius info">Wire</span>
+            {% endif %}
+            {% if stage.symbol.is_modlen %}
+              <span class="right label radius info">Modlen</span>
+            {% endif %}
+        </ul>
+    </div>
+    <!--<div class="small-12 medium-6 columns panel radius end">
+        {% for imgpath in stage.imgpaths %}
+            <img src="/gsymlib/gsymlib/{{imgpath}}">
+        {% endfor %}
+    </div>-->
+</div>
+
+<!--Sourcing Information-->
+
+<!--Sourcing History-->
+
+<!--Inventory Information-->
+
+<!--Inventory History-->
+
+<!--Utilization Information-->
+
+<!--Utilization History-->
+
+
+{% endblock %}

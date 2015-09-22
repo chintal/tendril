@@ -1,0 +1,42 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<p></p>
+
+<h2>Customs</h2>
+
+<div class="small-10 medium-6 columns header panel radius">
+    <div class="sign small-9 medium-6 small-centered columns">
+        <h6>Recent</h6>
+    </div>
+    <div class="small-12 columns">
+        <ul class="doclinklist">
+            {% for sno in stage.latest %}
+            <li>
+                <a href="/sourcing/customs/invoice/{{ sno.sno }}">
+                    <div class="button small-12 columns info radius active-tb shadow mrgn-20-top">
+                        <div class="row text-center"><b>{{ sno.sno }}</b></div>
+                        <div class="row text-center">{{ sno.efield }}</div>
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+            <li>
+                <a href="/sourcing/customs/invoice/">
+                    <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+                        <div class="text-center"><b>All</b></div>
+                    </div>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+
+{% endblock %}

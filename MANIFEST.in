@@ -1,0 +1,10 @@
+include *.txt
+include alembic.ini
+include cocomo.yaml
+recursive-include alembic *
+recursive-include test *.py
+
+include doc/Makefile
+recursive-include doc *.rst *.py
+recursive-include doc/_static *
+
