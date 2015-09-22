@@ -811,18 +811,21 @@ def get_customs_invoice(serialno):
                          inv_format)
 
     from tendril.sourcing import electronics
-    vobj = electronics.get_vendor_by_sname(inv_format)
+    vobj = electronics.get_vendor_by_name(inv_format)
 
     workspace_name = get_tempname()
     docstore.copy_docs_to_workspace(serialno=serialno,
                                     workspace=workspace_name,
                                     clearws=True)
 
-    return invoice_class(
+    invoice = invoice_class(
         vobj,
         docstore.workspace_fs.getsyspath(
             fs.path.join(workspace_name, 'inv_data.yaml')
         )
     )
+
+    docstore.workspace_fs.removedir(workspace_name, recursive=True, force=True)
+    return invoice
 
 

@@ -261,14 +261,14 @@ def get_sourcing_information(ident, qty, avendors=vendor_list, allvendors=False)
 order = orders.CompositeOrder(vendor_list)
 
 
+# def get_vendor_by_name(name):
+#     for vendor in vendor_list:
+#         if vendor.vendor_name == name:
+#             return vendor
+#     return None
+
+
 def get_vendor_by_name(name):
-    for vendor in vendor_list:
-        if vendor.vendor_name == name:
-            return vendor
-    return None
-
-
-def get_vendor_by_sname(name):
     for vendor in vendor_list:
         if vendor._name == name:
             return vendor
