@@ -10,11 +10,11 @@ Setting up Tendril is essentially a matter of cloning/checking out the approriat
 and providing the software with a suitable environment which contains all the necessary dependencies.
 The instructions listed here are for Ubuntu, and should work as-is on most Debian based Linux distributions.
 
-The use of ``pyenv`` and ``virtualenv`` for this is recommended but not necessary. The use of these
-tools should create a reasonable stable environment until any cross-version kinks are found and worked out.
+The use of ``pyenv`` and ``virtualenv`` for this is strongly recommended but not necessary. The use of these
+tools should create a reasonably stable environment until any cross-version kinks are found and worked out.
 
 Compatibility of the scripts has not been tested with any python version other than the ``Python 2.7.6``
-which comes with ``Ubuntu 14.04.1 LTS Trusty Tahr``. They will almost certainly not work with ``Python 3.x``
+which comes with ``Ubuntu 14.04.1 LTS Trusty Tahr``. They will most certainly not work with ``Python 3.x``
 in their current form and may or may not work with older point realeases of ``Python 2.7``. While they
 may work, it's probably a good idea to avoid using Python versions < 2.7 with these scripts unit a full set
 of unit tests can be prepared and run.
@@ -23,7 +23,11 @@ of unit tests can be prepared and run.
 Setting up pyenv
 ****************
 
-``pyenv`` is needed to easily set up multiple python versions on your computer.
+``pyenv`` is needed to easily set up multiple python versions on your computer. While not strictly
+necessary to run Tendril, this is a very strongly recommended step. It allows the following :
+
+ - Make sure Tendril is run with the correct python version.
+ - Run tox tests for any developed code (not yet added).
 
 See `<http://davebehnke.com/python-pyenv-ubuntu.html>`_ for a more detailed explanation.
 
@@ -92,20 +96,21 @@ applicable to the organization should be checked out from the locally controlled
 should be essentially ``read-only`` with a specific set of people administering the installation. Until the
 details can be worked out, use the following checkouts:
 
-    * Users:
+    1. Get the Organization's fork of tendril core.
 
-        ``svn co svn://svnserver.qznet/tendril``
+        .. code-block:: bash
 
-        Access control isn't set up. Please don't commit to this unless absolutely necessary, and even then
-        run it by an administrator first.
-    * Administrators:
+            git clone git@gitlab.com:<org>/tendril.git
 
-        ``svn co svn://svnserver.qznet/tendril``
+    2. Create a fork of the Organization's instance configuration. For example, clone
+       `gitlab.com/<org>/tendril-instance-<org>.git`_ into `gitlab.com/<username>/tendril-instance-<org>.git`_
 
-        Access control isn't set up. Commits should generally be limited to instance-specific areas.
-    * Developers:
+    2. Get your fork of the tendril instance configuration.
 
-        ``git clone (something)``
+        .. code-block:: bash
+
+            git clone git@gitlab.com:<username>/tendril-instance-<org>.git ~/.tendril
+
 
 Setting up virtualenv
 *********************
@@ -170,46 +175,42 @@ Installing the Dependencies
             cd /path/to/tendril/checkout/trunk/
             pip install -r requirements.txt
 
- 2. Install ``sofficehelpers``:
+        .. note::
 
-        ``sofficehelpers`` is a collection of scripts to deal with ``libreoffice`` documents. As of this
-        version, this only includes a small script (ssconvertor) to convert a spreadsheet into csv files.
-        The libreoffice python interface (``uno``) requires the use of the python bundled into libreoffice,
-        and therefore is kept separate from the rest of tendril. There are plenty of other (and simpler) ways
-        to achieve the same effect, inculding a number of uno-based scripts to do this. The custom script is
-        retained for the moment to maintain a functional base upon which additional functionality can be added
-        on as needed. If another solution is to be used instead, appropriate changes should be made
-        to :func:`utils.libreoffice.XLFile._make_csv_files` and :func:`utils.libreoffice.XLFile._parse_sscout`.
+            At present, ``requirements.txt`` contains all the dependencies of ``tendril``,
+            including those not actually necessary to run the code. As such, the virtualenv
+            that results is likely to be reasonably heavy (~361M).
 
-        a. Install dependencies:
+            If a leaner installation is required, the dependencies should be pruned to remove
+            the packages included for :
 
-            .. code-block:: bash
+                - Generating documentation
+                - Testing, Profiling
 
-                sudo apt-get install python-uno
+ 2. Install dependencies not covered by ``requirements.txt``
 
-        b. Determine ``libreoffice`` ``python`` version:
+     a. Install ``sofficehelpers``:
 
-            TBD. Until then, refer to `<https://code.google.com/p/slidespeech/wiki/FindingLibreOfficePython>`_
+            ``sofficehelpers`` is a collection of scripts to deal with ``libreoffice`` documents.
+            The libreoffice python interface (``uno``) requires the use of the python bundled into libreoffice,
+            and therefore is kept separate from the rest of tendril. There are plenty of other (and simpler) ways
+            to achieve the same effect, inculding a number of uno-based scripts to do this. The custom script is
+            retained for the moment to maintain a functional base upon which additional functionality can be added
+            on as needed. If another solution is to be used instead, appropriate changes should be made
+            to :func:`utils.libreoffice.XLFile._make_csv_files` and :func:`utils.libreoffice.XLFile._parse_sscout`.
 
-        c. Checkout the ``sofficehelpers`` code:
+            i. Install dependencies:
 
-            .. code-block:: bash
+                .. code-block:: bash
 
-                svn co svn://svnserver.qznet/scripts/libreoffice
+                    sudo apt-get install python-uno python-pip3
 
-        d. Navigate to the trunk folder of the obtained repository in a terminal.
+            ii. Install the ``sofficehelpers`` package from PyPi:
 
-        e. Install to system using:
+                .. code-block:: bash
 
-            .. code-block:: bash
-
-                sudo python setup.py install
-
- 3. To be able to generate the documentation, also install the following:
-
-        TBD
+                    pip3 install sofficehelpers
 
 
-
-
-
+ 3. Install packages required specifically for your instance. Look up your instance-specific
+    configuration to figure out what those are.
