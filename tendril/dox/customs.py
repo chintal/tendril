@@ -64,12 +64,11 @@ import render
 import wallet
 import docstore
 
-from docstore import ExposedDocument
-
 from tendril.utils import pdf
 from tendril.utils.db import with_db
 from tendril.entityhub import serialnos
 from tendril.utils.fsutils import get_tempname
+from tendril.utils.fsutils import temp_fs
 
 from tendril.utils.config import COMPANY_GOVT_POINT
 
@@ -776,17 +775,6 @@ def get_all_customs_invoice_serialnos(session=None):
     return snos
 
 
-def get_customs_docs_list(serialno):
-    documents = docstore.controller.get_sno_documents(serialno=serialno)
-    rval = []
-    for document in documents:
-        rval.append(ExposedDocument(document.doctype,
-                                    document.docpath,
-                                    docstore.docstore_fs,
-                                    document.created_at))
-    return rval
-
-
 def get_customs_invoice(serialno):
     documents = docstore.controller.get_sno_documents(serialno=serialno)
     inv_yaml = None
@@ -816,16 +804,17 @@ def get_customs_invoice(serialno):
     workspace_name = get_tempname()
     docstore.copy_docs_to_workspace(serialno=serialno,
                                     workspace=workspace_name,
-                                    clearws=True)
+                                    clearws=True,
+                                    fs=temp_fs)
 
     invoice = invoice_class(
         vobj,
-        docstore.workspace_fs.getsyspath(
+        temp_fs.getsyspath(
             fs.path.join(workspace_name, 'inv_data.yaml')
         )
     )
 
-    docstore.workspace_fs.removedir(workspace_name, recursive=True, force=True)
+    temp_fs.removedir(workspace_name, recursive=True, force=True)
     return invoice
 
 

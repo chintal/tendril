@@ -28,6 +28,7 @@ from flask_user import login_required
 from . import customs as blueprint
 
 from tendril.dox import customs as dxcustoms
+from tendril.dox import docstore
 from tendril.utils.fsutils import Crumb
 
 
@@ -46,7 +47,7 @@ def invoices(invoice_sno=None):
         return render_template('customs_invoices.html', stage=stage,
                                pagetitle="Customs Invoices")
     else:
-        docs = dxcustoms.get_customs_docs_list(invoice_sno)
+        docs = docstore.get_docs_list_for_serialno(invoice_sno)
         invoice = dxcustoms.get_customs_invoice(invoice_sno)
         stage = {'sno': invoice_sno,
                  'docs': docs,

@@ -85,21 +85,29 @@ def list_sno_documents(serialno=None, session=None):
         print result
 
 
+def get_docs_list_for_serialno(serialno):
+    documents = controller.get_sno_documents(serialno=serialno)
+    rval = []
+    for document in documents:
+        rval.append(ExposedDocument(document.doctype,
+                                    document.docpath,
+                                    docstore_fs,
+                                    document.created_at))
+    return rval
+
+
 @with_db
-def copy_docs_to_workspace(serialno=None, workspace=None, clearws=False, setwsno=True, session=None):
+def copy_docs_to_workspace(serialno=None, workspace=None, clearws=False, setwsno=True, fs=None, session=None):
     if serialno is None:
         raise AttributeError('serialno cannot be None')
+    if fs is None:
+        fs = workspace_fs
     if workspace is None:
-        workspace = workspace_fs.makeopendir('workspace', recursive=True)
+        workspace = fs.makeopendir('workspace', recursive=True)
     elif workspace.startswith('/'):
-        # workspace = workspace
-        # if clearws is True and iagree is False:
-        #     raise StandardError('Workspace defined outside the Instance Scratch Area, and clearws is set to True. '
-        #                         'All files within the provided path will be removed. '
-        #                         'Set the iagree argument to True to accept responsibility for what you\'re doing.')
-        raise NotImplementedError("Workspace must be relative to and under INSTANCE_ROOT/scratch")
+        raise ValueError('workspace should be a relative path')
     else:
-        workspace = workspace_fs.makeopendir(workspace, recursive=True)
+        workspace = fs.makeopendir(workspace, recursive=True)
     if clearws is True:
         for p in workspace.listdir(dirs_only=True):
             workspace.removedir(p, force=True)
