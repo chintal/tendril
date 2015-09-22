@@ -19,16 +19,15 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm import backref
 
 from tendril.utils.db import DeclBase
 from tendril.utils.db import BaseMixin
 from tendril.utils.db import TimestampMixin
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class DocStoreDocument(TimestampMixin, BaseMixin, DeclBase):
@@ -36,11 +35,13 @@ class DocStoreDocument(TimestampMixin, BaseMixin, DeclBase):
     doctype = Column(String, unique=False, nullable=True)
     efield = Column(String, unique=False, nullable=True)
 
-    serialno_id = Column(Integer, ForeignKey('SerialNumber.id'), nullable=False)
+    serialno_id = Column(Integer, ForeignKey('SerialNumber.id'),
+                         nullable=False)
 
     # This does not work :
     # serialno = relationship("SerialNumber", backref=backref("document", cascade="all, delete"))
     serialno = relationship("SerialNumber", backref="documents")
 
     def __repr__(self):
-        return '<DocStoreDocument {0:<20} {2:<25} {1:<40}>'.format(str(self.doctype), str(self.docpath), str(self.efield))
+        return '<DocStoreDocument {0:<20} {2:<25} {1:<40}>'.format(
+            str(self.doctype), str(self.docpath), str(self.efield))
