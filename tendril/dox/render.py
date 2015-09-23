@@ -43,18 +43,12 @@ generate their output files.
 
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import subprocess
 import jinja2
 
 import numpy
-from scipy import linspace
-
 import matplotlib
-matplotlib.use('Agg')
 from matplotlib import pyplot
 
 from tendril.utils.config import DOX_TEMPLATE_FOLDER
@@ -65,6 +59,11 @@ from tendril.utils.config import COMPANY_ADDRESS_LINE
 from tendril.utils.config import COMPANY_IEC
 
 from tendril.utils.colors import tableau20
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
+
+matplotlib.use('Agg')
 
 
 def format_currency(value):
@@ -380,8 +379,6 @@ def get_optimum_bins(plotdata_y):
                  be called.
     """
 
-    print plotdata_y
-
     max_p = max(plotdata_y)
     min_p = min(plotdata_y)
 
@@ -398,7 +395,7 @@ def get_optimum_bins(plotdata_y):
 
     # Computation of the cost function
     for i in xrange(numpy.size(n)):
-        edges = linspace(min_p, max_p, n[i]+1)  # Bin edges
+        edges = numpy.linspace(min_p, max_p, n[i]+1)  # Bin edges
         ki = pyplot.hist(plotdata_y, edges)     # Count # of events in bins
         ki = ki[0]
         k = numpy.mean(ki)                      # Mean of event count
