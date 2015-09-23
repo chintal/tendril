@@ -34,7 +34,7 @@ Module Summary:
 .. autosummary::
     EntityBase
     EntityElnComp
-    EntityGroup
+    EntityElnGroup
     import_pcb
 
 Module Members:

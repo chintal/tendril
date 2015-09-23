@@ -19,9 +19,6 @@ Vendors module documentation (:mod:`sourcing.vendors`)
 ======================================================
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import csv
 import time
@@ -29,6 +26,9 @@ import time
 import tendril.entityhub.maps
 from tendril.utils.types import currency
 from tendril.utils import config
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 class VendorInvoiceLine(object):
@@ -146,7 +146,8 @@ class VendorBase(object):
         self._mappath = None
         self._map = None
         self._dname = dname
-        self._currency = currency.CurrencyDefinition(currency_code, currency_symbol)
+        self._currency = currency.CurrencyDefinition(currency_code,
+                                                     currency_symbol)
         self._pclass = pclass
         self._order = None
         self._orderbasecosts = []
@@ -222,7 +223,10 @@ class VendorBase(object):
         candidates = [self.get_vpart(x) for x in candidate_names]
 
         candidates = [x for x in candidates if x.abs_moq <= rqty]
-        candidates = [x for x in candidates if x.vqtyavail is None or x.vqtyavail > rqty or x.vqtyavail == -2]
+        candidates = [x for x in candidates
+                      if x.vqtyavail is None or
+                      x.vqtyavail > rqty or
+                      x.vqtyavail == -2]
 
         oqty = rqty
 
@@ -231,7 +235,9 @@ class VendorBase(object):
             return self, None, None, None, None, None
 
         selcandidate = candidates[0]
-        tcost = self.get_effective_price(selcandidate.get_price(rqty)[0]).extended_price(rqty).native_value
+        tcost = self.get_effective_price(
+            selcandidate.get_price(rqty)[0]
+        ).extended_price(rqty).native_value
 
         for candidate in candidates:
             ubprice, nbprice = candidate.get_price(oqty)
@@ -242,8 +248,11 @@ class VendorBase(object):
                 selcandidate = candidate
 
         if selcandidate.vqtyavail == -2:
-            logger.warning("Vendor available quantity could not be confirmed. Verify manually : "
-                           + self.name + " " + selcandidate.vpno + os.linesep + os.linesep + os.linesep)
+            logger.warning(
+                "Vendor available quantity could not be confirmed. "
+                "Verify manually : " + self.name + " " + selcandidate.vpno +
+                os.linesep + os.linesep + os.linesep
+            )
 
         ubprice, nbprice = selcandidate.get_price(oqty)
         effprice = self.get_effective_price(ubprice)
@@ -262,14 +271,16 @@ class VendorBase(object):
                 ubprice = nubprice
                 nbprice = nnbprice
                 effprice = neffprice
-            elif nubprice.unit_price.native_value < ubprice.unit_price.native_value * 0.5:
+            elif nubprice.unit_price.native_value < \
+                    ubprice.unit_price.native_value * 0.5:
                 urationale = "UP Decrease > 40%"
                 olduprice = ubprice
                 oqty = nbprice.moq
                 ubprice = nubprice
                 nbprice = nnbprice
                 effprice = neffprice
-        return self, selcandidate.vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice
+        return self, selcandidate.vpno, oqty, nbprice, \
+            ubprice, effprice, urationale, olduprice
 
     def add_order_additional_cost_component(self, desc, percent):
         self._orderadditionalcosts.append((desc, percent))
@@ -277,8 +288,10 @@ class VendorBase(object):
     def get_effective_price(self, price):
         effective_unitp = price.unit_price.source_value
         for additional_cost in self._orderadditionalcosts:
-            effective_unitp += price.unit_price.source_value * float(additional_cost[1]) / 100
-        return VendorPrice(price.moq, effective_unitp, self.currency, price.oqmultiple)
+            effective_unitp += price.unit_price.source_value * float(additional_cost[1]) / 100  # noqa
+        return VendorPrice(
+            price.moq, effective_unitp, self.currency, price.oqmultiple
+        )
 
     def get_additional_costs(self, price):
         rval = []
@@ -297,31 +310,44 @@ class VendorBase(object):
         if isinstance(value, currency.CurrencyValue):
             self._orderbasecosts.append((desc, value))
         else:
-            self._orderbasecosts.append((desc, currency.CurrencyValue(value, self.currency)))
+            self._orderbasecosts.append(
+                (desc, currency.CurrencyValue(value, self.currency))
+            )
 
     def add_to_order(self, line, orderref=None):
         if self._order is None:
             self._order = VendorOrder(self, orderref)
-        logger.info("Adding to " + self._name + " order : " + line[0] + " : " + str(line[3]))
+        logger.info("Adding to " + self._name + " order : " +
+                    line[0] + " : " + str(line[3])
+                    )
         self._order.add(line)
 
     def _dump_open_order(self, path):
         orderfile = os.path.join(path, self._name + '-order.csv')
         with open(orderfile, 'w') as orderf:
             w = csv.writer(orderf)
-            w.writerow([self._dname + " Order", None, None, None, None, time.strftime("%c")])
-            w.writerow(["Ident", "Vendor Part No", "Quantity",
-                        "Unit Price (" + self._currency.symbol + ")",
-                        "Extended Price (" + self._currency.symbol + ")",
-                        "Effective Price (" + currency.native_currency_defn.symbol + ")"
-                        ])
+            w.writerow(
+                [self._dname + " Order", None, None,
+                 None, None, time.strftime("%c")]
+            )
+            w.writerow(
+                ["Ident", "Vendor Part No", "Quantity",
+                 "Unit Price (" + self._currency.symbol + ")",
+                 "Extended Price (" + self._currency.symbol + ")",
+                 "Effective Price (" + currency.native_currency_defn.symbol +
+                 ")"
+                 ]
+            )
             for line in self._order.lines:
                 w.writerow([line[0], line[2], line[3],
                             line[5].unit_price.source_value,
                             line[5].extended_price(line[3]).source_value,
                             line[6].extended_price(line[3]).native_value])
             for basecost in self._orderbasecosts:
-                w.writerow([None, basecost[0], None, None, basecost[1].source_value, basecost[1].native_value])
+                w.writerow(
+                    [None, basecost[0], None, None, basecost[1].source_value,
+                     basecost[1].native_value]
+                )
 
     def _generate_purchase_order(self, path):
         stagebase = {}
@@ -329,7 +355,8 @@ class VendorBase(object):
 
     def finalize_order(self, path):
         if self._order is None or len(self._order) == 0:
-            logger.debug("Nothing in the order, not generating order file : " + self._name)
+            logger.debug("Nothing in the order, "
+                         "not generating order file : " + self._name)
             return
         logger.info("Writing " + self._dname + " order to Folder : " + path)
         self._dump_open_order(path)
@@ -464,7 +491,9 @@ class VendorPartBase(object):
         return rprice, rnextprice
 
     def __repr__(self):
-        return '<{0} {1} {2}>'.format(self.__class__, self.vpno,  str(self._vpartdesc))
+        return '<{0} {1} {2}>'.format(
+            self.__class__, self.vpno,  str(self._vpartdesc)
+        )
 
 
 class VendorElnPartBase(VendorPartBase):

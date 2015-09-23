@@ -19,16 +19,17 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import csv
 import copy
 import os
 
 from tendril.gedaif import gsymlib
-import tendril.inventory.guidelines
+from tendril.inventory import guidelines
 import tendril.sourcing.electronics
+
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class CompositeOrderElem(object):
@@ -39,20 +40,23 @@ class CompositeOrderElem(object):
         self._resqty = rqty - shortage
         self._shortage = shortage
         try:
-            self._sources = tendril.sourcing.electronics.get_sourcing_information(self.ident, self.gl_compl_qty,
-                                                                                avendors=self._order._allowed_vendors,
-                                                                                allvendors=True
-                                                                                )
+            self._sources = tendril.sourcing.electronics.get_sourcing_information(  # noqa
+                self.ident, self.gl_compl_qty,
+                avendors=self._order._allowed_vendors,
+                allvendors=True
+            )
             self._selsource = self._sources[0]
             for vsinfo in self._sources:
-                if self.get_eff_acq_price(vsinfo) < self.get_eff_acq_price(self._selsource):
+                if self.get_eff_acq_price(vsinfo) < \
+                        self.get_eff_acq_price(self._selsource):
                     self._selsource = vsinfo
-        except tendril.sourcing.electronics.SourcingException:
+        except tendril.sourcing.electronics.SourcingException:  # noqa
             self._sources = None
             self._selsource = None
 
     def get_eff_acq_price(self, source):
-        return (self._shortage + (source[2] - self._shortage)/2) * source[5].unit_price.native_value
+        return (self._shortage + (source[2] - self._shortage)/2) * \
+            source[5].unit_price.native_value
 
     @property
     def ident(self):
@@ -78,7 +82,9 @@ class CompositeOrderElem(object):
 
     @property
     def gl_compl_qty(self):
-        return tendril.inventory.guidelines.electronics_qty.get_compliant_qty(self.ident, self.shortage)
+        return guidelines.electronics_qty.get_compliant_qty(
+            self.ident, self.shortage
+        )
 
     @property
     def sources(self):
@@ -90,12 +96,16 @@ class CompositeOrderElem(object):
 
     @property
     def sorted_other_sources(self):
-        return sorted(self.other_sources, key=lambda x: x[5].extended_price(x[2]).native_value)
+        return sorted(
+            self.other_sources,
+            key=lambda x: x[5].extended_price(x[2]).native_value
+        )
 
     @property
     def other_sources(self):
         if self._sources is not None:
-            return [x for x in self._sources if x[0].name != self._selsource[0].name]
+            return [x for x in self._sources
+                    if x[0].name != self._selsource[0].name]
         else:
             return []
 
@@ -112,10 +122,13 @@ class CompositeOrderElem(object):
 
     def order(self):
         vobj = self._selsource[0]
-        vobj.add_to_order([self.ident] + list(self._selsource), self._order.orderref)
+        vobj.add_to_order(
+            [self.ident] + list(self._selsource), self._order.orderref
+        )
 
     def __repr__(self):
-        return str((self.ident, self.is_sourceable, self.selsource, len(self.other_sources))) + os.linesep
+        return str((self.ident, self.is_sourceable, self.selsource,
+                    len(self.other_sources))) + os.linesep
 
 
 class CompositeOrder(object):
@@ -184,7 +197,7 @@ class CompositeOrder(object):
             return rval
 
     def _render_vsinfo(self, vsinfo, row, basereq=None):
-        vobj, vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice = vsinfo
+        vobj, vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice = vsinfo  # noqa
         if basereq is None:
             basereq = oqty
 
@@ -204,22 +217,22 @@ class CompositeOrder(object):
 
         if nbprice is not None:
             row[headers.index("Next Break Qty")] = nbprice.moq
-            row[headers.index("NB Unit Price")] = nbprice.unit_price.source_value
-            row[headers.index("NB Extended Price")] = nbprice.extended_price(nbprice.moq).source_value
+            row[headers.index("NB Unit Price")] = nbprice.unit_price.source_value  # noqa
+            row[headers.index("NB Extended Price")] = nbprice.extended_price(nbprice.moq).source_value   # noqa
 
         if ubprice is not None:
             row[headers.index("Used Break Qty")] = ubprice.moq
-            row[headers.index("UB Unit Price")] = ubprice.unit_price.source_value
-            row[headers.index("UB Extended Price")] = ubprice.extended_price(oqty).source_value
-            row[headers.index("Unit Price")] = "%.2f" % ubprice.unit_price.native_value
+            row[headers.index("UB Unit Price")] = ubprice.unit_price.source_value  # noqa
+            row[headers.index("UB Extended Price")] = ubprice.extended_price(oqty).source_value  # noqa
+            row[headers.index("Unit Price")] = "%.2f" % ubprice.unit_price.native_value  # noqa
 
         if effprice is not None:
-            row[headers.index("Effective Unit Price")] = "%.2f" % effprice.unit_price.native_value
-            row[headers.index("Effective Extended Price")] = "%.2f" % effprice.extended_price(oqty).native_value
-            row[headers.index("Effective Excess Price")] = "%.2f" % ((oqty - basereq) * effprice.unit_price.native_value)
+            row[headers.index("Effective Unit Price")] = "%.2f" % effprice.unit_price.native_value  # noqa
+            row[headers.index("Effective Extended Price")] = "%.2f" % effprice.extended_price(oqty).native_value  # noqa
+            row[headers.index("Effective Excess Price")] = "%.2f" % ((oqty - basereq) * effprice.unit_price.native_value)  # noqa
 
         if olduprice is not None:
-            row[headers.index("Lower Break Unit Price")] = "%.2f" % olduprice.unit_price.native_value
+            row[headers.index("Lower Break Unit Price")] = "%.2f" % olduprice.unit_price.native_value  # noqa
 
         row[headers.index("Excess Rationale")] = urationale
         return row
@@ -237,7 +250,9 @@ class CompositeOrder(object):
         row[headers.index("Buy Qty")] = line.gl_compl_qty
 
         if line.selsource is not None:
-            row = self._render_vsinfo(line.selsource, row, basereq=line.shortage)
+            row = self._render_vsinfo(
+                line.selsource, row, basereq=line.shortage
+            )
             row.append('<--')
         writer.writerow(row)
 
@@ -270,13 +285,17 @@ class CompositeOrder(object):
         accepted_vendors = []
         # Remove Unsourceable
         rebalance_pass = 0
-        logger.debug("Making Rebalance Pass " + str(rebalance_pass)
-                     + ": Remaining Lines : " + str(len(shadowlines)))
-        # For some unknown reason this doesn't catch all the unsourceable idents in the first pass
+        logger.debug("Making Rebalance Pass " + str(rebalance_pass) +
+                     ": Remaining Lines : " + str(len(shadowlines)))
+        # For some unknown reason this doesn't catch all the
+        # unsourceable idents in the first pass
         for i in range(5):
             for line in shadowlines:
                 if line.is_sourceable is False:
-                    logger.debug("Accepting unsourceable line : " + line.ident + " p1." + str(i))
+                    logger.debug(
+                        "Accepting unsourceable line : " + line.ident +
+                        " p1." + str(i)
+                    )
                     shadowlines.remove(line)
         passes = 10
         while passes > 0:
@@ -287,18 +306,30 @@ class CompositeOrder(object):
             for line in shadowlines:
                 try:
                     if line.selsource[0].name in accepted_vendors:
-                        logger.debug("Accepting line sourced by standard means : " + line.ident)
+                        logger.debug(
+                            "Accepting line sourced by standard means : " +
+                            line.ident
+                        )
                         shadowlines.remove(line)
                     else:
                         if not line.other_sources:
-                            logger.info("Accepting Vendor : " + line.selsource[0].name +
-                                        " : Unique Source for " + line.ident)
+                            logger.info(
+                                "Accepting Vendor : " +
+                                line.selsource[0].name +
+                                " : Unique Source for " +
+                                line.ident)
                             accepted_vendors.append(line.selsource[0].name)
-                            logger.debug("Accepting uniquely sourced line : " + line.ident)
+                            logger.debug(
+                                "Accepting uniquely sourced line : " +
+                                line.ident
+                            )
                             shadowlines.remove(line)
-                        elif line.selsource[0].order_baseprice.native_value == 0:
-                            logger.info("Accepting Vendor : " + line.selsource[0].name +
-                                        " since Base Order Cost is 0")
+                        elif line.selsource[0].order_baseprice.native_value == 0:  # noqa
+                            logger.info(
+                                "Accepting Vendor : " +
+                                line.selsource[0].name +
+                                " since Base Order Cost is 0"
+                            )
                             accepted_vendors.append(line.selsource[0].name)
                             shadowlines.remove(line)
                 except Exception:
@@ -311,19 +342,19 @@ class CompositeOrder(object):
 
             for line in shadowlines:
                 if line.selsource[0].name not in candidate_vendors.keys():
-                    candidate_vendors[line.selsource[0].name] = [line.selsource[0].order_baseprice, 0]
+                    candidate_vendors[line.selsource[0].name] = [line.selsource[0].order_baseprice, 0]  # noqa
                 vsinfo = line.sorted_other_sources[0]
                 saving = line.excess(vsinfo)
                 candidate_vendors[line.selsource[0].name][1] += saving
 
             if len(candidate_vendors) > 0:
                 cvendors = sorted(candidate_vendors.keys(),
-                                  key=lambda x: candidate_vendors[x][1] - candidate_vendors[x][0].native_value,
+                                  key=lambda x: candidate_vendors[x][1] - candidate_vendors[x][0].native_value,  # noqa
                                   reverse=True)
-                if candidate_vendors[cvendors[0]][1] > candidate_vendors[cvendors[0]][0].native_value:
-                    logger.info("Accepting Vendor " + cvendors[0]
-                                + " for an estimated saving of "
-                                + str(candidate_vendors[cvendors[0]][1] - candidate_vendors[cvendors[0]][0].native_value))
+                if candidate_vendors[cvendors[0]][1] > candidate_vendors[cvendors[0]][0].native_value:  # noqa
+                    logger.info("Accepting Vendor " + cvendors[0] +
+                                " for an estimated saving of " +
+                                str(candidate_vendors[cvendors[0]][1] - candidate_vendors[cvendors[0]][0].native_value))  # noqa
                     accepted_vendors.append(cvendors[0])
                 else:
                     break
@@ -337,22 +368,27 @@ class CompositeOrder(object):
                 for line in shadowlines:
                     try:
                         if line.selsource[0].name in accepted_vendors:
-                            logger.debug("Accepting line sourced by standard means : " + line.ident)
+                            logger.debug(
+                                "Accepting line sourced by standard means: " +
+                                line.ident
+                            )
                             shadowlines.remove(line)
                     except Exception:
                         print line
                         raise Exception
 
-        # TODO Anything left which doesn't have an accepted alternate source should trigger vendor acceptance.
+        # TODO Anything left which doesn't have an accepted alternate source
+        # should trigger vendor acceptance.
 
-        # TODO Anything still left should be switched to accepted sources here.
+        # TODO Anything still left should be switched to accepted sources
+        # here.
 
-        logger.info("Finished all Rebalance Passes " + str(rebalance_pass)
-                    + ": Remaining Lines : " + str(len(shadowlines)))
+        logger.info("Finished all Rebalance Passes " + str(rebalance_pass) +
+                    ": Remaining Lines : " + str(len(shadowlines)))
         # if len(shadowlines) > 0:
         #     print "Unhandled Idents :"
         # for line in shadowlines:
-        #     print line.ident, line.selsource[0].name, len(line.other_sources)
+        #     print line.ident, line.selsource[0].name, len(line.other_sources)  # noqa
         # print "Accepted Vendors :"
         # for vendor in accepted_vendors:
         #     print vendor
