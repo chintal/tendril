@@ -43,15 +43,18 @@ class TestSuiteResult(TimestampMixin, BaseMixin, DeclBase):
     desc = Column(String, unique=False, nullable=True)
     title = Column(String, unique=False, nullable=True)
 
-    serialno_id = Column(Integer, ForeignKey('SerialNumber.id'), nullable=False)
+    serialno_id = Column(Integer,
+                         ForeignKey('SerialNumber.id'),
+                         nullable=False
+                         )
     serialno = relationship("SerialNumber", backref="test_suites")
 
     passed = Column(Boolean, unique=False, nullable=False)
 
     def __repr__(self):
-        return '<TestSuiteResult {0:<20} {2:<25} {1:<40}>'.format(str(self.created_at),
-                                                                  str(self.serialno),
-                                                                  str(self.suite_class))
+        return '<TestSuiteResult {0:<20} {2:<25} {1:<40}>'.format(
+            str(self.created_at), str(self.serialno), str(self.suite_class)
+        )
 
 
 class TestResult(TimestampMixin, BaseMixin, DeclBase):
@@ -62,13 +65,18 @@ class TestResult(TimestampMixin, BaseMixin, DeclBase):
     desc = Column(String, unique=False, nullable=True)
     title = Column(String, unique=False, nullable=True)
 
-    testsuite_id = Column(Integer, ForeignKey('TestSuiteResult.id'), nullable=False)
+    testsuite_id = Column(Integer,
+                          ForeignKey('TestSuiteResult.id'),
+                          nullable=False
+                          )
     testsuite = relationship("TestSuiteResult", backref="tests")
 
     result = Column(JSON, unique=False, nullable=False)
     passed = Column(Boolean, unique=False, nullable=False)
 
     def __repr__(self):
-        return '<TestResult {0:<20} {2:<25} {1:<40}>'.format(str(self.created_at),
-                                                             str(self.testsuite.serialno),
-                                                             str(self.test_class))
+        return '<TestResult {0:<20} {2:<25} {1:<40}>'.format(
+            str(self.created_at),
+            str(self.testsuite.serialno),
+            str(self.test_class)
+        )

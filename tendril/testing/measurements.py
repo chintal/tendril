@@ -113,8 +113,12 @@ class TestSimpleMeasurement(TestMeasurementBase):
             if self._inputchannel is None:
                 raise IOError("Input channel is not defined")
             self._input = self._inputchannel.get()
-            if self._input.unitclass is not None and not self._input.unitclass == self._inputtype:
-                raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
+            if self._input.unitclass is not None and \
+                    not self._input.unitclass == self._inputtype:
+                raise TypeError(
+                    "Expected " + self._inputtype.unitclass +
+                    ", got " + type(self._input)
+                )
 
         self._ts = arrow.utcnow()
 
@@ -127,7 +131,9 @@ class TestSimpleMeasurement(TestMeasurementBase):
         raise NotImplementedError
 
     def render(self):
-        return {'instrument': (self._instrument.ident if self._instrument is not None else None),
+        return {'instrument':
+                (self._instrument.ident if self._instrument is not None
+                 else None),
                 'output': self._output,
                 'input': self._input}
 
@@ -144,9 +150,10 @@ class DCVoltageMeasurement(TestSimpleMeasurement):
 
     def do_measurement(self):
         """
-        This function is present only because the instrument return value is not of a
-        SignalPoint Type. Instrument classes should be changed to use Signal Point type
-        instead and this class should fall back to the parent's implementation.
+        This function is present only because the instrument return value is
+        not of a SignalPoint Type. Instrument classes should be changed to
+        use Signal Point type instead and this class should fall back to the
+        parent's implementation.
         """
         logger.debug("Making measurement : " + repr(self))
         if self._output is not None:
@@ -161,8 +168,12 @@ class DCVoltageMeasurement(TestSimpleMeasurement):
             if self._inputchannel is None:
                 raise IOError("Input channel is not defined")
             self._input = self._inputchannel.get()
-            # if self._input.unitclass and not self._input.unitclass == self._inputtype:
-            #     raise TypeError("Expected " + self._inputtype.unitclass + ", got " + type(self._input))
+            # if self._input.unitclass and \
+            #         not self._input.unitclass == self._inputtype:
+            #     raise TypeError(
+            #         "Expected " + self._inputtype.unitclass +
+            #         ", got " + type(self._input)
+            #     )
         logger.info("Measured Voltage: " + repr(self._input))
         self._ts = arrow.utcnow()
 
@@ -203,8 +214,9 @@ class TestUserMeasurement(TestMeasurementBase):
 
     def do_measurement(self):
         while self.input_valid is False:
-            self._user_input = raw_input(terminal.CYAN + self._string +
-                                         ' [y/n] : ' + terminal.NORMAL).strip()
+            self._user_input = raw_input(
+                terminal.CYAN + self._string + ' [y/n] : ' + terminal.NORMAL
+            ).strip()
         self._ts = arrow.utcnow()
 
     @property

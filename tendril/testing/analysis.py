@@ -42,7 +42,8 @@ def sort_by_order(desc, order):
 
 
 @with_db
-def get_test_suite_objects(serialno=None, order_by='FILE_ORDER', session=None):
+def get_test_suite_objects(serialno=None, order_by='FILE_ORDER',
+                           session=None):
     # This reconstructs the test objects from the database. Using SQLAlchemy
     # as the ORM that it is, and letting it handle the object creation would
     # be infinitely better. It isn't done here since the models are separate
@@ -70,7 +71,8 @@ def get_test_suite_objects(serialno=None, order_by='FILE_ORDER', session=None):
             suite.dummy = True
             ldummy_suites.append(suite)
 
-        file_order = [(x.desc, [(y.desc, y.passfailonly) for y in x.tests]) for x in ldummy_suites]
+        file_order = [(x.desc, [(y.desc, y.passfailonly) for y in x.tests])
+                      for x in ldummy_suites]
         suite_order = [x[0] for x in file_order]
         test_order = {x[0]: x[1] for x in file_order}
 
@@ -86,21 +88,23 @@ def get_test_suite_objects(serialno=None, order_by='FILE_ORDER', session=None):
 
     # for suite_name in suite_names:
     for desc, name in suite_descs:
-        suite_db_obj = controller.get_latest_test_suite(serialno=serialno,
-                                                        suite_class=name,
-                                                        descr=desc,
-                                                        session=session)
-        if suite_db_obj.suite_class == "<class 'tendril.testing.testbase.TestSuiteBase'>":
+        suite_db_obj = controller.get_latest_test_suite(
+            serialno=serialno, suite_class=name, descr=desc, session=session
+        )
+        if suite_db_obj.suite_class == \
+                "<class 'tendril.testing.testbase.TestSuiteBase'>":
             suite_obj = TestSuiteBase()
         else:
-            raise ValueError("Unrecognized suite_class : " + suite_db_obj.suite_class)
+            raise ValueError("Unrecognized suite_class : " +
+                             suite_db_obj.suite_class)
 
         suite_obj.desc = suite_db_obj.desc
         suite_obj.title = suite_db_obj.title
         suite_obj.ts = suite_db_obj.created_at
         suite_obj.serialno = serialno
         if order_by == 'FILE_ORDER':
-            test_display_params = {x[0]: x[1] for x in test_order[suite_obj.desc]}
+            test_display_params = {x[0]: x[1]
+                                   for x in test_order[suite_obj.desc]}
 
         for test_db_obj in suite_db_obj.tests:
             class_name = rex_class.match(test_db_obj.test_class).group('cl')
@@ -135,7 +139,9 @@ class ResultGraphCollector(object):
     def _make_graph(self, color='black', lw=2, marker=None,
                     xscale='linear', yscale='linear',
                     xlabel='', ylabel=''):
-        outpath = os.path.join(TEMPDIR, 'GRAPH_GROUP_' + get_tempname() + '.png')
+        outpath = os.path.join(TEMPDIR,
+                               'GRAPH_GROUP_' + get_tempname() + '.png'
+                               )
         for graph in self._collected:
             pyplot.plot(graph[0], graph[1], color=color, lw=lw, marker=marker)
         pyplot.xscale(xscale)
@@ -203,7 +209,9 @@ class ResultLineCollector(object):
     @property
     def measured(self):
         if self._parser is not None:
-            return (sum(self._collected) / len(self._collected)).quantized_repr
+            return (
+                sum(self._collected) / len(self._collected)
+            ).quantized_repr
         else:
             return 'VARIOUS'
 
@@ -230,7 +238,9 @@ class ResultLineCollector(object):
     @property
     def std_dev(self):
         if self._parser is not None:
-            return self._parser(numpy.std([float(x) for x in self._collected])).integral_repr
+            return self._parser(
+                numpy.std([float(x) for x in self._collected])
+            ).integral_repr
         return None
 
 
@@ -261,8 +271,10 @@ class ResultTestCollector(object):
 
     def add_test(self, test):
         if str(test.__class__) != str(self._dummy_test.__class__):
-            raise TypeError("Test Class does not match : " + str(test.__class__) +
-                            ", expected " + str(self._dummy_test.__class__))
+            raise TypeError(
+                "Test Class does not match : " + str(test.__class__) +
+                ", expected " + str(self._dummy_test.__class__)
+            )
         self._total_count += 1
         if test.passed is True:
             self._passed_count += 1
@@ -301,8 +313,9 @@ class ResultSuiteCollector(object):
         self._total_count = 0
         self._passed_count = 0
         for test in dummy_suite.tests:
-            self._test_collectors.append(ResultTestCollector(test,
-                                                             include_failed=include_failed))
+            self._test_collectors.append(
+                ResultTestCollector(test, include_failed=include_failed)
+            )
 
     def get_collector(self, name, desc):
         rval = []
@@ -319,8 +332,10 @@ class ResultSuiteCollector(object):
 
     def add_suite(self, suite):
         if str(suite.__class__) != str(self._dummy_suite.__class__):
-            raise TypeError("Suite Class does not match : " + str(suite.__class__) +
-                            ", expected " + str(self._dummy_suite.__class__))
+            raise TypeError(
+                "Suite Class does not match : " + str(suite.__class__) +
+                ", expected " + str(self._dummy_suite.__class__)
+            )
         self._total_count += 1
         if suite.passed is True:
             self._passed_count += 1
@@ -364,8 +379,9 @@ class ResultCollector(object):
     def __init__(self, dummy_suites, include_failed=False):
         self._suite_collectors = []
         for suite in dummy_suites:
-            self._suite_collectors.append(ResultSuiteCollector(suite,
-                                                               include_failed=include_failed))
+            self._suite_collectors.append(
+                ResultSuiteCollector(suite, include_failed=include_failed)
+            )
 
     def add_suites_set(self, suites):
         for idx, suite in enumerate(suites):
@@ -384,7 +400,8 @@ class ResultCollector(object):
 
 
 @with_db
-def get_device_test_summary(devicetype=None, include_failed=False, session=None):
+def get_device_test_summary(devicetype=None, include_failed=False,
+                            session=None):
     projectfolder = projects.cards[devicetype]
     bomobj = import_pcb(cardfolder=projectfolder)
     bomobj.configure_motifs(devicetype)
@@ -407,4 +424,3 @@ def get_device_test_summary(devicetype=None, include_failed=False, session=None)
             collector.add_suites_set(suites)
 
     return collector
-
