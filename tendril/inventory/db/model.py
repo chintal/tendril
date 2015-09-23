@@ -19,17 +19,18 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 from sqlalchemy import Column, String
 
 from tendril.utils.db import DeclBase
 from tendril.utils.db import BaseMixin
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class InventoryLocationCode(BaseMixin, DeclBase):
     name = Column(String)
 
     def __repr__(self):
-        return "<InventoryLocationCode(id = %s, name='%s')>" % (self.id, self.name)
+        return "<InventoryLocationCode" \
+               "(id = %s, name='%s')>" % (self.id, self.name)

@@ -28,6 +28,11 @@ from tendril.entityhub.guidelines import QtyGuidelines
 from tendril.utils.config import INSTANCE_ROOT
 
 
-electronics_qty_file = os.path.join(INSTANCE_ROOT, 'inventory', 'guidelines', 'electronics-qty.yaml')
-logger.info("Loading Electronics Inventory Qty Guidelines from file : " + os.linesep + electronics_qty_file)
+electronics_qty_file = os.path.join(INSTANCE_ROOT,
+                                    'inventory',
+                                    'guidelines',
+                                    'electronics-qty.yaml'
+                                    )
+logger.info("Loading Electronics Inventory Qty Guidelines from file : " +
+            os.linesep + electronics_qty_file)
 electronics_qty = QtyGuidelines(electronics_qty_file)
