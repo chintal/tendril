@@ -74,8 +74,8 @@ def get_iec60063_params():
 
 
 def get_iec60063_contextpart(stype, series, start=None, end=None):
-    return {"iec60063vals": [i for i in iec60063.gen_vals(iec60063.get_series(series),
-                                                          iec60063.get_ostr(stype),
+    return {"iec60063vals": [i for i in iec60063.gen_vals(iec60063.get_series(series),  # noqa
+                                                          iec60063.get_ostr(stype),  # noqa
                                                           start, end)],
             "iec60063stype": stype,
             "iec60063series": series,
@@ -90,7 +90,7 @@ def motif_description(motifname=None):
     stage = {'crumbroot': "/conventions",
              'motifname': motifname,
              'motif': get_motif_render(motifname),
-             'breadcrumbs': get_path_breadcrumbs(motifname, rootst="Conventions  /  Motifs")}
+             'breadcrumbs': get_path_breadcrumbs(motifname, rootst="Conventions  /  Motifs")}  # noqa
     return render_template('motif.html', stage=stage,
                            pagetitle='MOTIF ' + motifname)
 

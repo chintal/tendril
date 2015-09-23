@@ -51,6 +51,7 @@ def get_instance_logo():
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static', 'images'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
-
+    return send_from_directory(
+        os.path.join(app.root_path, 'static', 'images'),
+        'favicon.ico', mimetype='image/vnd.microsoft.icon'
+    )

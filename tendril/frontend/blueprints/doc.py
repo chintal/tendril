@@ -28,7 +28,9 @@ from tendril.utils.config import TENDRIL_ROOT
 
 
 doc = Blueprint('doc', __name__,
-                static_folder=os.path.join(TENDRIL_ROOT, os.pardir, 'doc', '_build', 'dirhtml'))
+                static_folder=os.path.join(
+                    TENDRIL_ROOT, os.pardir, 'doc', '_build', 'dirhtml'
+                ))
 
 
 @doc.route('/')

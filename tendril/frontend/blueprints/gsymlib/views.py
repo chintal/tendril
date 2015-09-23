@@ -83,14 +83,14 @@ def get_geda_browser_context(path):
         show_images_st = 'on'
 
     if not flatten_folders:
-        subfolders = [Subfolder(name=x, path=os.path.relpath(os.path.join(path, x), GEDA_SYMLIB_ROOT))
-                      for x in os.listdir(path) if os.path.isdir(os.path.join(path, x))]
+        subfolders = [Subfolder(name=x, path=os.path.relpath(os.path.join(path, x), GEDA_SYMLIB_ROOT))  # noqa
+                      for x in os.listdir(path) if os.path.isdir(os.path.join(path, x))]  # noqa
     else:
         subfolders = []
 
     symbols = tendril.gedaif.gsymlib.gen_symlib(path,
-                                                include_generators=show_generators,
-                                                resolve_generators=resolve_generators,
+                                                include_generators=show_generators,  # noqa
+                                                resolve_generators=resolve_generators,  # noqa
                                                 recursive=flatten_folders)
     if symbols is None:
         symbols = []
@@ -102,7 +102,7 @@ def get_geda_browser_context(path):
 
     context = {'path': os.path.relpath(path, GEDA_SYMLIB_ROOT),
                'subfolders': sorted(subfolders, key=lambda y: y.name),
-               'breadcrumbs': get_path_breadcrumbs(path, GEDA_SYMLIB_ROOT, rootst="gEDA Symbol Library"),
+               'breadcrumbs': get_path_breadcrumbs(path, GEDA_SYMLIB_ROOT, rootst="gEDA Symbol Library"),  # noqa
                'symbols': sorted(symbols, key=lambda y: y.ident),
                'show_images': show_images,
                'resolve_generators': resolve_generators,
@@ -120,12 +120,12 @@ def get_geda_symbol_context(ident):
     navpath = os.path.relpath(symbol[0].fpath, GEDA_SYMLIB_ROOT)
     breadcrumbs = get_path_breadcrumbs(navpath, rootst="gEDA Symbol Library")
     if symbol[0].is_virtual:
-        breadcrumbs.insert(-1, Crumb(name=os.path.splitext(symbol[0].fname)[0] + '.gen',
-                                     path='detail/' + os.path.splitext(symbol[0].fname)[0] + '.gen'))
+        breadcrumbs.insert(-1, Crumb(name=os.path.splitext(symbol[0].fname)[0] + '.gen',  # noqa
+                                     path='detail/' + os.path.splitext(symbol[0].fname)[0] + '.gen'))  # noqa
 
     return {'ident': ident,
             'symbol': symbol[0],
-            'sympaths': [os.path.relpath(sym.fpath, GEDA_SYMLIB_ROOT) for sym in symbol],
+            'sympaths': [os.path.relpath(sym.fpath, GEDA_SYMLIB_ROOT) for sym in symbol],  # noqa
             'imgpaths': [sym.img_repr_fname for sym in symbol],
             'breadcrumbs': breadcrumbs}
 
@@ -138,7 +138,7 @@ def get_geda_generator_context(gen):
 
     return {'genname': gen,
             'generator': generator,
-            'breadcrumbs': get_path_breadcrumbs(navpath, rootst="gEDA Symbol Library"),
+            'breadcrumbs': get_path_breadcrumbs(navpath, rootst="gEDA Symbol Library"),  # noqa
             'sympaths': [os.path.relpath(generator.fpath, GEDA_SYMLIB_ROOT)],
             'genpath': os.path.relpath(generator.genpath, GEDA_SYMLIB_ROOT),
             'genobj': genobj}

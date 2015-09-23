@@ -95,7 +95,7 @@ def pcbs(pcbname=None):
         stage_pcbs = [{'name': k,
                        'configdata': ConfigsFile(v)}
                       for k, v in ehprojects.pcbs.iteritems()]
-        stage = {'pcbs': sorted([x for x in stage_pcbs if x['configdata'].status == 'Experimental'],
+        stage = {'pcbs': sorted([x for x in stage_pcbs if x['configdata'].status == 'Experimental'],  # noqa
                                 key=lambda y: y['name']) +
                          sorted([x for x in stage_pcbs if x['configdata'].status == 'Active'],  # noqa
                                 key=lambda y: y['name']) +
@@ -150,7 +150,7 @@ def products(productname=None):
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Products", path="products/"),
-                                 Crumb(name=productname, path="pcbs/" + productname)],
+                                 Crumb(name=productname, path="pcbs/" + productname)],  # noqa
                  }
         return render_template('entityhub_product_detail.html', stage=stage,
                                pagetitle="Products")

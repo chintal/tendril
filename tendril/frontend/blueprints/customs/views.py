@@ -57,11 +57,13 @@ def invoices(invoice_sno=None):
                  'crumbroot': '/sourcing',
                  'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
                                  Crumb(name="Customs", path="customs/"),
-                                 Crumb(name="Invoices", path="customs/invoice/"),
-                                 Crumb(name=invoice_sno, path="customs/invoice/" + invoice_sno)],
+                                 Crumb(name="Invoices", path="customs/invoice/"),  # noqa
+                                 Crumb(name=invoice_sno, path="customs/invoice/" + invoice_sno)],  # noqa
                  }
-        return render_template('customs_invoice_detail.html', stage=stage,
-                               pagetitle=invoice_sno + " Customs Document Set")
+        return render_template(
+            'customs_invoice_detail.html', stage=stage,
+            pagetitle=invoice_sno + " Customs Document Set"
+        )
 
 
 @blueprint.route('/')
