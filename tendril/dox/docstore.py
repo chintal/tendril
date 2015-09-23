@@ -74,6 +74,10 @@ class ExposedDocument(object):
             return None
         return ext.strip('.').lower()
 
+    @property
+    def filename(self):
+        return path.splitext(path.split(self.path)[1])[0]
+
 
 @with_db
 def list_sno_documents(serialno=None, session=None):

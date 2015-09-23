@@ -103,6 +103,9 @@ def init_app(app, db):
     from tendril.frontend.blueprints.vendors import vendors
     app.register_blueprint(vendors, url_prefix='/sourcing/vendors')
 
+    from tendril.frontend.blueprints.testing import testing
+    app.register_blueprint(testing, url_prefix='/testing')
+
     return app
 
 
