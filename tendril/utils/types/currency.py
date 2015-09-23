@@ -122,7 +122,7 @@ class CurrencyDefinition(object):
     def _get_exchval(code):
         """
         Obtains the exchange rate of the currency definition's :attr:`code`
-        using the `<http://currencylayer.com>`_ JSON API. The native currency
+        using the `<https://currencylayer.com>`_ JSON API. The native currency
         is used as the reference.
 
         :param code: The currency code for which the exchange rate is needed.

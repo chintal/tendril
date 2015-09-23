@@ -37,8 +37,6 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
  - Make sure Tendril is run with the correct python version.
  - Run tox tests for any developed code (not yet added).
 
-See `<http://davebehnke.com/python-pyenv-ubuntu.html>`_ for a more detailed explanation.
-
  1. Install Git:
 
         ``sudo apt-get install git-core curl``
@@ -122,7 +120,7 @@ details can be worked out, use the following checkouts:
 
 Setting up virtualenv
 ---------------------
-See `<http://simononsoftware.com/virtualenv-tutorial-part-2/>`_ for a more detailed explanation.
+See `<http://www.simononsoftware.com/virtualenv-tutorial-part-2/>`_ for a more detailed explanation.
 
  1. Install ``virtualenv`` from the standard repository.
 

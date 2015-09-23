@@ -13,7 +13,7 @@ def read(fname):
 
 
 setup(
-    name="tendril",
+    name="tendril-framework",
     version="0.1.0",
     author="Chintalagiri Shashank",
     author_email="shashank@chintal.in",
