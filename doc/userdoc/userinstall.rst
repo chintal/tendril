@@ -226,17 +226,24 @@ Installing the Dependencies
 Maintaining the Installation
 ****************************
 
-TODO
-
 Updating the Core
 -----------------
 
-TODO
+    .. code-block:: bash
+
+        cd tendril
+        git checkout master
+        git pull
 
 Updating the Instance Folder
 ----------------------------
 
-TODO
+    .. code-block:: bash
+
+        cd ~/.tendril
+        git checkout master
+        git pull
+
 
 Contributing to the Instance
 ****************************

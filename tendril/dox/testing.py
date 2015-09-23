@@ -35,9 +35,6 @@ the output files after constructing the appropriate stage.
 
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import os
 
 from tendril.testing import analysis
@@ -50,8 +47,12 @@ from tendril.entityhub.db.model import SerialNumber
 from tendril.entityhub.db import controller as sno_controller
 
 from render import render_pdf
+import docstore
 
 from tendril.utils.config import INSTANCE_ROOT
+from tendril.utils import log
+
+logger = log.get_logger(__name__, log.DEFAULT)
 default_target = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
 
 
@@ -208,3 +209,15 @@ def render_device_summary(devicetype, include_failed=False, outfolder=None):
              }
 
     return render_pdf(stage, template, outpath)
+
+
+def get_all_test_reports(limit=None):
+    return docstore.get_docs_list_for_sno_doctype(serialno=None,
+                                                  doctype='TEST-RESULT',
+                                                  limit=limit)
+
+
+def get_latest_test_report(serialno=None):
+    return docstore.get_docs_list_for_sno_doctype(serialno=serialno,
+                                                  doctype='TEST-RESULT',
+                                                  limit=1)
