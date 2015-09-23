@@ -1,7 +1,7 @@
 /.cache
 /.tox
 /profiling/*/*/*.profile*
-/tendril.egg-info
+/*.egg-info
 /dist
 /build
 *.egg
