@@ -23,7 +23,6 @@ import re
 import csv
 
 from tendril.utils.config import PROJECTS_ROOT
-from tendril.utils.config import TENDRIL_ROOT
 from tendril.gedaif import conffile
 
 
@@ -65,7 +64,8 @@ def get_card_indicative_cost(cardname):
         return None
     allfiles = os.listdir(pricingfolder)
     pfrex = re.compile(cardname + "~(.*).csv")
-    pfiles = [os.path.join(pricingfolder, x) for x in allfiles if pfrex.match(x)]
+    pfiles = [os.path.join(pricingfolder, x)
+              for x in allfiles if pfrex.match(x)]
     contextc = len(pfiles)
     if contextc == 0:
         return None
@@ -87,16 +87,21 @@ def get_projects(basefolder=None):
         basefolder = PROJECTS_ROOT
 
     for root, dirs, files in os.walk(basefolder):
-        dirs[:] = [d for d in dirs if not d.endswith('.git') and not d.endswith('.svn')]
+        dirs[:] = [d for d in dirs
+                   if not d.endswith('.git') and not d.endswith('.svn')]
         for d in dirs:
             if is_project_folder(os.path.join(root, d)):
-                lprojects[os.path.relpath(os.path.join(root, d), basefolder)] = os.path.join(root, d)
+                lprojects[
+                    os.path.relpath(os.path.join(root, d), basefolder)
+                ] = os.path.join(root, d)
                 cf = conffile.ConfigsFile(os.path.join(root, d))
                 if cf.configdata['pcbname'] is not None:
                     lpcbs[cf.configdata['pcbname']] = os.path.join(root, d)
                 for config in cf.configdata['configurations']:
                     lcards[config['configname']] = os.path.join(root, d)
-                    lcard_reporoot[config['configname']] = os.path.relpath(os.path.join(root, d), basefolder)
+                    lcard_reporoot[
+                        config['configname']
+                    ] = os.path.relpath(os.path.join(root, d), basefolder)
 
     return lprojects, lpcbs, lcards, lcard_reporoot
 
