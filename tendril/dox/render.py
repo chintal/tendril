@@ -189,19 +189,26 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
     .. list-table::
 
         * - ``logo``
-          - The company logo, as specified in :data:`tendril.utils.config.COMPANY_LOGO_PATH`
+          - The company logo, as specified in
+            :data:`tendril.utils.config.COMPANY_LOGO_PATH`
         * - ``company``
-          - The company name, as specified in :data:`tendril.utils.config.COMPANY_NAME`
+          - The company name, as specified in
+            :data:`tendril.utils.config.COMPANY_NAME`
         * - ``company_email``
-          - The company email address, as specified in :data:`tendril.utils.config.COMPANY_EMAIL`
+          - The company email address, as specified in
+            :data:`tendril.utils.config.COMPANY_EMAIL`
         * - ``company_address_line``
-          - The company address, as specified in :data:`tendril.utils.config.COMPANY_ADDRESS_LINE`
+          - The company address, as specified in
+            :data:`tendril.utils.config.COMPANY_ADDRESS_LINE`
         * - ``company_iec``
-          - The company IEC, as specified in :data:`tendril.utils.config.COMPANY_IEC`
+          - The company IEC, as specified in
+            :data:`tendril.utils.config.COMPANY_IEC`
 
     """
     if not os.path.exists(template) \
-            and not os.path.exists(os.path.join(DOX_TEMPLATE_FOLDER, template)):
+            and not os.path.exists(
+                os.path.join(DOX_TEMPLATE_FOLDER, template)
+            ):
         logger.error("Template not found : " + template)
         raise ValueError
     template = renderer_pdf.get_template(template)
@@ -219,7 +226,8 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
     auxpath = os.path.splitext(outpath)[0] + ".aux"
     logpath = os.path.splitext(outpath)[0] + ".log"
 
-    pdflatex_cmd = ("pdflatex -interaction=batchmode -output-directory=" + os.path.split(outpath)[0]).split(' ')
+    pdflatex_cmd = ("pdflatex -interaction=batchmode -output-directory=" +
+                    os.path.split(outpath)[0]).split(' ')
     pdflatex_cmd.append(texpath)
 
     for i in range(3):
@@ -283,10 +291,12 @@ def render_lineplot(outf, plotdata, title, note):
     xmin = min([min(l) for l in xlists])
     xmax = max([max(l) for l in xlists])
 
-    pl.yticks(range(0, int(ymax), int(ymax / 10)), [str(x) for x in range(0, int(ymax), int(ymax / 10))])
+    pl.yticks(range(0, int(ymax), int(ymax / 10)),
+              [str(x) for x in range(0, int(ymax), int(ymax / 10))])
 
     for y in range(0, int(ymax), int(ymax / 10)):
-        ax.plot(range(xmin, xmax), [y] * len(range(xmin, xmax)), "--", lw=0.5, color="black", alpha=0.3)
+        ax.plot(range(xmin, xmax), [y] * len(range(xmin, xmax)),
+                "--", lw=0.5, color="black", alpha=0.3)
 
     pl.tick_params(axis="both", which="both", bottom="off", top="off",
                    labelbottom="on", left="off", right="off", labelleft="on")
@@ -295,7 +305,8 @@ def render_lineplot(outf, plotdata, title, note):
     pl.xlim(xmin, xmax)
 
     for idx, curvename in enumerate(curvenames):
-        ax.plot(xlists[idx], ylists[idx], color=tableau20[idx], label=curvename)
+        ax.plot(xlists[idx], ylists[idx],
+                color=tableau20[idx], label=curvename)
         # y_pos = ylists[idx][-1] - 0.5
         # pl.text(xmax, y_pos, curvename, color=tableau20[idx])
     pl.title(title)
@@ -318,17 +329,23 @@ def make_graph(outpath, plotdata_y, plotdata_x=None,
     :type outpath: str
     :param plotdata_y: The y-axis data to plot
     :type plotdata_y: list
-    :param plotdata_x: The x-axis data to plot, or None if a plotdata_y is a sequence
+    :param plotdata_x: The x-axis data to plot, or None if
+                       a plotdata_y is a sequence
     :type plotdata_x: :class:`list` or None
-    :param color: The color of the curve, default ``black``. See matplotlib docs.
+    :param color: The color of the curve, default ``black``.
+                  See matplotlib docs.
     :type color: str
-    :param lw: The linewidth of the curve, default ``2``. See matplotlib docs.
+    :param lw: The linewidth of the curve, default ``2``.
+               See matplotlib docs.
     :type lw: int
-    :param marker: The marker to be used, default ``None``. See matplotlib docs.
+    :param marker: The marker to be used, default ``None``.
+                   See matplotlib docs.
     :type marker: str
-    :param xscale: The scale of the x axis, default ``linear``. See matplotlib docs.
+    :param xscale: The scale of the x axis, default ``linear``.
+                   See matplotlib docs.
     :type xscale: str
-    :param yscale: The scale of the y axis, default ``linear``. See matplotlib docs.
+    :param yscale: The scale of the y axis, default ``linear``.
+                   See matplotlib docs.
     :type yscale: str
     :param xlabel: The x-axis label, default ``''``
     :type xlabel: str
@@ -412,8 +429,9 @@ def get_optimum_bins(plotdata_y):
 def make_histogram(outpath, plotdata_y, bins=None, color='red',
                    xlabel='', ylabel='', x_range=None):
     """
-    Renders a histogram of the data provided as a ``.png`` file, saved to the
-    path specified by ``outpath``. This function uses :mod:`matplotlib.pyplot`.
+    Renders a histogram of the data provided as a ``.png`` file,
+    saved to the path specified by ``outpath``.
+    This function uses :mod:`matplotlib.pyplot`.
 
     .. seealso:: :func:`get_optimum_bins`
 
@@ -421,15 +439,18 @@ def make_histogram(outpath, plotdata_y, bins=None, color='red',
     :type outpath: str
     :param plotdata_y: The y-axis data to plot
     :type plotdata_y: list
-    :param bins: Number of bins to use. If None, uses the optimum. See matplotlib docs.
+    :param bins: Number of bins to use. If None, uses the optimum.
+                 See matplotlib docs.
     :type bins: int or None
-    :param color: The color of the curve, default ``red``. See matplotlib docs.
+    :param color: The color of the curve, default ``red``.
+                  See matplotlib docs.
     :type color: str
     :param xlabel: The x-axis label, default ``''``
     :type xlabel: str
     :param ylabel: The y-axis label, default ``''``
     :type ylabel: str
-    :param x_range: The x-axis range, if not the default. See matplotlib docs for range.
+    :param x_range: The x-axis range, if not the default.
+                    See matplotlib docs for range.
     :type x_range: tuple
     :return: The output path.
     """
@@ -446,4 +467,3 @@ def make_histogram(outpath, plotdata_y, bins=None, color='red',
     pyplot.savefig(outpath)
     pyplot.close()
     return outpath
-

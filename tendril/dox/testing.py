@@ -20,8 +20,8 @@ Testing Dox Module (:mod:`tendril.dox.testing`)
 
 This module provides functions to generate testing documents.
 
-The functions here use the :mod:`tendril.dox.render` module to actually produce
-the output files after constructing the appropriate stage.
+The functions here use the :mod:`tendril.dox.render` module to actually
+produce the output files after constructing the appropriate stage.
 
 .. seealso:: :mod:`tendril.testing.analysis`, which does much of
              the heavy lifting
@@ -75,7 +75,8 @@ def render_test_report(serialno=None, outfolder=None, session=None):
     .. rubric:: Template Used
 
     ``tendril/dox/templates/testing/test_report_template.tex``
-    (:download:`Included version <../../tendril/dox/templates/testing/test_report_template.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/testing/test_report_template.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
@@ -96,11 +97,11 @@ def render_test_report(serialno=None, outfolder=None, session=None):
           - A list of graphs, each graph being a list of tuples of
             (graphpath, graphtitle)
         * - ``instruments``
-          - A list of instrument ident strings, one for each unique instrument used
-            in the suites.
+          - A list of instrument ident strings, one for each unique
+            instrument used in the suites.
         * - ``suites``
-          - A list of instances of :class:`tendril.testing.testbase.TestSuiteBase`
-            or its subclasses.
+          - A list of instances of
+            :class:`tendril.testing.testbase.TestSuiteBase` or its subclasses.
 
     Note that the ``suites`` provided to the template are typically
     expected to be offline test suites which are reconstructed from the
@@ -112,25 +113,30 @@ def render_test_report(serialno=None, outfolder=None, session=None):
     if serialno is None:
         raise ValueError("serialno cannot be None")
     if not isinstance(serialno, SerialNumber):
-        serialno = sno_controller.get_serialno_object(sno=serialno, session=session)
+        serialno = sno_controller.get_serialno_object(sno=serialno,
+                                                      session=session)
     if outfolder is None:
         outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
 
     template = os.path.join('testing', 'test_report_template.tex')
-    outpath = os.path.join(outfolder, 'TEST-REPORT-' + serialno.sno + '.pdf')
+    outpath = os.path.join(outfolder,
+                           'TEST-REPORT-' + serialno.sno + '.pdf')
 
-    devicetype = serialnos.get_serialno_efield(sno=serialno.sno, session=session)
+    devicetype = serialnos.get_serialno_efield(sno=serialno.sno,
+                                               session=session)
     projectfolder = projects.cards[devicetype]
     gcf = ConfigsFile(projectfolder)
 
-    suites = analysis.get_test_suite_objects(serialno=serialno.sno, session=session)
+    suites = analysis.get_test_suite_objects(serialno=serialno.sno,
+                                             session=session)
     graphs = []
     instruments = {}
     for suite in suites:
         for test in suite._tests:
             graphs.extend(test.graphs)
             graphs.extend(test.histograms)
-            if test._inststr is not None and test._inststr not in instruments.keys():
+            if test._inststr is not None and \
+                    test._inststr not in instruments.keys():
                 instruments[test._inststr] = len(instruments.keys()) + 1
 
     stage = {'suites': [x.render_dox() for x in suites],
@@ -164,7 +170,8 @@ def render_device_summary(devicetype, include_failed=False, outfolder=None):
     .. rubric:: Template Used
 
     ``tendril/dox/templates/testing/test_device_summary_template.tex``
-    (:download:`Included version <../../tendril/dox/templates/testing/test_device_summary_template.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/testing/test_device_summary_template.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
@@ -190,7 +197,8 @@ def render_device_summary(devicetype, include_failed=False, outfolder=None):
     if outfolder is None:
         outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
     template = os.path.join('testing', 'test_device_summary_template.tex')
-    outpath = os.path.join(outfolder, 'TEST-DEVICE-SUMMARY-' + devicetype + '.pdf')
+    outpath = os.path.join(outfolder,
+                           'TEST-DEVICE-SUMMARY-' + devicetype + '.pdf')
 
     projectfolder = projects.cards[devicetype]
     gcf = ConfigsFile(projectfolder)
@@ -199,8 +207,7 @@ def render_device_summary(devicetype, include_failed=False, outfolder=None):
                                                include_failed=include_failed)
     graphs = summary.graphs
 
-    stage = {
-             'devicetype': devicetype,
+    stage = {'devicetype': devicetype,
              'desc': gcf.description(devicetype),
              'svnrevision': vcs.get_path_revision(projectfolder),
              'svnrepo': vcs.get_path_repository(projectfolder),

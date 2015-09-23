@@ -42,7 +42,8 @@ from tendril.utils import log
 
 logger = log.get_logger(__name__, log.INFO)
 docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
-workspace_fs = fsopendir(os.path.join(INSTANCE_ROOT, 'scratch'), create_dir=True)
+workspace_fs = fsopendir(os.path.join(INSTANCE_ROOT, 'scratch'),
+                         create_dir=True)
 refdoc_fs = fsopendir(REFDOC_ROOT)
 local_fs = fsopendir('/')
 
@@ -148,7 +149,8 @@ def copy_docs_to_workspace(serialno=None, workspace=None,
     if setwsno is True:
         with workspace.open('wsno', 'wb') as f:
             f.write(serialno)
-    for doc in controller.get_sno_documents(serialno=serialno, session=session):
+    for doc in controller.get_sno_documents(serialno=serialno,
+                                            session=session):
         docname = os.path.split(doc.docpath)[1]
         if docname.startswith(serialno):
             if not os.path.splitext(docname)[0] == serialno:
@@ -171,7 +173,8 @@ def deregister_document(docpath=None, session=None):
 
 def insert_document(sno, docpath, series):
     fname = os.path.split(docpath)[1]
-    if not fname.startswith(sno) and not os.path.splitext(fname)[0].endswith(sno):
+    if not fname.startswith(sno) and \
+            not os.path.splitext(fname)[0].endswith(sno):
         fname = sno + '-' + fname
     if series is None:
         series = serialnos.get_series(sno)
@@ -192,12 +195,14 @@ def register_document(serialno=None, docpath=None, doctype=None,
     if doctype is None:
         raise AttributeError('doctype cannot be None')
 
-    logger.info("Registering document for sno " + str(serialno) + " : " + str(docpath))
-    # WARNING : This writes the file before actually checking that all is ok. This
-    #           may not be a very safe approach.
+    logger.info("Registering document for sno " + str(serialno) + " : " +
+                str(docpath))
+    # WARNING : This writes the file before actually checking that all is ok.
+    #           This may not be a very safe approach.
     storepath = insert_document(serialno, docpath, series)
-    controller.register_document(serialno=serialno, docpath=storepath, doctype=doctype,
-                                 efield=efield, session=session)
+    controller.register_document(serialno=serialno, docpath=storepath,
+                                 doctype=doctype, efield=efield,
+                                 session=session)
 
 
 # def clean_docindex():

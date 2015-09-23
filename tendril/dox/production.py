@@ -19,8 +19,8 @@ Production Dox Module (:mod:`tendril.dox.production`)
 =====================================================
 
 This module provides functions to generate production related documentation.
-The functions here use the :mod:`tendril.dox.render` module to actually produce
-the output files after constructing the appropriate stage.
+The functions here use the :mod:`tendril.dox.render` module to actually
+produce the output files after constructing the appropriate stage.
 
 .. seealso:: :mod:`tendril.dox`
 
@@ -95,7 +95,8 @@ def gen_pcb_am(projfolder, configname, outfolder, sno=None,
     .. rubric:: Template Used
 
     ``tendril\dox\\templates\pcb-assem-manifest.tex``
-    (:download:`Included version <../../tendril/dox/templates/pcb-assem-manifest.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/pcb-assem-manifest.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
@@ -189,18 +190,19 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
 
     .. todo:: Document the format of the .yaml file.
 
-    :param outfolder: The folder within which the output file should be created.
+    :param outfolder: The folder within which the output file
+                      should be created.
     :type outfolder: str
     :param prod_sno: The serial number of the Production Order to generate.
     :type prod_sno: str
     :param sourcedata: The source data loaded from a ``.yaml`` file.
     :type sourcedata: dict
-    :param snos: A list of serial numbers to produce, along with whatever other
-                 information should be included in the order. See the template for
-                 details.
+    :param snos: A list of serial numbers to produce, along with whatever
+                 other information should be included in the order. See
+                 the template for details.
     :type snos: :class:`list` of :class:`dict`
-    :param sourcing_orders: A list of sourcing orders which were made to obtain
-                            raw materials for this production order.
+    :param sourcing_orders: A list of sourcing orders which were made to
+                            obtain raw materials for this production order.
     :type sourcing_orders: :class:`list` of :class:`str`
     :param root_orders: A list of root orders which is production order is
                         intended to fulfill.
@@ -210,7 +212,8 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
     .. rubric:: Template Used
 
     ``tendril\dox\\templates\production-order-template.tex``
-    (:download:`Included version <../../tendril/dox/templates/production-order-template.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/production-order-template.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
@@ -220,7 +223,8 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
         * - ``title``
           - The title of the production order.
         * - ``cards``
-          - A list of different card types to be produced, and quantities of each.
+          - A list of different card types to be produced,
+            and quantities of each.
         * - ``snos``
           - A list of cards to produce, with serial numbers and other included
             information.
@@ -228,7 +232,8 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
           - A list of sourcing orders which were made to obtain raw materials
             for this production order.
         * - ``root_orders``
-          - A list of root orders which is production order is intended to fulfill.
+          - A list of root orders which is production order is
+            intended to fulfill.
 
     """
     cards = [{'qty': sourcedata['cards'][k],

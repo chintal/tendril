@@ -91,13 +91,15 @@ def gen_declaration(invoice, target_folder, copyt, serialno):
     .. rubric:: Template Used
 
     ``tendril/dox/templates/customs/decl.tex``
-    (:download:`Included version <../../tendril/dox/templates/customs/decl.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/customs/decl.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
 
         * - ``date``
-          - The date the documents were generated at, from :func:`datetime.date.today`.
+          - The date the documents were generated at, from
+            :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
             :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
@@ -130,7 +132,10 @@ def gen_declaration(invoice, target_folder, copyt, serialno):
           - The serial number of the document.
 
     """
-    outpath = os.path.join(target_folder, "customs-declaration-" + copyt + '-' + str(invoice.inv_no) + ".pdf")
+    outpath = os.path.join(
+        target_folder,
+        "customs-declaration-" + copyt + '-' + str(invoice.inv_no) + ".pdf"
+    )
 
     given_data = copy.deepcopy(invoice.given_data)
 
@@ -143,13 +148,17 @@ def gen_declaration(invoice, target_folder, copyt, serialno):
              'inv_date': invoice.inv_date,
              'given_data': given_data,
              'currency': render.escape_latex(invoice.currency.symbol),
-             'inv_total': render.escape_latex(invoice.extendedtotal.source_string),
+             'inv_total':
+             render.escape_latex(invoice.extendedtotal.source_string),
              'exchrate': invoice.given_data['exchrate'],
              'exchnotif': invoice.given_data['exchnotif'],
              'exchnotifdt': invoice.given_data['exchnotif_date'],
-             'extended_total_sc': render.escape_latex(invoice.extendedtotal.source_string),
-             'assessable_total_sc': render.escape_latex(invoice.assessabletotal.source_string),
-             'assessable_total_nc': render.escape_latex(invoice.assessabletotal.native_string),
+             'extended_total_sc':
+             render.escape_latex(invoice.extendedtotal.source_string),
+             'assessable_total_sc':
+             render.escape_latex(invoice.assessabletotal.source_string),
+             'assessable_total_nc':
+             render.escape_latex(invoice.assessabletotal.native_string),
              'copyt': copyt,
              'sno': serialno + '.5'
              }
@@ -172,13 +181,15 @@ def gen_valuation(invoice, target_folder, serialno):
     .. rubric:: Template Used
 
     ``tendril/dox/templates/customs/valuation.tex``
-    (:download:`Included version <../../tendril/dox/templates/customs/valuation.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/customs/valuation.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
 
         * - ``date``
-          - The date the documents were generated at, from :func:`datetime.date.today`.
+          - The date the documents were generated at, from
+            :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
             :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
@@ -219,19 +230,35 @@ def gen_valuation(invoice, target_folder, serialno):
           - Bool, whether the payment was made by a wire transfer.
 
     """
-    outpath = os.path.join(target_folder, "customs-valuation-" + str(invoice.inv_no) + ".pdf")
+    outpath = os.path.join(
+        target_folder,
+        "customs-valuation-" + str(invoice.inv_no) + ".pdf"
+    )
 
     note1 = ''
     if invoice.includes_freight is True:
-        note1 += "As listed in the invoice, {0} towards freight is also added. ".format(invoice.freight.source_string)
+        note1 += "As listed in the invoice, {0} towards freight " \
+                 "is also added. ".format(invoice.freight.source_string)
     note1 = render.escape_latex(note1)
 
     note2 = []
 
     if invoice.added_insurance is True:
-        note2.append("An additional {0}% of FOB is added to the assessable value as per Rule 10(2)(c)(iii) of Customs Valuation (Determination of Value of Imported Goods) Rules, 2007. No specific insurance charges were paid as part of the transaction.".format(invoice.insurance_pc))
+        note2.append(
+            "An additional {0}% of FOB is added to the assessable value "
+            "as per Rule 10(2)(c)(iii) of Customs Valuation "
+            "(Determination of Value of Imported Goods) Rules, 2007. "
+            "No specific insurance charges were paid as part of the"
+            " transaction.".format(invoice.insurance_pc)
+        )
     if invoice.added_handling is True:
-        note2.append("An additional {0}% of CIF is added to the assessable value as per Rule 10(2)(b)(ii) of Customs Valuation (Determination of Value of Imported Goods) Rules, 2007. No specific handling charges were paid as part of the transaction.".format(invoice.handling_pc))
+        note2.append(
+            "An additional {0}% of CIF is added to the assessable value "
+            "as per Rule 10(2)(b)(ii) of Customs Valuation "
+            "(Determination of Value of Imported Goods) Rules, 2007. "
+            "No specific handling charges were paid as part of the"
+            " transaction.".format(invoice.handling_pc)
+        )
 
     include_note2 = False
     if len(note2) > 0:
@@ -247,16 +274,20 @@ def gen_valuation(invoice, target_folder, serialno):
              'inv_date': invoice.inv_date,
              'given_data': invoice.given_data,
              'currency': render.escape_latex(invoice.currency.symbol),
-             'inv_total': render.escape_latex(invoice.extendedtotal.source_string),
+             'inv_total':
+             render.escape_latex(invoice.extendedtotal.source_string),
              'exchrate': invoice.given_data['exchrate'],
              'exchnotif': invoice.given_data['exchnotif'],
              'exchnotifdt': invoice.given_data['exchnotif_date'],
              'note1': note1,
              'note2': note2,
              'include_note2': include_note2,
-             'extended_total_sc': render.escape_latex(invoice.extendedtotal.source_string),
-             'assessable_total_sc': render.escape_latex(invoice.assessabletotal.source_string),
-             'assessable_total_nc': render.escape_latex(invoice.assessabletotal.native_string),
+             'extended_total_sc':
+             render.escape_latex(invoice.extendedtotal.source_string),
+             'assessable_total_sc':
+             render.escape_latex(invoice.assessabletotal.source_string),
+             'assessable_total_nc':
+             render.escape_latex(invoice.assessabletotal.native_string),
              'sno': serialno + '.3',
              'is_wire': is_wire
              }
@@ -279,13 +310,15 @@ def gen_rsp_declaration(invoice, target_folder, serialno):
     .. rubric:: Template Used
 
     ``tendril/dox/templates/customs/rsp-declaration.tex``
-    (:download:`Included version <../../tendril/dox/templates/customs/rsp-declaration.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/customs/rsp-declaration.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
 
         * - ``date``
-          - The date the documents were generated at, from :func:`datetime.date.today`.
+          - The date the documents were generated at,
+            from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
             :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
@@ -300,7 +333,11 @@ def gen_rsp_declaration(invoice, target_folder, serialno):
           - The serial number of the document.
 
     """
-    outpath = os.path.join(target_folder, "customs-rsp-declaration-" + str(invoice.inv_no) + ".pdf")
+    outpath = os.path.join(
+        target_folder,
+        "customs-rsp-declaration-" + str(invoice.inv_no) + ".pdf"
+    )
+
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
              'inv_no': invoice.inv_no,
@@ -329,7 +366,8 @@ def gen_authorization(invoice, target_folder, serialno):
     This function uses a different template for each CHA, in the format
     that the CHA asks for it.
 
-    Template Filename : ``tendril/dox/templates/customs/authorization.<cha>.tex``
+    Template Filename :
+    ``tendril/dox/templates/customs/authorization.<cha>.tex``
 
     Included Templates :
 
@@ -337,16 +375,19 @@ def gen_authorization(invoice, target_folder, serialno):
 
         * - FedEx India
           - ``tendril/dox/templates/customs/authorization.fedex.tex``
-          - (:download:`Included version <../../tendril/dox/templates/customs/authorization.fedex.tex>`)
+          - (:download:`Included version
+          <../../tendril/dox/templates/customs/authorization.fedex.tex>`)
         * - DHL India
           - ``tendril/dox/templates/customs/authorization.dhl.tex``
-          - (:download:`Included version <../../tendril/dox/templates/customs/authorization.dhl.tex>`)
+          - (:download:`Included version
+          <../../tendril/dox/templates/customs/authorization.dhl.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
 
         * - ``date``
-          - The date the documents were generated at, from :func:`datetime.date.today`.
+          - The date the documents were generated at,
+            from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
             :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
@@ -361,7 +402,10 @@ def gen_authorization(invoice, target_folder, serialno):
           - The serial number of the document.
 
     """
-    outpath = os.path.join(target_folder, "customs-authorization-" + str(invoice.inv_no) + ".pdf")
+    outpath = os.path.join(
+        target_folder,
+        "customs-authorization-" + str(invoice.inv_no) + ".pdf"
+    )
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
              'inv_no': invoice.inv_no,
@@ -393,14 +437,17 @@ def gen_tech_writeup(invoice, target_folder, serialno):
 
     .. rubric:: Template Used
 
-    Template Filename : ``tendril/dox/templates/customs/technical-writeup.tex``
-    (:download:`Included version <../../tendril/dox/templates/customs/technical-writeup.tex>`)
+    Template Filename :
+    ``tendril/dox/templates/customs/technical-writeup.tex``
+    (:download:`Included version
+    <../../tendril/dox/templates/customs/technical-writeup.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
 
         * - ``date``
-          - The date the documents were generated at, from :func:`datetime.date.today`.
+          - The date the documents were generated at,
+            from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
             :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
@@ -439,16 +486,20 @@ def gen_tech_writeup(invoice, target_folder, serialno):
           - Total value of all lines classified into this line.
 
     """
-    outpath = os.path.join(target_folder, "customs-tech-writeup-" + str(invoice.inv_no) + ".pdf")
+    outpath = os.path.join(
+        target_folder,
+        "customs-tech-writeup-" + str(invoice.inv_no) + ".pdf"
+    )
     sectable = []
     tqty = 0
     tvalue = 0
     for section in invoice.hssections:
+        lval = invoice.getsection_assessabletotal(section).source_string
         secline = {'code': section.code,
                    'name': section.name,
                    'idxs': invoice.getsection_idxs(section),
                    'qty': invoice.getsection_qty(section),
-                   'value': render.escape_latex(invoice.getsection_assessabletotal(section).source_string)
+                   'value': render.escape_latex(lval)
                    }
         sectable.append(secline)
         tqty += invoice.getsection_qty(section)
@@ -458,7 +509,10 @@ def gen_tech_writeup(invoice, target_folder, serialno):
                     'qty': sum([x.qty for x in invoice.unclassified]),
                     }
     if unclassified['qty'] > 0:
-        unclassified['value'] = render.escape_latex(sum([x.assessableprice for x in invoice.unclassified]).source_string)
+        unclassified['value'] = \
+            render.escape_latex(
+                sum([x.assessableprice
+                     for x in invoice.unclassified]).source_string)
         tvalue += sum([x.assessableprice for x in invoice.unclassified])
         tqty += unclassified['qty']
     else:
@@ -516,16 +570,22 @@ def gen_submitdocs(invoice, target_folder, serialno):
                 gen_valuation(invoice, target_folder, serialno),
                 gen_tech_writeup(invoice, target_folder, serialno)
                 ]
-    lh_fpath = os.path.join(target_folder, "customs-printable-lh-" + str(invoice.inv_no) + ".pdf")
+    lh_fpath = os.path.join(
+        target_folder, "customs-printable-lh-" + str(invoice.inv_no) + ".pdf"
+    )
     lh_fpath = pdf.merge_pdf(lh_files, lh_fpath, remove_sources=True)
 
-    pp_files = [gen_declaration(invoice, target_folder, 'ORIGINAL', serialno),
-                gen_declaration(invoice, target_folder, 'DUPLICATE', serialno),
+    pp_files = [gen_declaration(invoice, target_folder,
+                                'ORIGINAL', serialno),
+                gen_declaration(invoice, target_folder,
+                                'DUPLICATE', serialno),
                 wallet.get_document_path('CUSTOMS-DECL'),
                 wallet.get_document_path('CUSTOMS-DECL'),
                 wallet.get_document_path('IEC'),
                 ]
-    pp_fpath = os.path.join(target_folder, "customs-printable-pp-" + str(invoice.inv_no) + ".pdf")
+    pp_fpath = os.path.join(
+        target_folder, "customs-printable-pp-" + str(invoice.inv_no) + ".pdf"
+    )
     pp_fpath = pdf.merge_pdf(pp_files, pp_fpath, remove_sources=True)
 
     files = [(lh_fpath, 'CUST-PRINTABLE-LH'), (pp_fpath, 'CUST-PRINTABLE-PP')]
@@ -547,13 +607,15 @@ def gen_verification_sections(invoice, target_folder, serialno):
     .. rubric:: Template Used
 
     ``tendril/dox/templates/customs/verification-sections.tex``
-    (:download:`Included version <../../tendril/dox/templates/customs/verification-sections.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/customs/verification-sections.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
 
         * - ``date``
-          - The date the documents were generated at, from :func:`datetime.date.today`.
+          - The date the documents were generated at,
+            from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
             :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
@@ -565,12 +627,16 @@ def gen_verification_sections(invoice, target_folder, serialno):
           - A dict containing various facts about the invoice. See
             :attr:`tendril.sourcing.customs.CustomsInvoice.given_data`.
         * - ``lines``
-          - A list of :class:`tendril.sourcing.customs.CustomsInvoiceLine` instances.
+          - A list of :class:`tendril.sourcing.customs.CustomsInvoiceLine`
+            instances.
         * - ``sno``
           - The serial number of the document.
 
     """
-    outpath = os.path.join(target_folder, "customs-verification-sections-" + str(invoice.inv_no) + ".pdf")
+    outpath = os.path.join(
+        target_folder,
+        "customs-verification-sections-" + str(invoice.inv_no) + ".pdf"
+    )
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
              'inv_no': invoice.inv_no,
@@ -580,7 +646,9 @@ def gen_verification_sections(invoice, target_folder, serialno):
              'sno': serialno + '.6',
              }
 
-    outpath = render.render_pdf(stage, 'customs/verification-sections.tex', outpath)
+    outpath = render.render_pdf(stage,
+                                'customs/verification-sections.tex',
+                                outpath)
     return outpath, 'CUST-VERIF-SEC'
 
 
@@ -599,13 +667,15 @@ def gen_verification_checklist(invoice, target_folder, serialno):
     .. rubric:: Template Used
 
     ``tendril/dox/templates/customs/verification-duties.tex``
-    (:download:`Included version <../../tendril/dox/templates/customs/verification-duties.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/customs/verification-duties.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
 
         * - ``date``
-          - The date the documents were generated at, from :func:`datetime.date.today`.
+          - The date the documents were generated at,
+            from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
             :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
@@ -617,20 +687,21 @@ def gen_verification_checklist(invoice, target_folder, serialno):
           - A dict containing various facts about the invoice. See
             :attr:`tendril.sourcing.customs.CustomsInvoice.given_data`.
         * - ``lines``
-          - A list of :class:`tendril.sourcing.customs.CustomsInvoiceLine` instances.
+          - A list of :class:`tendril.sourcing.customs.CustomsInvoiceLine`
+            instances.
         * - ``invoice``
           - The :class:`tendril.sourcing.customs.CustomsInvoice` instance.
         * - ``sno``
           - The serial number of the document.
         * - ``summary``
-          - A list of dicts containing the summary of the customs duties applicable
-            against a particular section, as described below
+          - A list of dicts containing the summary of the customs duties
+            applicable against a particular section, as described below
 
     .. list-table:: Summary keys
 
         * - ``section``
-          - The HS section, a :class:`tendril.sourcing.customs.CustomsSection``
-            instance.
+          - The HS section, a
+            :class:`tendril.sourcing.customs.CustomsSection`` instance.
         * - ``code``
           - The HS section code.
         * - ``name``
@@ -646,34 +717,56 @@ def gen_verification_checklist(invoice, target_folder, serialno):
         * - ``cvd``
           - Total Countervailing Duty applicable against this section.
         * - ``acvd``
-          - Total Additional Countervailing Duty applicable against this section.
+          - Total Additional Countervailing Duty applicable against
+            this section.
         * - ``cec``
-          - Total Education Cess on Customs Duty applicable against this section.
+          - Total Education Cess on Customs Duty applicable against
+            this section.
         * - ``cshec``
-          - Total Secondary and Higher Education Cess on Customs Duty applicable
-            against this section.
+          - Total Secondary and Higher Education Cess on Customs Duty
+            applicable against this section.
         * - ``cvdec``
-          - Total Education Cess on Countervailing Duty applicable against this
-            section.
+          - Total Education Cess on Countervailing Duty applicable
+            against this section.
         * - ``cvdshec``
           - Total Secondary and Higher Education Cess on Countervailing Duty
             applicable against this section.
 
     """
-    outpath = os.path.join(target_folder, "customs-verification-duties-" + str(invoice.inv_no) + ".pdf")
+    outpath = os.path.join(
+        target_folder,
+        "customs-verification-duties-" + str(invoice.inv_no) + ".pdf"
+    )
     summary = []
     for section in invoice.hssections:
-        secsum = {'section': section, 'code': section.code, 'name': section.name,
+        secsum = {'section': section,
+                  'code': section.code,
+                  'name': section.name,
                   'idxs': invoice.getsection_idxs(hssection=section),
-                  'assessablevalue': invoice.getsection_assessabletotal(hssection=section),
+                  'assessablevalue':
+                  invoice.getsection_assessabletotal(hssection=section),
                   'qty': invoice.getsection_qty(hssection=section),
-                  'bcd': sum([x.bcd.value for x in invoice.getsection_lines(hssection=section)]),
-                  'cvd': sum([x.cvd.value for x in invoice.getsection_lines(hssection=section)]),
-                  'acvd': sum([x.acvd.value for x in invoice.getsection_lines(hssection=section)]),
-                  'cec': sum([x.cec.value for x in invoice.getsection_lines(hssection=section)]),
-                  'cshec': sum([x.cshec.value for x in invoice.getsection_lines(hssection=section)]),
-                  'cvdec': sum([x.cvdec.value for x in invoice.getsection_lines(hssection=section)]),
-                  'cvdshec': sum([x.cvdshec.value for x in invoice.getsection_lines(hssection=section)]),
+                  'bcd':
+                  sum([x.bcd.value for x in
+                       invoice.getsection_lines(hssection=section)]),
+                  'cvd':
+                  sum([x.cvd.value for x in
+                       invoice.getsection_lines(hssection=section)]),
+                  'acvd':
+                  sum([x.acvd.value for x in
+                       invoice.getsection_lines(hssection=section)]),
+                  'cec':
+                  sum([x.cec.value for x in
+                       invoice.getsection_lines(hssection=section)]),
+                  'cshec':
+                  sum([x.cshec.value for x in
+                       invoice.getsection_lines(hssection=section)]),
+                  'cvdec':
+                  sum([x.cvdec.value for x in
+                       invoice.getsection_lines(hssection=section)]),
+                  'cvdshec':
+                  sum([x.cvdshec.value for x in
+                       invoice.getsection_lines(hssection=section)]),
                   }
         summary.append(secsum)
     stage = {'date': datetime.date.today().isoformat(),
@@ -685,7 +778,9 @@ def gen_verification_checklist(invoice, target_folder, serialno):
              'summary': summary,
              'invoice': invoice,
              'sno': serialno + '.7'}
-    outpath = render.render_pdf(stage, 'customs/verification-duties.tex', outpath)
+    outpath = render.render_pdf(stage,
+                                'customs/verification-duties.tex',
+                                outpath)
     return outpath, 'CUST-VERIF-BOE'
 
 
@@ -704,7 +799,8 @@ def gen_verificationdocs(invoice, target_folder, serialno):
     .. rubric:: Included Documents
 
     * Sections Verification, generated by :func:`gen_verification_sections`
-    * Duties / Checklist Verification, generated by :func:`gen_verification_checklist`
+    * Duties / Checklist Verification, generated by
+      :func:`gen_verification_checklist`
 
     """
     files = [gen_verification_sections(invoice, target_folder, serialno),
@@ -713,7 +809,8 @@ def gen_verificationdocs(invoice, target_folder, serialno):
     return files
 
 
-def generate_docs(invoice, target_folder=None, serialno=None, register=False, efield=None):
+def generate_docs(invoice, target_folder=None,
+                  serialno=None, register=False, efield=None):
     """
     Generates all the Customs related documentation given a CustomsInvoice
     (or subclass) instance.
@@ -727,10 +824,11 @@ def generate_docs(invoice, target_folder=None, serialno=None, register=False, ef
     :param serialno: The serial number of the Customs documentation set.
                      Autogenerates if None.
     :type serialno: str
-    :param register: Whether or not to register in the docstore. Default False.
+    :param register: Whether or not to register in the docstore.
+                     Default False.
     :type register: bool
-    :param efield: Additional short note to identify the document in the store.
-                   Autogenerates from invoice if None.
+    :param efield: Additional short note to identify the document in the
+                   store. Autogenerates from invoice if None.
     :type efield: str
     :return: The serial number of the generated document set.
 
@@ -768,10 +866,10 @@ def generate_docs(invoice, target_folder=None, serialno=None, register=False, ef
 
 @with_db
 def get_all_customs_invoice_serialnos(limit=None, session=None):
-    snos = docstore.controller.get_snos_by_document_doctype(doctype='CUST-PRINTABLE-PP',
-                                                            series='PINV',
-                                                            limit=limit,
-                                                            session=session)
+    snos = docstore.controller.get_snos_by_document_doctype(
+        doctype='CUST-PRINTABLE-PP', series='PINV',
+        limit=limit, session=session
+    )
     return snos
 
 
@@ -816,5 +914,3 @@ def get_customs_invoice(serialno):
 
     temp_fs.removedir(workspace_name, recursive=True, force=True)
     return invoice
-
-

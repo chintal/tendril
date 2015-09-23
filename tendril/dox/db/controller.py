@@ -43,7 +43,9 @@ def get_sno_documents(serialno=None, session=None):
 
 @with_db
 def get_doctype_documents(doctype=None, limit=None, session=None):
-    q = session.query(DocStoreDocument).filter(DocStoreDocument.doctype == doctype)
+    q = session.query(DocStoreDocument).filter(
+        DocStoreDocument.doctype == doctype
+    )
     q = q.order_by(desc(DocStoreDocument.created_at))
     if limit:
         q = q.limit(limit)
@@ -51,11 +53,13 @@ def get_doctype_documents(doctype=None, limit=None, session=None):
 
 
 @with_db
-def get_serialno_doctype_documents(serialno=None, doctype=None, limit=None, session=None):
+def get_serialno_doctype_documents(serialno=None, doctype=None,
+                                   limit=None, session=None):
     q = session.query(DocStoreDocument)
     if serialno is not None:
         if not isinstance(serialno, SerialNumber):
-            serialno = serialnos.get_serialno_object(sno=serialno, session=session)
+            serialno = serialnos.get_serialno_object(sno=serialno,
+                                                     session=session)
         q = q.filter_by(serialno=serialno)
     if doctype:
         q = q.filter(DocStoreDocument.doctype == doctype)
@@ -67,7 +71,8 @@ def get_serialno_doctype_documents(serialno=None, doctype=None, limit=None, sess
 
 
 @with_db
-def get_snos_by_document_doctype(doctype=None, series=None, limit=None, session=None):
+def get_snos_by_document_doctype(doctype=None, series=None,
+                                 limit=None, session=None):
     if doctype is None:
         raise AttributeError("doctype cannot be None")
     if series is not None and not isinstance(series, str):
@@ -98,15 +103,21 @@ def register_document(serialno=None, docpath=None, doctype=None,
         raise AttributeError('doctype cannot be None')
 
     if not isinstance(serialno, SerialNumber):
-        serialno = serialnos.get_serialno_object(sno=serialno, session=session)
+        serialno = serialnos.get_serialno_object(sno=serialno,
+                                                 session=session)
 
     try:
-        q = session.query(DocStoreDocument).filter_by(serialno=serialno, docpath=docpath)
+        q = session.query(DocStoreDocument).filter_by(
+            serialno=serialno, docpath=docpath
+        )
         existing = q.one()
     except NoResultFound:
         # default does not exist yet, so add it...
-        session.add(DocStoreDocument(docpath=docpath, doctype=doctype, efield=efield,
-                                     serialno_id=serialno.id, serialno=serialno))
+        session.add(
+            DocStoreDocument(docpath=docpath, doctype=doctype,
+                             efield=efield, serialno_id=serialno.id,
+                             serialno=serialno)
+        )
     else:
         if clobber is True:
             existing.serialno = serialno
@@ -123,6 +134,7 @@ def deregister_document(docpath=None, session=None):
     if docpath is None:
         raise AttributeError('docpath cannot be None')
     if not isinstance(docpath, DocStoreDocument):
-        docpath = session.query(DocStoreDocument).filter_by(docpath=docpath).one()
+        docpath = session.query(
+            DocStoreDocument).filter_by(docpath=docpath).one()
     session.delete(docpath)
     session.flush()

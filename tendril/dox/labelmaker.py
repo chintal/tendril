@@ -103,7 +103,9 @@ class LabelBase(object):
             if not os.path.exists(wfpath):
                 os.makedirs(wfpath)
         qr = qrcode.make(self._ident + ' ' + self._sno)
-        self._qr_path = os.path.join(wfpath, 'QR-' + self._ident + '-' + self._sno + '.png')
+        self._qr_path = os.path.join(
+            wfpath, 'QR-' + self._ident + '-' + self._sno + '.png'
+        )
         qr.save(self._qr_path)
 
     def __repr__(self):
@@ -312,12 +314,17 @@ class LabelSheet(object):
         elif sheets > 0:
             stage = {'labels': labels[:self.base.lpp * sheets]}
             self._labels = labels[self.base.lpp * sheets:]
-            logger.info("Holding back " + str(remain) + " labels for sheet : " + self._code)
+            logger.info("Holding back " +
+                        str(remain) + " labels for sheet : " + self._code)
         else:
-            logger.info("Not generating labels for sheet : " + self._code + ' ' + str(remain))
+            logger.info("Not generating labels for sheet : " + self._code +
+                        ' ' + str(remain))
             return None
-        return render.render_pdf(stage, self._base.templatefile,
-                                 os.path.join(targetfolder, 'labels-' + self.code + '.pdf'))
+        return render.render_pdf(
+            stage,
+            self._base.templatefile,
+            os.path.join(targetfolder, 'labels-' + self.code + '.pdf')
+        )
 
     def clear_sno_label(self, sno):
         if self._labels is None:
