@@ -96,7 +96,8 @@ def zipdir(path, zfpath):
     Creates a zip file at ``zfpath`` containing all the files in ``path``.
     This function is simple wrapper around python's :mod:`zipfile` module.
 
-    :param path: Path of the source folder, which is to be added to the zip file.
+    :param path: Path of the source folder, which is to be added to the zip
+                 file.
     :param zfpath: Path of the zip file to create.
     :return: The path of the created zip file.
 
@@ -104,7 +105,10 @@ def zipdir(path, zfpath):
     zfile = zipfile.ZipFile(zfpath, 'w')
     for root, dirs, files in os.walk(path):
         for f in files:
-            zfile.write(os.path.join(root, f), os.path.relpath(os.path.join(root, f), os.path.join(path, '..')))
+            zfile.write(os.path.join(root, f),
+                        os.path.relpath(
+                            os.path.join(root, f), os.path.join(path, '..')
+                        ))
     zfile.close()
     return zfpath
 
@@ -127,7 +131,8 @@ def get_path_breadcrumbs(path, base=None, rootst='Root'):
 
     :param path: The path to the target, compatible with :mod:`os.path`
     :type path: str
-    :param base: The path of the base, compatible with :mod:`os.path`. Optional.
+    :param base: The path of the base, compatible with :mod:`os.path`.
+                 Optional.
     :type base: str
     :param rootst: The string for the root breadcrumb.
     :type rootst: str
@@ -247,7 +252,8 @@ class VersionedOutputFile:
     This is like a file object opened for output, but it makes
     versioned backups of anything it might otherwise overwrite.
 
-    `http://code.activestate.com/recipes/52277-saving-backups-when-writing-files/`_
+    `http://code.activestate.com/recipes/\
+52277-saving-backups-when-writing-files/`_
     """
 
     def __init__(self, pathname, numSavedVersions=3):
@@ -255,7 +261,8 @@ class VersionedOutputFile:
         Create a new output file.
 
         :param pathname: The name of the file to [over]write.
-        :param numSavedVersions: How many of the most recent versions of `pathname` to save.
+        :param numSavedVersions: How many of the most recent versions of
+                                 `pathname` to save.
 
         """
 
@@ -303,7 +310,8 @@ class VersionedOutputFile:
             os.rename(self._pathname, new_name)
 
             # Maybe get rid of old versions.
-            if (self._numSavedVersions is not None) and (self._numSavedVersions > 0):
+            if (self._numSavedVersions is not None) and \
+                    (self._numSavedVersions > 0):
                 self._delete_old_revisions()
 
     def _versioned_name(self, revision):

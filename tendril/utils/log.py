@@ -37,15 +37,15 @@ being able to set the default log level for all modules simultaneously.
 import logging
 
 #: Level for debug entries. High volume is ok
-from logging import DEBUG  # noqa
+from logging import DEBUG   # noqa
 #: Level for informational entires. Low volume
-from logging import INFO # noqa
+from logging import INFO  # noqa
 #: Warnings only, which inform of possible failure
-from logging import WARNING # noqa
+from logging import WARNING  # noqa
 #: Errors only, which inform of high likelihood of failure
-from logging import ERROR # noqa
+from logging import ERROR  # noqa
 #: Critical Errors, things which should halt execution entirely
-from logging import CRITICAL # noqa
+from logging import CRITICAL  # noqa
 
 
 #: The default log level for all loggers created through this module,
@@ -69,7 +69,8 @@ def get_logger(name, level):
 
     :param name: The name of the logger
     :type name: str
-    :param level: Log level of the logger to be used. Default : :data:`DEFAULT`.
+    :param level: Log level of the logger to be used.
+                  Default : :data:`DEFAULT`.
     :type level: int
     :return: The logger instance
     """

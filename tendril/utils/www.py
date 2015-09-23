@@ -31,17 +31,21 @@ proxies and caching is implemented.
     get_soup
 
 
-This module uses the following configuration values from :mod:`tendril.utils.config`:
+This module uses the following configuration values from
+:mod:`tendril.utils.config`:
 
 .. rubric:: Basic Settings
 
-- :data:`tendril.utils.config.ENABLE_REDIRECT_CACHING` Whether or not redirect caching should be used.
-- :data:`tendril.utils.config.TRY_REPLICATOR_CACHE_FIRST` Whether or not a replicator cache should be used.
+- :data:`tendril.utils.config.ENABLE_REDIRECT_CACHING`
+  Whether or not redirect caching should be used.
+- :data:`tendril.utils.config.TRY_REPLICATOR_CACHE_FIRST`
+  Whether or not a replicator cache should be used.
 
-Redirect caching speeds up network accesses by saving ``301`` and ``302`` redirects,
-and not needing to get the correct URL on a second access. This redirect cache is stored
-as a pickled object in the ``INSTANCE_CACHE`` folder. The effect of this caching is far
-more apparent when a replicator cache is also used.
+Redirect caching speeds up network accesses by saving ``301`` and ``302``
+redirects, and not needing to get the correct URL on a second access. This
+redirect cache is stored as a pickled object in the ``INSTANCE_CACHE``
+folder. The effect of this caching is far more apparent when a replicator
+cache is also used.
 
 .. rubric:: Network Proxy Settings
 
@@ -53,9 +57,10 @@ more apparent when a replicator cache is also used.
 
 .. rubric:: Replicator Cache Settings
 
-The replicator cache is intended to be a ``http-replicator`` instance, to be used to
-cache the web pages that are accessed locally. If ``TRY_REPLICATOR_CACHE_FIRST`` is False,
-the replicator isn't actually going to be hit.
+The replicator cache is intended to be a ``http-replicator`` instance, to be
+used to cache the web pages that are accessed locally. If
+``TRY_REPLICATOR_CACHE_FIRST`` is False, the replicator isn't actually going
+to be hit.
 
 - :data:`tendril.utils.config.REPLICATOR_PROXY_TYPE`
 - :data:`tendril.utils.config.REPLICATOR_PROXY_IP`
@@ -149,18 +154,20 @@ if ENABLE_REDIRECT_CACHING is True:
 
 class CachingRedirectHandler(urllib2.HTTPRedirectHandler):
     """
-    This handler modifies the behavior of :class:`urllib2.HTTPRedirectHandler`,
-    resulting in a HTTP ``301`` or ``302`` status to be included in the ``result``.
+    This handler modifies the behavior of
+    :class:`urllib2.HTTPRedirectHandler`, resulting in a HTTP ``301`` or
+    ``302`` status to be included in the ``result``.
 
     When this handler is attached to a ``urllib2`` opener, if the opening of
-    the URL resulted in a redirect via HTTP ``301`` or ``302``, this is reported
-    along with the result. This information can be used by the opener to
-    maintain a redirect cache.
+    the URL resulted in a redirect via HTTP ``301`` or ``302``, this is
+    reported along with the result. This information can be used by the opener
+    to maintain a redirect cache.
     """
     def http_error_301(self, req, fp, code, msg, headers):
         """
-        Wraps the :func:`urllib2.HTTPRedirectHandler.http_error_301` handler, setting
-        the ``result.status`` to ``301`` in case a http ``301`` error is encountered.
+        Wraps the :func:`urllib2.HTTPRedirectHandler.http_error_301` handler,
+        setting the ``result.status`` to ``301`` in case a http ``301`` error
+        is encountered.
         """
         result = urllib2.HTTPRedirectHandler.http_error_301(
             self, req, fp, code, msg, headers)
@@ -169,8 +176,9 @@ class CachingRedirectHandler(urllib2.HTTPRedirectHandler):
 
     def http_error_302(self, req, fp, code, msg, headers):
         """
-        Wraps the :func:`urllib2.HTTPRedirectHandler.http_error_302` handler, setting
-        the ``result.status`` to ``302`` in case a http ``302`` error is encountered.
+        Wraps the :func:`urllib2.HTTPRedirectHandler.http_error_302` handler,
+        setting the ``result.status`` to ``302`` in case a http ``302`` error
+        is encountered.
         """
         result = urllib2.HTTPRedirectHandler.http_error_302(
             self, req, fp, code, msg, headers)
@@ -189,8 +197,8 @@ def get_actual_url(url):
 
 def _test_opener(openr):
     """
-    Tests an opener obtained using :func:`urllib2.build_opener` by attempting to
-    open Google's homepage. This is used to test internet connectivity.
+    Tests an opener obtained using :func:`urllib2.build_opener` by attempting
+    to open Google's homepage. This is used to test internet connectivity.
     """
     try:
         openr.open('http://www.google.com', timeout=5)
@@ -203,15 +211,15 @@ def _create_opener():
     """
     Creates an opener for the internet.
 
-    It also attaches the :class:`CachingRedirectHandler` to the opener and sets its
-    User-agent to ``Mozilla/5.0``.
+    It also attaches the :class:`CachingRedirectHandler` to the opener and
+    sets its User-agent to ``Mozilla/5.0``.
 
-    If the Network Proxy settings are set and recognized, it creates the opener and
-    attaches the proxy_handler to it. The opener is tested and returned if the test
-    passes.
+    If the Network Proxy settings are set and recognized, it creates the
+    opener and attaches the proxy_handler to it. The opener is tested and
+    returned if the test passes.
 
-    If the test fails an opener without the proxy settings is created instead and
-    is returned instead.
+    If the test fails an opener without the proxy settings is created instead
+    and is returned instead.
     """
     use_proxy = False
     use_proxy_auth = False
@@ -227,13 +235,19 @@ def _create_opener():
         if NETWORK_PROXY_USER is not None:
             use_proxy_auth = True
             password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(None, proxyurl, NETWORK_PROXY_USER, NETWORK_PROXY_PASS)
+            password_mgr.add_password(
+                None, proxyurl, NETWORK_PROXY_USER, NETWORK_PROXY_PASS
+            )
             proxy_auth_handler = urllib2.ProxyBasicAuthHandler(password_mgr)
     if use_proxy:
         if use_proxy_auth:
-            openr = urllib2.build_opener(proxy_handler, proxy_auth_handler, CachingRedirectHandler)
+            openr = urllib2.build_opener(
+                proxy_handler, proxy_auth_handler, CachingRedirectHandler
+            )
         else:
-            openr = urllib2.build_opener(proxy_handler, CachingRedirectHandler)
+            openr = urllib2.build_opener(
+                proxy_handler, CachingRedirectHandler
+            )
     else:
         openr = urllib2.build_opener(CachingRedirectHandler)
     openr.addheaders = [('User-agent', 'Mozilla/5.0')]
@@ -250,11 +264,11 @@ def _create_replicator_opener():
     """
     Creates an opener for the replicator.
 
-    It also attaches the :class:`CachingRedirectHandler` to the opener and sets its
-    User-agent to ``Mozilla/5.0``.
+    It also attaches the :class:`CachingRedirectHandler` to the opener and
+    sets its User-agent to ``Mozilla/5.0``.
 
-    If the Network Proxy settings are set and recognized, it creates the opener and
-    attaches the proxy_handler to it, and is returned.
+    If the Network Proxy settings are set and recognized, it creates the
+    opener and attaches the proxy_handler to it, and is returned.
     """
 
     use_proxy = False
@@ -267,17 +281,25 @@ def _create_replicator_opener():
         proxyurl = 'http://' + REPLICATOR_PROXY_IP
         if REPLICATOR_PROXY_PORT:
             proxyurl += ':' + REPLICATOR_PROXY_PORT
-        proxy_handler = urllib2.ProxyHandler({REPLICATOR_PROXY_TYPE: proxyurl})
+        proxy_handler = urllib2.ProxyHandler(
+            {REPLICATOR_PROXY_TYPE: proxyurl}
+        )
         if REPLICATOR_PROXY_USER is not None:
             use_proxy_auth = True
             password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(None, proxyurl, REPLICATOR_PROXY_USER, REPLICATOR_PROXY_PASS)
+            password_mgr.add_password(
+                None, proxyurl, REPLICATOR_PROXY_USER, REPLICATOR_PROXY_PASS
+            )
             proxy_auth_handler = urllib2.ProxyBasicAuthHandler(password_mgr)
     if use_proxy:
         if use_proxy_auth:
-            openr = urllib2.build_opener(proxy_handler, proxy_auth_handler, CachingRedirectHandler)
+            openr = urllib2.build_opener(
+                proxy_handler, proxy_auth_handler, CachingRedirectHandler
+            )
         else:
-            openr = urllib2.build_opener(proxy_handler, CachingRedirectHandler)
+            openr = urllib2.build_opener(
+                proxy_handler, CachingRedirectHandler
+            )
     else:
         openr = urllib2.build_opener(CachingRedirectHandler)
     openr.addheaders = [('User-agent', 'Mozilla/5.0')]
@@ -368,9 +390,7 @@ class WWWCachedFetcher:
         filepath = md5(url).hexdigest()
         if self.cache_fs.exists(filepath):
             # TODO This seriously needs cleaning up.
-            if int(time.time()) - \
-                    int(time.mktime(self.cache_fs.getinfo(filepath)['modified_time'].timetuple())) < \
-                    max_age:
+            if int(time.time()) - int(time.mktime(self.cache_fs.getinfo(filepath)['modified_time'].timetuple())) < max_age:  # noqa
                 return self.cache_fs.open(filepath).read()
         # Retrieve over HTTP and cache, using rename to avoid collisions
         data = urlopen(url).read()
@@ -379,7 +399,8 @@ class WWWCachedFetcher:
         fp.write(data)
         fp.close()
         # This can be pretty expensive if the move is across a real filesystem
-        # boundary. We should instead use a temporary file in the cache_fs itself
+        # boundary. We should instead use a temporary file in the cache_fs
+        # itself
         movefile(temp_fs, temp_fs.unsyspath(temppath),
                  self.cache_fs, filepath)
         return data
@@ -393,7 +414,8 @@ def get_soup(url):
     The :mod:`lxml` parser is used.
 
     This function returns a soup constructed of the cached page if one
-    exists and is valid, or obtains one and dumps it into the cache if it doesn't.
+    exists and is valid, or obtains one and dumps it into the cache if it
+    doesn't.
     """
     page = cached_fetcher.fetch(url)
     if page is None:
