@@ -1,10 +1,18 @@
+
+
+recursive-include tendril/gedaif/templates *.yaml
+recursive-include tendril/gedaif/src *.cc
+recursive-include tendril/dox/templates *.tex
+recursive-include tendril/frontend/static *
+recursive-include tendril/frontend/templates *.html
+recursive-include tendril/frontend/blueprints/*/templates *.html
+
+include *.rst
 include *.txt
 include alembic.ini
-include cocomo.yaml
 recursive-include alembic *
-recursive-include test *.py
+recursive-include tests *.py
 recursive-include resources *
-recursive-include profiling *.py
 
 include doc/Makefile
 recursive-include doc *.rst *.py

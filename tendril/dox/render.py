@@ -49,6 +49,7 @@ import jinja2
 
 import numpy
 import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot
 
 from tendril.utils.config import DOX_TEMPLATE_FOLDER
@@ -62,8 +63,6 @@ from tendril.utils.colors import tableau20
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
-
-matplotlib.use('Agg')
 
 
 def format_currency(value):

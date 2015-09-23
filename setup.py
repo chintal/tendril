@@ -24,6 +24,7 @@ setup(
     url="https://github.com/chintal/tendril",
     package_dir={'tendril': 'tendril'},
     packages=find_packages(exclude=['profiling', 'contrib', 'doc', 'tests*']),
+    include_package_data=True,
     long_description=read('README.rst'),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -77,11 +78,6 @@ setup(
         # Extracted Modules
         'driver2200087',
         'iec60063',
-
-        # Maintenance
-        'sphinx',
-        'sphinx-rtd-theme',
-        'sphinxcontrib-documentedlist',
     ],
     tests_require=[
         'pytest',
@@ -90,5 +86,13 @@ setup(
         'twine',
         'wheel',
     ],
+    extras_require={
+        'doc': [
+            'sphinx',
+            'sphinx-rtd-theme',
+            'sphinxcontrib-documentedlist',
+            'sphinxcontrib-googleanalytics==0.1.dev20150826'
+            ]
+    },
     platforms='any'
 )

@@ -45,8 +45,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.documentedlist',
-    'sphinxcontrib.googleanalytics',
-    # 'sphinxcontrib.fulltoc'
+    # 'sphinxcontrib.googleanalytics',
 ]
 
 googleanalytics_id = 'UA-10367073-7'
