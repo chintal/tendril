@@ -26,11 +26,12 @@ use cases of Currencies within tendril, i.e. :
   without too much fuss.
 - Handling currency arithmetic and comparisons.
 
-This module uses a specific `Base Currency`, defined by :const:`tendril.utils.config.BASE_CURRENCY`
-and :const:`tendril.utils.config.BASE_CURRENCY_SYMBOL` and available as this
+This module uses a specific `Base Currency`, defined by
+:const:`tendril.utils.config.BASE_CURRENCY` and
+:const:`tendril.utils.config.BASE_CURRENCY_SYMBOL` and available as this
 module's :data:`native_currency_defn` module variable. In case this module is
-to be used independent of Tendril, at least those configuration options *must* be
-defined in :mod:`tendril.utils.config`.
+to be used independent of Tendril, at least those configuration options
+*must* be defined in :mod:`tendril.utils.config`.
 
 .. rubric:: Module Contents
 
@@ -40,9 +41,11 @@ defined in :mod:`tendril.utils.config`.
     CurrencyDefinition
     CurrencyValue
 
-.. seealso:: :mod:`tendril.utils.types`, for an overview applicable to most types defined in Tendril.
+.. seealso:: :mod:`tendril.utils.types`, for an overview applicable to most
+             types defined in Tendril.
 
-.. todo:: The core numbers in this module need to switched to :class:`decimal.Decimal`.
+.. todo:: The core numbers in this module need to switched to
+          :class:`decimal.Decimal`.
 
 """
 
@@ -127,7 +130,8 @@ class CurrencyDefinition(object):
 
         :param code: The currency code for which the exchange rate is needed.
         :type code: str
-        :return: The exchange rate of currency specified by code vs the native currency.
+        :return: The exchange rate of currency specified by code vs the native
+                 currency.
         :rtype: float
 
         """
@@ -144,8 +148,12 @@ class CurrencyDefinition(object):
             api_target_code = code
             api_base_code = BASE_CURRENCY
 
-            api_target_from_source = float(data['quotes'][api_source_code + api_target_code])
-            api_base_from_source = float(data['quotes'][api_source_code + api_base_code])
+            api_target_from_source = float(
+                data['quotes'][api_source_code + api_target_code]
+            )
+            api_base_from_source = float(
+                data['quotes'][api_source_code + api_base_code]
+            )
 
             rate = api_base_from_source / api_target_from_source
         except KeyError:
@@ -184,15 +192,18 @@ class CurrencyValue(object):
     (recommended), or a string containing the code for the currency.
 
     :param val: The numerical value.
-    :param currency_def: The currency definition within which the value is defined.
+    :param currency_def: The currency definition within which the value
+                         is defined.
     :type currency_def: :class:`CurrencyDefinition` or str
 
-    .. note:: Since the exchange rate is obtained at the instantiation of the
-              :class:`CurrencyDefinition`, using a string instead of a
+    .. note:: Since the exchange rate is obtained at the instantiation of
+              the :class:`CurrencyDefinition`, using a string instead of a
               predefined :class:`CurrencyDefinition` instance may result in
-              instances of the same currency, but with different exchange rates.
+              instances of the same currency, but with different exchange
+              rates.
 
-    :ivar _currency_def: The currency definition of the source value of the instance.
+    :ivar _currency_def: The currency definition of the source value of the
+                         instance.
     :ivar _val: The numerical value in the source currency of the instance.
 
     .. rubric:: Arithmetic Operations
@@ -227,8 +238,8 @@ class CurrencyValue(object):
     @property
     def native_string(self):
         """
-        The string representation of the currency value in the native currency,
-        i.e., that defined by :data:`native_currency_defn`.
+        The string representation of the currency value in the native
+        currency, i.e., that defined by :data:`native_currency_defn`.
 
         :rtype: str
 
@@ -297,9 +308,13 @@ class CurrencyValue(object):
         if not isinstance(other, CurrencyValue):
             raise NotImplementedError
         if self._currency_def.symbol == other.source_currency.symbol:
-            return CurrencyValue(self.source_value + other.source_value, self.source_currency)
+            return CurrencyValue(
+                self.source_value + other.source_value, self.source_currency
+            )
         else:
-            return CurrencyValue(self.native_value + other.native_value, native_currency_defn)
+            return CurrencyValue(
+                self.native_value + other.native_value, native_currency_defn
+            )
 
     def __radd__(self, other):
         if other == 0:
@@ -322,7 +337,9 @@ class CurrencyValue(object):
         :rtype: :class:`CurrencyValue`
         """
         if isinstance(other, numbers.Number):
-            return CurrencyValue(self.source_value * other, self.source_currency)
+            return CurrencyValue(
+                self.source_value * other, self.source_currency
+            )
         else:
             raise NotImplementedError
 
@@ -330,7 +347,8 @@ class CurrencyValue(object):
         """
         Division of one :class:`CurrencyValue` instance with a numerical type
         results in a :class:`CurrencyValue` instance, whose value is is the
-        currency type operand's value divided by the numerical operand's value.
+        currency type operand's value divided by the numerical operand's
+        value.
 
         The :attr:`source_currency` of the returned :class:`CurrencyValue`
         is the same as that of the currency type operand. In this case, the
@@ -345,7 +363,9 @@ class CurrencyValue(object):
         :rtype: :class:`CurrencyValue`
         """
         if isinstance(other, numbers.Number):
-            return CurrencyValue(self.source_value / other, self.source_currency)
+            return CurrencyValue(
+                self.source_value / other, self.source_currency
+            )
         elif isinstance(other, CurrencyValue):
             return self.native_value / other.native_value
         else:

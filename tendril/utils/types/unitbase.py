@@ -19,12 +19,12 @@ Base Unit Types (:mod:`tendril.utils.types.unitbase`)
 =====================================================
 
 The Types provided in this module are not intended for direct use. Instead,
-they provide reusable primitives which can be sub-classed to provide functional
-Types.
+they provide reusable primitives which can be sub-classed to provide
+functional Types.
 
-Ideally, all Unit classes should derive from the :class:`UnitBase` class provided
-here. In practice, only the newer Types follow this inheritance, while the older
-ones still need to be migrated to this form.
+Ideally, all Unit classes should derive from the :class:`UnitBase` class
+provided here. In practice, only the newer Types follow this inheritance,
+while the older ones still need to be migrated to this form.
 
 .. rubric:: Module Contents
 
@@ -37,7 +37,8 @@ ones still need to be migrated to this form.
     parse_percent
     Percentage
 
-.. seealso:: :mod:`tendril.utils.types`, for an overview applicable to most types defined in Tendril.
+.. seealso:: :mod:`tendril.utils.types`, for an overview applicable to
+             most types defined in Tendril.
 
 """
 
@@ -46,7 +47,11 @@ from math import floor
 from decimal import Decimal
 import numbers
 
-round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1)) if x else 0
+
+def round_to_n(x, n):
+    if x:
+        return round(x, -int(floor(log10(x))) + (n - 1))
+    return 0
 
 
 class UnitBase(object):
@@ -55,13 +60,16 @@ class UnitBase(object):
 
     When instantiated, the `value` param is processed as follows :
 
-    - :class:`str` value is passed though `_parse_func`, and whatever it returns is stored.
-    - :class:`numbers.Number` values are first converted into :class:`decimal.Decimal` and then stored.
+    - :class:`str` value is passed though `_parse_func`, and whatever it
+      returns is stored.
+    - :class:`numbers.Number` values are first converted into
+      :class:`decimal.Decimal` and then stored.
     - All other `value` types are simply stored as is.
 
     :param value: The core value to be stored.
     :param _dostr: The canonical unit / order string to use.
-    :param _parse_func: The function used to parse string values into an actual value in the canonical unit.
+    :param _parse_func: The function used to parse string values into an
+                        actual value in the canonical unit.
 
     .. rubric:: Arithmetic Operations
 
@@ -134,23 +142,26 @@ class NumericalUnitBase(UnitBase):
     :param value: The core value to be stored.
     :param _orders: The recognized orders / units for the Unit.
     :param _dostr: The canonical unit / order string to use.
-    :param _parse_func: The function used to parse string values into an actual value in the canonical unit.
+    :param _parse_func: The function used to parse string values into an
+                        actual value in the canonical unit.
 
     .. seealso:: :class:`UnitBase`
 
     .. rubric:: The `orders` Parameter
 
-    The `orders` parameter can either be a list of strings or a list of tuples.
+    The `orders` parameter can either be a list of strings or a
+    list of tuples.
 
-    - In case it is a `list` of `str`, it is assumed that each string represents a
-      unit value 1000 times smaller than the next.
-    - In case it is a `list` of `tuple`, it is assumed that the first element of the
-      tuple is the string representation of the order, and the second element is the
-      multipicative factor relative to the default order string.
+    - In case it is a `list` of `str`, it is assumed that each string
+      represents a unit value 1000 times smaller than the next.
+    - In case it is a `list` of `tuple`, it is assumed that the first
+      element of the tuple is the string representation of the order,
+      and the second element is the multipicative factor relative to
+      the default order string.
     - In both cases, note that first order within which the unit value's
       representation lies between 1 and 1000 is used to produce the unit's
-      string representation. As such, you should place higher priority or more
-      'standard' units towards the beginning of the list.
+      string representation. As such, you should place higher priority or
+      more 'standard' units towards the beginning of the list.
 
     .. rubric:: Arithmetic Operations
 
@@ -168,7 +179,8 @@ class NumericalUnitBase(UnitBase):
         if _orders is not None and isinstance(_orders, list):
             if isinstance(_orders[0], str):
                 doidx = _orders.index(_dostr)
-                self._orders = [(ostr, Decimal(str(10 ** (3 * idx - doidx)))) for idx, ostr in enumerate(_orders)]
+                self._orders = [(ostr, Decimal(str(10 ** (3 * idx - doidx))))
+                                for idx, ostr in enumerate(_orders)]
                 self._ostrs = _orders
             if isinstance(_orders[0], tuple):
                 self._orders = _orders
@@ -193,7 +205,9 @@ class NumericalUnitBase(UnitBase):
         elif self.__class__ == other.__class__:
             return self.__class__(self.value + other.value)
         else:
-            raise NotImplementedError("Addition of : " + repr(self) + " + " + repr(other))
+            raise NotImplementedError(
+                "Addition of : " + repr(self) + " + " + repr(other)
+            )
 
     def __radd__(self, other):
         if other == 0:
@@ -223,24 +237,27 @@ class NumericalUnitBase(UnitBase):
                 if self._gtype != other._gtype:
                     raise TypeError("Gain is of a different type.")
                 return self.__class__(self.value * other.value)
-            if other._gtype is not None and not isinstance(self, other._gtype):
+            if other._gtype and not isinstance(self, other._gtype):
                 raise TypeError("Gain is of a different type.")
             return self.__class__(self.value * other.value)
         else:
-            raise NotImplementedError("Multiplication of : " + repr(self) + " x " + repr(other))
+            raise NotImplementedError(
+                "Multiplication of : " + repr(self) + " x " + repr(other)
+            )
 
     def __div__(self, other):
         """
         Division of one Unit type class instance with a numerical type
-        results in a Unit type class instance of the same type, whose value is
-        the Unit type operand's value divided by the numerical operand's value.
+        results in a Unit type class instance of the same type, whose value
+        is the Unit type operand's value divided by the numerical operand's
+        value.
 
-        In this case, the first operand must be a Unit type class instance, and
-        not the reverse.
+        In this case, the first operand must be a Unit type class instance,
+        and not the reverse.
 
         Division of one Unit type class instance by another of the same type
-        returns a numerical value, which is obtained by performing the division
-        with the operands' value.
+        returns a numerical value, which is obtained by performing the
+        division with the operands' value.
 
         Division with all other Types / Classes is not supported.
         """
@@ -252,7 +269,9 @@ class NumericalUnitBase(UnitBase):
         elif isinstance(other, self.__class__):
             return self.value / other.value
         else:
-            raise NotImplementedError("Division of : " + repr(self) + " / " + repr(other))
+            raise NotImplementedError(
+                "Division of : " + repr(self) + " / " + repr(other)
+            )
 
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -296,7 +315,9 @@ class NumericalUnitBase(UnitBase):
                 return 1
         else:
             print self, other
-            raise NotImplementedError("Comparison of : " + repr(self) + ", " + repr(other))
+            raise NotImplementedError(
+                "Comparison of : " + repr(self) + ", " + repr(other)
+            )
 
     @property
     def natural_repr(self):
@@ -417,8 +438,8 @@ class Percentage(NumericalUnitBase):
     The contribution this base class makes is to be able to parse percentage
     strings so that the Descendant class need not.
 
-    Only the standard :class:`NumericalUnitBase` Arithmetic is supported by this
-    class at this time.
+    Only the standard :class:`NumericalUnitBase` Arithmetic is supported by
+    this class at this time.
     """
     def __init__(self, value):
         _ostrs = ['%']

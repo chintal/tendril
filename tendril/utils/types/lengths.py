@@ -18,14 +18,16 @@
 This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
 
 from decimal import Decimal
 import numbers
 import re
 
-lrex = re.compile(ur'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<um>[-+]?\d*\.*\d+) *um *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|((?P<mil>[-+]?\d*\.*\d+) *mil *$)|((?P<cmil>[-+]?\d*\.*\d+) *cmil *$)|((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$)',
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
+
+
+lrex = re.compile(ur'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<um>[-+]?\d*\.*\d+) *um *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|((?P<mil>[-+]?\d*\.*\d+) *mil *$)|((?P<cmil>[-+]?\d*\.*\d+) *cmil *$)|((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$)',  # noqa
                   re.IGNORECASE)
 
 
@@ -166,7 +168,9 @@ class Length(object):
             if other == 0:
                 cval = 0
             else:
-                raise NotImplementedError("Can't Compare :: " + str(self) + ' ' + str(other))
+                raise NotImplementedError(
+                    "Can't Compare :: " + str(self) + ' ' + str(other)
+                )
         elif isinstance(other, Length):
             cval = other.decimal
         else:
@@ -178,4 +182,3 @@ class Length(object):
             return -1
         else:
             return 1
-

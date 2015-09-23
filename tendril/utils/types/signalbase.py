@@ -23,7 +23,6 @@ from tendril.utils.types.time import TimeDelta
 
 from tendril.utils.types.unitbase import Percentage
 
-from decimal import Decimal
 from collections import deque
 import copy
 
@@ -111,9 +110,11 @@ class SignalWave(SignalBase):
             else:
                 if not self._use_point_ts:
                     span_spacing = self._spacing.timespan
-                    self._points = deque([(ts0 + (span_spacing * idx).timedelta, point)
-                                          for idx, point in enumerate(points)],
-                                         maxlen=buffer_size)
+                    self._points = deque(
+                        [(ts0 + (span_spacing * idx).timedelta, point)
+                         for idx, point in enumerate(points)],
+                        maxlen=buffer_size
+                    )
                 else:
                     self._points = deque([(point.timestamp, point)
                                           for point in points],
@@ -171,7 +172,8 @@ class SignalWave(SignalBase):
     @property
     def mean(self):
         if self.unitclass == int:
-            return int(round(float(sum([x[1].value for x in self._points])) / len(self._points)))
+            return int(round(float(sum([x[1].value for x in self._points])) /
+                             len(self._points)))
         return sum([x[1].value for x in self._points]) / len(self._points)
 
     @property

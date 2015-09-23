@@ -182,8 +182,9 @@ def parse_voltage_gain(value):
             v = Decimal(value[:-2])
             return 10 ** (v/20)
         else:
-            raise ValueError("Unrecognized string for VoltageGain : "
-                             + value)
+            raise ValueError(
+                "Unrecognized string for VoltageGain : " + value
+            )
 
 
 class VoltageGain(GainBase):
@@ -192,7 +193,9 @@ class VoltageGain(GainBase):
         _ostrs = ['V/V']
         _dostr = 'V/V'
         _parse_func = parse_voltage_gain
-        super(VoltageGain, self).__init__(value, _ostrs, _dostr, _parse_func, _gtype)
+        super(VoltageGain, self).__init__(
+            value, _ostrs, _dostr, _parse_func, _gtype
+        )
 
 
 class PowerRatio(NumericalUnitBase):

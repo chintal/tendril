@@ -71,7 +71,9 @@ class CartesianLineSegment(object):
             raise ZeroDivisionError
 
     def length(self):
-        return Length(str(math.sqrt((self.p2.x - self.p1.x)**2 + (self.p2.y - self.p1.y)**2)) + self.p1.unit)
+        return Length(str(
+            math.sqrt((self.p2.x - self.p1.x)**2 + (self.p2.y - self.p1.y)**2)
+        ) + self.p1.unit)
 
     def __contains__(self, p):
         try:
