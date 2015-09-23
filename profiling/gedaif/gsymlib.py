@@ -30,6 +30,8 @@ import inspect
 
 from ..profiler import do_profile
 
+from tendril.gedaif import gsymlib
+
 SCRIPT_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 SCRIPT_FOLDER = os.path.normpath(os.path.join(SCRIPT_PATH, os.pardir))
 
@@ -40,9 +42,8 @@ def generate_gsymlib():
     Profiles gsymlib generation.
 
     When the ``gsymlib`` module is loaded, it automatically generates the gEDA symbol
-    library from the library on the filesystem. This function performs the import and
-    profiles all the actions that happen on import.
-
+    library from the library on the filesystem. This function profiles the generation of
+    the symlib.
 
     :download:`Raw execution profile <../../../profiling/gedaif/gsymlib/gsymlib.profile>`
     :download:`SVG of execution profile <../../../profiling/gedaif/gsymlib/gsymlib.profile.svg>`
@@ -56,7 +57,7 @@ def generate_gsymlib():
     .. literalinclude:: ../../../profiling/gedaif/gsymlib/gsymlib.profile.stats
 
     """
-    from tendril.gedaif import gsymlib
+    symlib = gsymlib.gen_symlib()
 
 
 def main():

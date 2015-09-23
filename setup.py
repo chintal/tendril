@@ -22,7 +22,7 @@ setup(
     keywords="",
     url="https://github.com/chintal/tendril",
     package_dir={'tendril': 'tendril'},
-    packages=find_packages(exclude=['contrib', 'doc', 'tests*']),
+    packages=find_packages(exclude=['profiling', 'contrib', 'doc', 'tests*']),
     long_description=read('README.rst'),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -83,7 +83,6 @@ setup(
         'sphinx-rtd-theme',
         'twine',
         'wheel',
-        'pytest',
     ],
     platforms='any'
 )

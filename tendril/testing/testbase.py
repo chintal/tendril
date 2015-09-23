@@ -19,9 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import arrow
 from collections import namedtuple
@@ -31,6 +28,9 @@ from tendril.utils.fsutils import get_tempname
 
 # TODO  Replace with colorama or so
 from tendril.utils.progressbar import terminal
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
+
 
 TestLine = namedtuple('TestLine', ['desc', 'expected', 'measured'])
 

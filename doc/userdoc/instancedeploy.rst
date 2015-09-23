@@ -66,7 +66,6 @@ goal is to reintegrate the submodule after a package manager is used to remove
 the various javascript dependencies from the frontend repository, making it small
 enough to be contained within the main repository.
 
-
  1. Create a checkout of your empty repository.
 
     .. code-block:: bash

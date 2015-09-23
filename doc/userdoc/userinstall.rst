@@ -113,7 +113,7 @@ details can be worked out, use the following checkouts:
     2. Create a fork of the Organization's instance configuration. For example, clone
        ``gitlab.com/<org>/tendril-instance-<org>.git`` into ``gitlab.com/<username>/tendril-instance-<org>.git``
 
-    2. Get your fork of the tendril instance configuration.
+    2. Get a clone of your fork of the Organization's instance configuration.
 
         .. code-block:: bash
 
