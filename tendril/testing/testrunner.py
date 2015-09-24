@@ -90,7 +90,9 @@ def get_channel_defs_from_cnf_channels(channeldict, grouplist):
         if groupname in grouplist:
             channellist = groupdict[groupname]
             for c in channellist:
-                channeldefs.extend([ChannelDef(idx=k, name=v) for k, v in c.iteritems()])
+                channeldefs.extend(
+                    [ChannelDef(idx=k, name=v) for k, v in c.iteritems()]
+                )
     return channeldefs
 
 
@@ -108,7 +110,9 @@ def replace_in_string(cnf_string, token, value, channelmap=None):
         for s in mapped_strings:
             if cnf_string.startswith(s):
                 lidx = channelmap[s][value]
-                logger.debug("Applying channel map : " + ' '.join([str(s), str(value), str(lidx)]))
+                logger.debug("Applying channel map : " +
+                             ' '.join([str(s), str(value), str(lidx)])
+                             )
 
     return cnf_string.replace(token, str(lidx))
 
@@ -117,11 +121,17 @@ def replace_in_test_cnf_list(cnf_list, token, value, channelmap=None):
     l = copy.deepcopy(cnf_list)
     for idx, startval in enumerate(l):
         if isinstance(startval, str):
-            l[idx] = replace_in_string(startval, token, value, channelmap)
+            l[idx] = replace_in_string(
+                startval, token, value, channelmap
+            )
         elif isinstance(startval, dict):
-            l[idx] = replace_in_test_cnf_dict(startval, token, value, channelmap)
+            l[idx] = replace_in_test_cnf_dict(
+                startval, token, value, channelmap
+            )
         elif isinstance(startval, list):
-            l[idx] = replace_in_test_cnf_list(startval, token, value, channelmap)
+            l[idx] = replace_in_test_cnf_list(
+                startval, token, value, channelmap
+            )
     return l
 
 
@@ -130,11 +140,17 @@ def replace_in_test_cnf_dict(cnf_dict, token, value, channelmap=None):
     for key in d.keys():
         startval = d[key]
         if isinstance(startval, str):
-            d[key] = replace_in_string(startval, token, value, channelmap)
+            d[key] = replace_in_string(
+                startval, token, value, channelmap
+            )
         elif isinstance(startval, dict):
-            d[key] = replace_in_test_cnf_dict(startval, token, value, channelmap)
+            d[key] = replace_in_test_cnf_dict(
+                startval, token, value, channelmap
+            )
         elif isinstance(startval, list):
-            d[key] = replace_in_test_cnf_list(startval, token, value, channelmap)
+            d[key] = replace_in_test_cnf_list(
+                startval, token, value, channelmap
+            )
     return d
 
 
@@ -185,36 +201,48 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
                 if cnf_group.keys()[0] in cnf_grouplist:
                     cnf_test_list = cnf_group[cnf_group.keys()[0]]
                     for cnf_test in cnf_test_list:
-                        suite[0].add_test(get_testobj_from_cnf_test(cnf_test,
-                                                                    testvars,
-                                                                    bomobj,
-                                                                    offline=offline))
+                        suite[0].add_test(
+                            get_testobj_from_cnf_test(
+                                cnf_test, testvars, bomobj, offline=offline
+                            )
+                        )
 
         if 'channel-tests' in suite_detail.keys():
-            channel_defs = get_channel_defs_from_cnf_channels(suite_detail['channels'],
-                                                              cnf_grouplist)
+            channel_defs = get_channel_defs_from_cnf_channels(
+                suite_detail['channels'], cnf_grouplist
+            )
 
             lsuites = []
             for channel_def in channel_defs:
                 lsuite = TestSuiteBase()
                 if 'prep' in suite_detail.keys():
-                    add_prep_steps_from_cnf_prep(lsuite, replace_in_test_cnf_dict(suite_detail['prep'],
-                                                                                  '<CH>', channel_def.idx))
+                    add_prep_steps_from_cnf_prep(
+                        lsuite,
+                        replace_in_test_cnf_dict(
+                            suite_detail['prep'], '<CH>', channel_def.idx
+                        )
+                    )
                 if desc is not None:
-                    lsuite.desc = replace_in_string(desc, '<CH>', channel_def.idx)
+                    lsuite.desc = replace_in_string(
+                        desc, '<CH>', channel_def.idx
+                    )
                 if title is not None:
-                    lsuite.title = replace_in_string(title, '<CH>', channel_def.idx)
+                    lsuite.title = replace_in_string(
+                        title, '<CH>', channel_def.idx
+                    )
                 for test in suite_detail['channel-tests']:
                     if 'motif-map' in suite_detail.keys():
                         motifmap = suite_detail['motif-map']
                     else:
                         motifmap = None
-                    cnf_test_dict = replace_in_test_cnf_dict(test, '<CH>',
-                                                             channel_def.idx,
-                                                             motifmap)
-                    lsuite.add_test(get_testobj_from_cnf_test(cnf_test_dict,
-                                                              testvars, bomobj,
-                                                              offline=offline))
+                    cnf_test_dict = replace_in_test_cnf_dict(
+                        test, '<CH>', channel_def.idx, motifmap
+                    )
+                    lsuite.add_test(
+                        get_testobj_from_cnf_test(
+                            cnf_test_dict, testvars, bomobj, offline=offline
+                        )
+                    )
                 lsuites.append(lsuite)
 
             suite.extend(lsuites)
@@ -224,32 +252,40 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
     return suite
 
 
-def get_electronics_test_suites(serialno, devicetype, projectfolder, offline=False):
+def get_electronics_test_suites(serialno, devicetype, projectfolder,
+                                offline=False):
     try:
         gcf = ConfigsFile(projectfolder)
-        logger.info("Using gEDA configs file from : " + projects.cards[devicetype])
+        logger.info("Using gEDA configs file from : " +
+                    projects.cards[devicetype])
     except NoGedaProjectException:
         raise AttributeError("gEDA project for " + devicetype + " not found.")
     cnf_suites = gcf.tests()
     for cnf_suite in cnf_suites:
-        suite = get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=offline)
+        suite = get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype,
+                                            offline=offline)
         for lsuite in suite:
             lsuite.serialno = serialno
             logger.info("Constructed Suite : " + repr(lsuite))
             yield lsuite
 
 
-def run_electronics_test(serialno, devicetype, projectfolder, incremental=True):
+def run_electronics_test(serialno, devicetype, projectfolder,
+                         incremental=True):
     offline = False
     suites = []
-    for suite in get_electronics_test_suites(serialno, devicetype, projectfolder, offline=offline):
+    for suite in get_electronics_test_suites(serialno, devicetype,
+                                             projectfolder, offline=offline):
         if offline is False:
             if incremental is True:
-                latest = controller.get_latest_test_suite(serialno=serialno,
-                                                          suite_class=repr(suite.__class__),
-                                                          descr=suite.desc)
+                latest = controller.get_latest_test_suite(
+                    serialno=serialno,
+                    suite_class=repr(suite.__class__),
+                    descr=suite.desc
+                )
                 if latest and latest.passed and \
-                        latest.created_at.floor('day') == arrow.utcnow().floor('day'):
+                        latest.created_at.floor('day') == \
+                        arrow.utcnow().floor('day'):
                     suite_needs_be_run = False
                     suite.destroy()
                 else:

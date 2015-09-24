@@ -52,7 +52,7 @@ def results(device_sno=None):
                  'crumbroot': '/testing',
                  'breadcrumbs': [Crumb(name="Testing", path="/"),
                                  Crumb(name="Reports", path="result/"),
-                                 Crumb(name=device_sno, path="result/" + device_sno)],
+                                 Crumb(name=device_sno, path="result/" + device_sno)],  # noqa
                  }
         return render_template('test_result_detail.html', stage=stage,
                                pagetitle=device_sno + " Test Result")

@@ -55,7 +55,9 @@ def reset_db(app, db):
     from tendril.utils.config import ADMIN_EMAIL
     from tendril.utils.config import ADMIN_PASSWORD
 
-    user = add_user(app, db, ADMIN_USERNAME, ADMIN_FULLNAME, ADMIN_EMAIL, ADMIN_PASSWORD)
+    user = add_user(
+        app, db, ADMIN_USERNAME, ADMIN_FULLNAME, ADMIN_EMAIL, ADMIN_PASSWORD
+    )
     user.roles.append(admin_role)
     user.roles.append(exec_role)
     user.roles.append(internal_role)
@@ -66,7 +68,8 @@ def add_user(app, db, username, full_name, email, password):
     """
     Create UserAuth and User records.
     """
-    user_auth = UserAuth(username=username, password=app.user_manager.hash_password(password))
+    user_auth = UserAuth(username=username,
+                         password=app.user_manager.hash_password(password))
     user = User(
         active=True,
         full_name=full_name,

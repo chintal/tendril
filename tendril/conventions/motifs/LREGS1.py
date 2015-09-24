@@ -71,12 +71,14 @@ class MotifLREGS1(MotifBase):
             lastval = rval
             rval = electronics.parse_resistance(val)
             if rval >= required_res_val:
-                self.get_elem_by_idx('R2').data['value'] = gsymlib.find_resistor(lastval, r2_fp, r2_dev)
+                self.get_elem_by_idx('R2').data['value'] = gsymlib.find_resistor(lastval, r2_fp, r2_dev)  # noqa
                 break
 
     def validate(self):
         logger.debug("Validating Motif : " + self.refdes)
-        logger.debug(" Vout: " + str(self.Vout) + " R2:" + str(self.R2) + " R1:" + str(self.R1))
+        logger.debug(" Vout: " + str(self.Vout) +
+                     " R2:" + str(self.R2) +
+                     " R1:" + str(self.R1))
 
     @property
     def Vout(self):
@@ -94,7 +96,7 @@ class MotifLREGS1(MotifBase):
                                              self._configdict['Rmin'],
                                              self._configdict['Rmax'])
 
-        required_res_val = ((electronics.parse_voltage(value) / self.Vref) - 1) * self.R2
+        required_res_val = ((electronics.parse_voltage(value) / self.Vref) - 1) * self.R2  # noqa
 
         rval = None
         lastval = None
@@ -102,20 +104,20 @@ class MotifLREGS1(MotifBase):
             lastval = rval
             rval = electronics.parse_resistance(val)
             if rval >= required_res_val:
-                self.get_elem_by_idx('R1').data['value'] = gsymlib.find_resistor(lastval, r1_fp, r1_dev)
+                self.get_elem_by_idx('R1').data['value'] = gsymlib.find_resistor(lastval, r1_fp, r1_dev)  # noqa
                 break
 
     @property
     def R1(self):
         elem = self.get_elem_by_idx('R1')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])
+        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
 
     @property
     def R2(self):
         elem = self.get_elem_by_idx('R2')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])
+        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
 
     @property
     def Vref(self):

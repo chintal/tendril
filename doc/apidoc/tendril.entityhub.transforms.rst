@@ -1,5 +1,5 @@
 tendril.entityhub.transforms module
-=================================
+===================================
 
 .. automodule:: tendril.entityhub.transforms
     :members:

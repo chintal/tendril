@@ -23,30 +23,33 @@
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 
 """
 
 The Progressbar Package (:mod:`tendril.utils.progressbar`)
 ========================================================
 
-This package produces animated progress bars on the terminal. It is based on the
-one written by Nadia Alramli in 2009, made available under the BSD License. This
-license is retained for this package (:mod:`tendril.utils.progressbar`) and it's
-submodules. The changes to the original code are minimal.
+This package produces animated progress bars on the terminal. It is based
+on the one written by Nadia Alramli in 2009, made available under the BSD
+License. This license is retained for this package
+(:mod:`tendril.utils.progressbar`) and it's submodules. The changes to the
+original code are minimal.
 
-This package should ideally be outside tendril, on it's own and living in PyPi.
-It is here because PyPi seems to already have a large assortment of progressbar
-packages, and I have no idea which of those are usable / how. This version,
-though, has done it's job satisfactorily in the past, and doesn't need me to go
-digging though the various PyPi modules to find a stable progressbar package.
+This package should ideally be outside tendril, on it's own and living in
+PyPi. It is here because PyPi seems to already have a large assortment of
+progressbar packages, and I have no idea which of those are usable / how.
+This version, though, has done it's job satisfactorily in the past, and
+doesn't need me to go digging though the various PyPi modules to find a
+stable progressbar package.
 
 .. rubric:: Submodules
 

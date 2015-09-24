@@ -33,14 +33,14 @@ within the Utils module, meaning application code does not have to bother
 about it. This comes at the cost of reducing the flexibility available when
 using this functionality in application code.
 
-The intent of the :mod:`tendril.utils` package and it's modules is to attempt to
-create a consistent structure throughout the :mod:`tendril` codebase. The
-:mod:`tendril.utils` module, in effect, specifies the preferred way to do certain
-common things. Tendril application code which makes use of the functionality of
-this module is expected to benefit in the form of consistency, relative
-ease in honoring user-provided parameters (across the codebase), and not need
-to deal with the underlying libraries and the wide range of usage options
-available for the most common cases.
+The intent of the :mod:`tendril.utils` package and it's modules is to attempt
+to create a consistent structure throughout the :mod:`tendril` codebase. The
+:mod:`tendril.utils` module, in effect, specifies the preferred way to do
+certain common things. Tendril application code which makes use of the
+functionality of this module is expected to benefit in the form of
+consistency, relative ease in honoring user-provided parameters (across the
+codebase), and not need to deal with the underlying libraries and the wide
+range of usage options available for the most common cases.
 
 It is expected that this structure will be critical to being able to easily
 adapt the Tendril codebase to new environments and for making more flexibility

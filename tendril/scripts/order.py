@@ -47,7 +47,8 @@ if __name__ == '__main__':
 
     bomlist = []
 
-    orderfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'sourcing', 'current')
+    orderfolder = os.path.join(INSTANCE_ROOT, 'scratch',
+                               'sourcing', 'current')
     orderfile = os.path.join(orderfolder, 'order.yaml')
 
     with open(orderfile, 'r') as f:
@@ -80,18 +81,19 @@ if __name__ == '__main__':
         IMMEDIATE_EARMARKS = data['immediate']
 
     # Define base transforms for external data
-    base_tf_0 = tendril.inventory.electronics.inventory_locations[0]._reader.tf
-    base_tf_1 = tendril.inventory.electronics.inventory_locations[1]._reader.tf
-    base_tf_2 = tendril.inventory.electronics.inventory_locations[2]._reader.tf
+    base_tf_0 = tendril.inventory.electronics.inventory_locations[0]._reader.tf  # noqa
+    base_tf_1 = tendril.inventory.electronics.inventory_locations[1]._reader.tf  # noqa
+    base_tf_2 = tendril.inventory.electronics.inventory_locations[2]._reader.tf  # noqa
 
     if LOAD_PRESHORT is True:
         # Load Preshort File
         if os.path.exists(os.path.join(orderfolder, 'preshort.csv')):
             with open(os.path.join(orderfolder, 'preshort.csv'), 'r') as f:
                 logger.debug('Creating PRESHORT Bom')
-                obom_descriptor = tendril.boms.outputbase.OutputElnBomDescriptor('PRESHORT',
-                                                                               os.path.join(INSTANCE_ROOT, 'scratch'),
-                                                                               'PRESHORT', None)
+                obom_descriptor = tendril.boms.outputbase.OutputElnBomDescriptor(  # noqa
+                    'PRESHORT', os.path.join(INSTANCE_ROOT, 'scratch'),
+                    'PRESHORT', None
+                )
                 obom = tendril.boms.outputbase.OutputBom(obom_descriptor)
                 rex_qty = re.compile(ur'^-(?P<qty>[\d]+)\s+(qty)?$')
                 reader = csv.reader(f)
@@ -107,18 +109,22 @@ if __name__ == '__main__':
                         print line, line[1]
                         raise
                     if base_tf_0.has_contextual_repr(cident):
-                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_0.get_canonical_repr(cident))
+                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_0.get_canonical_repr(cident))  # noqa
                     elif base_tf_1.has_contextual_repr(cident):
-                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_1.get_canonical_repr(cident))
+                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_1.get_canonical_repr(cident))  # noqa
                     elif base_tf_2.has_contextual_repr(cident):
-                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_2.get_canonical_repr(cident))
+                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_2.get_canonical_repr(cident))  # noqa
                     else:
                         logger.info('NOT HANDLED : {0}'.format(line[0]))
                         continue
 
                     item = tendril.boms.electronics.EntityElnComp()
                     item.define('Undef', device, value, footprint)
-                    logger.debug("Inserting : {0:4} {1}".format(str(qty), str(item.ident)))
+                    logger.debug(
+                        "Inserting : {0:4} {1}".format(
+                            str(qty), str(item.ident)
+                        )
+                    )
                     for i in range(qty + 1):
                         obom.insert_component(item)
 
@@ -135,10 +141,13 @@ if __name__ == '__main__':
                 EXTERNAL_REQ_IMMEDIATE = True
             else:
                 EXTERNAL_REQ_IMMEDIATE = True
-                logger.warning("External Req File Priority Not Recognized. Assuming Immediate")
+                logger.warning("External Req File Priority Not Recognized. "
+                               "Assuming Immediate")
 
             if os.path.exists(external_req_file):
-                logger.info("Loading External Req File : " + external_req_file)
+                logger.info(
+                    "Loading External Req File : " + external_req_file
+                )
                 with open(external_req_file, 'r') as f:
                     header = []
                     reader = csv.reader(f)
@@ -152,10 +161,13 @@ if __name__ == '__main__':
                     oboms = []
                     for head in header[1:]:
                         logger.debug('Creating Bom : ' + head)
-                        obom_descriptor = tendril.boms.outputbase.OutputElnBomDescriptor(head,
-                                                                                       os.path.join(INSTANCE_ROOT, 'scratch'),
-                                                                                       head, None)
-                        obom = tendril.boms.outputbase.OutputBom(obom_descriptor)
+                        obom_descriptor = tendril.boms.outputbase.OutputElnBomDescriptor(  # noqa
+                            head, os.path.join(INSTANCE_ROOT, 'scratch'),
+                            head, None
+                        )
+                        obom = tendril.boms.outputbase.OutputBom(
+                            obom_descriptor
+                        )
                         oboms.append(obom)
 
                     for line in reader:
@@ -166,7 +178,7 @@ if __name__ == '__main__':
                             break
                         if not base_tf_0.has_contextual_repr(line[0]):
                             print line[0] + ' Possibly not recognized'
-                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_0.get_canonical_repr(line[0]))
+                        device, value, footprint = tendril.conventions.electronics.parse_ident(base_tf_0.get_canonical_repr(line[0]))  # noqa
                         # print base_tf.get_canonical_repr(line[0])
                         item = tendril.boms.electronics.EntityElnComp()
                         item.define('Undef', device, value, footprint)
@@ -177,9 +189,14 @@ if __name__ == '__main__':
                                     oboms[idx].insert_component(item)
 
                     for obom in oboms:
-                        logger.info('Inserting External Bom : ' + obom.descriptor.configname)
+                        logger.info(
+                            'Inserting External Bom : ' +
+                            obom.descriptor.configname
+                        )
                         if EXTERNAL_REQ_IMMEDIATE is True:
-                            IMMEDIATE_EARMARKS.append(obom.descriptor.configname)
+                            IMMEDIATE_EARMARKS.append(
+                                obom.descriptor.configname
+                            )
                         bomlist.append(obom)
 
     # Generate Tendril Requisitions
@@ -189,8 +206,10 @@ if __name__ == '__main__':
             bom = tendril.boms.electronics.import_pcb(projects.cards[k])
             obom = bom.create_output_bom(k)
             obom.multiply(v)
-            logger.info('Inserting Card Bom : ' + obom.descriptor.configname +
-                        ' x' + str(obom.descriptor.multiplier))
+            logger.info(
+                'Inserting Card Bom : ' + obom.descriptor.configname +
+                ' x' + str(obom.descriptor.multiplier)
+            )
             bomlist.append(obom)
 
     cobom = tendril.boms.outputbase.CompositeOutputBom(bomlist)
@@ -200,7 +219,10 @@ if __name__ == '__main__':
         immediate_idxs = range(len(cobom.descriptors))
 
     with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
-        logger.info('Exporting Composite Output BOM to File : ' + os.linesep + os.path.join(orderfolder, 'cobom.csv'))
+        logger.info(
+            'Exporting Composite Output BOM to File : ' +
+            os.linesep + os.path.join(orderfolder, 'cobom.csv')
+        )
         cobom.dump(f)
 
     orders_path = os.path.join(orderfolder, 'purchase-orders')
@@ -219,90 +241,126 @@ if __name__ == '__main__':
     # TODO Heavily refactor
 
     for pbidx, line in enumerate(cobom.lines):
-        if logger.getEffectiveLevel() >= log.INFO or (PRIORITIZE is False and USE_STOCK is False):
+        if logger.getEffectiveLevel() >= log.INFO or \
+                (PRIORITIZE is False and USE_STOCK is False):
             percentage = (float(pbidx) / nlines) * 100.00
-            pb.render(int(percentage),
-                      "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Shortage File, Reservations, and Preparing Orders".format(
-                          percentage, line.ident, line.quantity))
+            pb.render(
+                int(percentage),
+                "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\n"
+                "Constructing Shortage File, Reservations, and Preparing Orders".format(  # noqa
+                    percentage, line.ident, line.quantity
+                )
+            )
             shortage = 0
         if USE_STOCK is True:
             if PRIORITIZE is False:
                 for idx, descriptor in enumerate(cobom.descriptors):
-                    earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
-                    avail = tendril.inventory.electronics.get_total_availability(line.ident)
+                    earmark = descriptor.configname + \
+                        ' x' + str(descriptor.multiplier)
+                    avail = tendril.inventory.electronics.get_total_availability(line.ident)  # noqa
                     if line.columns[idx] == 0:
                         continue
                     if avail > line.columns[idx]:
-                        tendril.inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
+                        tendril.inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)  # noqa
                     elif avail > 0:
-                        tendril.inventory.electronics.reserve_items(line.ident, avail, earmark)
+                        tendril.inventory.electronics.reserve_items(line.ident, avail, earmark)  # noqa
                         pshort = line.columns[idx] - avail
                         shortage += pshort
-                        logger.debug('Adding Partial Qty of ' + line.ident +
-                                     ' for ' + earmark + ' to shortage : ' + str(pshort))
+                        logger.debug(
+                            'Adding Partial Qty of ' + line.ident +
+                            ' for ' + earmark +
+                            ' to shortage : ' + str(pshort)
+                        )
                     else:
                         shortage += line.columns[idx]
-                        logger.debug('Adding Full Qty of ' + line.ident +
-                                     ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
+                        logger.debug(
+                            'Adding Full Qty of ' + line.ident +
+                            ' for ' + earmark +
+                            ' to shortage : ' + str(line.columns[idx])
+                        )
             else:
-                avail = tendril.inventory.electronics.get_total_availability(line.ident)
+                avail = tendril.inventory.electronics.get_total_availability(line.ident)  # noqa
                 if avail >= line.subset_qty(immediate_idxs):
                     if avail < line.quantity:
                         deferred.append((line.ident, line.quantity - avail))
-                    logger.debug('Availability surpasses priority requirement. Rejecting for order : ' + line.ident)
+                    logger.debug(
+                        'Availability surpasses priority requirement. '
+                        'Rejecting for order : ' + line.ident
+                    )
                     shortage = 0
                 else:
-                    logger.debug('Availability falls short of priority requirement. Accepting for order : ' + line.ident)
+                    logger.debug(
+                        'Availability falls short of priority requirement. '
+                        'Accepting for order : ' + line.ident
+                    )
                     # Reserve for immediate
                     for idx, descriptor in enumerate(cobom.descriptors):
                         if idx in immediate_idxs:
-                            earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
-                            avail = tendril.inventory.electronics.get_total_availability(line.ident)
+                            earmark = descriptor.configname + \
+                                ' x' + str(descriptor.multiplier)
+                            avail = tendril.inventory.electronics.get_total_availability(line.ident)  # noqa
                             if line.columns[idx] == 0:
                                 continue
                             if avail > line.columns[idx]:
-                                tendril.inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
+                                tendril.inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)  # noqa
                             elif avail > 0:
-                                tendril.inventory.electronics.reserve_items(line.ident, avail, earmark)
+                                tendril.inventory.electronics.reserve_items(line.ident, avail, earmark)  # noqa
                                 pshort = line.columns[idx] - avail
                                 shortage += pshort
-                                logger.debug('Adding Partial Qty of ' + line.ident +
-                                             ' for ' + earmark + ' to shortage : ' + str(pshort))
+                                logger.debug(
+                                    'Adding Partial Qty of ' + line.ident +
+                                    ' for ' + earmark +
+                                    ' to shortage : ' + str(pshort)
+                                )
                             else:
                                 shortage += line.columns[idx]
-                                logger.debug('Adding Full Qty of ' + line.ident +
-                                             ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
+                                logger.debug(
+                                    'Adding Full Qty of ' + line.ident +
+                                    ' for ' + earmark +
+                                    ' to shortage : ' + str(line.columns[idx])
+                                )
                     # Reserve for the rest
                     for idx, descriptor in enumerate(cobom.descriptors):
                         if idx not in immediate_idxs:
-                            earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
-                            avail = tendril.inventory.electronics.get_total_availability(line.ident)
+                            earmark = descriptor.configname + \
+                                ' x' + str(descriptor.multiplier)
+                            avail = tendril.inventory.electronics.get_total_availability(line.ident)  # noqa
                             if line.columns[idx] == 0:
                                 continue
                             if avail > line.columns[idx]:
-                                tendril.inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)
+                                tendril.inventory.electronics.reserve_items(line.ident, line.columns[idx], earmark)  # noqa
                             elif avail > 0:
-                                tendril.inventory.electronics.reserve_items(line.ident, avail, earmark)
+                                tendril.inventory.electronics.reserve_items(line.ident, avail, earmark)  # noqa
                                 pshort = line.columns[idx] - avail
                                 shortage += pshort
-                                logger.debug('Adding Partial Qty of ' + line.ident +
-                                             ' for ' + earmark + ' to shortage : ' + str(pshort))
+                                logger.debug(
+                                    'Adding Partial Qty of ' + line.ident +
+                                    ' for ' + earmark +
+                                    ' to shortage : ' + str(pshort)
+                                )
                             else:
                                 shortage += line.columns[idx]
-                                logger.debug('Adding Full Qty of ' + line.ident +
-                                             ' for ' + earmark + ' to shortage : ' + str(line.columns[idx]))
+                                logger.debug(
+                                    'Adding Full Qty of ' + line.ident +
+                                    ' for ' + earmark +
+                                    ' to shortage : ' + str(line.columns[idx])
+                                )
         else:
             if PRIORITIZE is False:
                 shortage = line.quantity
             else:
                 if line.subset_qty(immediate_idxs) > 0:
-                    logger.debug("Accepting for priority inclusion : " + line.ident)
+                    logger.debug(
+                        "Accepting for priority inclusion : " + line.ident
+                    )
                     shortage = line.quantity
                 else:
-                    logger.debug("Rejecting for priority inclusion : " + line.ident)
+                    logger.debug(
+                        "Rejecting for priority inclusion : " + line.ident
+                    )
                     shortage = 0
         if shortage > 0:
-            result = tendril.sourcing.electronics.order.add(line.ident, line.quantity, shortage, orderref)
+            result = tendril.sourcing.electronics.order.add(line.ident, line.quantity, shortage, orderref)  # noqa
             if result is False:
                 unsourced.append((line.ident, shortage))
 
@@ -318,7 +376,7 @@ if __name__ == '__main__':
     tendril.sourcing.electronics.order.collapse()
     tendril.sourcing.electronics.order.rebalance()
     tendril.sourcing.electronics.order.generate_orders(orders_path)
-    tendril.sourcing.electronics.order.dump_to_file(os.path.join(orderfolder, 'shortage.csv'), include_others=True)
+    tendril.sourcing.electronics.order.dump_to_file(os.path.join(orderfolder, 'shortage.csv'), include_others=True)  # noqa
     tendril.inventory.electronics.export_reservations(reservations_path)
 
     if IS_INDICATIVE:
@@ -326,7 +384,10 @@ if __name__ == '__main__':
         logger.debug('Loading Ident Pricing Information')
         pricing = {}
         if USE_STOCK:
-            logger.warning("Possibly Incorrect Analysis : Using Stock for Indicative Pricing Calculation")
+            logger.warning(
+                "Possibly Incorrect Analysis : "
+                "Using Stock for Indicative Pricing Calculation"
+            )
         with open(os.path.join(orderfolder, 'shortage.csv'), 'r') as f:
             reader = csv.reader(f)
             headers = None
@@ -338,21 +399,23 @@ if __name__ == '__main__':
                 if row[0] is not '':
                     if row[0] not in pricing.keys():
                         try:
-                            pricing[row[0]] = (row[headers.index('Vendor')],
-                                               row[headers.index('Vendor Part No')],
-                                               row[headers.index('Manufacturer')],
-                                               row[headers.index('Manufacturer Part No')],
-                                               row[headers.index('Description')],
-                                               row[headers.index('Used Break Qty')],
-                                               row[headers.index('Effective Unit Price')]
-                                               )
+                            pricing[row[0]] = (
+                                row[headers.index('Vendor')],
+                                row[headers.index('Vendor Part No')],
+                                row[headers.index('Manufacturer')],
+                                row[headers.index('Manufacturer Part No')],
+                                row[headers.index('Description')],
+                                row[headers.index('Used Break Qty')],
+                                row[headers.index('Effective Unit Price')]
+                            )
                         except IndexError:
                             pricing[row[0]] = None
         summaryf = open(os.path.join(orderfolder, 'costing-summary.csv'), 'w')
         summaryw = csv.writer(summaryf)
-        summaryw.writerow(["Card", "Total BOM Lines", "Uncosted BOM Lines", "Quantity",
-                           "Indicative Unit Cost", "Indicative Line Cost"
-                           ])
+        summaryw.writerow(
+            ["Card", "Total BOM Lines", "Uncosted BOM Lines", "Quantity",
+             "Indicative Unit Cost", "Indicative Line Cost"]
+        )
         all_uncosted_idents = []
         for k, v in sorted(data['cards'].iteritems()):
             logger.info('Creating Indicative Pricing for Card : ' + k)
@@ -367,7 +430,10 @@ if __name__ == '__main__':
                     desc = configuration['desc']
             if desc is None:
                 desc = ''
-            ipfile = os.path.join(ipfolder, obom.descriptor.configname + '~' + indication_context + '.csv')
+            ipfile = os.path.join(
+                ipfolder,
+                obom.descriptor.configname + '~' + indication_context + '.csv'
+            )
             totalcost = 0
             uncosted_idents = []
             total_lines = 0
@@ -375,7 +441,8 @@ if __name__ == '__main__':
                 writer = csv.writer(f)
                 headers = ['Ident',
                            'Vendor', 'Vendor Part No',
-                           'Manufacturer', 'Manufacturer Part No', 'Description',
+                           'Manufacturer', 'Manufacturer Part No',
+                           'Description',
                            'Used Break Qty', 'Effective Unit Price',
                            'Quantity', 'Line Price']
                 writer.writerow(headers)
@@ -383,18 +450,31 @@ if __name__ == '__main__':
                     total_lines += 1
                     if pricing[line.ident][0].strip() != '':
                         try:
-                            writer.writerow([line.ident] + list(pricing[line.ident]) +
-                                            [line.quantity, line.quantity * float(pricing[line.ident][-1])])
+                            writer.writerow(
+                                [line.ident] + list(pricing[line.ident]) +
+                                [line.quantity, line.quantity * float(pricing[line.ident][-1])]  # noqa
+                            )
                         except ValueError:
                             print pricing[line.ident][-1]
                             raise ValueError
-                        totalcost += line.quantity * float(pricing[line.ident][-1])
+                        totalcost += line.quantity * float(pricing[line.ident][-1])  # noqa
                     else:
-                        writer.writerow([line.ident] + [None] * (len(headers) - 3) + [line.quantity] + [None])
+                        writer.writerow(
+                            [line.ident] +
+                            [None] * (len(headers) - 3) +
+                            [line.quantity] +
+                            [None]
+                        )
                         uncosted_idents.append([line.ident])
 
-                summaryw.writerow([k, total_lines, len(uncosted_idents), v, totalcost, totalcost * v, desc])
-                logger.info('Indicative Pricing for Card ' + k + ' Written to File : ' + os.linesep + ipfile)
+                summaryw.writerow(
+                    [k, total_lines, len(uncosted_idents), v,
+                     totalcost, totalcost * v, desc]
+                )
+                logger.info(
+                    'Indicative Pricing for Card ' + k +
+                    ' Written to File : ' + os.linesep + ipfile
+                )
                 for ident in uncosted_idents:
                     if ident not in all_uncosted_idents:
                         all_uncosted_idents.append(ident)
@@ -405,4 +485,6 @@ if __name__ == '__main__':
             summaryw.writerow(ident)
         summaryf.close()
         logger.info(
-            'Indicative Pricing Summary Written to File : ' + os.linesep + os.path.join(orderfolder, 'costing-summary.csv'))
+            'Indicative Pricing Summary Written to File : ' +
+            os.linesep + os.path.join(orderfolder, 'costing-summary.csv')
+        )

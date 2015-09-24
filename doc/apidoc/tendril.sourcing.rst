@@ -1,5 +1,5 @@
 tendril.sourcing package
-======================
+========================
 
 Submodules
 ----------

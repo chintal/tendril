@@ -53,7 +53,7 @@ bundles = {
         'js/vendor/stickyFooter.js',
         output='gen/foundation.js',
         filters='jsmin'),
-    
+
     'datatables_css': Bundle(
         'css/datatables/dataTables.foundation.css',
         'css/datatables/responsive.foundation.css',
@@ -62,7 +62,7 @@ bundles = {
         'css/datatables/keyTable.foundation.css',
         output='gen/datatables.css',
         filters='cssmin'),
-    
+
     'datatables_js': Bundle(
         'js/datatables/jquery.dataTables.js',
         'js/datatables/dataTables.foundation.js',
@@ -79,7 +79,7 @@ bundles = {
         'js/datatables/dataTables.keyTable.js',
         output='gen/datatables.js',
         filters='jsmin'),
-    
+
     'tendril_css': Bundle(
         'css/tendril.css',
         output='gen/tendril.css',

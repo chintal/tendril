@@ -18,8 +18,8 @@
 The LibreOffice Utils Module (:mod:`tendril.utils.libreoffice`)
 ===============================================================
 
-This module provides utilities to deal with LibreOffice files. Functionality is
-implemented lazily, so this doesn't really do much.
+This module provides utilities to deal with LibreOffice files. Functionality
+is implemented lazily, so this doesn't really do much.
 
 Presently, whatever it does do, it does by relying on external python code,
 executed in a shell by :mod:`subprocess`. This is required since the default
@@ -50,20 +50,22 @@ open_files = []
 
 class XLFile(object):
     """
-    This class allows reading data from LibreOffice supported Spreadsheet files,
-    by converting each sheet into a CSV file, which can then be read by
-    application code. Note that this is a one way conversion only. The original
-    spreadsheet file is not written to.
+    This class allows reading data from LibreOffice supported Spreadsheet
+    files, by converting each sheet into a CSV file, which can then be read by
+    application code. Note that this is a one way conversion only. The
+    original spreadsheet file is not written to.
 
-    When the object is instantiated, a copy of the file is made in the temporary
-    folder by :func:`_make_copy`, which is then converted into one CSV file per
-    sheet in the original spreadsheet file by :func:`_make_csv_files`. It then
-    adds itself to the modules :data:`open_files` list.
+    When the object is instantiated, a copy of the file is made in the
+    temporary folder by :func:`_make_copy`, which is then converted into one
+    CSV file per sheet in the original spreadsheet file by
+    :func:`_make_csv_files`. It then adds itself to the modules
+    :data:`open_files` list.
 
     :param filepath: The path of the spreadsheet to be opened.
     :ivar fpath: The path to the original spreadsheet file.
     :ivar fname: The file name of the original spreadsheet file.
-    :ivar _csv_list: The list of CSV files generated from the spreadsheet, one per sheet.
+    :ivar _csv_list: The list of CSV files generated from the spreadsheet,
+                     one per sheet.
 
     """
     def __init__(self, filepath):
@@ -77,8 +79,8 @@ class XLFile(object):
 
     def get_csv_path(self, sheetname):
         """
-        Gets the path to the CSV file that was created at object initialization
-        corresponding to the sheetname provided.
+        Gets the path to the CSV file that was created at object
+        initialization corresponding to the sheetname provided.
 
         :param sheetname: Name of the Spreadsheet Sheet.
         """
@@ -98,8 +100,8 @@ class XLFile(object):
     def _make_csv_files(self):
         """
         Converts a SpreadSheet file supported by LibreOffice into a set of CSV
-        files, one per sheet, using the :mod:`sofficehelpers.ssconverter` script.
-        The output is parsed by :func:`_parse_sscout`.
+        files, one per sheet, using the :mod:`sofficehelpers.ssconverter`
+        script. The output is parsed by :func:`_parse_sscout`.
         """
         fname = os.path.splitext(self.fname)[0]
         csvpath = os.path.join(TEMPDIR, fname + '-%s.csv')

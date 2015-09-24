@@ -20,8 +20,8 @@ The Config Module (:mod:`tendril.utils.config`)
 
 This module provides the core configuration for Tendril.
 
-The Tendril configuration file is itself a Python file, and is imported from it's
-default location.
+The Tendril configuration file is itself a Python file, and is imported from
+it's default location.
 
 This module performs the import using the :func:`tendril.utils.fs.import_`
 function and the :mod:`imp` module, following which all the recognized *and*
@@ -41,7 +41,9 @@ from fsutils import import_
 
 
 CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
-TENDRIL_ROOT = os.path.normpath(os.path.join(CONFIG_PATH, os.pardir, os.pardir))
+TENDRIL_ROOT = os.path.normpath(
+    os.path.join(CONFIG_PATH, os.pardir, os.pardir)
+)
 INSTANCE_ROOT = os.path.join(os.path.expanduser('~chintal'), '.tendril')
 INSTANCE_CONFIG_FILE = os.path.join(INSTANCE_ROOT, 'instance_config.py')
 DOX_TEMPLATE_FOLDER = os.path.join(TENDRIL_ROOT, 'dox/templates')

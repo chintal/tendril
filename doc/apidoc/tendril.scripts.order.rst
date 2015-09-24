@@ -1,5 +1,5 @@
 tendril.scripts.order module
-==========================
+============================
 
 .. automodule:: tendril.scripts.order
     :members:

@@ -1,5 +1,5 @@
 tendril.testing.testrunner module
-===============================
+=================================
 
 .. automodule:: tendril.testing.testrunner
     :members:

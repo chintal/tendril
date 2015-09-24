@@ -29,22 +29,28 @@ application code for rendering things.
 The color palette available is :data:`tableau20`, a palette from
 `Tableau <http://www.tableau.com/>`_.
 
-For more information on how this is intended to be used and the original source of the code, see
-`How to make beautiful data visualizations in Python with matplotlib <http://www.randalolson.com/2014/06/28/how-to-make-beautiful-data-visualizations-in-python-with-matplotlib/>`_,
+For more information on how this is intended to be used and the
+original source of the code, see
+`How to make beautiful data visualizations in Python with matplotlib
+<http://www.randalolson.com/2014/06/28/how-to-make-beautiful-data-\
+visualizations-in-python-with-matplotlib/>`_,
 written by Randal S. Olson.
 
 .. note:: This module is released under the MIT license. See the included
-          `LICENSE.txt` for information about :mod:`tendril`'s licensing structure.
+          `LICENSE.txt` for information about :mod:`tendril`'s licensing
+          structure.
 
 """
 
 
 #: The `tableau20` color palette [(R,G,B)]
-tableau20 = [(31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),
-             (44, 160, 44), (152, 223, 138), (214, 39, 40), (255, 152, 150),
-             (148, 103, 189), (197, 176, 213), (140, 86, 75), (196, 156, 148),
-             (227, 119, 194), (247, 182, 210), (127, 127, 127), (199, 199, 199),
-             (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229)]
+tableau20 = [
+    (31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),
+    (44, 160, 44), (152, 223, 138), (214, 39, 40), (255, 152, 150),
+    (148, 103, 189), (197, 176, 213), (140, 86, 75), (196, 156, 148),
+    (227, 119, 194), (247, 182, 210), (127, 127, 127), (199, 199, 199),
+    (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229)
+]
 
 for i in range(len(tableau20)):
     r, g, b = tableau20[i]

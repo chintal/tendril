@@ -39,7 +39,10 @@ class DocStoreDocument(TimestampMixin, BaseMixin, DeclBase):
                          nullable=False)
 
     # This does not work :
-    # serialno = relationship("SerialNumber", backref=backref("document", cascade="all, delete"))
+    # serialno = relationship(
+    #     "SerialNumber",
+    #     backref=backref("document", cascade="all, delete")
+    # )
     serialno = relationship("SerialNumber", backref="documents")
 
     def __repr__(self):

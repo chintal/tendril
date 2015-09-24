@@ -19,9 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import arrow
 from collections import namedtuple
@@ -31,6 +28,9 @@ from tendril.utils.fsutils import get_tempname
 
 # TODO  Replace with colorama or so
 from tendril.utils.progressbar import terminal
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
+
 
 TestLine = namedtuple('TestLine', ['desc', 'expected', 'measured'])
 
@@ -156,7 +156,9 @@ class RunnableTest(object):
 
 
 class TestBase(RunnableTest):
-    """ Object representing a full runnable Test of the same Measurement type"""
+    """
+    Object representing a full runnable Test of the same Measurement type
+    """
     def __init__(self, offline=False):
         super(TestBase, self).__init__()
         self._prep = []
@@ -200,9 +202,10 @@ class TestBase(RunnableTest):
                     value = getattr(motif, elem)
                 except (TypeError, AttributeError):
                     logger.error("Error getting element " + repr(elem) +
-                                 " from Motif " + repr(motif) + ", required by "
-                                 + value)
-                    logger.error("Bomobject configured for " + self._bom_object.configured_for)
+                                 " from Motif " + repr(motif) +
+                                 ", required by " + value)
+                    logger.error("Bomobject configured for " +
+                                 self._bom_object.configured_for)
                     raise
             value = typeclass(value)
         except KeyError:
@@ -233,8 +236,10 @@ class TestBase(RunnableTest):
         test_dict = {'desc': self.desc,
                      'title': self.title,
                      'ts': self.ts.format(),
-                     'passed': ('PASSED' if self.passed is True else 'FAILED'),
-                     'measurements': [x.render_dox() for x in self._measurements],
+                     'passed':
+                     ('PASSED' if self.passed is True else 'FAILED'),
+                     'measurements':
+                     [x.render_dox() for x in self._measurements],
                      'instrument': self._inststr,
                      'lines': self.lines,
                      'passfailonly': self.passfailonly,
@@ -373,7 +378,8 @@ class TestSuiteBase(RunnableTest):
         suite_dict = {'desc': self.desc,
                       'title': self.title,
                       'ts': self.ts.format(),
-                      'passed': ('PASSED' if self.passed is True else 'FAILED'),
+                      'passed':
+                      ('PASSED' if self.passed is True else 'FAILED'),
                       'tests': [x.render_dox() for x in self._tests]
                       }
         return suite_dict

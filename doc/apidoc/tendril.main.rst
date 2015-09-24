@@ -1,5 +1,5 @@
 tendril.main module
-=================
+===================
 
 .. automodule:: tendril.main
     :members:

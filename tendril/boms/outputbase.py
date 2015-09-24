@@ -18,8 +18,6 @@
 This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
 
 import os
 import csv
@@ -29,9 +27,13 @@ from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import parse_ident
 from tendril.utils.types.lengths import Length
 
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
+
 
 class OutputElnBomDescriptor(object):
-    def __init__(self, pcbname, cardfolder, configname, configurations, multiplier=1):
+    def __init__(self, pcbname, cardfolder, configname,
+                 configurations, multiplier=1):
         self.pcbname = pcbname
         self.cardfolder = cardfolder
         self.configname = configname
@@ -52,7 +54,8 @@ class OutputBomLine(object):
         if comp.fillstatus == "DNP":
             return
         if comp.fillstatus == "CONF":
-            logger.warning("Configurable Component not Configured by Conf File : " + comp.refdes)
+            logger.warning("Configurable Component "
+                           "not Configured by Conf File : " + comp.refdes)
         if comp.ident == self.ident:
             self.refdeslist.append(comp.refdes)
         else:
@@ -70,14 +73,19 @@ class OutputBomLine(object):
                     elen = Length('5mm')
                 elif elen > Length('1inch'):
                     elen = Length('1inch')
-                return len(self.refdeslist) * (Length(footprint) + elen) * self.parent.descriptor.multiplier
+                return len(self.refdeslist) * (Length(footprint) + elen) * \
+                    self.parent.descriptor.multiplier
             except ValueError:
-                logger.error("Problem parsing length for ident : " + self.ident)
+                logger.error(
+                    "Problem parsing length for ident : " + self.ident
+                )
                 raise
         return len(self.refdeslist) * self.parent.descriptor.multiplier
 
     def __repr__(self):
-        return "{0:<50} {1:<4} {2}".format(self.ident, self.quantity, str(self.refdeslist))
+        return "{0:<50} {1:<4} {2}".format(
+            self.ident, self.quantity, str(self.refdeslist)
+        )
 
 
 class OutputBom(object):
@@ -212,7 +220,11 @@ class CompositeOutputBom(object):
 
     def dump(self, stream):
         writer = csv.writer(stream)
-        writer.writerow(['device'] + [x.configname + ' x' + str(x.multiplier) for x in self.descriptors] + ['Total'])
+        writer.writerow(
+            ['device'] +
+            [x.configname + ' x' + str(x.multiplier)
+             for x in self.descriptors] +
+            ['Total'])
         for line in self.lines:
             columns = [None if x == 0 else x for x in line.columns]
             writer.writerow([line.ident] + columns + [line.quantity])
@@ -264,7 +276,9 @@ def load_cobom_from_file(cobompath, tf=None):
                 if tf and not tf.has_contextual_repr(line[0]):
                     print line[0] + ' Possibly not recognized'
                 if tf:
-                    device, value, footprint = parse_ident(tf.get_canonical_repr(line[0]))
+                    device, value, footprint = parse_ident(
+                        tf.get_canonical_repr(line[0])
+                    )
                 else:
                     device, value, footprint = parse_ident(line[0])
                 logger.debug("Trying to insert line : " + line[0])
@@ -278,7 +292,9 @@ def load_cobom_from_file(cobompath, tf=None):
                             length = Length(col)
                             if length > 0:
                                 wireitem = EntityElnComp()
-                                wireitem.define('Undef', device, value, str(length))
+                                wireitem.define(
+                                    'Undef', device, value, str(length)
+                                )
                                 oboms[idx].insert_component(wireitem)
                         else:
                             num = int(col)
@@ -287,8 +303,11 @@ def load_cobom_from_file(cobompath, tf=None):
                                     oboms[idx].insert_component(item)
 
             for obom in oboms:
-                logger.info('Inserting External Bom : ' + obom.descriptor.configname)
+                logger.info('Inserting External Bom : ' +
+                            obom.descriptor.configname)
                 bomlist.append(obom)
-    cobom = CompositeOutputBom(bomlist, name=os.path.splitext(os.path.split(cobompath)[1])[0])
+    cobom = CompositeOutputBom(
+        bomlist,
+        name=os.path.splitext(os.path.split(cobompath)[1])[0]
+    )
     return cobom
-

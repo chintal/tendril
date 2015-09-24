@@ -66,12 +66,14 @@ class SignalWaveInputChannel(InstrumentInputChannelBase):
 
     def get(self, unitclass=None, flush=True):
         """
-        Gets the latest data point in the channel's point buffer. By default, it
-        also flushes any older points from the buffer. This behavior can be
+        Gets the latest data point in the channel's point buffer. By default,
+        it also flushes any older points from the buffer. This behavior can be
         suppressed by passing flush=False.
 
-        :param unitclass: Unit class of which the data point is expected, or None if you don't care.
-        :param flush: Whether or not older points should be flushed. Default True.
+        :param unitclass: Unit class of which the data point is expected, or
+                          None if you don't care.
+        :param flush: Whether or not older points should be flushed.
+                      Default True.
         :return: Latest datapoint.
         :rtype: :class:`tendril.utils.types.signalbase.SignalPoint`
 
@@ -85,10 +87,13 @@ class SignalWaveInputChannel(InstrumentInputChannelBase):
     def get_next_chunk(self, unitclass=None, maxlen=None):
         """
         Gets the next chunk of data from the instrument channel. Note that the
-        chunk returned has already been removed from the channel's point buffer.
+        chunk returned has already been removed from the channel's
+        point buffer.
 
-        :param unitclass: Unit class of which the data point is expected, or None if you don't care.
-        :return: Wave containing all but the latest data point in the channel's point buffer.
+        :param unitclass: Unit class of which the data point is expected, or
+                          None if you don't care.
+        :return: Wave containing all but the latest data point in the
+                 channel's point buffer.
         :rtype: :class:`tendril.utils.types.signalbase.SignalWave`
 
         """

@@ -91,7 +91,8 @@ class StockXlsReader(InventoryReaderBase):
         if 'Balance on' in item:
             match = re.search(r'\d{2}/\d{2}/\d{4}', item)
             try:
-                date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+                date = datetime.datetime.strptime(
+                    match.group(), '%d/%m/%Y').date()
             except AttributeError:
                 print "Tried to match " + item
                 return None
@@ -138,7 +139,8 @@ def get_reader(elec_inven_data_idx):
     if reader is not None:
         return reader
     else:
-        logger.error("Could not find reader for: ELECTRONICS_INVENTORY_DATA." +
+        logger.error("Could not find reader for: "
+                     "ELECTRONICS_INVENTORY_DATA." +
                      str(elec_inven_data_idx))
 
 
@@ -155,7 +157,9 @@ def gen_canonical_transform(elec_inven_data_idx, regen=True):
         outp = tfpath
         outf = fsutils.VersionedOutputFile(outp)
         outw = csv.writer(outf)
-        outw.writerow(('Current', 'gEDA Current', 'Ideal', 'Status', 'In Symlib'))
+        outw.writerow(
+            ('Current', 'gEDA Current', 'Ideal', 'Status', 'In Symlib')
+        )
         for line in rdr.row_gen:
             if regen and rdr.tf.has_contextual_repr(line[0]):
                 if gsymlib.is_recognized(rdr.tf.get_canonical_repr(line[0])):

@@ -71,7 +71,8 @@ class TimeSpan(NumericalUnitBase):
                 value.minutes * 60 + value.hours * 3600 + \
                 value.days * 3600 * 24
         elif not isinstance(value, Number):
-            raise TypeError("Only numerical time spans (in seconds) are supported at this time")
+            raise TypeError("Only numerical time spans (in seconds) "
+                            "are supported at this time")
         super(TimeSpan, self).__init__(value, _ostrs, _dostr, _parse_func)
 
     def __repr__(self):
@@ -125,11 +126,13 @@ class TimeStamp(arrow.arrow.Arrow):
             raise ValueError
         else:
             raise NotImplementedError("Add not implemented for " +
-                                      repr(self.__class__) + " + " + repr(other.__class__))
+                                      repr(self.__class__) + " + " +
+                                      repr(other.__class__))
 
 
 class TimeDelta(object):
-    def __init__(self, years=0, months=0, days=0, hours=0, minutes=0, seconds=0, microseconds=0):
+    def __init__(self, years=0, months=0, days=0, hours=0, minutes=0,
+                 seconds=0, microseconds=0):
         self.years = years
         self.months = months
         self.days = days
@@ -140,32 +143,38 @@ class TimeDelta(object):
 
     def __sub__(self, other):
         if isinstance(other, TimeDelta):
-            return TimeDelta(years=self.years - other.years,
-                             months=self.months - other.months,
-                             days=self.days - other.days,
-                             hours=self.hours - other.hours,
-                             minutes=self.minutes - other.minutes,
-                             seconds=self.seconds - other.seconds,
-                             microseconds=self.microseconds - other.microseconds)
+            return TimeDelta(
+                years=self.years - other.years,
+                months=self.months - other.months,
+                days=self.days - other.days,
+                hours=self.hours - other.hours,
+                minutes=self.minutes - other.minutes,
+                seconds=self.seconds - other.seconds,
+                microseconds=self.microseconds - other.microseconds
+            )
         else:
             raise NotImplementedError
 
     def __add__(self, other):
         if isinstance(other, TimeDelta):
-            return TimeDelta(years=self.years + other.years,
-                             months=self.months + other.months,
-                             days=self.days + other.days,
-                             hours=self.hours + other.hours,
-                             minutes=self.minutes + other.minutes,
-                             seconds=self.seconds + other.seconds,
-                             microseconds=self.microseconds + other.microseconds)
+            return TimeDelta(
+                years=self.years + other.years,
+                months=self.months + other.months,
+                days=self.days + other.days,
+                hours=self.hours + other.hours,
+                minutes=self.minutes + other.minutes,
+                seconds=self.seconds + other.seconds,
+                microseconds=self.microseconds + other.microseconds
+            )
         else:
             raise NotImplementedError
 
     def __repr__(self):
-        return ':'.join([str(self.years), str(self.months), str(self.days),
-                         str(self.hours), str(self.minutes), str(self.seconds),
-                         str(self.microseconds)])
+        return ':'.join(
+            [str(self.years), str(self.months), str(self.days),
+             str(self.hours), str(self.minutes), str(self.seconds),
+             str(self.microseconds)]
+        )
 
     @property
     def timespan(self):

@@ -30,8 +30,6 @@ import urlparse
 import HTMLParser
 import traceback
 
-from bs4 import BeautifulSoup
-
 import vendors
 from tendril.utils import www
 from tendril.conventions import electronics
@@ -44,7 +42,8 @@ html_parser = HTMLParser.HTMLParser()
 
 
 class VendorMouser(vendors.VendorBase):
-    def __init__(self, name, dname, pclass, mappath=None, currency_code=None, currency_symbol=None, ):
+    def __init__(self, name, dname, pclass, mappath=None,
+                 currency_code=None, currency_symbol=None):
         self.url_base = 'http://www.mouser.in/'
         self._devices = ['IC SMD',
                          'IC THRU',
@@ -74,7 +73,8 @@ class VendorMouser(vendors.VendorBase):
             currency_code = 'USD'
         if not currency_symbol:
             currency_symbol = 'US$'
-        super(VendorMouser, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
+        super(VendorMouser, self).__init__(name, dname, pclass, mappath,
+                                           currency_code, currency_symbol)
         self._vpart_class = MouserElnPart
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)
@@ -93,12 +93,15 @@ class VendorMouser(vendors.VendorBase):
             if device.startswith('RES') or device.startswith('POT') or \
                     device.startswith('CAP') or device.startswith('CRYSTAL'):
                 if electronics.check_for_std_val(ident) is False:
-                    return self._get_search_vpnos(device, value, footprint, ident)
+                    return self._get_search_vpnos(device, value,
+                                                  footprint, ident)
                 try:
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
-                    # TODO This warning is necessary. Restore it when implemented.
-                    # logger.warning(ident + ' :: Mouser Search for ' + device + ' Not Implemented')
+                    # TODO This warning is necessary.
+                    # Restore it when implemented.
+                    # logger.warning(ident + ' :: Mouser Search for ' +
+                    #                device +' Not Implemented')
                     return None, 'NOT_IMPL'
             if device in self._devices:
                 return self._get_search_vpnos(device, value, footprint, ident)
@@ -122,17 +125,21 @@ class VendorMouser(vendors.VendorBase):
     def _process_product_page(soup):
         # beablock = soup.find('td', 'beablock-notice')
         # if beablock is not None:
-        #     if beablock.text == u'\nObsolete item; call Digi-Key for more information.\n':
+        #     if beablock.text == u'\nObsolete item\n':
         #         return False, None, 'OBSOLETE_NOTAVAIL'
         pdtable = soup.find('div', id='product-desc')
         if pdtable is not None:
             pno_cell = pdtable.find('div', id='divMouserPartNum')
             pno = pno_cell.text.encode('ascii', 'replace').strip()
-            mfgpno = soup.find('div', id='divManufacturerPartNum').text.strip()
+            mfgpno = soup.find(
+                'div', id='divManufacturerPartNum'
+            ).text.strip()
             try:
                 package = soup.find(
                     'span', text=re.compile('Package / Case')
-                ).parent.find_next_sibling().text.strip().encode('ascii', 'replace')
+                ).parent.find_next_sibling().text.strip().encode(
+                    'ascii', 'replace'
+                )
             except AttributeError:
                 package = None
             # TODO Implement these
@@ -165,7 +172,7 @@ class VendorMouser(vendors.VendorBase):
         # SOIC-Narrow-8
         # SOIC8 (Normalized)
         # SOIC-8
-        (re.compile(ur'^(SO(IC)?(-Narrow)?-?(?P<pinc>[\d]+))$'), 'SOIC{0}', ['pinc']),
+        (re.compile(ur'^(SO(IC)?(-Narrow)?-?(?P<pinc>[\d]+))$'), 'SOIC{0}', ['pinc']),  # noqa
         # TO220 (Normalized)
         # TO-220
         # TO-220-3
@@ -180,7 +187,7 @@ class VendorMouser(vendors.VendorBase):
         # --- Somewhat Special Cases --- #
         # PDIP-6 Gull Wing
         # SMT6 (Normalized)
-        (re.compile(ur'^P?DIP-?(?P<pinc>\d+)( Gull Wing)$'), 'SMT{0}', ['pinc']),
+        (re.compile(ur'^P?DIP-?(?P<pinc>\d+)( Gull Wing)$'), 'SMT{0}', ['pinc']),  # noqa
 
         # --- Very Special Cases --- #
         # SOIC4
@@ -243,20 +250,24 @@ class VendorMouser(vendors.VendorBase):
         return pno, mfgpno, package, ns, unitp
 
     def _get_resultpage_parts(self, soup):
-        ptable = soup.find('table',
-                           id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid'))
+        ptable = soup.find(
+            'table',
+            id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid')
+        )
         if ptable is None:
             return False, None, 'NO_RESULTS:3'
-        header_row = ptable.find('tr', class_=re.compile(r'SearchResultColumnHeading')).find_all('th')
+        header_row = ptable.find(
+            'tr', class_=re.compile(r'SearchResultColumnHeading')
+        ).find_all('th')
         header = [x.text.strip() for x in header_row]
         rows = ptable.find_all('tr', class_=re.compile(r'SearchResultsRow'))
         if not rows:
             return False, None, 'NO_RESULTS:1'
         parts = []
         for row in rows:
-            pno, mfgpno, package, ns, unitp = self._process_resultpage_row(row, header)
-            if unitp is not None:
-                parts.append((pno, mfgpno, package, ns))
+            part = self._process_resultpage_row(row, header)
+            if part[-1] is not None:
+                parts.append(part)
         # check_package = ''
         # for part in parts:
         #     if part[2] is None:
@@ -329,17 +340,23 @@ class VendorMouser(vendors.VendorBase):
             return True, pnos, strategy
 
         # Find Exact Match Package
-        result, cpackage, strategy = self._find_exact_match_package(parts, value)
+        result, cpackage, strategy = self._find_exact_match_package(parts,
+                                                                    value)
         if result is False:
-            # Did not find an exact match package. Check for consensus package instead.
+            # Did not find an exact match package.
+            # Check for consensus package instead.
             result, cpackage, strategy = self._find_consensus_package(parts)
             if result is False:
                 # No exact match, no consensus on package
-                result, pnos, strategy = self._filter_results_byfootprint(parts, footprint)
+                result, pnos, strategy = self._filter_results_byfootprint(
+                    parts, footprint
+                )
                 return True, pnos, strategy
 
         # cpackage exists
-        result, pnos, strategy = self._filter_results_bycpackage(parts, cpackage, strategy)
+        result, pnos, strategy = self._filter_results_bycpackage(
+            parts, cpackage, strategy
+        )
 
         if len(pnos) == 0:
             pnos = None
@@ -359,7 +376,9 @@ class VendorMouser(vendors.VendorBase):
             raise Exception
         if len(parts) == 0:
             return False, None, 'NO_RESULTS:2'
-        # result, pnos, strategy = self._filter_results(parts, value, footprint)
+        # result, pnos, strategy = self._filter_results(
+        #     parts, value, footprint
+        # )
         return result, parts, strategy
 
     @staticmethod
@@ -398,15 +417,21 @@ class VendorMouser(vendors.VendorBase):
             yield soup
         elif sctable:
             cat_dict = {}
-            cat_title_divs = sctable.find_all('div', class_='catTitleNoBorder')
+            cat_title_divs = sctable.find_all(
+                'div', class_='catTitleNoBorder'
+            )
             for title_div in cat_title_divs:
                 newurl = None
                 cat_title = title_div.text.strip()
-                subcatlist = title_div.find_next_siblings('ul', class_='sub-cats', limit=1)[0]
-                subcats = subcatlist.find_all('a', attrs={'itemprop': 'significantLink'})
+                subcatlist = title_div.find_next_siblings(
+                    'ul', class_='sub-cats', limit=1
+                )[0]
+                subcats = subcatlist.find_all(
+                    'a', attrs={'itemprop': 'significantLink'}
+                )
                 subcat_links = {x.text: x.attrs['href'] for x in subcats}
                 cat_dict[cat_title] = subcat_links
-                res, catstrings, subcatstrings, titles = self._get_device_catstrings(device)
+                res, catstrings, subcatstrings, titles = self._get_device_catstrings(device)  # noqa
                 cat_links = None
                 for title in titles:
                     if title in cat_dict.keys():
@@ -423,7 +448,9 @@ class VendorMouser(vendors.VendorBase):
                 soup = www.get_soup(newurl)
                 ctable = soup.find('div', id='CategoryControlTop')
                 if ctable:
-                    soups = self._get_cat_soup(soup, device, newurl, ident, i=i+1)
+                    soups = self._get_cat_soup(
+                        soup, device, newurl, ident, i=i+1
+                    )
                     for soup in soups:
                         yield soup
                 else:
@@ -431,7 +458,7 @@ class VendorMouser(vendors.VendorBase):
         elif ctable:
             cats = ctable.find_all('a', attrs={'itemprop': 'significantLink'})
             cat_links = {x.text: x.attrs['href'] for x in cats}
-            res, catstrings, subcatstrings, titles = self._get_device_catstrings(device)
+            res, catstrings, subcatstrings, titles = self._get_device_catstrings(device)  # noqa
             newurl = None
             if i == 0:
                 for catstring in catstrings:
@@ -442,7 +469,9 @@ class VendorMouser(vendors.VendorBase):
                     soup = www.get_soup(newurl)
                     ctable = soup.find('div', id='CategoryControlTop')
                     if ctable:
-                        soups = self._get_cat_soup(soup, device, newurl, ident, i=i+1)
+                        soups = self._get_cat_soup(
+                            soup, device, newurl, ident, i=i+1
+                        )
                         for soup in soups:
                             yield soup
                     else:
@@ -454,7 +483,9 @@ class VendorMouser(vendors.VendorBase):
                         soup = www.get_soup(newurl)
                         ctable = soup.find('div', id='CategoryControlTop')
                         if ctable:
-                            soups = self._get_cat_soup(soup, device, newurl, ident, i=i+1)
+                            soups = self._get_cat_soup(
+                                soup, device, newurl, ident, i=i+1
+                            )
                             for soup in soups:
                                 yield soup
                         else:
@@ -469,8 +500,10 @@ class VendorMouser(vendors.VendorBase):
             raise Exception
 
     def _process_cat_soup(self, soup):
-        ptable = soup.find('table',
-                           id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid'))
+        ptable = soup.find(
+            'table',
+            id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid')
+        )
         if ptable is None:
             # check for single product page
             result, pnos, strategy = self._process_product_page(soup)
@@ -484,16 +517,24 @@ class VendorMouser(vendors.VendorBase):
                 if nr_text == 'did not return any results.':
                     return True, None, 'NO_RESULTS_PAGE'
 
-            raise NotImplementedError("Expecting a results page or products page, not whatever this is")
+            raise NotImplementedError(
+                "Expecting a results page or products page, "
+                "not whatever this is"
+            )
         return self._process_results_page(soup)
 
     def _get_search_vpnos(self, device, value, footprint, ident):
         if value.strip() == '':
             return None, 'NOVALUE'
-        device, value, footprint = self._search_preprocess(device, value, footprint)
-        url = urlparse.urljoin(self.url_base,
-                               "Search/Refine.aspx?Keyword={0}&Stocked=True".format(
-                                   urllib.quote_plus(value)))
+        device, value, footprint = self._search_preprocess(
+            device, value, footprint
+        )
+        url = urlparse.urljoin(
+            self.url_base,
+            "Search/Refine.aspx?Keyword={0}&Stocked=True".format(
+                urllib.quote_plus(value)
+            )
+        )
         soup = www.get_soup(url)
         if soup is None:
             return None, 'URL_FAIL'
@@ -512,7 +553,7 @@ class VendorMouser(vendors.VendorBase):
         parts = self._prefilter_parts(parts, value)
         if not len(parts):
             return None, strategy + ':NO_RESULTS:PREFILTER'
-        result, pnos, lstrategy = self._filter_results(parts, value, footprint)
+        result, pnos, lstrategy = self._filter_results(parts, value, footprint)  # noqa
         if pnos:
             pnos = list(set(pnos))
             pnos = map(lambda x: html_parser.unescape(x), pnos)
@@ -520,7 +561,7 @@ class VendorMouser(vendors.VendorBase):
 
     @staticmethod
     def _get_searchurl_crystal():
-        return 'http://www.mouser.in/Passive-Components/Frequency-Control-Timing-Devices/Crystals/_/N-6zu9f/'
+        return 'http://www.mouser.in/Passive-Components/Frequency-Control-Timing-Devices/Crystals/_/N-6zu9f/'  # noqa
 
     def _get_pas_vpnos(self, device, value, footprint):
         raise NotImplementedError
@@ -553,20 +594,28 @@ class MouserElnPart(vendors.VendorElnPartBase):
             # TODO raise AttributeError
 
     def _get_product_soup(self):
-        start_url = urlparse.urljoin(self.url_base,
-                                     '/Search/Refine.aspx?Keyword={0}&FS=True'.format(
-                                        urllib.quote_plus(self.vpno)))
+        start_url = urlparse.urljoin(
+            self.url_base,
+            '/Search/Refine.aspx?Keyword={0}&FS=True'.format(
+                urllib.quote_plus(self.vpno)
+            )
+        )
         soup = www.get_soup(start_url)
         url = www.get_actual_url(start_url)
-        # TODO start_url may not be the actual URL. Handle this or remove the redirect handler.
+        # TODO start_url may not be the actual URL.
+        # Handle this or remove the redirect handler.
         if soup is None:
-            logger.error("Unable to open Mouser product start page : " + self.vpno)
+            logger.error(
+                "Unable to open Mouser product start page : " + self.vpno
+            )
             return
         if soup.find('div', id='productdetail-box1'):
             return soup
         else:
-            stable = soup.find('table',
-                               id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid'))
+            stable = soup.find(
+                'table',
+                id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid')
+            )
             srow = stable.find('tr', {'data-partnumber': self.vpno},
                                class_=re.compile(r'SearchResultsRow'))
             link = srow.find('a', id=re.compile(r'lnkMouserPartNumber'))
@@ -578,37 +627,44 @@ class MouserElnPart(vendors.VendorElnPartBase):
         ptable = soup.find(id='ctl00_ContentMain_divPricing')
         prices = []
         rows = [x.find_parent('div').find_parent('div')
-                for x in ptable.find_all(
-                'span', id=re.compile(r'ctl00_ContentMain_ucP_rptrPriceBreaks_ctl(\d+)_lblPrice'))]
+                for x in ptable.find_all('span', id=re.compile(r'ctl00_ContentMain_ucP_rptrPriceBreaks_ctl(\d+)_lblPrice'))  # noqa
+                ]
         for row in rows:
             moq_text = row.find(id=re.compile('lnkQuantity')).text
-            rex_qtyrange = re.compile(ur'SelectMiniReelQuantity\(((?P<minq>\d+),(?P<maxq>\d+))\)')
+            rex_qtyrange = re.compile(ur'SelectMiniReelQuantity\(((?P<minq>\d+),(?P<maxq>\d+))\)')  # noqa
             rex_qty = re.compile(ur'SelectQuantity\((?P<minq>\d+)\)')
             try:
-                m = rex_qty.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])
+                m = rex_qty.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])  # noqa
             except KeyError:
                 # TODO make sure this holds
                 continue
             maxq = None
             if m is None:
-                m = rex_qtyrange.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])
+                m = rex_qtyrange.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])  # noqa
                 if m is None:
-                    # print row.find('a', id=re.compile('lnkQuantity')).attrs['href']
-                    raise ValueError("Error parsing qty range while acquiring moq for " + self.vpno)
+                    raise ValueError(
+                        "Error parsing qty range while acquiring moq for " +
+                        self.vpno
+                    )
                 maxq = locale.atoi(m.group('maxq'))
             minq = locale.atoi(m.group('minq'))
             price_text = row.find(id=re.compile('lblPrice')).text
             try:
                 moq = locale.atoi(moq_text)
                 if moq != minq:
-                    raise ValueError("minq {0} does not match moq {1} for {2}".format(
-                        str(minq), str(moq), self.vpno))
+                    raise ValueError(
+                        "minq {0} does not match moq {1} for {2}".format(
+                            str(minq), str(moq), self.vpno
+                        )
+                    )
                 if not maxq or minq != maxq:
                     oqmultiple = 1
                 else:
                     oqmultiple = minq
             except ValueError:
-                raise ValueError(moq_text + " found while acquiring moq for " + self.vpno)
+                raise ValueError(
+                    moq_text + " found while acquiring moq for " + self.vpno
+                )
             try:
                 price = locale.atof(price_text.replace('$', ''))
             except ValueError:
@@ -616,7 +672,10 @@ class MouserElnPart(vendors.VendorElnPartBase):
                     # TODO handle this somehow?
                     continue
                 else:
-                    raise ValueError(price_text + " found while acquiring price for " + self.vpno)
+                    raise ValueError(
+                        price_text + " found while acquiring price for " +
+                        self.vpno
+                    )
             price_obj = vendors.VendorPrice(moq,
                                             price,
                                             self._vendor.currency,
@@ -652,13 +711,15 @@ class MouserElnPart(vendors.VendorElnPartBase):
         datasheet_div = soup.find('div', id=re.compile('divCatalogDataSheet'))
         if not datasheet_div:
             return
-        datasheet_link = datasheet_div.find_all('a', text=re.compile('Data Sheet'))[0].attrs['href']
+        datasheet_link = datasheet_div.find_all(
+            'a', text=re.compile('Data Sheet')
+        )[0].attrs['href']
         return datasheet_link.strip().encode('ascii', 'replace')
 
     @staticmethod
     def _get_avail_qty(soup):
         n = soup.find('div', id='availability')
-        n = n.findChild(text=re.compile('Stock')).parent.parent.find_next_sibling()
+        n = n.findChild(text=re.compile('Stock')).parent.parent.find_next_sibling()  # noqa
         qtytext = n.text.strip().encode('ascii', 'replace')
         rex = re.compile(r'^(?P<qty>[\d,]+)')
         qtytext = rex.search(qtytext).groupdict()['qty'].replace(',', '')

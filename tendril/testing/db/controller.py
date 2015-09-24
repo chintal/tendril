@@ -55,7 +55,8 @@ def create_test_model_obj(testobj=None, suite=None, session=None):
 
 @with_db
 def commit_test_suite(suiteobj=None, session=None):
-    sno = serialnos.get_serialno_object(sno=suiteobj.serialno, session=session)
+    sno = serialnos.get_serialno_object(sno=suiteobj.serialno,
+                                        session=session)
     passed = suiteobj.passed
 
     sro = TestSuiteResult(suite_class=repr(suiteobj.__class__),
@@ -69,7 +70,9 @@ def commit_test_suite(suiteobj=None, session=None):
 
     session.add(sro)
     for test in suiteobj.tests:
-        sro.tests.append(create_test_model_obj(testobj=test, suite=sro, session=session))
+        sro.tests.append(
+            create_test_model_obj(testobj=test, suite=sro, session=session)
+        )
 
 
 @with_db
@@ -77,8 +80,11 @@ def get_test_suites(serialno=None, session=None):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
     if not isinstance(serialno, SerialNumber):
-        serialno = serialnos.get_serialno_object(sno=serialno, session=session)
-    return session.query(TestSuiteResult).filter_by(serialno=serialno).order_by(desc(TestSuiteResult.created_at)).all()
+        serialno = serialnos.get_serialno_object(sno=serialno,
+                                                 session=session)
+    return session.query(
+        TestSuiteResult).filter_by(serialno=serialno).order_by(
+        desc(TestSuiteResult.created_at)).all()
 
 
 @with_db
@@ -88,19 +94,28 @@ def get_latest_test_result(serialno=None, test_class=None, session=None):
     if test_class is None:
         raise AttributeError("testclass cannot be None")
     if not isinstance(serialno, SerialNumber):
-        serialno = serialnos.get_serialno_object(sno=serialno, session=session)
+        serialno = serialnos.get_serialno_object(sno=serialno,
+                                                 session=session)
     if not isinstance(test_class, str):
         test_class = repr(test_class.__class__)
-    return session.query(TestResult).filter_by(test_class=test_class).join(TestSuiteResult).filter(TestSuiteResult.serialno == serialno).order_by(desc(TestResult.created_at)).first()
+    return session.query(TestResult).filter_by(
+        test_class=test_class).join(
+        TestSuiteResult).filter(
+        TestSuiteResult.serialno == serialno).order_by(
+        desc(TestResult.created_at)).first()
 
 
 @with_db
-def get_latest_test_suite(serialno=None, suite_class=None, descr=None, session=None):
+def get_latest_test_suite(serialno=None, suite_class=None,
+                          descr=None, session=None):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
     if not isinstance(serialno, SerialNumber):
-        serialno = serialnos.get_serialno_object(sno=serialno, session=session)
-    q = session.query(TestSuiteResult).filter_by(serialno=serialno, suite_class=suite_class)
+        serialno = serialnos.get_serialno_object(sno=serialno,
+                                                 session=session)
+    q = session.query(TestSuiteResult).filter_by(
+        serialno=serialno, suite_class=suite_class
+    )
     if descr is not None:
         q = q.filter_by(desc=descr)
     q = q.order_by(desc(TestSuiteResult.created_at))
@@ -112,8 +127,13 @@ def get_test_suite_names(serialno=None, session=None):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
     if not isinstance(serialno, SerialNumber):
-        serialno = serialnos.get_serialno_object(sno=serialno, session=session)
-    return [x[0] for x in session.query(TestSuiteResult.suite_class).filter_by(serialno=serialno).distinct().all()]
+        serialno = serialnos.get_serialno_object(sno=serialno,
+                                                 session=session)
+    return [x[0] for x in
+            session.query(
+                TestSuiteResult.suite_class).filter_by(
+                serialno=serialno).distinct().all()
+            ]
 
 
 @with_db
@@ -121,5 +141,8 @@ def get_test_suite_descs(serialno=None, session=None):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
     if not isinstance(serialno, SerialNumber):
-        serialno = serialnos.get_serialno_object(sno=serialno, session=session)
-    return session.query(TestSuiteResult.desc, TestSuiteResult.suite_class).filter_by(serialno=serialno).distinct().all()
+        serialno = serialnos.get_serialno_object(sno=serialno,
+                                                 session=session)
+    return session.query(
+        TestSuiteResult.desc, TestSuiteResult.suite_class).filter_by(
+        serialno=serialno).distinct().all()

@@ -25,4 +25,6 @@ import tendril.entityhub.projects
 
 if __name__ == '__main__':
     for project in tendril.entityhub.projects.projects:
-        tendril.gedaif.validate.check(tendril.entityhub.projects.projects[project])
+        tendril.gedaif.validate.check(
+            tendril.entityhub.projects.projects[project]
+        )

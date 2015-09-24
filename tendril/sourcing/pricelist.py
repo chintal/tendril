@@ -19,9 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import os
 import yaml
 import re
@@ -33,33 +30,47 @@ import iec60063
 import vendors
 import customs
 
-import tendril.conventions.electronics
+from tendril.conventions.electronics import ident_transform
+from tendril.conventions.electronics import construct_resistor
+from tendril.conventions.electronics import construct_capacitor
 from tendril.utils.types import currency
 from tendril.utils.config import PRICELISTVENDORS_FOLDER
 from tendril.utils.config import INSTANCE_ROOT
 
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
+
 
 class VendorPricelist(vendors.VendorBase):
     def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code=None, currency_symbol=None, pricelistpath=None):
+                 currency_code=None, currency_symbol=None,
+                 pricelistpath=None):
         if pricelistpath is None:
-            pricelistpath = os.path.join(PRICELISTVENDORS_FOLDER, name + '-pricelist.yaml')
+            pricelistpath = os.path.join(PRICELISTVENDORS_FOLDER,
+                                         name + '-pricelist.yaml')
         with open(pricelistpath, 'r') as f:
             self._pricelist = yaml.load(f)
         if currency_code is None:
             currency_code = self._pricelist["currency"]["code"].strip()
         if currency_symbol is None:
             currency_symbol = self._pricelist["currency"]["symbol"].strip()
-        self._currency = currency.CurrencyDefinition(currency_code, currency_symbol)
+        self._currency = currency.CurrencyDefinition(
+            currency_code, currency_symbol
+        )
         super(VendorPricelist, self).__init__(name, dname, pclass, mappath,
                                               currency_code, currency_symbol)
         if 'vendorinfo' in self._pricelist:
             if "effectivefactor" in self._pricelist["vendorinfo"]:
-                self.add_order_additional_cost_component("Unspecified",
-                                                         self._pricelist["vendorinfo"]["effectivefactor"] * 100)
+                self.add_order_additional_cost_component(
+                    "Unspecified",
+                    self._pricelist["vendorinfo"]["effectivefactor"] * 100
+                )
         self._vpart_class = PricelistPart
         try:
-            self.add_order_baseprice_component("Shipping Cost", self._pricelist["vendorinfo"]["shippingcost"])
+            self.add_order_baseprice_component(
+                "Shipping Cost",
+                self._pricelist["vendorinfo"]["shippingcost"]
+            )
         except KeyError:
             pass
         if "prices" not in self._pricelist:
@@ -82,9 +93,12 @@ class VendorPricelist(vendors.VendorBase):
                     continue
                 if line[0] == 'ident':
                     continue
-                partdict = {'ident': line[0], 'vpno': line[1],
-                            'unitp': float(line[2]), 'moq': int(line[3]),
-                            'oqmultiple': int(line[4]), 'pkgqty': int(line[5])}
+                partdict = {'ident': line[0],
+                            'vpno': line[1],
+                            'unitp': float(line[2]),
+                            'moq': int(line[3]),
+                            'oqmultiple': int(line[4]),
+                            'pkgqty': int(line[5])}
                 try:
                     partdict['avail'] = int(line[6])
                 except ValueError:
@@ -104,9 +118,7 @@ class VendorPricelist(vendors.VendorBase):
                     self._pricelist["prices"].append(partdict)
 
     def _get_generator_idents(self, pricegen):
-        return [tendril.conventions.electronics.ident_transform(pricegen['device'],
-                                                              x,
-                                                              pricegen['footprint'])
+        return [ident_transform(pricegen['device'], x, pricegen['footprint'])
                 for x in self._get_generator_values(pricegen)]
 
     @staticmethod
@@ -132,7 +144,10 @@ class VendorPricelist(vendors.VendorBase):
                                                     start=generator['start'],
                                                     end=generator['end'])
                         for rvalue in rvalues:
-                            values.append(tendril.conventions.electronics.construct_resistor(rvalue, generator['wattage']))
+                            values.append(
+                                construct_resistor(rvalue,
+                                                   generator['wattage'])
+                            )
                     else:
                         raise ValueError
             if 'values' in pricegen.keys():
@@ -152,7 +167,10 @@ class VendorPricelist(vendors.VendorBase):
                                                     start=generator['start'],
                                                     end=generator['end'])
                         for cvalue in cvalues:
-                            values.append(tendril.conventions.electronics.construct_capacitor(cvalue, generator['voltage']))
+                            values.append(
+                                construct_capacitor(cvalue,
+                                                    generator['voltage'])
+                            )
                     else:
                         raise ValueError
             if 'values' in pricegen.keys():
@@ -174,8 +192,10 @@ class VendorPricelist(vendors.VendorBase):
         vp_dict = self._pl_get_vpart_dict(vpartno)
         if ident is not None:
             if vp_dict['ident'].strip() != ident:
-                logger.warning('Specified Ident does not match Pricelist Defined Ident : '
-                               + vp_dict['ident'].strip())
+                logger.warning(
+                    'Specified Ident does not match '
+                    'Pricelist Defined Ident : ' + vp_dict['ident'].strip()
+                )
         return PricelistPart(vp_dict, ident, self)
 
     def _pl_get_vpart_dict(self, vpartno):
@@ -195,22 +215,29 @@ class VendorPricelist(vendors.VendorBase):
         if len(candidates) > 1:
             for candidate in candidates:
                 ltcost, loqty, lprice = candidate.get_price_qty(rqty)
-                if ltcost < tcost and (selcandidate.vqtyavail is not None and selcandidate.vqtyavail < oqty):
+                if ltcost < tcost and (
+                        selcandidate.vqtyavail is not None and
+                        selcandidate.vqtyavail < oqty
+                ):
                     tcost = ltcost
                     selcandidate = candidate
                     oqty = loqty
                     price = lprice
         else:
-            if selcandidate.vqtyavail is not None and selcandidate.vqtyavail < oqty:
+            if selcandidate.vqtyavail is not None and \
+                    selcandidate.vqtyavail < oqty:
                 return self, None, None, None, None, None, None, None
         effprice = self.get_effective_price(price)
-        return self, selcandidate.vpno, oqty, None, price, effprice, "Vendor MOQ/GL", None
+        return self, selcandidate.vpno, oqty, None, \
+            price, effprice, "Vendor MOQ/GL", None
 
 
 class PricelistPart(vendors.VendorPartBase):
     def __init__(self, vp_dict, ident, vendor):
         self._vendor = vendor
-        super(PricelistPart, self).__init__(vp_dict['vpno'].strip(), ident, vendor)
+        super(PricelistPart, self).__init__(
+            vp_dict['vpno'].strip(), ident, vendor
+        )
         if 'pkgqty' in vp_dict.keys():
             self.pkgqty = vp_dict['pkgqty']
         if 'availqty' in vp_dict.keys():
@@ -231,7 +258,9 @@ class PricelistPart(vendors.VendorPartBase):
             except AttributeError:
                 pass
         if len(self._prices) == 0:
-            price = vendors.VendorPrice(vp_dict['moq'], vp_dict['unitp'], self._vendor.currency,
+            price = vendors.VendorPrice(vp_dict['moq'],
+                                        vp_dict['unitp'],
+                                        self._vendor.currency,
                                         vp_dict['oqmultiple'])
             self._prices.append(price)
 
@@ -254,15 +283,20 @@ class PricelistPart(vendors.VendorPartBase):
 class AnalogDevicesInvoice(customs.CustomsInvoice):
     def __init__(self, vendor=None, inv_yaml=None, working_folder=None):
         if vendor is None:
-            vendor = VendorPricelist('analogdevices', 'Analog Devices Inc', 'electronics')
+            vendor = VendorPricelist(
+                'analogdevices', 'Analog Devices Inc', 'electronics'
+            )
         if inv_yaml is None:
-            inv_yaml = os.path.join(INSTANCE_ROOT, 'scratch', 'customs', 'inv_data.yaml')
+            inv_yaml = os.path.join(INSTANCE_ROOT, 'scratch',
+                                    'customs', 'inv_data.yaml')
 
-        super(AnalogDevicesInvoice, self).__init__(vendor, inv_yaml, working_folder)
+        super(AnalogDevicesInvoice, self).__init__(vendor, inv_yaml,
+                                                   working_folder)
 
     def _acquire_lines(self):
         logger.info("Acquiring Lines")
-        invoice_file = os.path.join(self._source_folder, self._data['invoice_file'])
+        invoice_file = os.path.join(self._source_folder,
+                                    self._data['invoice_file'])
         with open(invoice_file) as f:
             reader = csv.reader(f)
             header = None
@@ -279,20 +313,25 @@ class AnalogDevicesInvoice(customs.CustomsInvoice):
                     idx = line[header.index('Index')].strip()
                     qty = int(line[header.index('Quantity')].strip())
                     vpno = line[header.index('Part Number')].strip()
-                    # mpno = line[header.index('Manufacturer Part Number')].strip()
                     desc = line[header.index('Description')].strip()
                     ident = line[header.index('Customer Reference')].strip()
                     boqty = line[header.index('Backorder')].strip()
                     try:
                         if int(boqty) > 0:
-                            logger.warning("Apparant backorder. Crosscheck customs treatment for: "
-                                           + idx + ' ' + ident)
+                            logger.warning(
+                                "Apparant backorder. "
+                                "Crosscheck customs treatment for: " +
+                                idx + ' ' + ident
+                            )
                     except ValueError:
                         print line
 
                     unitp_str = line[header.index('Unit Price')].strip()
-                    # extendedp_str = line[header.index('Extended Price')].strip()
 
-                    unitp = currency.CurrencyValue(float(unitp_str), self._vendor.currency)
-                    lineobj = customs.CustomsInvoiceLine(self, ident, vpno, unitp, qty, idx=idx, desc=desc)
+                    unitp = currency.CurrencyValue(
+                        float(unitp_str), self._vendor.currency
+                    )
+                    lineobj = customs.CustomsInvoiceLine(
+                        self, ident, vpno, unitp, qty, idx=idx, desc=desc
+                    )
                     self._lines.append(lineobj)

@@ -1,5 +1,5 @@
 tendril.boms.entitybase module
-============================
+==============================
 
 .. automodule:: tendril.boms.entitybase
     :members:

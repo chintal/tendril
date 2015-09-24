@@ -47,7 +47,8 @@ def get_serialnos_by_efield(efield=None, session=None):
 def get_serialnos_by_series(series=None, session=None):
     if not series or not isinstance(series, str):
         raise ValueError('series should be a string, got : ' + repr(series))
-    return session.query(SerialNumber).filter(SerialNumber.sno.like('{0}%'.format(series))).all()
+    return session.query(SerialNumber).filter(
+        SerialNumber.sno.like('{0}%'.format(series))).all()
 
 
 @with_db
@@ -76,7 +77,8 @@ def delete_serialno(sno=None, session=None):
 
 
 @with_db
-def link_serialno(child=None, parent=None, association_type=None, session=None):
+def link_serialno(child=None, parent=None,
+                  association_type=None, session=None):
 
     if not isinstance(child, SerialNumber):
         child = get_serialno_object(sno=child, session=session)
@@ -84,7 +86,8 @@ def link_serialno(child=None, parent=None, association_type=None, session=None):
         parent = get_serialno_object(sno=parent, session=session)
 
     try:
-        existing = session.query(SerialNumberAssociation).filter_by(child_id=child.id, parent_id=parent.id).one()
+        existing = session.query(SerialNumberAssociation).filter_by(
+            child_id=child.id, parent_id=parent.id).one()
         session.delete(existing)
         session.flush()
     except NoResultFound:
@@ -99,14 +102,17 @@ def link_serialno(child=None, parent=None, association_type=None, session=None):
 
 
 @with_db
-def get_child_snos(serialno=None, child_efield=None, child_series=None, session=None):
+def get_child_snos(serialno=None, child_efield=None, child_series=None,
+                   session=None):
 
     if serialno is None:
         raise ValueError("serialno cannot be None")
     if not isinstance(serialno, SerialNumber):
         serialno = get_serialno_object(sno=serialno, session=session)
 
-    q = session.query(SerialNumberAssociation).filter_by(parent_id=serialno.id)
+    q = session.query(SerialNumberAssociation).filter_by(
+        parent_id=serialno.id
+    )
     q = q.join(SerialNumberAssociation.child)
 
     if child_efield is not None:

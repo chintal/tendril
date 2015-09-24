@@ -28,7 +28,7 @@ import re
 DEVICE_CLASSES_DOC = [
     ('RES SMD', 'SMD Resistors'),
     ('RES THRU', 'THRU Resistors'),
-    ('RES POWER', 'Off-PCB power resistors for direct mounting onto heatsinks'),
+    ('RES POWER', 'Off-PCB power resistors for direct mounting onto heatsinks'),  # noqa
     ('RES ARRAY THRU', 'THRU Resistor Arrays'),
     ('RES ARRAY SMD', 'SMD Resistor Arrays'),
     ('POT TRIM', 'Trimpots'),
@@ -193,7 +193,8 @@ def ident_transform(device, value, footprint, tf=None):
     When applied to gEDA generated data (BOMs, gsymlib), the return value is
     the ``Canonical Representation`` for the component. The burden of ensuring
     uniqueness and consistency is on the gEDA schematic files and authors
-    thereof. See conventions.rst listed in ``somewhere`` for relevant guidelines.
+    thereof. See conventions.rst listed in ``somewhere`` for relevant
+    guidelines.
 
     For all other forms of data, the specific modules must provide a transform
     csv file to ensure correct mapping into the canonical form. For the format
@@ -207,7 +208,10 @@ def ident_transform(device, value, footprint, tf=None):
     try:
         ident = device + " " + value + " " + footprint
     except TypeError:
-        logging.error('Error generating ident : ' + str(device) + ' ' + str(value) + ' ' + str(footprint))
+        logging.error(
+            'Error generating ident : ' +
+            str(device) + ' ' + str(value) + ' ' + str(footprint)
+        )
         ident = 'FATAL'
     if device is None:
         logging.critical("Malformed ident : " + ident)
@@ -303,7 +307,7 @@ def construct_crystal(frequency):
 
 
 def parse_resistor(value):
-    rex = re.compile(r'^(?P<resistance>\d+(.\d+)*[mEKM])(/(?P<wattage>\d+(.\d+)*W))*$')
+    rex = re.compile(r'^(?P<resistance>\d+(.\d+)*[mEKM])(/(?P<wattage>\d+(.\d+)*W))*$')  # noqa
     try:
         rdict = rex.search(value).groupdict()
         return rdict['resistance'], rdict['wattage']
@@ -312,7 +316,7 @@ def parse_resistor(value):
 
 
 def parse_capacitor(value):
-    rex = re.compile(r'^(?P<capacitance>\d+(.\d+)*[pnum]F)(/(?P<voltage>\d+(.\d+)*V(DC|AC)*))*$')
+    rex = re.compile(r'^(?P<capacitance>\d+(.\d+)*[pnum]F)(/(?P<voltage>\d+(.\d+)*V(DC|AC)*))*$')  # noqa
     try:
         rdict = rex.search(value).groupdict()
         return rdict['capacitance'], rdict['voltage']
@@ -338,10 +342,10 @@ def parse_crystal(value):
         return None
 
 
-from tendril.utils.types.electromagnetic import parse_resistance
-from tendril.utils.types.electromagnetic import parse_capacitance
-from tendril.utils.types.electromagnetic import parse_current
-from tendril.utils.types.electromagnetic import parse_voltage
+from tendril.utils.types.electromagnetic import parse_resistance  # noqa
+from tendril.utils.types.electromagnetic import parse_capacitance  # noqa
+from tendril.utils.types.electromagnetic import parse_current  # noqa
+from tendril.utils.types.electromagnetic import parse_voltage  # noqa
 
 res_ostrs = ['m', 'E', 'K', 'M', 'G']
 

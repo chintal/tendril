@@ -34,7 +34,7 @@ Module Summary:
 .. autosummary::
     EntityBase
     EntityElnComp
-    EntityGroup
+    EntityElnGroup
     import_pcb
 
 Module Members:
@@ -257,7 +257,9 @@ class EntityElnBomConf(object):
                 try:
                     return configuration["motiflist"]
                 except KeyError:
-                    logger.debug("Configuration missing motiflist : " + configname)
+                    logger.debug(
+                        "Configuration missing motiflist : " + configname
+                    )
                     return None
         raise ValueError
 
@@ -267,7 +269,9 @@ class EntityElnBomConf(object):
                 try:
                     return configuration["genlist"]
                 except KeyError:
-                    logger.debug("Configuration missing genlist : " + configname)
+                    logger.debug(
+                        "Configuration missing genlist : " + configname
+                    )
                     return None
         raise ValueError
 
@@ -284,7 +288,9 @@ class EntityElnBomConf(object):
                         return sjlist
                     return configuration['sjlist']
                 except KeyError:
-                    logger.debug("Configuration missing SJ list : " + configname)
+                    logger.debug(
+                        "Configuration missing SJ list : " + configname
+                    )
                     return sjlist
         raise ValueError
 
@@ -321,14 +327,16 @@ class EntityElnBom(EntityBomBase):
 
         :rtype : EntityElnGroup
         """
-        groupname = item.data['group']
-        if groupname == 'unknown':
-            groupname = 'default'
-        if groupname not in [x['name'] for x in self.configurations.grouplist]:
-            logger.warning("Could not find group in config file : " + groupname)
-            groupname = 'default'
+        gname = item.data['group']
+        if gname == 'unknown':
+            gname = 'default'
+        if gname not in [x['name'] for x in self.configurations.grouplist]:
+            logger.warning(
+                "Could not find group in config file : " + gname
+            )
+            gname = 'default'
         for group in self.grouplist:
-            if group.groupname == groupname:
+            if group.groupname == gname:
                 return group
 
     def find_group(self, groupname):
@@ -346,7 +354,9 @@ class EntityElnBom(EntityBomBase):
             comp = EntityElnComp()
             comp.define('PCB', 'PCB', self.configurations.pcbname)
             tgroup.insert_eln_comp(comp)
-        parser = tendril.gedaif.bomparser.MotifAwareBomParser(self.projfolder, "bom")
+        parser = tendril.gedaif.bomparser.MotifAwareBomParser(
+            self.projfolder, "bom"
+        )
         for item in parser.line_gen:
             if item.data['device'] == 'TESTPOINT':
                 continue
@@ -354,13 +364,17 @@ class EntityElnBom(EntityBomBase):
             skip = False
             if item.data['footprint'] == 'MY-TO220':
                 comp = EntityElnComp()
-                comp.define('HS' + item.data['refdes'][1:], 'HEAT SINK', 'TO220')
+                comp.define('HS' + item.data['refdes'][1:],
+                            'HEAT SINK', 'TO220')
                 tgroup.insert_eln_comp(comp)
             if item.data['device'] == 'MODULE LCD' and \
                     item.data['value'] == "CHARACTER PARALLEL 16x2" and \
                     item.data['footprint'] == "MY-MTA100-16":
                 comp = EntityElnComp()
-                comp.define(item.data['refdes'], 'CONN SIP', "16PIN PM ST", "MY-MTA100-16")
+                comp.define(
+                    item.data['refdes'], 'CONN SIP',
+                    "16PIN PM ST", "MY-MTA100-16"
+                )
                 tgroup.insert_eln_comp(comp)
                 skip = True
             if not skip:
@@ -392,7 +406,9 @@ class EntityElnBom(EntityBomBase):
                     basemotifconfs = self.configurations.motiflist
                     for bkey, baseconf in basemotifconfs.iteritems():
                         if bkey == key:
-                            logger.debug("Found Base Configuration for : " + key)
+                            logger.debug(
+                                "Found Base Configuration for : " + key
+                            )
                             motifconf_act.update(baseconf)
                 motifconf_act.update(motifconf)
                 motif.configure(motifconf_act)
@@ -400,7 +416,9 @@ class EntityElnBom(EntityBomBase):
     def create_output_bom(self, configname):
         if configname not in self.configurations.get_configurations():
             raise ValueError
-        outbomdescriptor = OutputElnBomDescriptor(self.pcbname, self.projfolder, configname, self.configurations)
+        outbomdescriptor = OutputElnBomDescriptor(
+            self.pcbname, self.projfolder, configname, self.configurations
+        )
         outbom = OutputBom(outbomdescriptor)
         outgroups = self.configurations.get_configuration(configname)
 
@@ -419,16 +437,21 @@ class EntityElnBom(EntityBomBase):
             grpobj = self.find_group(group)
             if grpobj is None:
                 logger.critical("outgroups : " + str(outgroups))
-                logger.critical("grpobj not found : " + str(group) + ":for " + configname)
+                logger.critical(
+                    "grpobj not found : " + str(group) + ":for " + configname
+                )
             for comp in grpobj.complist:
-                if gen_refdeslist is not None and comp.refdes in gen_refdeslist:
+                if gen_refdeslist is not None and \
+                        comp.refdes in gen_refdeslist:
                     if tendril.conventions.electronics.fpiswire(comp.device):
                         comp.footprint = genlist[comp.refdes]
                     else:
                         comp.value = genlist[comp.refdes]
                 if sj_refdeslist is not None and comp.refdes in sj_refdeslist:
                     if not comp.fillstatus == 'CONF':
-                        logger.error("sjlist attempts to change not configurable SJ : " + comp.refdes)
+                        logger.error("sjlist attempts to change "
+                                     "non-configurable SJ : " +
+                                     comp.refdes)
                         raise AttributeError
                     if sjlist[comp.refdes]:
                         logger.debug("Setting Fillstatus : " + comp.refdes)
@@ -451,7 +474,8 @@ class EntityElnBom(EntityBomBase):
                 logger.error("Motif not defined : " + key)
                 continue
             for item in motif.get_line_gen():
-                if item.data['group'] in outgroups and item.data['fillstatus'] != 'DNP':
+                if item.data['group'] in outgroups and \
+                        item.data['fillstatus'] != 'DNP':
                     outbom.insert_component(EntityElnComp(item))
 
         outbom.sort_by_ident()

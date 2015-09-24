@@ -63,7 +63,7 @@ class MotifInampGainBase(MotifBase):
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
         if elem.data['fillstatus'] == 'DNP':
             return None
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])
+        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
 
     @property
     def gain(self):
@@ -91,5 +91,5 @@ class MotifInampGainBase(MotifBase):
             lastval = rval
             rval = electronics.parse_resistance(val)
             if rval > required_res_val:
-                self.get_elem_by_idx('R1').data['value'] = gsymlib.find_resistor(lastval, r1_fp, r1_dev)
+                self.get_elem_by_idx('R1').data['value'] = gsymlib.find_resistor(lastval, r1_fp, r1_dev)  # noqa
                 break

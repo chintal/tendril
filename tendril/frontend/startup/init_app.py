@@ -31,7 +31,8 @@ def init_app(app, db):
     # Initialize app config settings
     app.config.from_object('tendril.frontend.startup.settings')
     if app.testing:
-        app.config['WTF_CSRF_ENABLED'] = False              # Disable CSRF checks while testing
+        # Disable CSRF checks while testing
+        app.config['WTF_CSRF_ENABLED'] = False
 
     # Initialize Assets
     from tendril.frontend.startup import assets  # noqa
@@ -115,7 +116,8 @@ def init_error_logger_with_email_handler(app):
     Unhandled exceptions will now send an email message to app.config.ADMINS.
     """
     if app.debug:
-        return                        # Do not send error emails while developing
+        # Do not send error emails while developing
+        return
 
     # Retrieve email settings from app.config
     host = app.config['MAIL_SERVER']

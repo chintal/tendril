@@ -16,17 +16,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-RadioShack 2200087 DMM Interface Module (:mod:`tendril.testing.instruments.RS2200087`)
-======================================================================================
+RadioShack 2200087 DMM Interface (:mod:`tendril.testing.instruments.RS2200087`)
+===============================================================================
 
 This module provides the instrument object for RadioShack's 2200087 Digital
 Multimeter with PC interface. It uses the :mod:`driver2200087` module to
 handle the communication with the instrument, while subclassing the Twisted
 protocol of that module to provide one which produces
 :class:`tendril.utils.types.signalbase.SignalPoint` and
-:class:`tendril.utils.types.signalbase.SignalWave` objects instead, which contain
-Type objects from the :mod:`tendril.utils.types` module. This allows seamless
-integration with Tendril's :mod:`tendril.testing` module.
+:class:`tendril.utils.types.signalbase.SignalWave` objects instead, which
+contain Type objects from the :mod:`tendril.utils.types` module. This allows
+seamless integration with Tendril's :mod:`tendril.testing` module.
 
 .. rubric:: Usage example
 
@@ -103,11 +103,15 @@ from decimal import InvalidOperation
 
 def voltage_processor(m):
     """
-    Processor that converts a regex match of a Voltage string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a Voltage string from
+    :mod:`driver2200087.serialDecoder` and returns a string compatible
+    with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the Voltage regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.electromagnetic.Voltage` class and its subclasses
+    :param m: :class:`re.match` object from one of the
+               Voltage regexs in :data:`rex_list`
+    :return: String compatible with the
+             :class:`tendril.utils.types.electromagnetic.Voltage`
+             class and its subclasses
     :rtype: str
 
     """
@@ -126,11 +130,15 @@ def voltage_processor(m):
 
 def resistance_processor(m):
     """
-    Processor that converts a regex match of a Resistance string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a Resistance string from
+    :mod:`driver2200087.serialDecoder` and returns a string compatible
+    with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the Resistance regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.electromagnetic.Resistance` class and its subclasses
+    :param m: :class:`re.match` object from one of the Resistance regexs
+              in :data:`rex_list`
+    :return: String compatible with the
+             :class:`tendril.utils.types.electromagnetic.Resistance`
+             class and its subclasses
     :rtype: str
 
     """
@@ -149,11 +157,15 @@ def resistance_processor(m):
 
 def capacitance_processor(m):
     """
-    Processor that converts a regex match of a Capacitance string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a Capacitance string from
+    :mod:`driver2200087.serialDecoder` and returns a string compatible
+    with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the Capacitance regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.electromagnetic.Capacitance` class and its subclasses
+    :param m: :class:`re.match` object from one of the Capacitance regexs
+              in :data:`rex_list`
+    :return: String compatible with the
+             :class:`tendril.utils.types.electromagnetic.Capacitance` class
+             and its subclasses
     :rtype: str
 
     """
@@ -167,11 +179,15 @@ def capacitance_processor(m):
 
 def frequency_processor(m):
     """
-    Processor that converts a regex match of a Frequency string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a Frequency string from
+    :mod:`driver2200087.serialDecoder` and returns a string compatible
+    with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the Frequency regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.time.Frequency` class and its subclasses
+    :param m: :class:`re.match` object from one of the Frequency regexs
+              in :data:`rex_list`
+    :return: String compatible with the
+             :class:`tendril.utils.types.time.Frequency` class
+             and its subclasses
     :rtype: str
 
     """
@@ -188,11 +204,15 @@ def frequency_processor(m):
 
 def time_processor(m):
     """
-    Processor that converts a regex match of a Time string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a Time string from
+    :mod:`driver2200087.serialDecoder` and returns a string
+    compatible with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the Time regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.time.TimeSpan` class and its subclasses
+    :param m: :class:`re.match` object from one of the Time regexs
+              in :data:`rex_list`
+    :return: String compatible with the
+             :class:`tendril.utils.types.time.TimeSpan` class
+             and its subclasses
     :rtype: str
 
     """
@@ -215,11 +235,15 @@ def time_processor(m):
 
 def current_processor(m):
     """
-    Processor that converts a regex match of a Current string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a Current string from
+    :mod:`driver2200087.serialDecoder` and returns a string compatible
+    with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the Current regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.electromagnetic.Current` class and its subclasses
+    :param m: :class:`re.match` object from one of the Current regexs
+              in :data:`rex_list`
+    :return: String compatible with the
+             :class:`tendril.utils.types.electromagnetic.Current` class
+             and its subclasses
     :rtype: str
 
     """
@@ -238,11 +262,15 @@ def current_processor(m):
 
 def power_processor(m):
     """
-    Processor that converts a regex match of a PowerRatio string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a PowerRatio string from
+    :mod:`driver2200087.serialDecoder` and returns a string compatible
+    with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the PowerRatio regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.electromagnetic.PowerRatio` class and its subclasses
+    :param m: :class:`re.match` object from one of the PowerRatio regexs
+              in :data:`rex_list`
+    :return: String compatible with the
+             :class:`tendril.utils.types.electromagnetic.PowerRatio` class
+             and its subclasses
     :rtype: str
 
     """
@@ -251,11 +279,15 @@ def power_processor(m):
 
 def hfe_processor(m):
     """
-    Processor that converts a regex match of a HFR string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a HFR string from
+    :mod:`driver2200087.serialDecoder` and returns a string compatible
+    with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the HFE regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.electromagnetic.HFE` class and its subclasses
+    :param m: :class:`re.match` object from one of the HFE regexs
+              in :data:`rex_list`
+    :return: String compatible with the
+             :class:`tendril.utils.types.electromagnetic.HFE` class
+             and its subclasses
     :rtype: str
 
     """
@@ -264,11 +296,15 @@ def hfe_processor(m):
 
 def duty_processor(m):
     """
-    Processor that converts a regex match of a DutyCycle string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a DutyCycle string from
+    :mod:`driver2200087.serialDecoder` and returns a string compatible
+    with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the DutyCycle regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.electromagnetic.DutyCycle` class and its subclasses
+    :param m: :class:`re.match` object from one of the DutyCycle regexs
+              in :data:`rex_list`
+    :return: String compatible with the
+             :class:`tendril.utils.types.electromagnetic.DutyCycle` class
+             and its subclasses
     :rtype: str
 
     """
@@ -277,11 +313,15 @@ def duty_processor(m):
 
 def continuity_processor(m):
     """
-    Processor that converts a regex match of a Continuity string from :mod:`driver2200087.serialDecoder`
-    and returns a string compatible with Tendril Unit Types
+    Processor that converts a regex match of a Continuity string from
+    :mod:`driver2200087.serialDecoder` and returns a string compatible
+    with Tendril Unit Types.
 
-    :param m: :class:`re.match` object from one of the Continuity regexs in :data:`rex_list`
-    :return: String compatible with the :class:`tendril.utils.types.electromagnetic.Continuity` class and its subclasses
+    :param m: :class:`re.match` object from one of the Continuity regexs
+              in :data:`rex_list`.
+    :return: String compatible with the
+             :class:`tendril.utils.types.electromagnetic.Continuity` class
+             and its subclasses
     :rtype: str
 
     """
@@ -290,54 +330,55 @@ def continuity_processor(m):
         rval = 'OPEN'
     return rval
 
-#: List of regular expressions, each of which matches the string for one type of data from
-#: :mod:`driver2200087.serialDecoder`. Each element of the list is a `tuple`, containing the
-#: following elements:
+#: List of regular expressions, each of which matches the string for one
+#: type of data from :mod:`driver2200087.serialDecoder`. Each element of
+#: the list is a `tuple`, containing the following elements:
 #:
-#: 0. Tendril type class from :mod:`tendril.utils.types` which is applicable to the data point.
+#: 0. Tendril type class from :mod:`tendril.utils.types` which is
+#:    applicable to the data point.
 #: 1. The compiled regular expression.
-#: 2. The applicable processor, which acts on the match object to produce a string. If the
-#:    processor is None, then the named match group 'string' is used to instantiate the
-#:    appropriate unit class.
+#: 2. The applicable processor, which acts on the match object to produce
+#:    a string. If the processor is None, then the named match group 'string'
+#:    is used to instantiate the appropriate unit class.
 #:
 rex_list = [(thermodynamic.Temperature,
              re.compile(ur'^(?P<string>[-?[0-9\\.]+[CFK])(?P<HOLD> HOLD)?$'),
              None),
             (electromagnetic.VoltageDC,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? VOLTS$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? VOLTS$'),  # noqa
              voltage_processor),
             (electromagnetic.VoltageAC,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+) AC(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? VOLTS$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+) AC(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? VOLTS$'),  # noqa
              voltage_processor),
             (electromagnetic.CurrentDC,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? AMPS$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? AMPS$'),  # noqa
              current_processor),
             (electromagnetic.CurrentAC,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+) AC(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? AMPS$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+) AC(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? AMPS$'),  # noqa
              current_processor),
             (electromagnetic.Continuity,
              re.compile(ur'^(?P<string>0PEN) CONTINUITY(?P<HOLD> HOLD)?$'),
              continuity_processor),
             (electromagnetic.DiodeVoltageDC,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+) DIODE(?P<HOLD> HOLD)? VOLTS$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+) DIODE(?P<HOLD> HOLD)? VOLTS$'),  # noqa
              voltage_processor),
             (electromagnetic.Resistance,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? OHMS$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? OHMS$'),  # noqa
              resistance_processor),
             (electromagnetic.Capacitance,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? FARADS$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)?( (?P<range>[munKM]) \(1e(?P<power>-?[\d]+)\))? FARADS$'),  # noqa
              capacitance_processor),
             (time.Frequency,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)? Hz$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)? Hz$'),  # noqa
              frequency_processor),
             (electromagnetic.PowerRatio,
              re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<HOLD> HOLD)? dBm$'),
              power_processor),
             (electromagnetic.DutyCycle,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)(?P<HOLD> HOLD)? Percent$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)(?P<HOLD> HOLD)? Percent$'),  # noqa
              duty_processor),
             (time.TimeSpan,
-             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)? SECONDS( (?P<range>[mun]) \(1e(?P<power>-?[\d]+)\))?$'),
+             re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<AUTO> AUTO)?(?P<HOLD> HOLD)? SECONDS( (?P<range>[mun]) \(1e(?P<power>-?[\d]+)\))?$'),  # noqa
              time_processor),
             (electromagnetic.HFE,
              re.compile(ur'^(?P<number>[-?[0-9\\.]+)(?P<HOLD> HOLD)? HFE$'),
@@ -356,19 +397,20 @@ class TendrilProtocol2200087(InstProtocol2200087):
     This subclasses the twisted protocol from :mod:`driver2200087.runner`
     which handles serial communications with 2200087 multimeters. It produces
     :class:`tendril.utils.types.signalbase.SignalPoint` and
-    :class:`tendril.utils.types.signalbase.SignalWave` objects instead of strings and
-    deque objects, which contain Type objects from the
+    :class:`tendril.utils.types.signalbase.SignalWave` objects instead of
+    strings and deque objects, which contain Type objects from the
     :mod:`tendril.utils.types` module.
 
     This protocol exists and operates within the context of a twisted reactor.
-    Applications themselves built on twisted should be able to simply import this
-    protocol (or its factory).
+    Applications themselves built on twisted should be able to simply import
+    this protocol (or its factory).
 
     Synchronous / non-twisted applications should directly use the
-    :class:`driver2200087.runner.InstInterface2200087` class instead, and pass this
-    protocol's factory to modify its behavior.
+    :class:`driver2200087.runner.InstInterface2200087` class instead, and
+    pass this protocol's factory to modify its behavior.
 
-    :param port: Port on which the device is connected. Default '/dev/ttyUSB0'.
+    :param port: Port on which the device is connected.
+                 Default '/dev/ttyUSB0'.
     :type port: str
     :param buffer_size: Length of the point buffer in the protocol.
     :type buffer_size: int
@@ -378,9 +420,10 @@ class TendrilProtocol2200087(InstProtocol2200087):
 
     def reset_buffer(self, unitclass=DummyUnit):
         """
-        Resets the point buffer to a new :class:`tendril.utils.types.signalbase.SignalWave`
-        with the unitclass as specified by the parameter. Any data presently within it
-        will be lost.
+        Resets the point buffer to a new
+        :class:`tendril.utils.types.signalbase.SignalWave` with the unitclass
+        as specified by the parameter. Any data presently within it will be
+        lost.
 
         :param unitclass: Class of Unit that the Wave points are composed of.
 
@@ -411,21 +454,25 @@ class TendrilProtocol2200087(InstProtocol2200087):
 
         """
         rval = copy.copy(self.point_buffer)
-        self.point_buffer = SignalWave(rval.unitclass,
-                                       points=deque([rval.pop()], maxlen=rval._buffer_size),
-                                       spacing=rval._spacing,
-                                       ts0=rval._ts0,
-                                       buffer_size=rval._buffer_size,
-                                       use_point_ts=rval._use_point_ts)
+        self.point_buffer = SignalWave(
+            rval.unitclass,
+            points=deque([rval.pop()], maxlen=rval._buffer_size),
+            spacing=rval._spacing,
+            ts0=rval._ts0,
+            buffer_size=rval._buffer_size,
+            use_point_ts=rval._use_point_ts
+        )
         return rval
 
     def _get_point(self, string):
         """
-        Processes a string returned by :mod:`driver2200087.serialDecoder` and converts it into
-        a :class:`tendril.utils.types.signalbase.SignalPoint` instance composed of the correct
-        Unit class.
+        Processes a string returned by :mod:`driver2200087.serialDecoder`
+        and converts it into a
+        :class:`tendril.utils.types.signalbase.SignalPoint` instance composed
+        of the correct Unit class.
 
-        :return:  SignalPoint composed of the correct type and value from the string
+        :return:  SignalPoint composed of the correct type and value from the
+                  string
         :rtype: :class:`tendril.utils.types.signalbase.SignalPoint`
 
         .. seealso:: :data:`rex_list`
@@ -443,15 +490,17 @@ class TendrilProtocol2200087(InstProtocol2200087):
                 try:
                     return SignalPoint(rex[0], rstring)
                 except (InvalidOperation, ValueError):
-                    # logger.error("Unable to make unit from string : " + rstring + " : " + repr(rex[0]))
+                    # logger.error("Unable to make unit from string : " +
+                    # rstring + " : " + repr(rex[0]))
                     return SignalPoint(rex[0], 0)
         raise ValueError("String not recognized : " + string)
 
     def frame_received(self, frame):
         """
-        Re-implements the Base class's frame_received function, producing SignalPoints instead.
-        When a signal point of a different type as the point buffer is encountered, it resets
-        the point buffer and initializes it to the new type.
+        Re-implements the Base class's frame_received function, producing
+        SignalPoints instead. When a signal point of a different type as
+        the point buffer is encountered, it resets the point buffer and
+        initializes it to the new type.
 
         .. seealso:: :meth:`_get_point`
 
@@ -480,7 +529,8 @@ class TendrilFactory2200087(InstFactory2200087):
 
         :param port: Serial port identifier to which the device is connected
         :type port: str
-        :param buffer_size: Length of the point buffer in the protocol. Default 100.
+        :param buffer_size: Length of the point buffer in the protocol.
+                            Default 100.
         :type buffer_size: int
         """
         instance = TendrilProtocol2200087(port=port, buffer_size=buffer_size)
@@ -509,12 +559,14 @@ class DMMInputChannel(InstrumentInputChannelBase):
 
     def get(self, unitclass=None, flush=True):
         """
-        Gets the latest data point in the channel's point buffer. By default, it
-        also flushes any older points from the buffer. This behavior can be
+        Gets the latest data point in the channel's point buffer. By default,
+        it also flushes any older points from the buffer. This behavior can be
         suppressed by passing flush=False.
 
-        :param unitclass: Unit class of which the data point is expected, or None if you don't care.
-        :param flush: Whether or not older points should be flushed. Default True.
+        :param unitclass: Unit class of which the data point is expected, or
+                          None if you don't care.
+        :param flush: Whether or not older points should be flushed.
+                      Default True.
         :return: Latest datapoint.
         :rtype: :class:`tendril.utils.types.signalbase.SignalPoint`
 
@@ -527,11 +579,14 @@ class DMMInputChannel(InstrumentInputChannelBase):
 
     def get_next_chunk(self, unitclass=None):
         """
-        Gets the next chunk of data from the instrument channel. Note that the
-        chunk returned has already been removed from the channel's point buffer.
+        Gets the next chunk of data from the instrument channel.
+        Note that the chunk returned has already been removed from
+        the channel's point buffer.
 
-        :param unitclass: Unit class of which the data point is expected, or None if you don't care.
-        :return: Wave containing all but the latest data point in the channel's point buffer.
+        :param unitclass: Unit class of which the data point is expected,
+                          or None if you don't care.
+        :return: Wave containing all but the latest data point in the
+                 channel's point buffer.
         :rtype: :class:`tendril.utils.types.signalbase.SignalWave`
 
         """
@@ -574,9 +629,10 @@ class InstrumentRS2200087(InstrumentBase):
 
     def _detect(self):
         """
-        Creates and initializes the :class:`driver2200087.runner.InstInterface2200087`
-        object, which in turn creates the protocol object and establishes the
-        connection to the device.
+        Creates and initializes the
+        :class:`driver2200087.runner.InstInterface2200087` object, which in
+        turn creates the protocol object and establishes the connection to
+        the device.
 
         The instrument interface object created is stored in the object's
         :attr:`_dmm` instance variable.

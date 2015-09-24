@@ -1,5 +1,5 @@
 tendril.boms.electronics module
-=============================
+===============================
 
 .. automodule:: tendril.boms.electronics
     :members:

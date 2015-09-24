@@ -1,5 +1,5 @@
 tendril.dox.invoice module
-========================
+==========================
 
 .. automodule:: tendril.dox.invoice
     :members:

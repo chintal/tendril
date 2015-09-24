@@ -1,5 +1,5 @@
 tendril.utils.types.electromagnetic module
-========================================
+==========================================
 
 .. automodule:: tendril.utils.types.electromagnetic
     :members:

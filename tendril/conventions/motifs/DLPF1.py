@@ -23,14 +23,14 @@ This file needs to be refactored quite a bit
 
 from math import pi
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import iec60063
 
 from tendril.conventions import electronics
 from tendril.conventions.motifs.motifbase import MotifBase
 from tendril.gedaif import gsymlib
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class MotifDLPF1(MotifBase):
@@ -40,8 +40,8 @@ class MotifDLPF1(MotifBase):
 
     def configure(self, configdict):
         # Set Resistances
-        self.get_elem_by_idx('R1').data['value'] = electronics.construct_resistor(configdict['R1'], '0.125W')
-        self.get_elem_by_idx('R2').data['value'] = electronics.construct_resistor(configdict['R1'], '0.125W')
+        self.get_elem_by_idx('R1').data['value'] = electronics.construct_resistor(configdict['R1'], '0.125W')  # noqa
+        self.get_elem_by_idx('R2').data['value'] = electronics.construct_resistor(configdict['R1'], '0.125W')  # noqa
         # Set Frequency
         self._configdict = configdict
         self.Fdiff = float(configdict['Fdiff'][:-2])
@@ -53,7 +53,7 @@ class MotifDLPF1(MotifBase):
             log.WARNING('Positive terminal bias not defined : ' + self.refdes)
         else:
             if self._configdict['pbias'] != '-1':
-                self.get_elem_by_idx('R3').data['value'] = electronics.construct_resistor(self._configdict['pbias'], '0.125W')
+                self.get_elem_by_idx('R3').data['value'] = electronics.construct_resistor(self._configdict['pbias'], '0.125W')  # noqa
             else:
                 try:
                     self.get_elem_by_idx('R3').data['fillstatus'] = 'DNP'
@@ -64,7 +64,7 @@ class MotifDLPF1(MotifBase):
             log.WARNING('Positive terminal bias not defined : ' + self.refdes)
         else:
             if self._configdict['nbias'] != '-1':
-                self.get_elem_by_idx('R4').data['value'] = electronics.construct_resistor(self._configdict['nbias'], '0.125W')
+                self.get_elem_by_idx('R4').data['value'] = electronics.construct_resistor(self._configdict['nbias'], '0.125W')  # noqa
             else:
                 try:
                     self.get_elem_by_idx('R4').data['fillstatus'] = 'DNP'
@@ -73,7 +73,7 @@ class MotifDLPF1(MotifBase):
 
     @property
     def Fdiff(self):
-        return (10 ** 9) / (2 * pi * float(self.R1) * float(2 * self.C1 + self.C2))
+        return (10 ** 9) / (2 * pi * float(self.R1) * float(2 * self.C1 + self.C2))  # noqa
 
     @property
     def Fcm(self):
@@ -100,8 +100,8 @@ class MotifDLPF1(MotifBase):
             lastval = cval
             cval = electronics.parse_capacitance(val)
             if cval >= required_cap_val:
-                self.get_elem_by_idx('C2').data['value'] = gsymlib.find_capacitor(lastval, c1_fp, c1_dev).value
-                self.get_elem_by_idx('C3').data['value'] = gsymlib.find_capacitor(lastval, c1_fp, c1_dev).value
+                self.get_elem_by_idx('C2').data['value'] = gsymlib.find_capacitor(lastval, c1_fp, c1_dev).value  # noqa
+                self.get_elem_by_idx('C3').data['value'] = gsymlib.find_capacitor(lastval, c1_fp, c1_dev).value  # noqa
                 break
 
         if cval is None:
@@ -111,38 +111,38 @@ class MotifDLPF1(MotifBase):
         for val in allowed_cap_vals:
             cval = electronics.parse_capacitance(val)
             if cval >= required_cap_val:
-                self.get_elem_by_idx('C1').data['value'] = gsymlib.find_capacitor(cval, c1_fp, c1_dev).value
+                self.get_elem_by_idx('C1').data['value'] = gsymlib.find_capacitor(cval, c1_fp, c1_dev).value  # noqa
                 break
 
     @property
     def R1(self):
         elem = self.get_elem_by_idx('R1')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])
+        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
 
     @property
     def R2(self):
         elem = self.get_elem_by_idx('R2')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])
+        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
 
     @property
     def C1(self):
         elem = self.get_elem_by_idx('C1')
         assert elem.data['device'] in ['CAP CER SMD', 'CAP CER THRU']
-        return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])
+        return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])  # noqa
 
     @property
     def C2(self):
         elem = self.get_elem_by_idx('C2')
         assert elem.data['device'] in ['CAP CER SMD', 'CAP CER THRU']
-        return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])
+        return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])  # noqa
 
     @property
     def C3(self):
         elem = self.get_elem_by_idx('C3')
         assert elem.data['device'] in ['CAP CER SMD', 'CAP CER THRU']
-        return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])
+        return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])  # noqa
 
     def validate(self):
         logger.debug("Validating Motif : " + self.refdes)

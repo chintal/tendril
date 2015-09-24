@@ -30,8 +30,6 @@ import urlparse
 import HTMLParser
 import traceback
 
-from bs4 import BeautifulSoup
-
 import vendors
 from tendril.utils import www
 from tendril.conventions import electronics
@@ -44,7 +42,8 @@ html_parser = HTMLParser.HTMLParser()
 
 
 class VendorTI(vendors.VendorBase):
-    def __init__(self, name, dname, pclass, mappath=None, currency_code=None, currency_symbol=None, ):
+    def __init__(self, name, dname, pclass, mappath=None,
+                 currency_code=None, currency_symbol=None):
         self.url_base = 'https://store.ti.com'
         self._devices = ['IC SMD',
                          'IC THRU',
@@ -56,7 +55,8 @@ class VendorTI(vendors.VendorBase):
             currency_code = 'USD'
         if not currency_symbol:
             currency_symbol = 'US$'
-        super(VendorTI, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
+        super(VendorTI, self).__init__(name, dname, pclass, mappath,
+                                       currency_code, currency_symbol)
         self._vpart_class = TIElnPart
         self.add_order_baseprice_component("Shipping Cost", 7)
         self.add_order_additional_cost_component("Customs", 12.85)
@@ -116,7 +116,7 @@ class VendorTI(vendors.VendorBase):
         # NEB05E-5
         # NEB05F-5
         # NEK-15
-        (re.compile(ur'^((K((C[ST]?)|(VT?)))|(ND[ABDEFGHKLZ])|(NEB0((3[AFG])|(5[BEF])))|(NEK))-(?P<pinc>\d+)$'),
+        (re.compile(ur'^((K((C[ST]?)|(VT?)))|(ND[ABDEFGHKLZ])|(NEB0((3[AFG])|(5[BEF])))|(NEK))-(?P<pinc>\d+)$'),  # noqa
          'TO-220-{0}', ['pinc']),
     ]
 
@@ -151,9 +151,9 @@ class VendorTI(vendors.VendorBase):
             return False, None, 'NO_RESULTS:1'
         parts = []
         for row in rows:
-            pno, mfgpno, package, ns, unitp = self._process_resultpage_row(row)
-            if unitp is not None:
-                parts.append((pno, mfgpno, package, ns))
+            part = self._process_resultpage_row(row)
+            if part[-1] is not None:
+                parts.append(part)
         return True, parts, ''
 
     @staticmethod
@@ -227,17 +227,21 @@ class VendorTI(vendors.VendorBase):
             return True, pnos, strategy
 
         # Find Exact Match Package
-        result, cpackage, strategy = self._find_exact_match_package(parts, value)
+        result, cpackage, strategy = self._find_exact_match_package(parts,
+                                                                    value)
         if result is False:
-            # Did not find an exact match package. Check for consensus package instead.
+            # Did not find an exact match package. Check for consensus
+            # package instead.
             result, cpackage, strategy = self._find_consensus_package(parts)
             if result is False:
                 # No exact match, no consensus on package
-                result, pnos, strategy = self._filter_results_byfootprint(parts, footprint)
+                result, pnos, strategy = \
+                    self._filter_results_byfootprint(parts, footprint)
                 return True, pnos, strategy
 
         # cpackage exists
-        result, pnos, strategy = self._filter_results_bycpackage(parts, cpackage, strategy)
+        result, pnos, strategy = \
+            self._filter_results_bycpackage(parts, cpackage, strategy)
 
         if len(pnos) == 0:
             pnos = None
@@ -251,7 +255,8 @@ class VendorTI(vendors.VendorBase):
     def _get_search_vpnos(self, device, value, footprint):
         if value.strip() == '':
             return None, 'NOVALUE'
-        device, value, footprint = self._search_preprocess(device, value, footprint)
+        device, value, footprint = \
+            self._search_preprocess(device, value, footprint)
         url = urlparse.urljoin(self.url_base,
                                "Search.aspx?k={0}&pt=-1".format(
                                    urllib.quote_plus(value)))
@@ -272,7 +277,8 @@ class VendorTI(vendors.VendorBase):
         parts = self._prefilter_parts(parts, value)
         if not len(parts):
             return None, strategy + ':NO_RESULTS:PREFILTER'
-        result, pnos, lstrategy = self._filter_results(parts, value, footprint)
+        result, pnos, lstrategy = \
+            self._filter_results(parts, value, footprint)
         if pnos:
             pnos = list(set(pnos))
             pnos = map(lambda x: html_parser.unescape(x), pnos)
@@ -305,9 +311,10 @@ class TIElnPart(vendors.VendorElnPartBase):
             # TODO raise AttributeError
 
     def _get_product_soup(self):
-        start_url = urlparse.urljoin(self.url_base,
-                               "Search.aspx?k={0}&pt=-1".format(
-                                   urllib.quote_plus(self.vpno)))
+        start_url = urlparse.urljoin(
+            self.url_base,
+            "Search.aspx?k={0}&pt=-1".format(urllib.quote_plus(self.vpno))
+        )
         soup = www.get_soup(start_url)
         ptable = soup.find('table',
                            id=re.compile(r'ctl00_ProductList'))
@@ -338,17 +345,23 @@ class TIElnPart(vendors.VendorElnPartBase):
     rex_price = re.compile(ur'^((?P<start>\d+)-)?(?P<end>\d+)$')
 
     def _get_prices(self, soup):
-        ptable = soup.find('div', id='ctl00_ctl00_NestedMaster_PageContent_ctl00_BuyProductDialog1_tierPricing')
+        ptable = soup.find('div',
+                           id='ctl00_ctl00_NestedMaster_PageContent'
+                              '_ctl00_BuyProductDialog1_tierPricing')
         prices = []
         rows = ptable.find_all('div', class_=re.compile(r'pMoreLine'))
         availq = None
         for row in rows:
-            price_text = row.find('span', id=re.compile(r'lblTier(\d+)ListPrice')).text.strip()
+            price_text = row.find(
+                'span', id=re.compile(r'lblTier(\d+)ListPrice')
+            ).text.strip()
             price = locale.atof(price_text.replace('$', ''))
             qty_text = row.find('span', class_='qty').text.strip()
             m = self.rex_price.match(qty_text)
             if not m:
-                raise ValueError("Didn't get a qty from " + qty_text + " for " + self.vpno)
+                raise ValueError(
+                    "Didn't get a qty from " + qty_text + " for " + self.vpno
+                )
             try:
                 moq = locale.atoi(m.group('start'))
             except AttributeError:

@@ -142,14 +142,16 @@ hs_classifier = CustomsClassifier()
 
 class CustomsInvoice(vendors.VendorInvoice):
     def __init__(self, vendor, inv_yaml, working_folder=None):
-        vendor_defaults_file = os.path.join(CUSTOMSDEFAULTS_FOLDER, vendor._name + '.yaml')
+        vendor_defaults_file = os.path.join(CUSTOMSDEFAULTS_FOLDER,
+                                            vendor._name + '.yaml')
         self._data = {}
         if os.path.exists(vendor_defaults_file):
             with open(vendor_defaults_file, 'r') as f:
                 vendor_defaults = yaml.load(f)
                 self._data = vendor_defaults.copy()
         else:
-            logger.warning("Vendor Customs Defaults File Not Found : " + vendor_defaults_file)
+            logger.warning("Vendor Customs Defaults File Not Found : " +
+                           vendor_defaults_file)
         self._source_folder = os.path.split(inv_yaml)[0]
         if working_folder is None:
             self._working_folder = self._source_folder
@@ -159,10 +161,13 @@ class CustomsInvoice(vendors.VendorInvoice):
             inv_data = yaml.load(f)
             self._data.update(inv_data)
         self._linetype = CustomsInvoiceLine
-        vendor.currency = currency.CurrencyDefinition(vendor.currency.code,
-                                                      vendor.currency.symbol,
-                                                      exchval=self._data['exchrate'])
-        super(CustomsInvoice, self).__init__(vendor, self._data['invoice_no'], self._data['invoice_date'])
+        vendor.currency = currency.CurrencyDefinition(
+            vendor.currency.code, vendor.currency.symbol,
+            exchval=self._data['exchrate']
+        )
+        super(CustomsInvoice, self).__init__(
+            vendor, self._data['invoice_no'], self._data['invoice_date']
+        )
 
         self.freight = 0
         self.insurance_pc = 0
@@ -183,34 +188,41 @@ class CustomsInvoice(vendors.VendorInvoice):
             if v is False:
                 self._data['costs_not_included'][k] = 'None'
             elif v == 'INCL':
-                self._data['costs_not_included'][k] = 'None, included in Invoice'
+                self._data['costs_not_included'][k] = 'None, ' \
+                                                      'included in Invoice'
             elif v == 'LISTED':
                 self._data['costs_not_included'][k] = 'Listed in Invoice'
             else:
-                logger.warning("Unrecognized Other Costs definition for " + k + " : " + v)
+                logger.warning(
+                    "Unrecognized Other Costs definition for " + k + " : " + v
+                )
 
-        if self._data['costs_not_included']['FREIGHT'] == 'None, included in Invoice':
-            self.freight = currency.CurrencyValue(float(self._data['shipping_cost_incl']),
-                                                  self._vendor.currency)
-            self._data['costs_not_included']['FREIGHT'] += " ({0})".format(self.freight.source_string)
+        if self._data['costs_not_included']['FREIGHT'] == 'None, included in Invoice':  # noqa
+            self.freight = currency.CurrencyValue(
+                float(self._data['shipping_cost_incl']),
+                self._vendor.currency
+            )
+            self._data['costs_not_included']['FREIGHT'] += " ({0})".format(self.freight.source_string)  # noqa
             self._includes_freight = True
         if self._data['costs_not_included']['FREIGHT'] == 'Listed in Invoice':
-            self.freight = currency.CurrencyValue(float(self._data['shipping_cost_listed']),
-                                                  self._vendor.currency)
-            self._data['costs_not_included']['FREIGHT'] = "{0} (as listed in the invoice)".format(self.freight.source_string)
+            self.freight = currency.CurrencyValue(
+                float(self._data['shipping_cost_listed']),
+                self._vendor.currency
+            )
+            self._data['costs_not_included']['FREIGHT'] = "{0} (as listed in the invoice)".format(self.freight.source_string)  # noqa
             self._includes_freight = True
 
         if 'insurance_pc' in self._data.keys():
             self.insurance_pc = float(self._data['insurance_pc'])
             if self.insurance_pc > 0:
                 self._added_insurance = True
-                self._data['costs_not_included']['INSURANCE'] = "{0} (@{1}% {2})".format(self.insurance.source_string, self.insurance_pc, self._data['insurance_note'])
+                self._data['costs_not_included']['INSURANCE'] = "{0} (@{1}% {2})".format(self.insurance.source_string, self.insurance_pc, self._data['insurance_note'])  # noqa
 
         if 'handling_pc' in self._data.keys():
             self.handling_pc = float(self._data['handling_pc'])
             if self.handling_pc > 0:
                 self._added_handling = True
-                self._data['costs_not_included']['LANDING'] = "{0} (@{1}% {2})".format(self.landing.source_string, self.handling_pc, self._data['handling_note'])
+                self._data['costs_not_included']['LANDING'] = "{0} (@{1}% {2})".format(self.landing.source_string, self.handling_pc, self._data['handling_note'])  # noqa
 
     @property
     def insurance(self):
@@ -255,8 +267,8 @@ class CustomsInvoice(vendors.VendorInvoice):
 
     @property
     def source_files(self):
-        rval = [(os.path.join(self._source_folder, 'inv_data.yaml'), 'INVOICE-DATA-YAML'),
-                (os.path.join(self._source_folder, self._data['invoice_file']), 'INVOICE-FILE-CSV')]
+        rval = [(os.path.join(self._source_folder, 'inv_data.yaml'), 'INVOICE-DATA-YAML'),  # noqa
+                (os.path.join(self._source_folder, self._data['invoice_file']), 'INVOICE-FILE-CSV')]  # noqa
         return rval
 
     @property
@@ -343,7 +355,7 @@ class CustomsInvoice(vendors.VendorInvoice):
 
     @property
     def dutypayable(self):
-        return self.bcd + self.cvd + self.cec + self.cshec + self.cvdec + self.cvdshec + self.acvd
+        return self.bcd + self.cvd + self.cec + self.cshec + self.cvdec + self.cvdshec + self.acvd  # noqa
 
     @property
     def effectiverate_cif(self):
@@ -362,22 +374,27 @@ class DutyComponent(object):
         self.value = value
 
     def __repr__(self):
-        return "{0:>50} (@{1:>5}%) : {2:>13}   Notification : {3}".format(self.title, self.rate, self.value.native_string, self.notification)
+        return "{0:>50} (@{1:>5}%) : {2:>13}   Notification : {3}".format(
+            self.title, self.rate, self.value.native_string, self.notification
+        )
 
 
 class CustomsInvoiceLine(vendors.VendorInvoiceLine):
     def __init__(self, invoice, ident, vpno, unitp, qty, idx=None, desc=None):
         if idx is None:
             idx = max(invoice.idxs) + 1
-        super(CustomsInvoiceLine, self).__init__(invoice, ident, vpno, unitp, qty, desc=desc)
+        super(CustomsInvoiceLine, self).__init__(
+            invoice, ident, vpno, unitp, qty, desc=desc
+        )
         if idx in invoice.idxs:
             raise ValueError
         self._idx = idx
 
     @property
     def dutypayable(self):
-        return self.bcd.value + self.cvd.value + self.cec.value + self.cshec.value + \
-            self.cvdec.value + self.cvdshec.value + self.acvd.value
+        return self.bcd.value + self.cvd.value + self.cec.value + \
+            self.cshec.value + self.cvdec.value + self.cvdshec.value + \
+            self.acvd.value
 
     @property
     def idx(self):
@@ -396,41 +413,53 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
 
     @property
     def bcd(self):
-        return DutyComponent("BCD", self.hs_section.bcd, self.hs_section.bcd_notif,
-                             self.assessableprice * self.hs_section.bcd / 100.0)
+        return DutyComponent(
+            "BCD", self.hs_section.bcd, self.hs_section.bcd_notif,
+            self.assessableprice * self.hs_section.bcd / 100.0
+        )
 
     @property
     def cvd(self):
-        return DutyComponent("CVD", self.hs_section.cvd, self.hs_section.cvd_notif,
-                             (self.assessableprice + self.bcd.value) * self.hs_section.cvd / 100.0)
+        return DutyComponent(
+            "CVD", self.hs_section.cvd, self.hs_section.cvd_notif,
+            (self.assessableprice + self.bcd.value) * self.hs_section.cvd / 100.0  # noqa
+        )
 
     @property
     def cec(self):
-        return DutyComponent("C EC", self.hs_section.cec, self.hs_section.cec_notif,
-                             (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cec / 100.0)
+        return DutyComponent(
+            "C EC", self.hs_section.cec, self.hs_section.cec_notif,
+            (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cec / 100.0  # noqa
+        )
 
     @property
     def cshec(self):
-        return DutyComponent("C SHEC", self.hs_section.cshec,
-                             self.hs_section.cshec_notif,
-                             (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cshec / 100.0)
+        return DutyComponent(
+            "C SHEC", self.hs_section.cshec, self.hs_section.cshec_notif,
+            (self.bcd.value + self.cvd.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.cshec / 100.0  # noqa
+        )
 
     @property
     def cvdec(self):
-        return DutyComponent("CVD EC", self.hs_section.cvdec, self.hs_section.cvdec_notif,
-                             self.cvd.value * self.hs_section.cvdec / 100.0)
+        return DutyComponent(
+            "CVD EC", self.hs_section.cvdec, self.hs_section.cvdec_notif,
+            self.cvd.value * self.hs_section.cvdec / 100.0
+        )
 
     @property
     def cvdshec(self):
-        return DutyComponent("CVD SHEC", self.hs_section.cvdshec,
-                             self.hs_section.cvdshec_notif,
-                             self.cvd.value * self.hs_section.cvdshec / 100.0)
+        return DutyComponent(
+            "CVD SHEC", self.hs_section.cvdshec,
+            self.hs_section.cvdshec_notif,
+            self.cvd.value * self.hs_section.cvdshec / 100.0
+        )
 
     @property
     def acvd(self):
-        return DutyComponent("SAD", self.hs_section.acvd,
-                             self.hs_section.acvd_notif,
-                             (self.assessableprice + self.bcd.value + self.cvd.value + self.cec.value + self.cshec.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.acvd / 100.0)
+        return DutyComponent(
+            "SAD", self.hs_section.acvd, self.hs_section.acvd_notif,
+            (self.assessableprice + self.bcd.value + self.cvd.value + self.cec.value + self.cshec.value + self.cvdec.value + self.cvdshec.value) * self.hs_section.acvd / 100.0  # noqa
+        )
 
     @property
     def invoice_fraction(self):
@@ -467,11 +496,11 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
         return rval
 
     def print_duties(self):
-        print "{0:>60} : {2:>13}  {3:>13}".format("Extended Value", '', self.extendedprice.native_string, self.extendedprice.source_string)
-        print "{0:>60} : {2:>13}".format("Freight Value", '', self.freight, '')
-        print "{0:>60} : {2:>13}".format("Insurance Value", '', self.insurance, '')
-        print "{0:>60} : {2:>13}".format("Handling Value", '', self.handling, '')
-        print "{0:>60} : {2:>13}".format("Assessable Value", '', self.assessableprice, '')
+        print "{0:>60} : {2:>13}  {3:>13}".format("Extended Value", '', self.extendedprice.native_string, self.extendedprice.source_string)  # noqa
+        print "{0:>60} : {2:>13}".format("Freight Value", '', self.freight, '')  # noqa
+        print "{0:>60} : {2:>13}".format("Insurance Value", '', self.insurance, '')  # noqa
+        print "{0:>60} : {2:>13}".format("Handling Value", '', self.handling, '')  # noqa
+        print "{0:>60} : {2:>13}".format("Assessable Value", '', self.assessableprice, '')  # noqa
         print self.bcd
         print self.cvd
         print self.cec
@@ -482,6 +511,6 @@ class CustomsInvoiceLine(vendors.VendorInvoiceLine):
 
     def __repr__(self):
         if self.hs_section is not None:
-            return "{0:<3} {1:<40} {2:<35} {3:>10} {4:>15}".format(self.idx, self._ident, self._desc, self.hs_section.code, self.hs_section.name)
+            return "{0:<3} {1:<40} {2:<35} {3:>10} {4:>15}".format(self.idx, self._ident, self._desc, self.hs_section.code, self.hs_section.name)  # noqa
         else:
-            return "{0:<3} {1:<40} {2:<35} {3:>10} {4:>15}".format(self.idx, self._ident, self._desc, '----------', 'Unclassified')
+            return "{0:<3} {1:<40} {2:<35} {3:>10} {4:>15}".format(self.idx, self._ident, self._desc, '----------', 'Unclassified')  # noqa

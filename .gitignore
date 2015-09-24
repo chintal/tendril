@@ -1,7 +1,11 @@
+/.cache
+/.tox
 /profiling/*/*/*.profile*
-/tendril.egg-info
+/*.egg-info
 /dist
 /build
+/stash
+*.egg
 
 
 # Created by .ignore support plugin (hsz.mobi)

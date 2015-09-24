@@ -18,10 +18,10 @@
 The Database Utils Module (:mod:`tendril.utils.db`)
 ===================================================
 
-This module provides utilities to deal with Tendril's Database. While the actual
-functionality is provided by the :mod:`sqlalchemy` package, the contents of
-this utility module simplify and specify the application code's interaction
-with :mod:`sqlalchemy`
+This module provides utilities to deal with Tendril's Database. While the
+actual functionality is provided by the :mod:`sqlalchemy` package, the
+contents of this utility module simplify and specify the application code's
+interaction with :mod:`sqlalchemy`
 
 .. rubric:: Module Contents
 
@@ -51,8 +51,9 @@ def init_db_engine():
     defined by the :mod:`tendril.utils.config` module.
 
     This function is called within the module and an engine is readily
-    available in the module variable :data:`tendril.utils.db.engine`. Application
-    code should not have to create a new engine for normal use cases.
+    available in the module variable :data:`tendril.utils.db.engine`.
+    Application code should not have to create a new engine for normal
+    use cases.
     """
     return create_engine(DB_URI)
 
@@ -73,8 +74,8 @@ def get_session():
     this context, and then exit the context.
 
     If any Exception is thrown, the session is rolled back completely. If no
-    Exception is thrown or Exceptions are handled by the application code within
-    the context, the session is committed when the context exits.
+    Exception is thrown or Exceptions are handled by the application code
+    within the context, the session is committed when the context exits.
 
     .. seealso:: :func:`with_db`
 
@@ -93,9 +94,9 @@ def get_session():
 def with_db(func):
     """
     Application executable code will typically only have to interact with this
-    function or the :func:`get_session` ``contextmanager``. The :func:`with_db`
-    decorator is intended to decorate functions which interact primarily with
-    the db.
+    function or the :func:`get_session` ``contextmanager``. The
+    :func:`with_db` decorator is intended to decorate functions which interact
+    primarily with the db.
 
     Such a function would accept only keyword arguments, one of which is
     ``session``, which can be a database session (created by
@@ -104,9 +105,10 @@ def with_db(func):
     using it.
 
     Any function which returns objects that still need to be bound to a db
-    session should be called with a valid session, if you intend to do anything
-    with the returned objects. They will still execute without exception if
-    no session is provided, but the returned value may not be useful.
+    session should be called with a valid session, if you intend to do
+    anything with the returned objects. They will still execute without
+    exception if no session is provided, but the returned value may not be
+    useful.
 
     .. seealso:: :func:`get_session`
 
@@ -121,16 +123,16 @@ def with_db(func):
     return inner
 
 
-#: The :mod:`sqlalchemy` declarative base for all Model defined by / in Tendril
+#: The :mod:`sqlalchemy` declarative base for all Models in Tendril
 DeclBase = declarative_base()
 
 
 class BaseMixin(object):
     """
     This Mixin can / should be used (by inheriting from) by all Model classes
-    defined by application code. It defines the :attr:`__tablename__` attribute
-    of the Model class to the name of the class and creates a Primary Key Column
-    named id in the table for the Model.
+    defined by application code. It defines the :attr:`__tablename__`
+    attribute of the Model class to the name of the class and creates a
+    Primary Key Column named id in the table for the Model.
     """
     @declared_attr
     def __tablename__(self):
@@ -157,9 +159,9 @@ def commit_metadata():
     run after importing **all** the Model classes, and it will create the
     tables in the database.
     """
-    from tendril.entityhub.db import model
-    from tendril.inventory.db import model
-    from tendril.dox.db import model
-    from tendril.testing.db import model
+    from tendril.entityhub.db import model  # noqa
+    from tendril.inventory.db import model  # noqa
+    from tendril.dox.db import model  # noqa
+    from tendril.testing.db import model  # noqa
 
     DeclBase.metadata.create_all(engine)

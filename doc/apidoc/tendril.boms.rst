@@ -1,5 +1,5 @@
 tendril.boms package
-==================
+====================
 
 Submodules
 ----------

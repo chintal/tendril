@@ -41,7 +41,7 @@ class MotifLPF1(MotifBase):
     def configure(self, configdict):
         # Set Resistances
 
-        self.get_elem_by_idx('R1').data['value'] = electronics.construct_resistor(configdict['R1'], '0.125W')
+        self.get_elem_by_idx('R1').data['value'] = electronics.construct_resistor(configdict['R1'], '0.125W')  # noqa
 
         # Set Frequency
         self._configdict = configdict
@@ -71,7 +71,7 @@ class MotifLPF1(MotifBase):
             lastval = cval
             cval = electronics.parse_capacitance(val)
             if cval >= required_cap_val:
-                self.get_elem_by_idx('C1').data['value'] = gsymlib.find_capacitor(lastval, c1_fp, c1_dev).value
+                self.get_elem_by_idx('C1').data['value'] = gsymlib.find_capacitor(lastval, c1_fp, c1_dev).value  # noqa
                 break
 
         if cval is None:
@@ -81,13 +81,13 @@ class MotifLPF1(MotifBase):
     def R1(self):
         elem = self.get_elem_by_idx('R1')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])
+        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
 
     @property
     def C1(self):
         elem = self.get_elem_by_idx('C1')
         assert elem.data['device'] in ['CAP CER SMD', 'CAP CER THRU']
-        return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])
+        return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])  # noqa
 
     def validate(self):
         pass

@@ -1,5 +1,5 @@
 tendril.gedaif package
-====================
+======================
 
 Submodules
 ----------

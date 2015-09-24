@@ -19,9 +19,6 @@ CSIL Sourcing Module documentation (:mod:`sourcing.csil`)
 =========================================================
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import time
 import locale
 import os
@@ -30,11 +27,7 @@ from collections import OrderedDict
 
 import splinter
 
-from selenium.webdriver.remote.remote_connection import LOGGER
-LOGGER.setLevel(log.WARNING)
 import selenium.common.exceptions
-
-
 import vendors
 
 from tendril.utils import fsutils
@@ -49,6 +42,11 @@ from tendril.utils.config import VENDORS_DATA
 from tendril.gedaif import projfile
 from tendril.entityhub import projects
 from tendril.dox import purchaseorder
+
+from selenium.webdriver.remote.remote_connection import LOGGER
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
+LOGGER.setLevel(log.WARNING)
 
 user = None
 pw = None
@@ -115,7 +113,6 @@ def get_csil_prices(params=exparams, rval=None):
     #                   'network.proxy.ftp_port':proxyPort
     #                   }
 
-    # browser = splinter.Browser('firefox', profile_preferences=proxy_settings)
     browser = splinter.Browser('firefox')
     url = 'http://www.pcbpower.com:8080'
     browser.visit(url)
@@ -131,16 +128,16 @@ def get_csil_prices(params=exparams, rval=None):
 
     values = OrderedDict()
     values['ctl00$ContentPlaceHolder1$txtPCBName'] = params['pcbname']
-    values['ctl00$ContentPlaceHolder1$ddlLayers'] = layers_codes[params['layers']]
+    values['ctl00$ContentPlaceHolder1$ddlLayers'] = layers_codes[params['layers']]  # noqa
     values['ctl00$ContentPlaceHolder1$txtDimX'] = params['dX']
     values['ctl00$ContentPlaceHolder1$txtDimY'] = params['dY']
     if 'qty' in params.keys():
-        values['ctl00$ContentPlaceHolder1$txtQuantity'] = str(params['qty'][1])
+        values['ctl00$ContentPlaceHolder1$txtQuantity'] = str(params['qty'][1])  # noqa
     else:
         values['ctl00$ContentPlaceHolder1$txtQuantity'] = '1'
     values['ctl00$ContentPlaceHolder1$DDLsurfacefinish'] = params['finish']
     if 'time' in params.keys():
-        values['ctl00$ContentPlaceHolder1$ddlDelTerms'] = delivery_codes[params['time']]
+        values['ctl00$ContentPlaceHolder1$ddlDelTerms'] = delivery_codes[params['time']]  # noqa
     else:
         values['ctl00$ContentPlaceHolder1$ddlDelTerms'] = delivery_codes[5]
 
@@ -179,16 +176,16 @@ def get_csil_prices(params=exparams, rval=None):
     except AttributeError:
         newt = ''
     try:
-        newtt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblTotalPrice').text
+        newtt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblTotalPrice').text  # noqa
     except AttributeError:
         newtt = ''
     while oldt == newt:
         try:
-            newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text
+            newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text  # noqa
         except AttributeError:
             newt = ''
         try:
-            newtt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblTotalPrice').text
+            newtt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblTotalPrice').text  # noqa
         except AttributeError:
             newtt = ''
         time.sleep(0.5)
@@ -197,7 +194,7 @@ def get_csil_prices(params=exparams, rval=None):
     pb = ProgressBar('red', block='#', empty='.')
     for qty in params['qty'][2:]:
         lined = {}
-        while browser.find_by_name('ctl00$ContentPlaceHolder1$txtQuantity')[0].value != '':
+        while browser.find_by_name('ctl00$ContentPlaceHolder1$txtQuantity')[0].value != '':  # noqa
             browser.type('ctl00$ContentPlaceHolder1$txtQuantity', '\b')
             time.sleep(0.1)
         browser.type('ctl00$ContentPlaceHolder1$txtQuantity', str(qty))
@@ -209,57 +206,57 @@ def get_csil_prices(params=exparams, rval=None):
             loi = [10]
         percentage = (float(qty) / max(params['qty'])) * 100.00
         pb.render(int(percentage),
-                  "\n{0:>7.4f}% {1:<40} Qty: {2:<10} DTS: {3:<4}\nGenerating PCB Pricing".format(
+                  "\n{0:>7.4f}% {1:<40} Qty: {2:<10} DTS: {3:<4}\nGenerating PCB Pricing".format(  # noqa
                       percentage, params['pcbname'], qty, loi)
                   )
         for dt_s in loi:
             dt_idx = delivery_times.index(dt_s)
             dts = delivery_times[dt_idx:dt_idx + 3]
-            browser.select('ctl00$ContentPlaceHolder1$ddlDelTerms', delivery_codes[dt_s])
+            browser.select('ctl00$ContentPlaceHolder1$ddlDelTerms', delivery_codes[dt_s])  # noqa
             time.sleep(1)
             while True:
                 try:
                     try:
-                        newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text
+                        newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text  # noqa
                     except AttributeError:
                         newt = ''
                     try:
                         # newt1 = ''
                         # newt2 = ''
-                        newt1 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc1').text
-                        newt2 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc2').text
+                        newt1 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc1').text  # noqa
+                        newt2 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc2').text  # noqa
                     except AttributeError:
                         newt1 = ''
                         newt2 = ''
                     break
-                except selenium.common.exceptions.StaleElementReferenceException:
+                except selenium.common.exceptions.StaleElementReferenceException:  # noqa
                     logger.warning("Selenium Exception Caught. Retrying")
                     continue
 
             timeout = 25
-            while oldt == newt and oldtt == newtt and newt is not '' and timeout > 0:
+            while oldt == newt and oldtt == newtt and newt is not '' and timeout > 0:  # noqa
                 timeout -= 1
                 time.sleep(1)
                 while True:
                     try:
                         try:
-                            newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text
+                            newt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblUnitPrc').text  # noqa
                         except AttributeError:
                             newt = ''
                         try:
                             # newt1 = ''
                             # newt2 = ''
-                            newt1 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc1').text
-                            newt2 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc2').text
+                            newt1 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc1').text  # noqa
+                            newt2 = browser.find_by_id('ctl00_ContentPlaceHolder1_lblnextunitprc2').text  # noqa
                         except AttributeError:
                             newt1 = ''
                             newt2 = ''
                         break
-                    except selenium.common.exceptions.StaleElementReferenceException:
+                    except selenium.common.exceptions.StaleElementReferenceException:  # noqa
                         logger.warning("Selenium Exception Caught. Retrying")
                         continue
                 try:
-                    newtt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblTotalPrice').text
+                    newtt = browser.find_by_id('ctl00_ContentPlaceHolder1_lblTotalPrice').text  # noqa
                 except AttributeError:
                     newtt = ''
             try:
@@ -288,7 +285,9 @@ class VendorCSIL(vendors.VendorBase):
         self._username = username
         self._password = password
         self._devices = ['PCB']
-        super(VendorCSIL, self).__init__(name, dname, pclass, mappath, currency_code, currency_symbol)
+        super(VendorCSIL, self).__init__(
+            name, dname, pclass, mappath, currency_code, currency_symbol
+        )
         self._vpart_class = CSILPart
         self.add_order_additional_cost_component("Excise (12.5\%)", 12.5)
         self.add_order_additional_cost_component("CST (5\%)", 5.625)
@@ -313,7 +312,8 @@ class VendorCSIL(vendors.VendorBase):
         ubprice, nbprice, urationale, olduprice = candidate.get_price(rqty)
         oqty = ubprice.moq
         effprice = self.get_effective_price(ubprice)
-        return self, candidate.vpno, oqty, nbprice, ubprice, effprice, urationale, olduprice
+        return self, candidate.vpno, oqty, nbprice, \
+            ubprice, effprice, urationale, olduprice
 
     def _generate_purchase_order(self, path):
         stagebase = super(VendorCSIL, self)._generate_purchase_order(path)
@@ -328,16 +328,18 @@ class VendorCSIL(vendors.VendorBase):
             stage['unitp'] = line[5].unit_price.source_value
             totalv = line[5].extended_price(line[3]).source_value
             stage['totalp'] = totalv
-            addl_costs = self.get_additional_costs(line[5].extended_price(line[3]))
-            stage['addl_costs'] = [{'desc': x[0], 'cost': x[1]} for x in addl_costs]
+            addl_costs = self.get_additional_costs(line[5].extended_price(line[3]))  # noqa
+            stage['addl_costs'] = [{'desc': x[0], 'cost': x[1]}
+                                   for x in addl_costs]
             for desc, cost in addl_costs:
                 totalv += cost
             stage['total'] = totalv
             vpart = self.get_vpart(line[2])
             stage['description'] = "\\\\".join(vpart.descriptors)
-            purchaseorder.render_po(stage,
-                                    self._name,
-                                    os.path.join(path, self._name + '-PO-' + line[2] + '.pdf'))
+            purchaseorder.render_po(
+                stage, self._name,
+                os.path.join(path, self._name + '-PO-' + line[2] + '.pdf')
+            )
 
 
 class CSILPart(vendors.VendorPartBase):
@@ -365,13 +367,17 @@ class CSILPart(vendors.VendorPartBase):
 
     def _load_descriptors(self):
         gpf = projfile.GedaProjectFile(self._projectfolder)
-        pricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
+        pricingfp = os.path.join(gpf.configsfile.projectfolder,
+                                 'pcb', 'sourcing.yaml')
         if not os.path.exists(pricingfp):
-            logger.debug("PCB does not have sourcing file. Not loading prices : " + self._pcbname)
+            logger.debug(
+                "PCB does not have sourcing file. Not loading prices : " +
+                self._pcbname
+            )
             return None
         with open(pricingfp, 'r') as f:
             data = yaml.load(f)
-        self._descriptors.append(str(data['params']['dX']) + 'mm x ' + str(data['params']['dY']) + 'mm')
+        self._descriptors.append(str(data['params']['dX']) + 'mm x ' + str(data['params']['dY']) + 'mm')  # noqa
         if data["params"]["layers"] == 2:
             self._descriptors.append("Double Layer")
         elif data["params"]["layers"] == 4:
@@ -392,23 +398,31 @@ class CSILPart(vendors.VendorPartBase):
         elif data["params"]["finish"] == 'OC':
             self._descriptors.append("Only Copper finish")
         else:
-            self._descriptors.append("UNKNOWN FINISH: " + data["params"]["finish"])
+            self._descriptors.append("UNKNOWN FINISH: " + data["params"]["finish"])  # noqa
         self._descriptors.append("10 Working Days")
 
     def _load_prices(self):
         gpf = projfile.GedaProjectFile(self._projectfolder)
-        pricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
+        pricingfp = os.path.join(gpf.configsfile.projectfolder,
+                                 'pcb', 'sourcing.yaml')
         if not os.path.exists(pricingfp):
-            logger.debug("PCB does not have sourcing file. Not loading prices : " + self._pcbname)
+            logger.debug(
+                "PCB does not have sourcing file. Not loading prices : " +
+                self._pcbname
+            )
             return None
         with open(pricingfp, 'r') as f:
             data = yaml.load(f)
         for qty, prices in data['pricing'].iteritems():
             if 10 not in prices.keys():
-                logger.warning("Default Delivery Time not in prices. Quantity pricing not imported : " +
-                               str([qty, self._pcbname]))
+                logger.warning(
+                    "Default Delivery Time not in prices. Quantity pricing not imported : " +  # noqa
+                    str([qty, self._pcbname])
+                )
             else:
-                price = vendors.VendorPrice(qty, prices[10], self._vendor.currency)
+                price = vendors.VendorPrice(
+                    qty, prices[10], self._vendor.currency
+                )
                 self._prices.append(price)
 
     @property
@@ -420,7 +434,7 @@ class CSILPart(vendors.VendorPartBase):
         base_price, next_base_price = super(CSILPart, self).get_price(qty)
         for price in self._prices:
             if price.moq > qty and \
-                    price.extended_price(price.moq).native_value < base_price.extended_price(qty).native_value:
+                    price.extended_price(price.moq).native_value < base_price.extended_price(qty).native_value:  # noqa
                 possible_prices.append(price)
         if len(possible_prices) == 0:
             return base_price, next_base_price, "GUIDELINE", None
@@ -433,12 +447,13 @@ class CSILPart(vendors.VendorPartBase):
                     selprice = price
                     mintot = price.extended_price(price.moq).native_value
                     rationale = "TC Reduction"
-            return selprice, super(CSILPart, self).get_price(selprice.moq + 1)[0], rationale, base_price
+            return selprice, super(CSILPart, self).get_price(selprice.moq + 1)[0], rationale, base_price  # noqa
 
 
 def flush_pcb_pricing(projfolder):
     gpf = projfile.GedaProjectFile(projfolder)
-    pricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
+    pricingfp = os.path.join(gpf.configsfile.projectfolder,
+                             'pcb', 'sourcing.yaml')
     if os.path.exists(pricingfp):
         os.remove(pricingfp)
 
@@ -449,14 +464,18 @@ def generate_pcb_pricing(projfolder, noregen=True, forceregen=False):
     try:
         pcbparams = gpf.configsfile.configdata['pcbdetails']['params']
     except KeyError:
-        logger.warning('Geda project does not seem have pcb details. Not generating PCB pricing information : ' + projfolder)
+        logger.warning(
+            'Geda project does not seem have pcb details. '
+            'Not generating PCB pricing information : ' +
+            projfolder)
         return None
 
-    pricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
+    pricingfp = os.path.join(gpf.configsfile.projectfolder,
+                             'pcb', 'sourcing.yaml')
 
     if noregen is True:
         if forceregen is False:
-            pcb_mtime = fsutils.get_file_mtime(os.path.join(gpf.configsfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
+            pcb_mtime = fsutils.get_file_mtime(os.path.join(gpf.configsfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))  # noqa
             outf_mtime = fsutils.get_file_mtime(pricingfp)
             if outf_mtime is not None and outf_mtime > pcb_mtime:
                 logger.info('Skipping up-to-date ' + pricingfp)

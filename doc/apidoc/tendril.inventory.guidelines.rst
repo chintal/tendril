@@ -1,5 +1,5 @@
 tendril.inventory.guidelines package
-==================================
+====================================
 
 Module contents
 ---------------

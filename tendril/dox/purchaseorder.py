@@ -57,7 +57,8 @@ def render_po(stage, templateid, outpath):
     :type stage: dict
     :param templateid: The id of the template to use.
     :type templateid: str
-    :param outpath: The path to which the output should be written, including ``.pdf``.
+    :param outpath: The path to which the output should be written,
+                    including ``.pdf``.
     :type outpath: str
     :return: The ``outpath``.
 
@@ -76,13 +77,17 @@ def render_po(stage, templateid, outpath):
     .. list-table::
 
         * - ``no``
-          - The serial number of the purchase order, either from the ``stage`` parameter or created.
+          - The serial number of the purchase order, either from the ``stage``
+            parameter or created.
         * - ``point``
-          - The name of the contact person, defined by :data:`tendril.utils.config.COMPANY_PO_POINT`.
+          - The name of the contact person, defined by
+            :data:`tendril.utils.config.COMPANY_PO_POINT`.
         * - ``date``
-          - The purchase order date, either from the ``stage`` parameter or today's date.
+          - The purchase order date, either from the ``stage`` parameter or
+            today's date.
         * - ``lcofile``
-          - The latex lcofile to use, defined by :data:`tendril.utils.config.COMPANY_PO_LCO_PATH`
+          - The latex lcofile to use, defined by
+            :data:`tendril.utils.config.COMPANY_PO_LCO_PATH`
 
     """
     template = 'po_' + templateid + '_template.tex'

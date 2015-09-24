@@ -25,7 +25,7 @@ from tendril.utils.config import SECRET_KEY  # noqa
 
 # SQLAlchemy settings
 from tendril.utils.config import INSTANCE_ROOT
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(INSTANCE_ROOT, 'db', 'auth.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(INSTANCE_ROOT, 'db', 'auth.db')  # noqa
 
 # Flask-Mail settings
 from tendril.utils.config import MAIL_DEFAULT_SENDER  # noqa

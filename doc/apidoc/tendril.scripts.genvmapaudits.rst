@@ -1,5 +1,5 @@
 tendril.scripts.genvmapaudits module
-==================================
+====================================
 
 .. automodule:: tendril.scripts.genvmapaudits
     :members:

@@ -19,9 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-import tendril.utils.log
-logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
-
 import os
 import subprocess
 import pyparsing
@@ -31,6 +28,9 @@ import tendril.utils.pdf
 from tendril.utils.types.lengths import Length
 from tendril.utils.types.cartesian import CartesianPoint
 from tendril.utils.types.cartesian import CartesianLineSegment
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 class PCBPoint(CartesianPoint):
@@ -253,8 +253,11 @@ class PCBStyles(list):
         meas.addParseAction(length)
         name = pyparsing.Word(pyparsing.alphas)
         comma = pyparsing.Suppress(pyparsing.Literal(','))
-        style = pyparsing.Group(name('name') + comma + meas('thickness') + comma + meas('diameter') +
-                                comma + meas('drill') + comma + meas('keepaway'))
+        style = pyparsing.Group(
+            name('name') + comma + meas('thickness') + comma +
+            meas('diameter') + comma + meas('drill') + comma +
+            meas('keepaway')
+        )
         style.setResultsName('Style', True)
         styles = pyparsing.delimitedList(style, delim=':')
         stylelist = styles.parseString(string)
@@ -329,7 +332,8 @@ class PCBFile(object):
             elif line[0] == "Grid":
                 if self._grid is not None:
                     logger.warning("UNEXPECTED :: Grid Redefined")
-                self._grid = PCBGrid(line.Step, line.OffsetX, line.OffsetY, line.Visible)
+                self._grid = PCBGrid(line.Step, line.OffsetX,
+                                     line.OffsetY, line.Visible)
             elif line[0] == "PolyArea":
                 if self._polyarea is not None:
                     logger.warning("UNEXPECTED :: Polyarea Redefined")
@@ -341,7 +345,8 @@ class PCBFile(object):
             elif line[0] == "DRC":
                 if self._drc is not None:
                     logger.warning("UNEXPECTED :: DRC Redefined")
-                self._drc = PCBDRC(line.Bloat, line.Shrink, line.Drill, line.Line, line.Silk, line.Ring)
+                self._drc = PCBDRC(line.Bloat, line.Shrink, line.Drill,
+                                   line.Line, line.Silk, line.Ring)
             elif line[0] == "Flags":
                 if self._flags is not None:
                     logger.warning("UNEXPECTED :: Flags Redefined")
@@ -375,7 +380,9 @@ class StringFlags(object):
     R = pyparsing.Literal(")").suppress()
     PartStart = pyparsing.Regex(r"[^,\(\)]*")
     CSV = pyparsing.delimitedList(PartStart)
-    Part = pyparsing.Group(PartStart + pyparsing.Group(pyparsing.Optional(L + CSV + R)))
+    Part = pyparsing.Group(
+        PartStart + pyparsing.Group(pyparsing.Optional(L + CSV + R))
+    )
     Parts = pyparsing.delimitedList(Part)
 
     def __init__(self, s):
@@ -414,7 +421,8 @@ class StringFlags(object):
 
     def __str__(self):
         if self.thermals is not None and len(self.thermals) > 0:
-            s = [str(i[0])+(str(i[1]).replace("!", "")) for i in self.thermals.items()]
+            s = [str(i[0])+(str(i[1]).replace("!", ""))
+                 for i in self.thermals.items()]
             t = "thermal("+",".join(sorted(s))+")"
             return ",".join(list(self.flags) + [t])
         else:
@@ -478,8 +486,10 @@ def build_bnf(pp=pyparsing):
 
     FileVersion = pp.Keyword("FileVersion") + LSQ + Digits("Version") + RSQ
 
-    PCB = pp.Keyword("PCB") + LSQ + (Str("Name") + Meas("Width") + Meas("Height"))("PCB") + RSQ
-    Grid = pp.Keyword("Grid") + LSQ+Meas("Step") + Meas("OffsetX") + Meas("OffsetY") + Digits("Visible") + RSQ
+    PCB = pp.Keyword("PCB") + LSQ + \
+        (Str("Name") + Meas("Width") + Meas("Height"))("PCB") + RSQ
+    Grid = pp.Keyword("Grid") + LSQ+Meas("Step") + Meas("OffsetX") + \
+        Meas("OffsetY") + Digits("Visible") + RSQ  # noqa
     PolyArea = pp.Keyword("PolyArea") + LSQ+Float("Area") + RSQ
     Thermal = pp.Keyword("Thermal") + LSQ+Float("Scale") + RSQ
     DRC = pp.Keyword("DRC") + LSQ + Meas("Bloat") + Meas("Shrink") + \
@@ -488,9 +498,11 @@ def build_bnf(pp=pyparsing):
     Groups = pp.Keyword("Groups") + LRND + Str("Groups") + RRND
     Styles = pp.Keyword("Styles") + LSQ + Str("Styles") + RSQ
     Mark = pp.Keyword("Mark") + LSQ + Meas("X")+Meas("Y") + RSQ
-    Cursor = pp.Keyword("Cursor") + LSQ + Meas("X") + Meas("Y") + Float("Zoom") + RSQ
+    Cursor = pp.Keyword("Cursor") + LSQ + Meas("X") + Meas("Y") + \
+        Float("Zoom") + RSQ
 
-    PCBAttributep = pp.Keyword("Attribute") + LRND + Str("AttrKey") + Str("AttrValue") + RRND
+    PCBAttributep = pp.Keyword("Attribute") + LRND + Str("AttrKey") + \
+        Str("AttrValue") + RRND
     PCBAttributep.addParseAction(PCBAttribute)
 
     SymbolLine = pp.Keyword("SymbolLine") + LSQ + Meas("X1") + Meas("Y1") + \
@@ -500,45 +512,62 @@ def build_bnf(pp=pyparsing):
     SymContent = G(SymContent2)
     SymContent = SymContent.setResultsName("Content", True)
 
-    PCBSymbolp = pp.Keyword("Symbol") + LSQ + Char("Char") + Meas("Delta") + RSQ + \
-        LRND + pp.ZeroOrMore(SymContent) + RRND
+    PCBSymbolp = pp.Keyword("Symbol") + LSQ + Char("Char") + Meas("Delta") + \
+        RSQ + LRND + pp.ZeroOrMore(SymContent) + RRND
     PCBSymbolp.addParseAction(PCBSymbol)
 
-    Via = pp.Keyword("Via") + LSQ + Meas("X") + Meas("Y") + Meas("Thickness") + \
-        Meas("Clearance") + Meas("Mask") + Meas("Drill") + Str("Name") + QSFlags("SFlags") + RSQ
+    Via = pp.Keyword("Via") + LSQ + Meas("X") + Meas("Y") + \
+        Meas("Thickness") + Meas("Clearance") + Meas("Mask") + \
+        Meas("Drill") + Str("Name") + QSFlags("SFlags") + RSQ
     Via.addParseAction(PCBVia)
-    Pin = pp.Keyword("Pin") + LSQ + Meas("rX") + Meas("rY") + Meas("Thickness") + \
-        Meas("Clearance") + Meas("Mask") + Meas("Drill") + Str("Name") + Str("Number") + QSFlags("SFlags") + RSQ
+
+    Pin = pp.Keyword("Pin") + LSQ + Meas("rX") + Meas("rY") + \
+        Meas("Thickness") + Meas("Clearance") + Meas("Mask") + \
+        Meas("Drill") + Str("Name") + Str("Number") + QSFlags("SFlags") + RSQ
     Pin.addParseAction(PCBPin)
-    Pad = pp.Keyword("Pad") + LSQ + Meas("rX1") + Meas("rY1") + Meas("rX2") + Meas("rY2") + Meas("Thickness") + \
-        Meas("Clearance") + Meas("Mask") + Str("Name") + Str("Number") + QSFlags("SFlags") + RSQ
+
+    Pad = pp.Keyword("Pad") + LSQ + Meas("rX1") + Meas("rY1") + \
+        Meas("rX2") + Meas("rY2") + Meas("Thickness") + Meas("Clearance") + \
+        Meas("Mask") + Str("Name") + Str("Number") + QSFlags("SFlags") + RSQ
     Pad.addParseAction(PCBPad)
 
-    ElementArc = pp.Keyword("ElementArc") + LSQ + Meas("X") + Meas("Y") + Meas("Width") + Meas("Height") + \
-        Digits("StartAngle") + Digits("DeltaAngle") + Meas("Thickness") + RSQ
+    ElementArc = pp.Keyword("ElementArc") + LSQ + Meas("X") + Meas("Y") + \
+        Meas("Width") + Meas("Height") + Digits("StartAngle") + \
+        Digits("DeltaAngle") + Meas("Thickness") + RSQ
     ElementArc.addParseAction(PCBElementArc)
-    ElementLine = pp.Keyword("ElementLine") + LSQ + Meas("X1") + Meas("Y1") + Meas("X2") + Meas("Y2") + \
-        Meas("Thickness") + RSQ
+
+    ElementLine = pp.Keyword("ElementLine") + LSQ + Meas("X1") + \
+        Meas("Y1") + Meas("X2") + Meas("Y2") + Meas("Thickness") + RSQ
     ElementLine.addParseAction(PCBElementLine)
 
     ElemContent2 = PCBAttributep | Pin | Pad | ElementLine | ElementArc
     ElemContent = G(ElemContent2)
     ElemContent = ElemContent.setResultsName("Content", True)
 
-    PCBElementp = (pp.Keyword("Element") + LSQ + QSFlags("SFlags") + Str("Desc") + Str("Name") + Str("Value") +
-                  Meas("MX") + Meas("MY") + Meas("TX") + Meas("TY") + Digits("TDir") + Digits("TScale") +
-                  QSFlags("TSFlags") + RSQ + LRND + pp.ZeroOrMore(ElemContent) + RRND)
+    PCBElementp = (pp.Keyword("Element") + LSQ + QSFlags("SFlags") +
+                   Str("Desc") + Str("Name") + Str("Value") +
+                   Meas("MX") + Meas("MY") + Meas("TX") + Meas("TY") +
+                   Digits("TDir") + Digits("TScale") + QSFlags("TSFlags") +
+                   RSQ + LRND + pp.ZeroOrMore(ElemContent) + RRND)
     PCBElementp.addParseAction(PCBElement)
 
-    Rat = pp.Keyword("Rat") + LSQ + Meas("X1") + Meas("Y1") + Digits("Group1") + Meas("X2") + Meas("Y2") + \
+    Rat = pp.Keyword("Rat") + LSQ + Meas("X1") + Meas("Y1") + \
+        Digits("Group1") + Meas("X2") + Meas("Y2") + \
         Digits("Group2") + QSFlags("SFlags") + RSQ
-    Line = pp.Keyword("Line") + LSQ + Meas("X1") + Meas("Y1") + Meas("X2") + Meas("Y2") + Meas("Thickness") + \
+
+    Line = pp.Keyword("Line") + LSQ + Meas("X1") + Meas("Y1") + \
+        Meas("X2") + Meas("Y2") + Meas("Thickness") + \
         Meas("Clearance") + QSFlags("SFlags") + RSQ
     Line.addParseAction(PCBLayerLine)
-    Arc = pp.Keyword("Arc") + LSQ + Meas("X") + Meas("Y") + Meas("Width") + Meas("Height") + Meas("Thickness") + \
-        Meas("Clearance") + Digits("StartAngle") + Digits("DeltaAngle") + QSFlags("SFlags") + RSQ
+
+    Arc = pp.Keyword("Arc") + LSQ + Meas("X") + Meas("Y") + \
+        Meas("Width") + Meas("Height") + Meas("Thickness") + \
+        Meas("Clearance") + Digits("StartAngle") + Digits("DeltaAngle") + \
+        QSFlags("SFlags") + RSQ
     Arc.addParseAction(PCBLayerArc)
-    Text = pp.Keyword("Text") + LSQ + Meas("X") + Meas("Y") + Digits("Direction") + Meas("Scale") + Str("String") + \
+
+    Text = pp.Keyword("Text") + LSQ + Meas("X") + Meas("Y") + \
+        Digits("Direction") + Meas("Scale") + Str("String") + \
         QSFlags("SFlags") + RSQ
     Text.addParseAction(PCBLayerText)
 
@@ -553,14 +582,16 @@ def build_bnf(pp=pyparsing):
     PolyContent = G(PolyContent2)
     PolyContent = PolyContent.setResultsName("Content", True)
 
-    Polygon = pp.Keyword("Polygon") + LRND + QSFlags("SFlags") + RRND + LRND + pp.ZeroOrMore(PolyContent) + RRND
+    Polygon = pp.Keyword("Polygon") + LRND + QSFlags("SFlags") + RRND + \
+        LRND + pp.ZeroOrMore(PolyContent) + RRND
     Polygon.addParseAction(PCBLayerPolygon)
 
     LayerContent2 = PCBAttributep | Line | Arc | Polygon | Text
     LayerContent = G(LayerContent2)
     LayerContent = LayerContent.setResultsName("Content", True)
 
-    Layer = pp.Keyword("Layer") + LRND + Digits("LayerNum") + Str("Name") + RRND + \
+    Layer = pp.Keyword("Layer") + \
+        LRND + Digits("LayerNum") + Str("Name") + RRND + \
         LRND + pp.ZeroOrMore(LayerContent) + RRND
     Layer.addParseAction(PCBLayer)
 
@@ -581,8 +612,9 @@ def build_bnf(pp=pyparsing):
         LRND + pp.ZeroOrMore(Nets)("Content") + RRND
     NetList.addParseAction(PCBNetList)
 
-    TopLevelThing2 = Comment | FileVersion | PCB | Grid | PolyArea | Thermal | DRC | Flags | Groups | Styles | \
-        Mark | Cursor | PCBSymbolp | PCBAttributep | Via | PCBElementp | Rat | Layer | NetList
+    TopLevelThing2 = Comment | FileVersion | PCB | Grid | PolyArea | \
+        Thermal | DRC | Flags | Groups | Styles | Mark | Cursor | \
+        PCBSymbolp | PCBAttributep | Via | PCBElementp | Rat | Layer | NetList
 
     TopLevelThing = G(TopLevelThing2)
     TopLevelThing = TopLevelThing.setResultsName("Content", True)
@@ -608,7 +640,8 @@ def conv_pcb2pdf(pcbpath, docfolder, projname):
 
 def conv_pcb2gbr(pcbpath):
     pcb_folder, pcb_file = os.path.split(pcbpath)
-    gbrfile = os.path.join(os.path.join(pcb_folder, os.pardir), 'gerber', os.path.splitext(pcb_file)[0])
+    gbrfile = os.path.join(os.path.join(pcb_folder, os.pardir),
+                           'gerber', os.path.splitext(pcb_file)[0])
     subprocess.call(['pcb', '-x', 'gerber',
                      '--gerberfile', gbrfile,
                      '--all-layers', '--verbose', '--outline',

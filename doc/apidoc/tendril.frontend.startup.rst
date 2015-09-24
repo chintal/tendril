@@ -1,5 +1,5 @@
 tendril.frontend.startup package
-==============================
+================================
 
 Submodules
 ----------

@@ -19,9 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import yaml
 
@@ -29,6 +26,10 @@ from tendril.dox.labelmaker import manager
 
 from tendril.utils.fsutils import import_
 from tendril.utils.config import INSTANCE_ROOT
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
+
 
 PRODUCTS_ROOT = os.path.join(INSTANCE_ROOT, 'products')
 INSTANCE_PRODUCT_CLASSES_PATH = os.path.join(PRODUCTS_ROOT, 'infoclasses')
@@ -64,10 +65,11 @@ class ProductBase(object):
         self._core = self._raw_data['derive_sno_from']
         self._calibformat = self._raw_data['calibformat']
         try:
-            self._product_info = INSTANCE_PRODUCT_CLASSES.get_product_info_class(
-                self._raw_data['productinfo']['line'],
-                self._raw_data['productinfo']
-            )
+            self._product_info = \
+                INSTANCE_PRODUCT_CLASSES.get_product_info_class(
+                    self._raw_data['productinfo']['line'],
+                    self._raw_data['productinfo']
+                )
         except ImportError:
             self._product_info = ProductInfo(self._raw_data['productinfo'])
 
@@ -104,7 +106,8 @@ class ProductBase(object):
 
 def get_folder_products(path):
     products = []
-    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    files = [f for f in os.listdir(path)
+             if os.path.isfile(os.path.join(path, f))]
     for f in files:
         if f.endswith('.product.yaml'):
             products.append(ProductBase(os.path.join(path, f)))
@@ -146,4 +149,6 @@ def generate_labels(product, sno):
     labelinfo = product.labelinfo(sno)
     if labelinfo is not None:
         for l in product.labels:
-            manager.add_label(l['type'], product.name, labelinfo[0], **labelinfo[1])
+            manager.add_label(
+                l['type'], product.name, labelinfo[0], **labelinfo[1]
+            )

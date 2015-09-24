@@ -19,12 +19,15 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
 from tendril.entityhub import projects
 from tendril.dox import gedaproject
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 if __name__ == '__main__':
     for project in projects.projects:
-        logger.info("Checking " + project + " for changes and updating documentation")
+        logger.info(
+            "Checking " + project +
+            " for changes and updating documentation"
+        )
         gedaproject.generate_docs(projects.projects[project])

@@ -19,18 +19,16 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm import backref
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import UniqueConstraint
 
 from tendril.utils.db import DeclBase
 from tendril.utils.db import BaseMixin
 from tendril.utils.db import TimestampMixin
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class SerialNumber(TimestampMixin, BaseMixin, DeclBase):
@@ -38,14 +36,22 @@ class SerialNumber(TimestampMixin, BaseMixin, DeclBase):
     efield = Column(String, unique=False, nullable=True)
 
     def __repr__(self):
-        return "<Serial Number (id = %s, sno='%s', efield='%s')>" % (self.id, self.sno, self.efield)
+        return "<Serial Number (id = %s, sno='%s', efield='%s')>" % (
+            self.id, self.sno, self.efield
+        )
 
 
 class SerialNumberAssociation(TimestampMixin, BaseMixin, DeclBase):
     parent_id = Column(Integer, ForeignKey('SerialNumber.id'))
-    parent = relationship("SerialNumber", backref="children", primaryjoin=(SerialNumber.id == parent_id))
+    parent = relationship(
+        "SerialNumber", backref="children",
+        primaryjoin=(SerialNumber.id == parent_id)
+    )
     child_id = Column(Integer, ForeignKey('SerialNumber.id'))
-    child = relationship("SerialNumber", backref="parents", primaryjoin=(SerialNumber.id == child_id))
+    child = relationship(
+        "SerialNumber", backref="parents",
+        primaryjoin=(SerialNumber.id == child_id)
+    )
     association_type = Column(String, nullable=True, unique=False)
 
     __table_args__ = (
@@ -61,7 +67,10 @@ class SerialNumberAssociation(TimestampMixin, BaseMixin, DeclBase):
 #
 #     @declared_attr
 #     def serialno(self):
-#         return relationship("SerialNumber", backref=lambda: backref(self._provides, cascade="all, delete"))
+#         return relationship(
+#             "SerialNumber",
+#             backref=lambda: backref(self._provides, cascade="all, delete")
+#         )
 #
 #
 # class LinkedToSerialNumberMixin(object):

@@ -19,17 +19,21 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import yaml
 from decimal import Decimal
 
-import tendril.conventions.electronics
+from tendril.conventions.electronics import parse_ident
+from tendril.conventions.electronics import check_for_std_val
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 class QtyGuidelineTableRow(object):
-    def __init__(self, ide, (oqty_min, oqty_multiple, baseline_qty, excess_min_pc, excess_min_qty, excess_max_qty)):
+    def __init__(self, ide,
+                 (oqty_min, oqty_multiple, baseline_qty,
+                  excess_min_pc, excess_min_qty, excess_max_qty)
+                 ):
         self._id = ide
         self._oqty_min = oqty_min
         self._oqty_multiple = oqty_multiple
@@ -84,11 +88,11 @@ class QtyGuidelines(object):
             self._default = data['default']
 
     def get_guideline_table(self):
-        return {'idents': [QtyGuidelineTableRow(x, self._get_full_guideline(self._idents[x]))
+        return {'idents': [QtyGuidelineTableRow(x, self._get_full_guideline(self._idents[x]))  # noqa
                            for x in self._idents.keys()],
-                'devices': [QtyGuidelineTableRow(x, self._get_full_guideline(self._devices[x]))
+                'devices': [QtyGuidelineTableRow(x, self._get_full_guideline(self._devices[x]))  # noqa
                             for x in self._devices.keys()],
-                'defaults': [QtyGuidelineTableRow('Default', self._get_full_guideline(self._default))]
+                'defaults': [QtyGuidelineTableRow('Default', self._get_full_guideline(self._default))]  # noqa
                 }
 
     @staticmethod
@@ -117,7 +121,8 @@ class QtyGuidelines(object):
             excess_max_qty = int(gldict['excess_max_qty'])
         else:
             excess_max_qty = -1
-        return oqty_min, oqty_multiple, baseline_qty, excess_min_pc, excess_min_qty, excess_max_qty
+        return oqty_min, oqty_multiple, baseline_qty, \
+            excess_min_pc, excess_min_qty, excess_max_qty
 
     def get_compliant_qty(self, ident, qty,
                           handle_excess=True,
@@ -125,7 +130,7 @@ class QtyGuidelines(object):
                           handle_baseline=False,
                           ):
         oqty = qty
-        device, value, footprint = tendril.conventions.electronics.parse_ident(ident)
+        device, value, footprint = parse_ident(ident)
         if ident in self._idents.keys():
             gldict = self._idents[ident]
         elif device in self._devices.keys():
@@ -133,13 +138,15 @@ class QtyGuidelines(object):
         else:
             gldict = self._default
         if gldict is not None:
-            if 'filter_std_vals_only' in gldict.keys() and gldict['filter_std_vals_only'] is True:
-                is_std_val = tendril.conventions.electronics.check_for_std_val(ident)
+            if 'filter_std_vals_only' in gldict.keys() and \
+                    gldict['filter_std_vals_only'] is True:
+                is_std_val = check_for_std_val(ident)
                 if not is_std_val:
                     gldict = self._default
 
+            gl = self._get_full_guideline(gldict)
             (oqty_min, oqty_multiple, baseline_qty,
-             excess_min_pc, excess_min_qty, excess_max_qty) = self._get_full_guideline(gldict)
+             excess_min_pc, excess_min_qty, excess_max_qty) = gl
             tqty = qty
             if handle_excess is True:
                 tqty1 = tqty * (1 + Decimal(excess_min_pc) / 100)
@@ -155,8 +162,10 @@ class QtyGuidelines(object):
             if handle_excess is True:
                 excess = oqty - qty
                 if 0 < excess_max_qty < excess:
-                    logger.warning('Maximum Excess Quantity exceeds predefined maximum : ' +
-                                   ident + "::" + str((qty, oqty, excess_max_qty)))
+                    logger.warning('Maximum Excess Quantity '
+                                   'exceeds predefined maximum : ' +
+                                   ident + "::" +
+                                   str((qty, oqty, excess_max_qty)))
                     if except_on_overrun is True:
                         raise ValueError
         return oqty

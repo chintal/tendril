@@ -1,5 +1,5 @@
 tendril.testing.tests package
-===========================
+=============================
 
 Module contents
 ---------------

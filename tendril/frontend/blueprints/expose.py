@@ -44,7 +44,7 @@ def static_proxy(path):
     if path.startswith(DOCSTORE_PREFIX):
         path = os.path.join(DOCSTORE_ROOT, path.split(os.path.sep, 1)[1])
     elif path.startswith(DOCUMENT_WALLET_PREFIX):
-        path = os.path.join(DOCUMENT_WALLET_ROOT, path.split(os.path.sep, 1)[1])
+        path = os.path.join(DOCUMENT_WALLET_ROOT, path.split(os.path.sep, 1)[1])  # noqa
     elif path.startswith(REFDOC_PREFIX):
         path = os.path.join(REFDOC_ROOT, path.split(os.path.sep, 1)[1])
     else:

@@ -1,5 +1,5 @@
 tendril.boms.products module
-==========================
+============================
 
 .. automodule:: tendril.boms.products
     :members:

@@ -32,7 +32,6 @@ from tendril.entityhub import projects
 from tendril.gedaif import gsymlib
 import tendril.gedaif.conffile
 
-from tendril.utils.types import currency
 from tendril.utils import fsutils
 from tendril.utils import config
 from tendril.utils.progressbar.progressbar import ProgressBar
@@ -67,7 +66,8 @@ def gen_vendor_mapfile(vendor_obj):
         nsymbols = len(symlib)
         counter = 0
 
-        for status in ['Active', 'Experimental', 'Deprecated', 'Virtual', 'Generator']:
+        for status in ['Active', 'Experimental',
+                       'Deprecated', 'Virtual', 'Generator']:
             for symbol in symlib:
                 if symbol.status == status and symbol.ident.strip() != "":
                     vpnos, strategy = vendor_obj.search_vpnos(symbol.ident)
@@ -75,20 +75,28 @@ def gen_vendor_mapfile(vendor_obj):
                         vpnos = [('@AG@' + vpno) for vpno in vpnos]
                     else:
                         # TODO Fix this error (hack around progressbar issue)
-                        if strategy not in ['NODEVICE', 'NOVALUE', 'NOT_IMPL']:
-                            logger.warning("Could not find matches for : " + symbol.ident +
+                        if strategy not in ['NODEVICE', 'NOVALUE',
+                                            'NOT_IMPL']:
+                            logger.warning("Could not find matches for : " +
+                                           symbol.ident +
                                            '::' + str(strategy) + '\n\n\n')
                         vpnos = []
                     try:
-                        outw.writerow([symbol.ident.strip(), strategy.strip()] + vpnos)
+                        outw.writerow(
+                            [symbol.ident.strip(), strategy.strip()] + vpnos
+                        )
                     except AttributeError:
                         print symbol.ident, strategy
                         raise AttributeError
                     counter += 1
                     percentage = counter * 100.00 / nsymbols
-                    pb.render(int(percentage), "\n%f%% %s\nGenerating Map File" % (percentage, symbol.ident))
+                    pb.render(
+                        int(percentage),
+                        "\n%f%% %s\nGenerating Map File" % (percentage,
+                                                            symbol.ident))
         outf.close()
-        logger.info("Written Electronics Vendor Map to File : " + vendor_obj.name)
+        logger.info("Written Electronics Vendor Map to File : " +
+                    vendor_obj.name)
     elif 'electronics_pcb' == vendor_obj.pclass:
         logger.info('Generating PCB mapfile for ' + vendor_obj.name)
 
@@ -115,7 +123,9 @@ def gen_vendor_mapfile(vendor_obj):
             outw.writerow(['PCB ' + pcb.strip(), strategy.strip()] + vpnos)
             counter += 1
             percentage = counter * 100.00 / nsymbols
-            pb.render(int(percentage), "\n%f%% %s\nGenerating Map File" % (percentage, pcb))
+            pb.render(
+                int(percentage),
+                "\n%f%% %s\nGenerating Map File" % (percentage, pcb))
         outf.close()
         logger.info("Written PCB Vendor Map to File : " + vendor_obj.name)
     else:
@@ -151,7 +161,8 @@ def init_vendors():
                                                  'USD',
                                                  'US$'
                                                  )
-                logger.info("Created Mouser Vendor Object : " + vendor['dname'])
+                logger.info("Created Mouser Vendor Object : " +
+                            vendor['dname'])
             if vendor['name'] == 'ti':
                 vendor_obj = ti.VendorTI(vendor['name'],
                                          vendor['dname'],
@@ -166,11 +177,13 @@ def init_vendors():
                                                        vendor['dname'],
                                                        'electronics',
                                                        mappath)
-                logger.info("Created Pricelist Vendor Object : " + vendor['dname'])
+                logger.info("Created Pricelist Vendor Object : " +
+                            vendor['dname'])
             if vendor_obj:
                 vendor_list.append(vendor_obj)
             else:
-                logger.error('Vendor Handlers not found for vendor : ' + vendor['name'])
+                logger.error('Vendor Handlers not found for vendor : ' +
+                             vendor['name'])
         if 'electronics_pcb' in vendor['pclass']:
             vendor_obj = None
             mappath = vendor['mapfile-base'] + '-electronics-pcb.csv'
@@ -187,7 +200,8 @@ def init_vendors():
             if vendor_obj:
                 vendor_list.append(vendor_obj)
             else:
-                logger.error('Vendor Handlers not found for vendor : ' + vendor['name'])
+                logger.error('Vendor Handlers not found for vendor : ' +
+                             vendor['name'])
 
 
 def export_vendor_map_audit(vendor_obj):
@@ -199,7 +213,8 @@ def export_vendor_map_audit(vendor_obj):
         vendor_obj = vendor_list[vendor_obj]
     mapobj = vendor_obj.map
     assert isinstance(mapobj, tendril.entityhub.maps.MapFile)
-    outp = os.path.join(config.vendor_map_audit_folder, vendor_obj.name + '-electronics-audit.csv')
+    outp = os.path.join(config.vendor_map_audit_folder,
+                        vendor_obj.name + '-electronics-audit.csv')
     outf = fsutils.VersionedOutputFile(outp)
     outw = csv.writer(outf)
     pb = ProgressBar('red', block='#', empty='.')
@@ -211,18 +226,27 @@ def export_vendor_map_audit(vendor_obj):
             try:
                 vp = vendor_obj.get_vpart(vpno, ident)
             except:
-                print "Error while getting part {0} from {1}".format(vpno, vendor_obj.name)
+                print "Error while getting part {0} from {1}".format(
+                    vpno, vendor_obj.name
+                )
                 raise
             try:
                 assert isinstance(vp, vendors.VendorElnPartBase)
-                outw.writerow([vp.ident, vp.vpno, vp.mpartno, vp.package, vp.vpartdesc,
-                               vp.manufacturer, vp.vqtyavail, vp.abs_moq])
+                outw.writerow([vp.ident, vp.vpno, vp.mpartno, vp.package,
+                               vp.vpartdesc, vp.manufacturer,
+                               vp.vqtyavail, vp.abs_moq])
             except AssertionError:
-                outw.writerow([vp.ident, vp.vpno, vp.mpartno, None, vp.vpartdesc,
-                               vp.manufacturer, vp.vqtyavail, vp.abs_moq])
+                outw.writerow([vp.ident, vp.vpno, vp.mpartno, None,
+                               vp.vpartdesc, vp.manufacturer,
+                               vp.vqtyavail, vp.abs_moq])
 
             percentage = count * 100.00 / total
-            pb.render(int(percentage), "\n%f%% %s;%s\nGenerating Vendor Map Audit" % (percentage, ident, vpno))
+            pb.render(
+                int(percentage),
+                "\n%f%% %s;%s\nGenerating Vendor Map Audit" % (
+                    percentage, ident, vpno
+                )
+            )
     outf.close()
     logger.info("Written Vendor Map Audit to File : " + vendor_obj.name)
 
@@ -237,7 +261,8 @@ def get_eff_acq_price(vsinfo, qty):
     return vsinfo[2] * vsinfo[5].unit_price.native_value
 
 
-def get_sourcing_information(ident, qty, avendors=vendor_list, allvendors=False):
+def get_sourcing_information(ident, qty, avendors=vendor_list,
+                             allvendors=False):
     # vobj, vpno, oqty, nbprice, ubprice, effprice
     sources = []
     ident = ident.strip()
@@ -252,7 +277,7 @@ def get_sourcing_information(ident, qty, avendors=vendor_list, allvendors=False)
     if allvendors is False:
         selsource = sources[0]
         for vsinfo in sources:
-            if get_eff_acq_price(vsinfo, qty) < get_eff_acq_price(selsource, qty):
+            if get_eff_acq_price(vsinfo, qty) < get_eff_acq_price(selsource, qty):  # noqa
                 selsource = vsinfo
         return selsource
     else:

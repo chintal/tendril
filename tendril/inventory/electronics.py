@@ -65,8 +65,9 @@ class InventoryLine(object):
             value = Length(str(value) + 'm')
         if value > self.avail_qty:
             raise ValueError
-        logger.debug("Reserving " + self.ident + " in " + self._parent._dname +
-                     " for " + earmark + " : " + str(value))
+        logger.debug("Reserving " + self.ident + " in " +
+                     self._parent._dname + " for " + earmark +
+                     " : " + str(value))
         self._reservations.append((value, earmark))
 
     @property
@@ -84,7 +85,8 @@ class InventoryLine(object):
         return self._reservation_gen()
 
     def __repr__(self):
-        return self.ident + '\t' + str(self._qty) + '\t' + str(self.reserved_qty)
+        return self.ident + '\t' + str(self._qty) + '\t' + \
+            str(self.reserved_qty)
 
 
 class InventoryLocation(object):
@@ -117,7 +119,8 @@ class InventoryLocation(object):
                 is_here = True
                 avail_qty += line.avail_qty
         if is_here:
-            logger.debug("Found " + ident + " in " + self._dname + " : " + str(avail_qty))
+            logger.debug("Found " + ident + " in " + self._dname +
+                         " : " + str(avail_qty))
             # if fpiswire_ident(ident):
             #     avail_qty = Length(str(avail_qty)+'m')
             return avail_qty
@@ -174,7 +177,9 @@ def init_inventory_locations():
     for idx, item in enumerate(ELECTRONICS_INVENTORY_DATA):
         logger.info("Acquiring Inventory Location : " + item['location'])
         reader = acquire.get_reader(idx)
-        inventory_locations.append(InventoryLocation(item['sname'], item['location'], reader))
+        inventory_locations.append(
+            InventoryLocation(item['sname'], item['location'], reader)
+        )
 
 
 def get_total_availability(ident):
@@ -215,7 +220,9 @@ def reserve_items(ident, qty, earmark, die_if_not=True):
         logger.warning('Partial Reservation of ' + ident +
                        ' for ' + earmark + ' : Short by ' + str(qty))
         if die_if_not is True:
-            raise ValueError("Insufficient Qty. Call with die_if_not=True if handled downstream")
+            raise ValueError("Insufficient Qty. "
+                             "Call with die_if_not=True if handled downstream"
+                             )
     return qty
 
 
@@ -226,7 +233,8 @@ def export_reservations(folderpath):
             if em not in earmarks:
                 earmarks.append(em)
     for location in inventory_locations:
-        dump_path = os.path.join(folderpath, 'reserve-' + location._dname + '.csv')
+        dump_path = os.path.join(folderpath,
+                                 'reserve-' + location._dname + '.csv')
         with open(dump_path, 'wb') as f:
             w = csv.writer(f)
             header = ['Ident'] + earmarks + ['Total', 'Remaining']
@@ -243,7 +251,7 @@ def export_reservations(folderpath):
                 row[header.index('Total')] = total
                 row[header.index('Remaining')] = get_total_availability(ident)
                 w.writerow(row)
-        logger.info("Exported " + location._dname + " Reservations to File : " + dump_path)
-
+        logger.info("Exported " + location._dname +
+                    " Reservations to File : " + dump_path)
 
 init_inventory_locations()

@@ -1,5 +1,5 @@
 tendril.testing.instruments package
-=================================
+===================================
 
 .. automodule:: tendril.testing.instruments
     :members:

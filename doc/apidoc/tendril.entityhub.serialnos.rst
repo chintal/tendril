@@ -1,5 +1,5 @@
 tendril.entityhub.serialnos module
-================================
+==================================
 
 .. automodule:: tendril.entityhub.serialnos
     :members:

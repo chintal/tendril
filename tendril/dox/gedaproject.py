@@ -31,11 +31,12 @@ names. Each function specifies the paths it operates on.
 ``<project_doc_folder>`` is obtained from
 :func:`get_project_doc_folder`
 
-.. warning:: Unless otherwise specified in the function documentation, the functions
-             of this module will not overwrite any target output files unless the
-             pre-existing output files are older than the source files. Note that this
-             means the output will not be regenerated if the template is changed. You
-             should ``touch`` one of the source files if you want to force a rebuild.
+.. warning:: Unless otherwise specified in the function documentation, the
+             functions of this module will not overwrite any target output
+             files unless the pre-existing output files are older than the
+             source files. Note that this means the output will not be
+             regenerated if the template is changed. You should ``touch``
+             one of the source files if you want to force a rebuild.
 
 .. seealso:: :mod:`tendril.dox`, :mod:`tendril.gedaif`
 
@@ -107,7 +108,8 @@ def get_project_doc_folder(projectfolder):
 
 def gen_confbom(projfolder, configname):
     """
-    Generates a PDF of the BOM for a specified configuration of a gEDA project.
+    Generates a PDF of the BOM for a specified configuration of a gEDA
+    project.
 
     :param projfolder: The gEDA project folder
     :type projfolder: str
@@ -123,7 +125,8 @@ def gen_confbom(projfolder, configname):
     .. rubric:: Template Used
 
     ``tendril/dox/templates/geda-bom-simple.tex``
-    (:download:`Included version <../../tendril/dox/templates/geda-bom-simple.tex>`)
+    (:download:`Included version
+    <../../tendril/dox/templates/geda-bom-simple.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
@@ -151,7 +154,8 @@ def gen_confbom(projfolder, configname):
         return outpath
 
     logger.info('Regenerating ' + outpath + os.linesep +
-                'Last modified : ' + str(sch_mtime) + '; Last Created : ' + str(outf_mtime))
+                'Last modified : ' + str(sch_mtime) +
+                '; Last Created : ' + str(outf_mtime))
     bom = boms_electronics.import_pcb(projfolder)
     obom = bom.create_output_bom(configname)
 
@@ -165,7 +169,8 @@ def gen_confbom(projfolder, configname):
     template = 'geda-bom-simple.tex'
 
     workspace_outpath = workspace_fs.getsyspath(outpath)
-    workspace_fs.makedir(path.dirname(outpath), recursive=True, allow_recreate=True)
+    workspace_fs.makedir(path.dirname(outpath),
+                         recursive=True, allow_recreate=True)
     render.render_pdf(stage, template, workspace_outpath)
     copyfile(workspace_fs, outpath, refdoc_fs, outpath, overwrite=True)
 
@@ -176,7 +181,8 @@ def gen_configdoc(projfolder, namebase):
     """
     Generate a PDF documenting the configs of the project. The document should
     include a reasonably thorough representation of the contents of the
-    configuration related sections of the ``tendril.gedaif.conffile.ConfigsFile``.
+    configuration related sections of the
+    ``tendril.gedaif.conffile.ConfigsFile``.
 
     .. todo:: Implement this.
 
@@ -227,12 +233,14 @@ def gen_schpdf(projfolder, namebase):
         return schpdfpath
 
     logger.info('Regenerating ' + schpdfpath + os.linesep +
-                'Last modified : ' + str(sch_mtime) + '; Last Created : ' + str(outf_mtime))
+                'Last modified : ' + str(sch_mtime) +
+                '; Last Created : ' + str(outf_mtime))
 
     if configfile.configdata is not None:
         workspace_outpath = workspace_fs.getsyspath(schpdfpath)
         workspace_folder = workspace_fs.getsyspath(path.dirname(schpdfpath))
-        workspace_fs.makedir(path.dirname(schpdfpath), recursive=True, allow_recreate=True)
+        workspace_fs.makedir(path.dirname(schpdfpath),
+                             recursive=True, allow_recreate=True)
         pdffiles = []
         for schematic in gpf.schfiles:
             schfile = os.path.normpath(projfolder + '/schematic/' + schematic)
@@ -241,7 +249,9 @@ def gen_schpdf(projfolder, namebase):
         pdf.merge_pdf(pdffiles, workspace_outpath)
         for pdffile in pdffiles:
             os.remove(pdffile)
-        copyfile(workspace_fs, schpdfpath, refdoc_fs, schpdfpath, overwrite=True)
+        copyfile(workspace_fs, schpdfpath,
+                 refdoc_fs, schpdfpath,
+                 overwrite=True)
         return schpdfpath
 
 
@@ -284,7 +294,8 @@ def gen_masterdoc(projfolder, namebase):
         return masterdocfile
 
     logger.info('Regnerating ' + masterdocfile + os.linesep +
-                'Last modified : ' + str(sch_mtime) + '; Last Created : ' + str(outf_mtime))
+                'Last modified : ' + str(sch_mtime) +
+                '; Last Created : ' + str(outf_mtime))
 
     pdffiles = [gen_configdoc(projfolder, namebase),
                 gen_schpdf(projfolder, namebase)]
@@ -295,7 +306,8 @@ def gen_masterdoc(projfolder, namebase):
                                  recursive=True, allow_recreate=True)
             copyfile(refdoc_fs, p, workspace_fs, p)
 
-    workspace_pdffiles = [workspace_fs.getsyspath(x) for x in pdffiles if x is not None]
+    workspace_pdffiles = [workspace_fs.getsyspath(x)
+                          for x in pdffiles if x is not None]
 
     workspace_outpath = workspace_fs.getsyspath(masterdocfile)
     workspace_fs.makedir(path.dirname(masterdocfile),
@@ -348,7 +360,8 @@ def gen_confpdf(projfolder, configname, namebase):
         return confdocfile
 
     logger.info('Regenerating ' + confdocfile + os.linesep +
-                'Last modified : ' + str(sch_mtime) + '; Last Created : ' + str(outf_mtime))
+                'Last modified : ' + str(sch_mtime) +
+                '; Last Created : ' + str(outf_mtime))
 
     pdffiles = [gen_confbom(projfolder, configname),
                 gen_schpdf(projfolder, namebase)]
@@ -359,7 +372,8 @@ def gen_confpdf(projfolder, configname, namebase):
                                  recursive=True, allow_recreate=True)
             copyfile(refdoc_fs, p, workspace_fs, p)
 
-    workspace_pdffiles = [workspace_fs.getsyspath(x) for x in pdffiles if x is not None]
+    workspace_pdffiles = [workspace_fs.getsyspath(x)
+                          for x in pdffiles if x is not None]
 
     workspace_outpath = workspace_fs.getsyspath(confdocfile)
     workspace_fs.makedir(path.dirname(confdocfile),
@@ -373,10 +387,10 @@ def gen_confpdf(projfolder, configname, namebase):
 
 def gen_cobom_csv(projfolder, namebase):
     """
-    Generates a CSV file in the :mod:`tendril.boms.outputbase.CompositeOutputBom`
-    format, including the BOMs of the all the defined configurations of the
-    project. This function uses a :mod:`csv.writer` instead of rendering a jinja2
-    template.
+    Generates a CSV file in the
+    :mod:`tendril.boms.outputbase.CompositeOutputBom` format, including the
+    BOMs of the all the defined configurations of the project. This function
+    uses a :mod:`csv.writer` instead of rendering a jinja2 template.
 
     It also generates configdocs for all the defined configurations of the
     project, using :func:`gen_confpdf`.
@@ -407,7 +421,8 @@ def gen_cobom_csv(projfolder, namebase):
         return cobom_csv_path
 
     logger.info('Regenerating ' + cobom_csv_path + os.linesep +
-                'Last modified : ' + str(sch_mtime) + '; Last Created : ' + str(outf_mtime))
+                'Last modified : ' + str(sch_mtime) +
+                '; Last Created : ' + str(outf_mtime))
 
     bomlist = []
     for cfn in configfile.configdata['configurations']:
@@ -419,7 +434,8 @@ def gen_cobom_csv(projfolder, namebase):
 
     with refdoc_fs.open(cobom_csv_path, 'wb') as f:
         writer = csv.writer(f)
-        writer.writerow(['device'] + [x.configname for x in cobom.descriptors])
+        writer.writerow(['device'] +
+                        [x.configname for x in cobom.descriptors])
         for line in cobom.lines:
             writer.writerow([line.ident] + line.columns)
 
@@ -430,7 +446,8 @@ def gen_pcb_pdf(projfolder):
     gEDA project.
 
     The pcb file is the one listed in the gEDA project file, and the
-    pcbname is the one specified in the :mod:`tendril.gedaif.conffile.ConfigsFile`.
+    pcbname is the one specified in the
+    :mod:`tendril.gedaif.conffile.ConfigsFile`.
 
     This function does not use jinja2 and latex. It relies on
     :func:`tendril.gedaif.pcb.conv_pcb2pdf` instead.
@@ -447,9 +464,12 @@ def gen_pcb_pdf(projfolder):
     """
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
-    pcb_mtime = fsutils.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
+    pcb_mtime = fsutils.get_file_mtime(
+        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb')
+    )
     docfolder = get_project_doc_folder(projfolder)
-    pdffile = path.join(docfolder, configfile.configdata['pcbname'] + '-pcb.pdf')
+    pdffile = path.join(docfolder,
+                        configfile.configdata['pcbname'] + '-pcb.pdf')
     outf_mtime = fsutils.get_file_mtime(pdffile, fs=refdoc_fs)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
@@ -457,12 +477,14 @@ def gen_pcb_pdf(projfolder):
         return pdffile
 
     logger.info('Regenerating ' + pdffile + os.linesep +
-                'Last modified : ' + str(pcb_mtime) + '; Last Created : ' + str(outf_mtime))
+                'Last modified : ' + str(pcb_mtime) +
+                '; Last Created : ' + str(outf_mtime))
 
     workspace_folder = workspace_fs.getsyspath(path.dirname(pdffile))
-    workspace_fs.makedir(path.dirname(pdffile), recursive=True, allow_recreate=True)
+    workspace_fs.makedir(path.dirname(pdffile),
+                         recursive=True, allow_recreate=True)
 
-    workspace_pdffile = pcb.conv_pcb2pdf(
+    pcb.conv_pcb2pdf(
         os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
         workspace_folder, configfile.configdata['pcbname']
     )
@@ -477,7 +499,8 @@ def gen_pcb_gbr(projfolder):
     creates a ``zip`` file of the generated gerbers.
 
     The pcbfile is the one listed in the gEDA project file, and the
-    pcbname is the one specified in the :mod:`tendril.gedaif.conffile.ConfigsFile`.
+    pcbname is the one specified in the
+    :mod:`tendril.gedaif.conffile.ConfigsFile`.
 
     This function does not use jinja2 and latex. It relies on
     :func:`tendril.gedaif.pcb.conv_pcb2gbr` instead.
@@ -499,7 +522,9 @@ def gen_pcb_gbr(projfolder):
     """
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
-    pcb_mtime = fsutils.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
+    pcb_mtime = fsutils.get_file_mtime(
+        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb')
+    )
     gbrfolder = os.path.join(configfile.projectfolder, 'gerber')
     outf_mtime = None
     if not os.path.exists(gbrfolder):
@@ -512,12 +537,15 @@ def gen_pcb_gbr(projfolder):
         return gbrfolder
 
     logger.info('Regenerating ' + gbrfolder + os.linesep +
-                'Last modified : ' + str(pcb_mtime) + '; Last Created : ' + str(outf_mtime))
+                'Last modified : ' + str(pcb_mtime) +
+                '; Last Created : ' + str(outf_mtime))
     glb = os.path.join(configfile.projectfolder, 'gerber', '*')
     rf = glob.glob(glb)
     for f in rf:
         os.remove(f)
-    gbrfolder = pcb.conv_pcb2gbr(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
+    gbrfolder = pcb.conv_pcb2gbr(
+        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb')
+    )
     zfile = os.path.join(projfolder, gpf.pcbfile + '-gerber.zip')
     fsutils.zipdir(gbrfolder, zfile)
     return gbrfolder
@@ -528,7 +556,8 @@ def gen_pcb_dxf(projfolder):
     Generates a DXF file of the PCB provided by the gEDA project.
 
     The pcb file is the one listed in the gEDA project file, and the
-    pcbname is the one specified in the :mod:`tendril.gedaif.conffile.ConfigsFile`.
+    pcbname is the one specified in the
+    :mod:`tendril.gedaif.conffile.ConfigsFile`.
 
     This function does not use jinja2 and latex. It relies on
     :func:`tendril.gedaif.pcb.conv_pcb2dxf` instead.
@@ -549,8 +578,11 @@ def gen_pcb_dxf(projfolder):
     """
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
-    pcb_mtime = fsutils.get_file_mtime(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))
-    dxffile = os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.dxf')
+    pcb_mtime = fsutils.get_file_mtime(
+        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb')
+    )
+    dxffile = os.path.join(configfile.projectfolder, 'pcb',
+                           gpf.pcbfile + '.dxf')
     outf_mtime = fsutils.get_file_mtime(dxffile)
 
     if outf_mtime is not None and outf_mtime > pcb_mtime:
@@ -558,9 +590,12 @@ def gen_pcb_dxf(projfolder):
         return dxffile
 
     logger.info('Regenerating ' + dxffile + os.linesep +
-                'Last modified : ' + str(pcb_mtime) + '; Last Created : ' + str(outf_mtime))
-    dxffile = pcb.conv_pcb2dxf(os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
-                               configfile.configdata['pcbname'])
+                'Last modified : ' + str(pcb_mtime) +
+                '; Last Created : ' + str(outf_mtime))
+    dxffile = pcb.conv_pcb2dxf(
+        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
+        configfile.configdata['pcbname']
+    )
     return dxffile
 
 
@@ -570,9 +605,10 @@ def gen_pcbpricing(projfolder, namebase):
     gEDA project.
 
     The pcb file is the one listed in the gEDA project file, and the
-    pcbname is the one specified in the :mod:`tendril.gedaif.conffile.ConfigsFile`.
-    The pricing information is read out from the PCB's ``sourcing.yaml`` file,
-    which in turn is intended to be created by sourcing modules.
+    pcbname is the one specified in the
+    :mod:`tendril.gedaif.conffile.ConfigsFile`. The pricing information is
+    read out from the PCB's ``sourcing.yaml`` file, which in turn is intended
+    to be created by sourcing modules.
 
     .. todo:: This function presently uses
               :func:`tendril.dox.render.render_lineplot`, which is marked for
@@ -592,7 +628,9 @@ def gen_pcbpricing(projfolder, namebase):
 
     """
     gpf = projfile.GedaProjectFile(projfolder)
-    pcbpricingfp = os.path.join(gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml')
+    pcbpricingfp = os.path.join(
+        gpf.configsfile.projectfolder, 'pcb', 'sourcing.yaml'
+    )
     pcbpricing_mtime = fsutils.get_file_mtime(pcbpricingfp)
 
     if not os.path.exists(pcbpricingfp):
@@ -607,28 +645,39 @@ def gen_pcbpricing(projfolder, namebase):
         return pcbpricingfp
 
     logger.info('Regnerating ' + plotfile + os.linesep +
-                'Last modified : ' + str(pcbpricing_mtime) + '; Last Created : ' + str(outf_mtime))
+                'Last modified : ' + str(pcbpricing_mtime) +
+                '; Last Created : ' + str(outf_mtime))
 
     with open(pcbpricingfp, 'r') as f:
         data = yaml.load(f)
 
     workspace_outpath = workspace_fs.getsyspath(plotfile)
     workspace_folder = workspace_fs.getsyspath(path.dirname(plotfile))
-    workspace_fs.makedir(path.dirname(plotfile), recursive=True, allow_recreate=True)
+    workspace_fs.makedir(path.dirname(plotfile),
+                         recursive=True, allow_recreate=True)
 
     plot1file = os.path.join(workspace_folder, namebase + '-1pricing.pdf')
     plot2file = os.path.join(workspace_folder, namebase + '-2pricing.pdf')
 
-    pltnote = "This pricing refers to the bare PCB only. See the corresponding Config Docs for Card Pricing"
+    pltnote = "This pricing refers to the bare PCB only. " \
+              "See the corresponding Config Docs for Card Pricing"
 
-    plt1data = {key: data['pricing'][key] for key in data['pricing'].keys() if key <= 10}
-    plt1title = gpf.configsfile.configdata['pcbname'] + " PCB Unit Price vs Order Quantity (Low Quantity)"
-    plot1file = render.render_lineplot(plot1file, plt1data, plt1title, pltnote)
+    plt1data = {key: data['pricing'][key]
+                for key in data['pricing'].keys() if key <= 10}
+    plt1title = gpf.configsfile.configdata['pcbname']
+    plt1title += " PCB Unit Price vs Order Quantity (Low Quantity)"
+    plot1file = render.render_lineplot(
+        plot1file, plt1data, plt1title, pltnote
+    )
 
     if max(data['pricing'].keys()) > 10:
-        plt2data = {key: data['pricing'][key] for key in data['pricing'].keys() if key > 10}
-        plt2title = gpf.configsfile.configdata['pcbname'] + " PCB Unit Price vs Order Quantity (Production Quantity)"
-        plot2file = render.render_lineplot(plot2file, plt2data, plt2title, pltnote)
+        plt2data = {key: data['pricing'][key]
+                    for key in data['pricing'].keys() if key > 10}
+        plt2title = gpf.configsfile.configdata['pcbname']
+        plt2title += " PCB Unit Price vs Order Quantity (Production Quantity)"
+        plot2file = render.render_lineplot(
+            plot2file, plt2data, plt2title, pltnote
+        )
         pdf.merge_pdf([plot1file, plot2file], workspace_outpath)
         os.remove(plot2file)
     else:
@@ -667,7 +716,8 @@ def generate_docs(projfolder):
         try:
             namebase = configfile.configdata['cblname']
         except KeyError:
-            logger.error("Project does not have a known identifier. Skipping : " + projfolder)
+            logger.error("Project does not have a known identifier. "
+                         "Skipping : " + projfolder)
             return
     gen_masterdoc(projfolder, namebase)
     gen_cobom_csv(projfolder, namebase)
@@ -687,7 +737,8 @@ def get_docs_list(projfolder, cardname=None):
             namebase = configfile.configdata['cblname']
             is_cable = True
         except KeyError:
-            logger.error("Project does not have a known identifier. Skipping : " + projfolder)
+            logger.error("Project does not have a known identifier. "
+                         "Skipping : " + projfolder)
             return
     project_doc_folder = get_project_doc_folder(projfolder)
     if not cardname:
@@ -754,7 +805,3 @@ def get_docs_list(projfolder, cardname=None):
                                 refdoc_fs),
                 ]
         return rval
-
-
-if __name__ == "__main__":
-    pass
