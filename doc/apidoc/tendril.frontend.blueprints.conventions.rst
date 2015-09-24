@@ -1,5 +1,5 @@
 tendril.frontend.blueprints.conventions package
-=============================================
+===============================================
 
 Submodules
 ----------

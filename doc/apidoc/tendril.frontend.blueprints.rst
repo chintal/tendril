@@ -1,5 +1,5 @@
 tendril.frontend.blueprints package
-=================================
+===================================
 
 Subpackages
 -----------

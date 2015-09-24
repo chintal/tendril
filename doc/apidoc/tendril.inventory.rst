@@ -1,5 +1,5 @@
 tendril.inventory package
-=======================
+=========================
 
 Subpackages
 -----------

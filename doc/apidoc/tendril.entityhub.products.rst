@@ -1,5 +1,5 @@
 tendril.entityhub.products module
-===============================
+=================================
 
 .. automodule:: tendril.entityhub.products
     :members:

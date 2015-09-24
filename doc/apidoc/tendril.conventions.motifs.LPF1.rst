@@ -1,5 +1,5 @@
 tendril.conventions.motifs.LPF1 module
-====================================
+======================================
 
 .. automodule:: tendril.conventions.motifs.LPF1
     :members:

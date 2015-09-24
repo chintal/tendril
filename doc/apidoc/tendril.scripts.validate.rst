@@ -1,5 +1,5 @@
 tendril.scripts.validate module
-=============================
+===============================
 
 .. automodule:: tendril.scripts.validate
     :members:

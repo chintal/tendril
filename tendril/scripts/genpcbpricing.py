@@ -20,7 +20,7 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 from tendril.entityhub import projects
-from tendril.sourcing  import csil
+from tendril.sourcing import csil
 
 
 def generate():

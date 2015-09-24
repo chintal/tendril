@@ -1,5 +1,5 @@
 tendril.utils.types.thermodynamic module
-======================================
+========================================
 
 .. automodule:: tendril.utils.types.thermodynamic
     :members:

@@ -375,10 +375,12 @@ def gen_authorization(invoice, target_folder, serialno):
 
         * - FedEx India
           - ``tendril/dox/templates/customs/authorization.fedex.tex``
-          - (:download:`Included version <../../tendril/dox/templates/customs/authorization.fedex.tex>`)
+          - (:download:`Included version <../../tendril/dox/templates/\
+customs/authorization.fedex.tex>`)
         * - DHL India
           - ``tendril/dox/templates/customs/authorization.dhl.tex``
-          - (:download:`Included version <../../tendril/dox/templates/customs/authorization.dhl.tex>`)
+          - (:download:`Included version <../../tendril/dox/templates/\
+customs/authorization.dhl.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::

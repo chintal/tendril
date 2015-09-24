@@ -1,5 +1,5 @@
 tendril.entityhub.macs package
-============================
+==============================
 
 Module contents
 ---------------

@@ -1,5 +1,5 @@
 tendril.sourcing.vendors module
-=============================
+===============================
 
 .. automodule:: tendril.sourcing.vendors
     :members:

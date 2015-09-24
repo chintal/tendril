@@ -1,5 +1,5 @@
 tendril.gedaif.pcb module
-=======================
+=========================
 
 .. automodule:: tendril.gedaif.pcb
     :members:

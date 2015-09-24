@@ -1,5 +1,5 @@
 tendril.dox.docstore module
-=========================
+===========================
 
 .. automodule:: tendril.dox.docstore
     :members:

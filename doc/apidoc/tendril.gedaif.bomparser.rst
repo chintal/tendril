@@ -1,5 +1,5 @@
 tendril.gedaif.bomparser module
-=============================
+===============================
 
 .. automodule:: tendril.gedaif.bomparser
     :members:

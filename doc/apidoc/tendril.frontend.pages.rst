@@ -1,5 +1,5 @@
 tendril.frontend.pages package
-============================
+==============================
 
 Submodules
 ----------

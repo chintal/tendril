@@ -1,5 +1,5 @@
 tendril.gedaif.gsymlib module
-===========================
+=============================
 
 .. automodule:: tendril.gedaif.gsymlib
     :members:

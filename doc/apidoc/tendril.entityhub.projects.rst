@@ -1,5 +1,5 @@
 tendril.entityhub.projects module
-===============================
+=================================
 
 .. automodule:: tendril.entityhub.projects
     :members:

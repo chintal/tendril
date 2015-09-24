@@ -1,5 +1,5 @@
 tendril.inventory.modules module
-==============================
+================================
 
 .. automodule:: tendril.inventory.modules
     :members:

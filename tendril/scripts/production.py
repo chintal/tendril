@@ -19,10 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-
-logger = log.get_logger(__name__, log.DEBUG)
-
 import yaml
 import os
 
@@ -36,13 +32,15 @@ import tendril.dox.docstore
 import tendril.dox.labelmaker
 import tendril.gedaif.conffile
 
-
 from tendril.entityhub import projects
 from tendril.entityhub import serialnos
 
 from tendril.utils.pdf import merge_pdf
 from tendril.utils.progressbar.progressbar import ProgressBar
 from tendril.utils.config import INSTANCE_ROOT
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEBUG)
 
 
 if __name__ == "__main__":
@@ -129,15 +127,19 @@ if __name__ == "__main__":
 
     for pbidx, line in enumerate(cobom.lines):
         percentage = (float(pbidx) / nlines) * 100.00
-        pb.render(int(percentage),
-                  "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Reservations".format(
-                      percentage, line.ident, line.quantity))
+        pb.render(
+            int(percentage),
+            "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Reservations".format(  # noqa
+                percentage, line.ident, line.quantity
+            )
+        )
         shortage = 0
         logger.debug("Processing Line : " + line.ident)
         for idx, descriptor in enumerate(cobom.descriptors):
             logger.debug("    for earmark : " + descriptor.configname)
-            earmark = descriptor.configname + ' x' + str(descriptor.multiplier)
-            avail = tendril.inventory.electronics.get_total_availability(line.ident)
+            earmark = descriptor.configname + \
+                ' x' + str(descriptor.multiplier)
+            avail = tendril.inventory.electronics.get_total_availability(line.ident)  # noqa
             if line.columns[idx] == 0:
                 continue
             if avail > line.columns[idx]:
@@ -183,22 +185,24 @@ if __name__ == "__main__":
                                            register=REGISTER)
         snomap['indentsno'] = indentsno
     title = data['title']
-    indentpath, indentsno = tendril.dox.indent.gen_stock_idt_from_cobom(orderfolder,
-                                                                        indentsno, title,
-                                                                        data['cards'], cobom)
+    indentpath, indentsno = tendril.dox.indent.gen_stock_idt_from_cobom(orderfolder,  # noqa
+                                                                        indentsno, title,  # noqa
+                                                                        data['cards'], cobom)  # noqa
     if REGISTER is True:
         tendril.dox.docstore.register_document(serialno=indentsno,
                                                docpath=indentpath,
                                                doctype='INVENTORY INDENT',
                                                efield=title)
     else:
-        logger.info("Not Registering Document : INVENTORY INDENT - " + indentsno)
+        logger.info(
+            "Not Registering Document : INVENTORY INDENT - " + indentsno
+        )
 
     # Generate Production Order
     logger.info("Generating Production Order")
     if REGISTER is True:
         tendril.dox.docstore.register_document(serialno=indentsno,
-                                               docpath=os.path.join(orderfolder, 'cobom.csv'),
+                                               docpath=os.path.join(orderfolder, 'cobom.csv'),  # noqa
                                                doctype='PRODUCTION COBOM CSV',
                                                efield=title)
         serialnos.link_serialno(child=indentsno, parent=PROD_ORD_SNO)
@@ -240,7 +244,10 @@ if __name__ == "__main__":
             # No Assembly manifest needed
             prodst = "@THIS"
             if INCLUDE_REFBOM_FOR_NO_AM is True:
-                addldocs.append(os.path.join(cardconf.doc_folder, 'confdocs', card + '-bom.pdf'))
+                addldocs.append(
+                    os.path.join(cardconf.doc_folder, 'confdocs',
+                                 card + '-bom.pdf')
+                )
         if cardconf.configdata['productionstrategy']['testing'] == 'normal':
             # Normal test procedure, Test when made
             testst = "@NOW"
@@ -257,11 +264,19 @@ if __name__ == "__main__":
         genlabel = False
         labels = []
         if isinstance(cardconf.configdata['documentation']['label'], dict):
-            for k in sorted(cardconf.configdata['documentation']['label'].keys()):
-                labels.append({'code': k, 'ident': card + '.' + cardconf.configdata['label'][k]})
+            for k in sorted(cardconf.configdata['documentation']['label'].keys()):  # noqa
+                labels.append(
+                    {'code': k,
+                     'ident': card + '.' + cardconf.configdata['label'][k]
+                     }
+                )
             genlabel = True
         elif isinstance(cardconf.configdata['documentation']['label'], str):
-            labels.append({'code': cardconf.configdata['documentation']['label'], 'ident': card})
+            labels.append(
+                {'code': cardconf.configdata['documentation']['label'],
+                 'ident': card
+                 }
+            )
             genlabel = True
 
         for idx in range(qty):
@@ -269,46 +284,64 @@ if __name__ == "__main__":
                 if idx in snomap[card].keys():
                     sno = snomap[card][idx]
                 else:
-                    sno = serialnos.get_serialno(series=series, efield=card, register=REGISTER)
+                    sno = serialnos.get_serialno(
+                        series=series, efield=card, register=REGISTER
+                    )
                     snomap[card][idx] = sno
             else:
                 snomap[card] = {}
-                sno = serialnos.get_serialno(series=series, efield=card, register=REGISTER)
+                sno = serialnos.get_serialno(
+                    series=series, efield=card, register=REGISTER
+                )
                 snomap[card][idx] = sno
             if REGISTER is True:
                 serialnos.link_serialno(child=sno, parent=PROD_ORD_SNO)
-            c = {'sno': sno, 'ident': card, 'prodst': prodst, 'lblst': lblst, 'testst': testst}
+            c = {'sno': sno, 'ident': card,
+                 'prodst': prodst, 'lblst': lblst, 'testst': testst
+                 }
             snos.append(c)
             if genlabel is True:
                 for label in labels:
-                    tendril.dox.labelmaker.manager.add_label(label['code'], label['ident'], sno)
+                    tendril.dox.labelmaker.manager.add_label(
+                        label['code'], label['ident'], sno
+                    )
             if genmanifest is True:
                 ampath = tendril.dox.production.gen_pcb_am(cardfolder, card,
-                                                           manifestsfolder, sno,
-                                                           productionorderno=PROD_ORD_SNO,
-                                                           indentsno=indentsno)
+                                                           manifestsfolder, sno,  # noqa
+                                                           productionorderno=PROD_ORD_SNO,  # noqa
+                                                           indentsno=indentsno)  # noqa
                 manifestfiles.append(ampath)
                 if REGISTER is True:
-                    tendril.dox.docstore.register_document(serialno=sno, docpath=ampath,
-                                                           doctype='ASSEMBLY MANIFEST')
+                    tendril.dox.docstore.register_document(serialno=sno, docpath=ampath,  # noqa
+                                                           doctype='ASSEMBLY MANIFEST')  # noqa
 
-    production_order = tendril.dox.production.gen_production_order(orderfolder, PROD_ORD_SNO,
-                                                                   data, snos,
-                                                                   sourcing_orders=SOURCING_ORDERS,
-                                                                   root_orders=ROOT_ORDERS)
-    labelpaths = tendril.dox.labelmaker.manager.generate_pdfs(orderfolder, force=FORCE_LABELS)
+    production_order = tendril.dox.production.gen_production_order(orderfolder, PROD_ORD_SNO,  # noqa
+                                                                   data, snos,  # noqa
+                                                                   sourcing_orders=SOURCING_ORDERS,  # noqa
+                                                                   root_orders=ROOT_ORDERS)  # noqa
+    labelpaths = tendril.dox.labelmaker.manager.generate_pdfs(orderfolder, force=FORCE_LABELS)  # noqa
 
     if len(labelpaths) > 0:
-        merge_pdf(labelpaths, os.path.join(orderfolder, 'device-labels.pdf'))
+        merge_pdf(
+            labelpaths,
+            os.path.join(orderfolder, 'device-labels.pdf')
+        )
     if len(addldocs) > 0:
-        merge_pdf([production_order] + addldocs, production_order, remove_sources=False)
+        merge_pdf(
+            [production_order] + addldocs,
+            production_order,
+            remove_sources=False
+        )
     if len(manifestfiles) > 0:
-        merge_pdf(manifestfiles, os.path.join(orderfolder, 'manifests-printable.pdf'))
+        merge_pdf(
+            manifestfiles,
+            os.path.join(orderfolder, 'manifests-printable.pdf')
+        )
 
     if REGISTER is True:
         if os.path.exists(os.path.join(orderfolder, 'device-labels.pdf')):
             tendril.dox.docstore.register_document(serialno=PROD_ORD_SNO,
-                                                   docpath=os.path.join(orderfolder, 'device-labels.pdf'),
+                                                   docpath=os.path.join(orderfolder, 'device-labels.pdf'),  # noqa
                                                    doctype='DEVICE LABELS',
                                                    efield=data['title'])
         tendril.dox.docstore.register_document(serialno=PROD_ORD_SNO,
@@ -317,17 +350,23 @@ if __name__ == "__main__":
                                                efield=data['title'])
         tendril.dox.docstore.register_document(serialno=PROD_ORD_SNO,
                                                docpath=orderfile,
-                                               doctype='PRODUCTION ORDER YAML',
+                                               doctype='PRODUCTION ORDER YAML',  # noqa
                                                efield=data['title'])
     else:
-        logger.info("Not registering document : DEVICE LABELS " + PROD_ORD_SNO)
-        logger.info("Not registering document : PRODUCTION ORDER " + PROD_ORD_SNO)
-        logger.info("Not registering document : PRODUCTION ORDER YAML " + PROD_ORD_SNO)
+        logger.info(
+            "Not registering document : DEVICE LABELS " + PROD_ORD_SNO
+        )
+        logger.info(
+            "Not registering document : PRODUCTION ORDER " + PROD_ORD_SNO
+        )
+        logger.info(
+            "Not registering document : PRODUCTION ORDER YAML " + PROD_ORD_SNO
+        )
 
     with open(os.path.join(orderfolder, 'snomap.yaml'), 'w') as f:
         f.write(yaml.dump(snomap, default_flow_style=False))
     if REGISTER is True:
         tendril.dox.docstore.register_document(serialno=PROD_ORD_SNO,
-                                               docpath=os.path.join(orderfolder, 'snomap.yaml'),
+                                               docpath=os.path.join(orderfolder, 'snomap.yaml'),  # noqa
                                                doctype='SNO MAP',
                                                efield=data['title'])

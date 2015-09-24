@@ -1,5 +1,5 @@
 tendril.scripts.genpcbpricing module
-==================================
+====================================
 
 .. automodule:: tendril.scripts.genpcbpricing
     :members:

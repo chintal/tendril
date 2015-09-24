@@ -1,5 +1,5 @@
 tendril.conventions.motifs package
-================================
+==================================
 
 Submodules
 ----------

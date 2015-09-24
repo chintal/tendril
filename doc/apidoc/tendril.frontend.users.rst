@@ -1,5 +1,5 @@
 tendril.frontend.users package
-============================
+==============================
 
 Submodules
 ----------

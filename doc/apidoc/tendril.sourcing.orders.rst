@@ -1,5 +1,5 @@
 tendril.sourcing.orders module
-============================
+==============================
 
 .. automodule:: tendril.sourcing.orders
     :members:

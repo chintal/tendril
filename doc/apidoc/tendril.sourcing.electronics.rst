@@ -1,5 +1,5 @@
 tendril.sourcing.electronics module
-=================================
+===================================
 
 .. automodule:: tendril.sourcing.electronics
     :members:

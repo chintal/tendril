@@ -1,5 +1,5 @@
 tendril.frontend.blueprints.gsymlib package
-=========================================
+===========================================
 
 Submodules
 ----------

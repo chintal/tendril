@@ -1,5 +1,5 @@
 tendril.inventory.db package
-==========================
+============================
 
 Submodules
 ----------

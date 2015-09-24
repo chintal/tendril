@@ -1,5 +1,5 @@
 tendril.entityhub.db package
-==========================
+============================
 
 Submodules
 ----------

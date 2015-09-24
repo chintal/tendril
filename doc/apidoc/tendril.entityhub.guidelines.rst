@@ -1,5 +1,5 @@
 tendril.entityhub.guidelines module
-=================================
+===================================
 
 .. automodule:: tendril.entityhub.guidelines
     :members:

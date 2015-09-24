@@ -1,5 +1,5 @@
 tendril.entityhub.maps module
-===========================
+=============================
 
 .. automodule:: tendril.entityhub.maps
     :members:
