@@ -1,0 +1,6 @@
+[run]
+data_file = tests/.coverage
+
+[html]
+directory = tests/coverage
+title = Test Coverage
