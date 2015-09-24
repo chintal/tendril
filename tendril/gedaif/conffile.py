@@ -39,7 +39,7 @@ class ConfigsFile(object):
         self.projectfile = self.configdata['projfile']
 
     def get_configs_file(self):
-        with open(os.path.join(self.projectfolder, "schematic", "configs.yaml")) as configfile:
+        with open(os.path.join(self.projectfolder, "schematic", "configs.yaml")) as configfile:  # noqa
             configdata = yaml.load(configfile)
         if configdata["schema"]["name"] == "pcbconfigs" and \
            configdata["schema"]["version"] == 1.0:
@@ -49,14 +49,16 @@ class ConfigsFile(object):
 
     @property
     def is_pcb(self):
-        if 'pcbname' in self.configdata.keys() and self.configdata['pcbname'] is not None:
+        if 'pcbname' in self.configdata.keys() and \
+                self.configdata['pcbname'] is not None:
             return True
         else:
             return False
 
     @property
     def is_cable(self):
-        if 'cblname' in self.configdata.keys() and self.configdata['cblname'] is not None:
+        if 'cblname' in self.configdata.keys() and \
+                self.configdata['cblname'] is not None:
             return True
         else:
             return False
@@ -166,7 +168,8 @@ class ConfigsFile(object):
                 try:
                     for configsection in self.get_configsections():
                         sec_confname = configuration["config"][configsection]
-                        rval = rval + self.get_sec_groups(configsection, sec_confname)
+                        rval = rval + self.get_sec_groups(configsection,
+                                                          sec_confname)
                 except TypeError:
                     rval = ["default"]
                     try:
@@ -211,5 +214,6 @@ class ConfigsFile(object):
         elif self.configdata['pcbdetails']["params"]["finish"] == 'OC':
             rval.append("Only Copper finish")
         else:
-            rval.append("UNKNOWN FINISH: " + self.configdata['pcbdetails']["params"]["finish"])
+            rval.append("UNKNOWN FINISH: " +
+                        self.configdata['pcbdetails']["params"]["finish"])
         return rval

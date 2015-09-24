@@ -31,7 +31,8 @@ class GedaProjectFile(object):
 
         self.configsfile = tendril.gedaif.conffile.ConfigsFile(projectfolder)
 
-        self.schfolder = os.path.join(os.path.abspath(projectfolder), 'schematic')
+        self.schfolder = os.path.join(os.path.abspath(projectfolder),
+                                      'schematic')
         projfilepath = os.path.join(self.schfolder,
                                     self.configsfile.configdata['projfile'])
         with open(projfilepath, 'r') as f:
@@ -52,7 +53,8 @@ class GedaProjectFile(object):
 
     @property
     def schpaths(self):
-        return [os.path.join(self.schfolder, schfile) for schfile in self.schfiles]
+        return [os.path.join(self.schfolder, schfile)
+                for schfile in self.schfiles]
 
 if __name__ == "__main__":
     pass

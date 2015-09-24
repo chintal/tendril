@@ -29,17 +29,17 @@ logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
 
 rex_vstring = re.compile(ur'^v (?P<gsch_ver>\d+) (?P<file_ver>\d+)$')
 
-rex_el_line = re.compile(ur'^L (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>\d+) (?P<dashstyle>-?\d+) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+)$')
-rex_el_picture = re.compile(ur'^G (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<width>\d+) (?P<height>\d+) (?P<angle>\d+) (?P<mirrored>[01]) (?P<embedded>[01])$')
-rex_el_box = re.compile(ur'^B (?P<x>-?\d+) (?P<y>-?\d+) (?P<boxwidth>-?\d+) (?P<boxheight>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[012]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+)$')
-rex_el_circle = re.compile(ur'^V (?P<x>-?\d+) (?P<y>-?\d+) (?P<radius>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[0]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+)$')
-rex_el_arc = re.compile(ur'^A (?P<x>-?\d+) (?P<y>-?\d+) (?P<radius>-?\d+) (?P<startangle>-?\d+) (?P<sweepangle>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[0]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+)$')
-rex_el_text = re.compile(ur'^T (?P<x>-?\d+) (?P<y>-?\d+) (?P<color>\d+) (?P<size>\d+) (?P<visibility>[01]) (?P<show_name_value>[012]) (?P<angle>\d+) (?P<alignment>[0-8]) (?P<num_lines>\d+)$')
-rex_el_net = re.compile(ur'^N (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+)$')
-rex_el_bus = re.compile(ur'^U (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<ripperdir>-?\d)$')
-rex_el_pin = re.compile(ur'^P (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<pintype>[01]) (?P<whichend>[01])$')
-rex_el_component = re.compile(ur'^C (?P<x>-?\d+) (?P<y>-?\d+) (?P<selectable>[01]) (?P<angle>\d+) (?P<mirror>[01]) (?P<basename>[\w.+ -]*)$')
-rex_el_path = re.compile(ur'^H (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[012]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+) (?P<num_lines>[\d]+)$')
+rex_el_line = re.compile(ur'^L (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>\d+) (?P<dashstyle>-?\d+) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+)$')  # noqa
+rex_el_picture = re.compile(ur'^G (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<width>\d+) (?P<height>\d+) (?P<angle>\d+) (?P<mirrored>[01]) (?P<embedded>[01])$')  # noqa
+rex_el_box = re.compile(ur'^B (?P<x>-?\d+) (?P<y>-?\d+) (?P<boxwidth>-?\d+) (?P<boxheight>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[012]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+)$')  # noqa
+rex_el_circle = re.compile(ur'^V (?P<x>-?\d+) (?P<y>-?\d+) (?P<radius>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[0]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+)$')  # noqa
+rex_el_arc = re.compile(ur'^A (?P<x>-?\d+) (?P<y>-?\d+) (?P<radius>-?\d+) (?P<startangle>-?\d+) (?P<sweepangle>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[0]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+)$')  # noqa
+rex_el_text = re.compile(ur'^T (?P<x>-?\d+) (?P<y>-?\d+) (?P<color>\d+) (?P<size>\d+) (?P<visibility>[01]) (?P<show_name_value>[012]) (?P<angle>\d+) (?P<alignment>[0-8]) (?P<num_lines>\d+)$')  # noqa
+rex_el_net = re.compile(ur'^N (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+)$')  # noqa
+rex_el_bus = re.compile(ur'^U (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<ripperdir>-?\d)$')  # noqa
+rex_el_pin = re.compile(ur'^P (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<pintype>[01]) (?P<whichend>[01])$')  # noqa
+rex_el_component = re.compile(ur'^C (?P<x>-?\d+) (?P<y>-?\d+) (?P<selectable>[01]) (?P<angle>\d+) (?P<mirror>[01]) (?P<basename>[\w.+ -]*)$')  # noqa
+rex_el_path = re.compile(ur'^H (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[012]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+) (?P<num_lines>[\d]+)$')  # noqa
 
 rex_block_start = re.compile(ur'^\s*[{]\s*$')
 rex_block_end = re.compile(ur'^\s*[}]\s*$')
@@ -272,27 +272,27 @@ class GschFile(object):
         while not line:
             line = lines.popleft()
         if line.startswith('L'):
-            return GschElementLine(parent, lines=lines, **rex_el_line.match(line).groupdict())
+            return GschElementLine(parent, lines=lines, **rex_el_line.match(line).groupdict())  # noqa
         elif line.startswith('G'):
-            return GschElementPicture(parent, lines=lines, **rex_el_picture.match(line).groupdict())
+            return GschElementPicture(parent, lines=lines, **rex_el_picture.match(line).groupdict())  # noqa
         elif line.startswith('B'):
-            return GschElementBox(parent, lines=lines, **rex_el_box.match(line).groupdict())
+            return GschElementBox(parent, lines=lines, **rex_el_box.match(line).groupdict())  # noqa
         elif line.startswith('V'):
-            return GschElementCircle(parent, lines=lines, **rex_el_circle.match(line).groupdict())
+            return GschElementCircle(parent, lines=lines, **rex_el_circle.match(line).groupdict())  # noqa
         elif line.startswith('A'):
-            return GschElementArc(parent, lines=lines, **rex_el_arc.match(line).groupdict())
+            return GschElementArc(parent, lines=lines, **rex_el_arc.match(line).groupdict())  # noqa
         elif line.startswith('T'):
-            return GschElementText(parent, lines=lines, **rex_el_text.match(line).groupdict())
+            return GschElementText(parent, lines=lines, **rex_el_text.match(line).groupdict())  # noqa
         elif line.startswith('N'):
-            return GschElementNet(parent, lines=lines, **rex_el_net.match(line).groupdict())
+            return GschElementNet(parent, lines=lines, **rex_el_net.match(line).groupdict())  # noqa
         elif line.startswith('U'):
-            return GschElementBus(parent, lines=lines, **rex_el_bus.match(line).groupdict())
+            return GschElementBus(parent, lines=lines, **rex_el_bus.match(line).groupdict())  # noqa
         elif line.startswith('P'):
-            return GschElementPin(parent, lines=lines, **rex_el_pin.match(line).groupdict())
+            return GschElementPin(parent, lines=lines, **rex_el_pin.match(line).groupdict())  # noqa
         elif line.startswith('C'):
-            return GschElementComponent(parent, lines=lines, **rex_el_component.match(line).groupdict())
+            return GschElementComponent(parent, lines=lines, **rex_el_component.match(line).groupdict())  # noqa
         elif line.startswith('H'):
-            return GschElementPath(parent, lines=lines, **rex_el_path.match(line).groupdict())
+            return GschElementPath(parent, lines=lines, **rex_el_path.match(line).groupdict())  # noqa
         else:
             raise AttributeError(line)
 
@@ -325,7 +325,8 @@ def conv_gsch2pdf(schpath, docfolder):
     schfname = os.path.splitext(os.path.split(schpath)[1])[0]
     pspath = os.path.join(docfolder, schfname + '.ps')
     pdfpath = os.path.join(docfolder, schfname + '.pdf')
-    gschem_pscmd = "gschem -o" + pspath + " -s" + GEDA_SCHEME_DIR + '/print.scm ' + schpath
+    gschem_pscmd = "gschem -o" + pspath + \
+                   " -s" + GEDA_SCHEME_DIR + '/print.scm ' + schpath
     subprocess.call(gschem_pscmd.split(' '))
     tendril.utils.pdf.conv_ps2pdf(pspath, pdfpath)
     os.remove(pspath)
@@ -340,20 +341,25 @@ def conv_gsch2png(schpath, outfolder):
     epspath = os.path.join(outfolder, schfname + '.eps')
 
     if ext == '.sym':
-        gschem_epscmd = [os.path.join(TENDRIL_ROOT, 'gedaif', 'bin', 'sym2eps'),
-                         schpath, epspath]
+        gschem_epscmd = [
+            os.path.join(TENDRIL_ROOT, 'gedaif', 'bin', 'sym2eps'),
+            schpath, epspath
+        ]
         try:
             subprocess.check_call(gschem_epscmd)
-            gschem_pngcmd = ["convert", epspath, "-transparent", "white", outpath]
+            gschem_pngcmd = [
+                "convert", epspath, "-transparent", "white", outpath
+            ]
             subprocess.call(gschem_pngcmd)
             try:
                 os.remove(epspath)
             except OSError:
-                logger.warning("Temporary .eps file not found to remove : " + epspath)
+                logger.warning("Temporary .eps file not found to remove : " +
+                               epspath)
         except subprocess.CalledProcessError:
             logger.error("SYM2EPS Segmentation Fault on symbol : " + schpath)
     elif ext == '.sch':
-        gschem_pngcmd = "gschem -p -o" + outpath + " -s" + GEDA_SCHEME_DIR + '/image.scm ' + schpath
+        gschem_pngcmd = "gschem -p -o" + outpath + " -s" + GEDA_SCHEME_DIR + '/image.scm ' + schpath  # noqa
         subprocess.call(gschem_pngcmd)
     return outpath
 

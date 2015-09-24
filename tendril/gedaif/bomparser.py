@@ -25,8 +25,7 @@ import shutil
 
 from tendril.conventions.motifs import create_motif_object
 
-import tendril.gedaif.projfile
-import tendril.gedaif.conffile
+import projfile
 
 from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.fsutils import TEMPDIR
@@ -57,7 +56,7 @@ class GedaBomParser(object):
         self.columns = []
         self.line_gen = None
         self.projectfolder = os.path.normpath(projectfolder)
-        self._gpf = tendril.gedaif.projfile.GedaProjectFile(self.projectfolder)
+        self._gpf = projfile.GedaProjectFile(self.projectfolder)
 
         self._namebase = os.path.relpath(self.projectfolder, PROJECTS_ROOT)
         self._basefolder = 'schematic'
@@ -76,7 +75,8 @@ class GedaBomParser(object):
         if not os.path.exists(self._temp_folder):
             os.makedirs(self._temp_folder)
         for schpath in self._gpf.schpaths:
-            tschpath = os.path.join(self._temp_folder, os.path.split(schpath)[1])
+            tschpath = os.path.join(self._temp_folder,
+                                    os.path.split(schpath)[1])
             shutil.copy(schpath, tschpath)
             self.schpaths.append(tschpath)
 
@@ -143,7 +143,9 @@ class MotifAwareBomParser(GedaBomParser):
                 if motif is not None:
                     motif.add_element(bomline)
                 else:
-                    logger.warning("Element not inserted : " + bomline.data["refdes"])
+                    logger.warning(
+                        "Element not inserted : " + bomline.data["refdes"]
+                    )
             else:
                 yield bomline
         self.motif_gen = self.get_motifs()

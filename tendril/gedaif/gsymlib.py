@@ -82,7 +82,7 @@ class GedaSymbol(object):
         if not os.path.exists(outfolder):
             os.makedirs(outfolder)
         if os.path.exists(self._img_repr_path):
-            if tendril.utils.fsutils.get_file_mtime(self._img_repr_path) > tendril.utils.fsutils.get_file_mtime(self.fpath):
+            if tendril.utils.fsutils.get_file_mtime(self._img_repr_path) > tendril.utils.fsutils.get_file_mtime(self.fpath):  # noqa
                 return
         conv_gsch2png(self.fpath, outfolder)
 
@@ -150,7 +150,7 @@ class GedaSymbol(object):
             from tendril.sourcing.electronics import vendor_list
             from tendril.inventory.guidelines import electronics_qty
             dkv = vendor_list[0]
-            vsinfo = dkv.get_optimal_pricing(self.ident, electronics_qty.get_compliant_qty(self.ident, 5))
+            vsinfo = dkv.get_optimal_pricing(self.ident, electronics_qty.get_compliant_qty(self.ident, 5))  # noqa
             dkvpno = vsinfo[1]
             dkdsurl = dkv.get_vpart(dkvpno).datasheet
             return dkdsurl
@@ -180,7 +180,7 @@ class GedaSymbol(object):
             raise AttributeError
         if not self.generator.values:
             return None
-        return [tendril.conventions.electronics.ident_transform(self.device, v, self.footprint)
+        return [tendril.conventions.electronics.ident_transform(self.device, v, self.footprint)  # noqa
                 for v in self.generator.values]
 
     def __repr__(self):
@@ -224,7 +224,8 @@ class GSymGeneratorFile(object):
 
             if gendata['type'] == 'simple':
                 self._type = 'Simple'
-                self._ivalues = [v for v in gendata['values'] if v is not None and v.strip() is not None]
+                self._ivalues = [v for v in gendata['values']
+                                 if v is not None and v.strip() is not None]
                 return gendata['values']
             values = []
 
@@ -238,13 +239,12 @@ class GSymGeneratorFile(object):
                     for generator in gendata['generators']:
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
-                            rvalues = iec60063.gen_vals(generator['series'],
-                                                        iec60063.res_ostrs,
-                                                        start=generator['start'],
-                                                        end=generator['end'])
+                            rvalues = iec60063.gen_vals(
+                                generator['series'], iec60063.res_ostrs,
+                                start=generator['start'], end=generator['end']
+                            )
                             for rvalue in rvalues:
-                                values.append(tendril.conventions.electronics.construct_resistor(rvalue,
-                                                                                                 generator['wattage']))
+                                values.append(tendril.conventions.electronics.construct_resistor(rvalue, generator['wattage']))  # noqa
                         else:
                             raise ValueError
                 if 'values' in gendata.keys():
@@ -263,13 +263,12 @@ class GSymGeneratorFile(object):
                     for generator in gendata['generators']:
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
-                            cvalues = iec60063.gen_vals(generator['series'],
-                                                        iec60063.cap_ostrs,
-                                                        start=generator['start'],
-                                                        end=generator['end'])
+                            cvalues = iec60063.gen_vals(
+                                generator['series'], iec60063.cap_ostrs,
+                                start=generator['start'], end=generator['end']
+                            )
                             for cvalue in cvalues:
-                                values.append(tendril.conventions.electronics.construct_capacitor(cvalue,
-                                                                                                  generator['voltage']))
+                                values.append(tendril.conventions.electronics.construct_capacitor(cvalue, generator['voltage']))  # noqa
                         else:
                             raise ValueError
                 if 'values' in gendata.keys():
@@ -287,11 +286,13 @@ class GSymGeneratorFile(object):
         return None
 
 
-def get_folder_symbols(path, template=None, resolve_generators=True, include_generators=False):
+def get_folder_symbols(path, template=None,
+                       resolve_generators=True, include_generators=False):
     if template is None:
         template = _jinja_init()
     symbols = []
-    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    files = [f for f in os.listdir(path)
+             if os.path.isfile(os.path.join(path, f))]
     for f in files:
         if f.endswith(".sym"):
             symbol = GedaSymbol(os.path.join(path, f))
@@ -328,18 +329,24 @@ def gen_symlib(path=GEDA_SYMLIB_ROOT, recursive=True,
     template = _jinja_init()
     if recursive:
         for root, dirs, files in os.walk(path):
-            symbols += get_folder_symbols(root, template,
-                                          resolve_generators=resolve_generators,
-                                          include_generators=include_generators)
+            symbols += get_folder_symbols(
+                root, template,
+                resolve_generators=resolve_generators,
+                include_generators=include_generators
+            )
     else:
-        symbols = get_folder_symbols(path, template,
-                                     resolve_generators=resolve_generators,
-                                     include_generators=include_generators)
+        symbols = get_folder_symbols(
+            path, template,
+            resolve_generators=resolve_generators,
+            include_generators=include_generators
+        )
     return symbols
 
 
 def _jinja_init():
-    loader = jinja2.FileSystemLoader(searchpath=os.path.join(TENDRIL_ROOT, 'gedaif', 'templates'))
+    loader = jinja2.FileSystemLoader(
+        searchpath=os.path.join(TENDRIL_ROOT, 'gedaif', 'templates')
+    )
     renderer = jinja2.Environment(loader=loader)
     template_file = 'generator.gen.yaml'
     template = renderer.get_template(template_file)
@@ -395,8 +402,8 @@ def get_symbol_folder(ident, case_insensitive=False):
 def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
-            cap, volt = tendril.conventions.electronics.parse_capacitor(symbol.value)
-            sym_capacitance = tendril.conventions.electronics.parse_capacitance(cap)
+            cap, volt = tendril.conventions.electronics.parse_capacitor(symbol.value)  # noqa
+            sym_capacitance = tendril.conventions.electronics.parse_capacitance(cap)  # noqa
             if capacitance == sym_capacitance:
                 return symbol
     raise ValueError
@@ -404,15 +411,15 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
 
 def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
     if device == 'RES THRU':
-        if resistance in [tendril.conventions.electronics.parse_resistance(x)
-                          for x in iec60063.gen_vals(iec60063.get_series('E24'), iec60063.res_ostrs)]:
-            return tendril.conventions.electronics.construct_resistor(tendril.conventions.electronics.normalize_resistance(resistance), '0.25W')
+        if resistance in [tendril.conventions.electronics.parse_resistance(x)  # noqa
+                          for x in iec60063.gen_vals(iec60063.get_series('E24'), iec60063.res_ostrs)]:  # noqa
+            return tendril.conventions.electronics.construct_resistor(tendril.conventions.electronics.normalize_resistance(resistance), '0.25W')  # noqa
         else:
             raise ValueError(resistance, device)
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
-            res, watt = tendril.conventions.electronics.parse_resistor(symbol.value)
-            sym_resistance = tendril.conventions.electronics.parse_resistance(res)
+            res, watt = tendril.conventions.electronics.parse_resistor(symbol.value)  # noqa
+            sym_resistance = tendril.conventions.electronics.parse_resistance(res)  # noqa
             if resistance == sym_resistance:
                 return symbol.value
     raise ValueError(resistance)
@@ -425,6 +432,9 @@ def export_gsymlib_audit():
     outw.writerow(['filename', 'status', 'ident', 'device', 'value',
                    'footprint', 'description', 'path', 'package'])
     for symbol in gsymlib:
-        outw.writerow([symbol.fname, symbol.status, symbol.ident, symbol.device, symbol.value,
-                       symbol.footprint, symbol.description, symbol.fpath, symbol.package])
+        outw.writerow(
+            [symbol.fname, symbol.status, symbol.ident, symbol.device,
+             symbol.value, symbol.footprint, symbol.description,
+             symbol.fpath, symbol.package]
+        )
     outf.close()

@@ -19,15 +19,15 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import tendril.gedaif.projfile
 import tendril.gedaif.gsymlib
 
 import tendril.boms.electronics
 
 from tendril.gedaif.conffile import NoGedaProjectException
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 def check(projectfolder):
@@ -38,7 +38,9 @@ def check(projectfolder):
     try:
         gpf = tendril.gedaif.projfile.GedaProjectFile(projectfolder)
     except NoGedaProjectException:
-        logger.critical("Configs file missing. No further validation will be attempted")
+        logger.critical(
+            "Configs file missing. No further validation will be attempted"
+        )
         return False
 
     logger.debug("Config and Project File loaded. Proceeding with Validation")
@@ -58,10 +60,16 @@ def check(projectfolder):
         logger.debug("Checking Components for Configuration : " + config)
         for line in obom.lines:
             ident = line.ident
-            if not tendril.gedaif.gsymlib.is_recognized(ident) and not ident.startswith('PCB '):
-                logger.warning("Component not recognized by gsymlib : " + line.ident + " " + str(line.refdeslist))
+            if not tendril.gedaif.gsymlib.is_recognized(ident) and not ident.startswith('PCB '):  # noqa
+                logger.warning(
+                    "Component not recognized by gsymlib : " +
+                    line.ident + " " + str(line.refdeslist)
+                )
             elif not ident.startswith('PCB '):
                 symbol = tendril.gedaif.gsymlib.get_symbol(line.ident)
                 if symbol.status == "Deprecated":
-                    logger.warning("Component or Symbol used is Deprecated : " + line.ident + " " + str(line.refdeslist))
+                    logger.warning(
+                        "Component or Symbol used is Deprecated : " +
+                        line.ident + " " + str(line.refdeslist)
+                    )
         logger.info("Validation Complete for Configuration : " + config)
