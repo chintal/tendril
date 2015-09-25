@@ -180,6 +180,11 @@ basic requirements for the webserver are :
     - Support ``wsgi``
     - (Recommended) Support ``x-sendfile``
 
+    .. hint::
+
+        ``x-sendfile`` is enabled by default. If you want to disable it,
+        set ``USE_X_SENDFILE`` to ``False`` in your ``instance_config.py``.
+
 You should edit the ``tendril.wsgi`` file in your instance root as well,
 and set the correct path to the ``virtualenv`` you have setup for ``tendril``.
 If the ``tendril.wsgi`` file is missing, you should either copy ``tendril.wsgi.sample``
@@ -190,7 +195,7 @@ Example ``tendril.wsgi``:
     .. literalinclude:: ../sample/tendril.wsgi.sample
 
 Your webserver should also be configured to serve files from within the
-exposed filesystems.
+exposed filesystems, and the wsgi script should be mounted.
 
 Example configuration for apache:
 
