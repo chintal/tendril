@@ -13,7 +13,8 @@ arrow==0.6.0
 qrcode==5.1
 splinter==0.7.0
 iec60063==0.1
-Flask-User==0.6.8
+Flask-Login==0.2.11
+Flask-User==0.6.1
 beautifulsoup4==4.3.2
 Flask-Principal==0.4.0
 PyPDF2==1.23
