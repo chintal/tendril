@@ -41,7 +41,7 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
 
         ``sudo apt-get install git-core curl``
 
- 3. Setup proxy, if any:
+ 2. Setup proxy, if any:
 
         .. code-block:: bash
 
@@ -49,11 +49,11 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
             export https_proxy=http://user:pass@192.168.1.254:3128
             export ftp_proxy=http://user:pass@192.168.1.254:3128
 
- 4. Tell ``git`` to use ``https://`` instead of ``git://`` to get around proxy issues:
+ 3. (Proxy) Setup corkscrew to use git through a http proxy, if necessary:
 
-        ``git config --global url."https://".insteadOf git://``
+        TODO
 
- 5. Run the installer:
+ 4. Run the installer:
 
         .. code-block:: bash
 
@@ -61,7 +61,7 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
             https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer \
             | bash
 
- 6. Insert the following at the end of ``~/.bashrc``:
+ 5. Insert the following at the end of ``~/.bashrc``:
 
         .. code-block:: bash
 
@@ -71,7 +71,7 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
                 eval "$(pyenv init -)"
             fi
 
- 7. Install Build Dependencies for Python 2.7:
+ 6. Install Build Dependencies for Python 2.7:
 
         .. code-block:: bash
 
@@ -80,7 +80,7 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
                 libreadline-dev libncurses5-dev libssl1.0.0 tk8.5-dev \
                 zlib1g-dev liblzma-dev
 
- 8. Install Python 2.7.6:
+ 7. Install Python 2.7.6:
 
         Python 2.7.x, where x>=6, should be fine. x<6 is untested. New features were intruduced in 2.7.5, 2.7.6
         that may be necessary for the scripts to run. If system python is 2.7.6 or better, ``pyenv`` isn't
@@ -99,24 +99,45 @@ Getting the Code
 
 The code can be obtained from the version control system. For users, the specific instance of ``tendril``
 applicable to the organization should be checked out from the locally controlled repository. This repository
-should be essentially ``read-only`` with a specific set of people administering the installation. Until the
-details can be worked out, use the following checkouts:
+should be essentially ``read-only`` with a specific set of people administering the installation.
 
-    1. Get the Organization's fork of tendril core.
+    1. Create an ssh key for yourself, if you don't already have one.
+
+        .. code-block:: bash
+
+            ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+
+    2. Register the key (``~/.ssh/id_rsa.pub``) on gitlab.
+    3. (Proxy) Setup ssh to use corkscrew for the git host, if necessary. Put the following
+       into ``~/.ssh/config``, create the file if necessary. Your proxy credentials go into
+       ``~/.ssh/proxyauth`` in the format ``user:pass``.
+
+        .. code-block:: bash
+
+            Host gitlab.com
+                Hostname gitlab.com
+                User git
+                IdentityFile ~/.ssh/id_rsa
+                ProxyCommand corkscrew proxy.host port %h %p ~/.ssh/proxyauth
+
+    4. Get the Organization's fork of tendril core.
 
         .. code-block:: bash
 
             git clone git@gitlab.com:<org>/tendril.git
 
-    2. Create a fork of the Organization's instance configuration. For example, clone
+    5. Create a fork of the Organization's instance configuration. For example, clone
        ``gitlab.com/<org>/tendril-instance-<org>.git`` into ``gitlab.com/<username>/tendril-instance-<org>.git``
-
-    2. Get a clone of your fork of the Organization's instance configuration.
+    6. Get a clone of your fork of the Organization's instance configuration.
 
         .. code-block:: bash
 
             git clone git@gitlab.com:<username>/tendril-instance-<org>.git ~/.tendril
-
+            cd ~/.tendril
+            git remote add upstream git@gitlab.com:<org>/tendril-instance-<org>.git
+            git fetch upstream
+            git checkout -b upstream-master upstream/master
+            git checkout master
 
 Setting up virtualenv
 ---------------------
@@ -170,6 +191,14 @@ See `<http://www.simononsoftware.com/virtualenv-tutorial-part-2/>`_ for a more d
 
             workon tendril
 
+ 6. If you've installed ``pyenv``, you can use the following commands instead to setup and
+    use your virtualenv:
+
+        .. code-block:: bash
+
+            pyenv virtualenv 2.7.6 tendril
+            pyenv activate tendril
+            pyenv deactivate
 
 Installing the Dependencies
 ---------------------------
@@ -178,32 +207,46 @@ Installing the Dependencies
 
         .. code-block:: bash
 
-            cd /path/to/tendril/checkout/trunk/
-            pip install -r requirements.txt
+            cd /path/to/tendril/clone
+            pip install -e .
 
-        .. note::
+        .. hint::
 
-            At present, ``requirements.txt`` contains all the dependencies of ``tendril``,
-            including those not actually necessary to run the code. As such, the virtualenv
-            that results is likely to be reasonably heavy (~361M).
+            You can install the package into the virtualenv or even into your
+            system if you really want to. However, due to the present volatile
+            state of the code, you should expect a fairly continuous stream of
+            small changes, most of which aren't going to come with a bump in the
+            version number. This may make upgrading the package a more involved
+            process. This command installs all the dependencies normally, but the
+            tendril package itself redirects to the clone, where you can make
+            changes which instantly propagate to the version you get when you
+            ``import tendril``.
 
-            If a leaner installation is required, the dependencies should be pruned to remove
-            the packages included for :
+        .. hint::
 
-                - Generating documentation
-                - Testing, Profiling
+            The dependencies may require additional libraries (and their
+            development headers) to be installed on your system. A non-exhaustive
+            list of the libraries you should have available is :
+
+              - freetype
+              - libpng
+              - libffi
+              - libpqxx (postgresql)
 
  2. Install dependencies not covered by ``requirements.txt``
 
      a. Install ``sofficehelpers``:
 
-            ``sofficehelpers`` is a collection of scripts to deal with ``libreoffice`` documents.
-            The libreoffice python interface (``uno``) requires the use of the python bundled into libreoffice,
-            and therefore is kept separate from the rest of tendril. There are plenty of other (and simpler) ways
-            to achieve the same effect, inculding a number of uno-based scripts to do this. The custom script is
-            retained for the moment to maintain a functional base upon which additional functionality can be added
-            on as needed. If another solution is to be used instead, appropriate changes should be made
-            to :func:`utils.libreoffice.XLFile._make_csv_files` and :func:`utils.libreoffice.XLFile._parse_sscout`.
+            ``sofficehelpers`` is a collection of scripts to deal with ``libreoffice``
+            documents. The libreoffice python interface (``uno``) requires use of the
+            python bundled into libreoffice, and therefore is kept separate from the
+            rest of tendril. There are plenty of other (and simpler) ways to achieve
+            the same effect, inculding a number of uno-based scripts to do this. The
+            custom script is retained for the moment to maintain a functional base upon
+            which additional functionality can be added on as needed. If another solution
+            is to be used instead, appropriate changes should be made
+            to :func:`tendril.utils.libreoffice.XLFile._make_csv_files` and
+            :func:`tendril.utils.libreoffice.XLFile._parse_sscout`.
 
             1. Install dependencies:
 
@@ -217,8 +260,94 @@ Installing the Dependencies
 
                     pip3 install sofficehelpers
 
+     b. (Optional) Install ``gaf 1.9.1`` or the devlopment version from git. This is required
+        for ``gaf export``, which in turn is required to convert ``gschem`` files to pdf on
+        a headless server. Refer to your instance specific conventions and rules to determine
+        if using this version generally is safe.
+
+            .. code-block:: bash
+
+                wget http://ftp.geda-project.org/geda-gaf/unstable/v1.9/1.9.1/geda-gaf-1.9.1.tar.gz
+                tar xvzf geda-gaf-1.9.1.tar.gz
+                cd geda-gaf-1.9.1
+                ./configure --prefix=/opt/geda
+                make
+                make install
+
+            .. seealso::::
+
+                The following config options in your instance config may need to be tweaked to
+                use this version of gEDA/gaf :
+
+                  - GEDA_SCHEME_DIR = "/opt/geda/share/gEDA/scheme"
+                  - USE_SYSTEM_GAF_BIN = False
+                  - GAF_BIN_ROOT = "/opt/geda/bin"
+                  - GAF_ROOT = os.path.join(USER_HOME, 'gEDA2')
+                  - GEDA_SYMLIB_ROOT = os.path.join(GAF_ROOT, 'symbols')
+
+
  3. Install packages required specifically for your instance. Look up your instance-specific
     documentation and configurations to figure out what those are.
+
+ 4. Setup your repository tree. This tree need not be specially created for tendril. You can
+    point to a folder within which all your repositories exist. The following are the
+    constraints you should keep in mind :
+
+        - Any folder with a ``configs.yaml`` in the correct format is assumed to be a
+          gEDA project, and the correct folder structure around it is expected.
+
+        - Most workflows call for specific information stored in a specific location
+          in the repository tree, such as inventory information, for instance. These
+          resources should mirror their location (relative to the repository root) in
+          the canonical repository tree.
+
+    Beyond this, you can use whatever method or tool you desire to keep the repositories
+    up to date. I recommend `checkoutmanager <https://github.com/reinout/checkoutmanager>`_.
+
+    a. Install ``checkoutmanager``
+
+        .. code-block:: bash
+
+            pip install checkoutmanager
+
+    b. Setup your ``~/.checkoutmanager.cfg``. Your instance may have a sample in the
+       ``resources`` folder. If it does, you may be able to simply copy the configuration
+       and make whatever local changes you require.
+
+        .. code-block:: bash
+
+            cd ~/.tendril/resources
+            cp checkoutmanager.cfg ~/.checkoutmanager.cfg
+
+    c. Create the checkouts.
+
+        .. code-block:: bash
+
+            checkoutmanager co
+
+ 5. (WIP) Create links to your Organization's central Tendril instance's filesystems where
+    appropriate.
+
+ 6. (Optional) Create a 'full' local tendril installation, detaching your copy from requiring
+    the central tendril installation to be accessible on the network. Follow the instructions
+    in the Instance Deployment section to :
+
+        - Setup ``apache``.
+        - Setup the filesystems.
+        - Generate your copy of ``refdocs``.
+
+        .. warning:: Real synchronization is not implemented yet. While some parts of tendril
+                     are to safe to use in isolation, much of it is not. Use with extreme caution.
+                     The following is a non-exhaustive list of potential failures :
+
+                         - ``postgresql`` replication / synchronization is not set up. Anything
+                           that hits the database is likely to fail.
+
+                         - Filesystem synchronization is not setup. Anything that hits ``docstore``
+                           is likely to cause trouble. ``refdocs`` and ``wallet`` are relatively
+                           safe to have a local version of the filesystem of, though you should
+                           remember that these are copies of the respective filestsyem - which
+                           you will have to maintain yourself.
 
 
 Maintaining the Installation
@@ -236,12 +365,30 @@ Updating the Core
 Updating the Instance Folder
 ----------------------------
 
+To pull in changes to your organization's instance folder, follow this process in
+your tendril instance folder (``~/.tendril``)
+
+ 1. Fetch updates from upstream and merge into your remote tracking branch :
+
     .. code-block:: bash
 
-        cd ~/.tendril
-        git checkout master
+        git checkout upstream-master
         git pull
 
+ 2. Merge ``upstream-master`` into your ``master``. If you have customizations in place, you
+    may want to merge first into a temporary branch of your ``master`` and make sure nothing
+    breaks.
+
+    .. code-block:: bash
+
+        git checkout master
+        git merge upstream-master
+
+ 3. Push the updates to your private repository.
+
+    .. code-block:: bash
+
+        git push
 
 Contributing to the Instance
 ****************************

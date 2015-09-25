@@ -26,11 +26,29 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from tendril.utils.db import with_db
 
+from model import SerialNumberSeries
 from model import SerialNumber
 from model import SerialNumberAssociation
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
+
+
+@with_db
+def get_series_obj(series=None, session=None):
+    return session.query(SerialNumberSeries).filter_by(series=series).one()
+
+
+@with_db
+def create_series_obj(series=None, start_seed=None, session=None):
+    if not series or not isinstance(series, str):
+        raise ValueError('series should be a string, got : ' + repr(series))
+    if not start_seed or not isinstance(series, str):
+        raise ValueError('start_seed should be a string, got : ' + repr(start_seed))
+    sobj = SerialNumberSeries(series=series, last_seed=start_seed)
+    session.add(sobj)
+    session.flush()
+    return sobj
 
 
 @with_db

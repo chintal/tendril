@@ -44,10 +44,17 @@ CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 TENDRIL_ROOT = os.path.normpath(
     os.path.join(CONFIG_PATH, os.pardir, os.pardir)
 )
-INSTANCE_ROOT = os.path.join(os.path.expanduser('~chintal'), '.tendril')
+
+INSTANCE_ROOT = os.path.join(os.path.expanduser('~'), '.tendril')
+if os.path.exists(os.path.join(INSTANCE_ROOT, 'redirect')):
+    print "Found redirect"
+    with open(os.path.join(INSTANCE_ROOT, 'redirect'), 'r') as f:
+        INSTANCE_ROOT = f.read().strip()
+
 INSTANCE_CONFIG_FILE = os.path.join(INSTANCE_ROOT, 'instance_config.py')
 DOX_TEMPLATE_FOLDER = os.path.join(TENDRIL_ROOT, 'dox/templates')
 
+print "Trying to import instance configuration from " + INSTANCE_CONFIG_FILE
 INSTANCE_CONFIG = import_(INSTANCE_CONFIG_FILE)
 
 AUDIT_PATH = INSTANCE_CONFIG.AUDIT_PATH
@@ -68,8 +75,12 @@ PRINTER_NAME = INSTANCE_CONFIG.PRINTER_NAME
 
 # gEDA Configuration
 GEDA_SCHEME_DIR = INSTANCE_CONFIG.GEDA_SCHEME_DIR
+USE_SYSTEM_GAF_BIN = INSTANCE_CONFIG.USE_SYSTEM_GAF_BIN
+GAF_BIN_ROOT = INSTANCE_CONFIG.GAF_BIN_ROOT
+
 GAF_ROOT = INSTANCE_CONFIG.GAF_ROOT
 GEDA_SYMLIB_ROOT = INSTANCE_CONFIG.GEDA_SYMLIB_ROOT
+
 
 # Network Configuration
 NETWORK_PROXY_TYPE = INSTANCE_CONFIG.NETWORK_PROXY_TYPE
@@ -97,6 +108,9 @@ DB_URI = 'postgresql://' + \
          DATABASE_USER + ":" + DATABASE_PASS + "@" + \
          DATABASE_HOST + ':' + DATABASE_PORT + '/' + \
          DATABASE_DB
+
+# Frontend Configuration
+USE_X_SENDFILE = INSTANCE_CONFIG.USE_X_SENDFILE
 
 # Mail Configuration
 MAIL_USERNAME = INSTANCE_CONFIG.MAIL_USERNAME

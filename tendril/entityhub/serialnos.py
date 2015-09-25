@@ -21,7 +21,6 @@ See the COPYING, README, and INSTALL files for more information
 
 import idstring
 
-import tendril.utils.state
 from tendril.utils.db import with_db
 
 from db import controller
@@ -29,8 +28,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEBUG)
-
-nsno_table = tendril.utils.state.state_ds['nsno']
 
 
 def get_series(sno):
@@ -112,8 +109,9 @@ def delete_serialno(sno, recurse=False, session=None):
 def get_serialno(series=None, efield=None, register=True,
                  start_seed='100A', session=None):
     series = series.upper()
-    if series in [x['series'] for x in nsno_table]:
-        last_seed = nsno_table.find_one(series=series)['last_seed']
+    series_obj = controller.get_series_obj(series=series, session=session)
+    if series_obj is not None:
+        last_seed = series_obj.last_seed
         logger.debug("Found last seed for series " + str(series) +
                      " : " + str(last_seed))
         generator = idstring.IDstring(seed=last_seed)
@@ -121,9 +119,7 @@ def get_serialno(series=None, efield=None, register=True,
         if register is True:
             logger.info("Updating seed for series " + series +
                         " : " + str(new_sno.get_seed()))
-            nsno_table.update(
-                dict(series=series, last_seed=new_sno.get_seed()), ['series']
-            )
+            series_obj.last_seed = new_sno.get_seed()
             register_serialno(
                 sno=series + '-' + new_sno,
                 efield=efield, session=session
@@ -137,7 +133,9 @@ def get_serialno(series=None, efield=None, register=True,
         generator = idstring.IDstring(seed=start_seed)
         if register is True:
             logger.info("Creating series in db : " + series)
-            nsno_table.insert(dict(series=series, last_seed=start_seed))
+            controller.create_series_obj(
+                series=series, start_seed=start_seed, session=session
+            )
             register_serialno(
                 sno=series + '-' + generator,
                 efield=efield, session=session

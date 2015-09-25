@@ -18,12 +18,12 @@
 The Persistent State Utils Module (:mod:`tendril.utils.state`)
 ==============================================================
 
+.. warning:: This module is deprecated in favor of
+             :mod:`tendril.utils.db`, and it's dependencies have
+             been purged from the tendril requirements.
+
 This module uses :mod:`dataset` to provide a means to store persistent
-state information. Note that this means of storing persistent information
-is under review, since most of the present usages will benefit from full
-database integration. This will likely be replaced by integrating it into
-the application database using the interfaces in :mod:`tendril.utils.db`
-instead.
+state information.
 
 The primary storage is an sqlite3 database, located within the INSTANCE_ROOT.
 This storage is accessible by application code by importing this module's

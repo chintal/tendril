@@ -31,6 +31,11 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
+class SerialNumberSeries(BaseMixin, DeclBase):
+    series = Column(String, unique=True, nullable=False)
+    last_seed = Column(String, unique=False, nullable=False)
+
+
 class SerialNumber(TimestampMixin, BaseMixin, DeclBase):
     sno = Column(String, unique=True, nullable=False)
     efield = Column(String, unique=False, nullable=True)

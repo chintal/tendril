@@ -29,8 +29,7 @@ A gEDA Project
 **************
 
 A ``gEDA Project`` consists of exactly one PCB designed using ``gEDA`` tools. Note that this is different
-from a ``product``, which can contain one or more ``projects`` (of the gEDA variety or other). The folder
-structure listed here is for the standard ``Quazar`` SVN gEDA project.
+from a ``product``, which can contain one or more ``projects`` (of the gEDA variety or other).
 
 Nomenclature
 ~~~~~~~~~~~~
@@ -62,6 +61,7 @@ the basis used is reasonable. Some suggested guidelines are listed here for refe
 General Structure of Names::
 
     [PROJECT-NAME-WITH-EMBEDDED-VARIABLES]-[HARDWARE-REVISION]-[SPECIAL-CONFIGURATION-FLAGS]
+
 where:
 
         * ``PROJECT-NAME-WITH-EMBEDDED-VARIABLES``
@@ -75,6 +75,7 @@ where:
                 The ``PROJECT-NAME`` itself could generally be of the form::
 
                     [PRODUCT LINE]-[PRIMARY PCB FUNCTION]-[ADDITIONAL INFORMATION]
+
                 Examples:
                  - ``X-TCON-L1`` for Xplore, Temperature Controller, Linear Design 1
                  - ``QASC-iSTRAIN`` for QDA, Active Signal Conditioner, Interactive Strain
@@ -83,7 +84,10 @@ where:
         * ``HARDWARE-REVISION``
                 is a representation of the specific Hardware Revision of
                 the PCB, generally represented as ``Rn``, where ``n`` is a number. Further
-                information in the hardware revision is probably not a good idea.
+                information in the hardware revision is probably not a good idea. Hardware
+                revisions would probably be tracked as branches and not tags since they
+                are mutable, in the sense that configurations may be tweaked after
+                fabrication of the base PCB. This is upto the project maintainer as well.
 
         * ``SPECIAL-CONFIGURATION-FLAGS``
                 is a list of configuration flags to specify parameters
@@ -98,10 +102,10 @@ Project Folder Structure
     [projname]
     `-- hardware
         |-- branches
-        |-- tags
-        |   |-- hR1
-        |   |   `-- [full copy of trunk at a specific revision]
+        |-- hR1
+        |   |   `-- [full copy of trunk at a specific hardware revision]
         |   ..
+        |-- tags
         `-- trunk
             |-- ChangeLog
             |-- gerber                          (all-generated-tendril)
@@ -117,14 +121,26 @@ Project Folder Structure
             |   `-- sourcing.yaml               (generated-tendril-manual)
             |
             |-- schematic
-            |   |-- [schname-1].sch
-            |   ..
-            |   |-- [schname-n].sch
-            |   |-- attribs                     (project-template)
-            |   |-- [projname].proj             (project-template-manual)
-            |   |-- readme.txt                  (project-template-manual)
-            |   `-- configs.yaml                (project-template-manual)
-            |
+                |-- [schname-1].sch
+                ..
+                |-- [schname-n].sch
+                |-- attribs                     (project-template)
+                |-- [projname].proj             (project-template-manual)
+                |-- readme.txt                  (project-template-manual)
+                `-- configs.yaml                (project-template-manual)
+
+The corresponding folder structure that will be generated in the ``refdocs``
+filesystem is :
+::
+
+    [projname]
+    `-- hardware
+        |-- branches
+        |-- hR1
+        |   |   `-- [full copy of trunk at a specific hardware revision]
+        |   ..
+        |-- tags
+        `-- trunk
             `-- doc                             (all-generated-tendril)
                 |-- [projname]-masterdoc.pdf
                 |-- [projname]-configs.pdf
@@ -135,3 +151,4 @@ Project Folder Structure
                     ..
                     |-- [confname-m]-bom.pdf
                     `-- conf-boms.csv
+

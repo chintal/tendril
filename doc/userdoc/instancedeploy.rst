@@ -87,7 +87,7 @@ enough to be contained within the main repository.
 
     .. code-block:: bash
 
-        https://github.com/chintal/tendril.git
+        git remote add upstream https://github.com/chintal/tendril.git
         git fetch upstream
         git checkout -b upstream-master upstream/master
         git checkout master
@@ -115,12 +115,9 @@ enough to be contained within the main repository.
 
 
 The fork thus created is what you you would use as the tendril core within
-your organization. If you implement new functionality within tendril, you are
-welcome to keep it to yourself (subject to the terms of the licenses of the
-files involved in your change). You are, of course, encouraged to send
-the changes over for integration into public tendril core, either in the form
-of patches or as a pull request on github.
-
+your organization. You should then follow the instructions in the User
+Installation section to set up your central Tendril installation,
+configuring the instance folder while you do.
 
 Setting up the Instance Folder
 ------------------------------
@@ -137,6 +134,77 @@ instance's frontend will serve this documentation to your users.
 
         cd tendril/doc
         make dirhtml
+
+Setting up the 'Filesystems'
+----------------------------
+
+Create the local folders to store your ``docstore``, ``refdocs``, and ``wallet``.
+Each of these 'filesystems' is used by tendril via ``pyfilesystem`` (:mod:`fs`),
+and can in principle be remote filesystems. For your central instance, though, only
+using them as local folders is supported at present.
+
+    .. code-block:: bash
+
+        mkdir ~/fs
+        mkdir ~/fs/wallet
+        mkdir ~/fs/docstore
+        mkdir ~/fs/refdocs
+
+    .. seealso::
+
+        These folders can be wherever you want them to be. Just make sure to set
+        the following configuration options :
+
+            - DOCUMENT_WALLET_ROOT
+            - DOCSTORE_ROOT
+            - REFDOC_ROOT
+
+    .. hint::
+
+        Using a remote filesystem instead basically requires the serving of
+        files by your webserver (through :mod:`tendril.frontend.blueprints.expose`
+        via ``x-sendfile``) to be changed to allow this. You could, in
+        principle, mount the remote filesystems locally with :mod:`fs.mountfs`.
+        However, expect a considerable performance hit. The ideal route would
+        probably be to have :mod:`tendril.frontend.blueprints.expose` redirect
+        you to the correct URL of the remote resource instead.
+
+
+Setting up Apache
+-----------------
+
+You can use ``apache`` or the webserver of your choice to serve Tendril. The
+basic requirements for the webserver are :
+
+    - Support ``wsgi``
+    - (Recommended) Support ``x-sendfile``
+
+    .. hint::
+
+        ``x-sendfile`` is enabled by default. If you want to disable it,
+        set ``USE_X_SENDFILE`` to ``False`` in your ``instance_config.py``.
+
+You should edit the ``tendril.wsgi`` file in your instance root as well,
+and set the correct path to the ``virtualenv`` you have setup for ``tendril``.
+If the ``tendril.wsgi`` file is missing, you should either copy ``tendril.wsgi.sample``
+file, if there is one, or you can copy the example below.
+
+Example ``tendril.wsgi``:
+
+    .. literalinclude:: ../sample/tendril.wsgi.sample
+
+Your webserver should also be configured to serve files from within the
+exposed filesystems, and the wsgi script should be mounted.
+
+Example configuration for apache:
+
+    .. literalinclude:: ../sample/apache2.tendril.conf.sample
+
+
+Setting up Postgresql
+---------------------
+
+TODO
 
 
 Maintaining the Instance

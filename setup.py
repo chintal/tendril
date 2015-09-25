@@ -60,6 +60,7 @@ setup(
         'svn',
         'fs',
         'paramiko',
+        'pyyaml',
 
         # Flask Dependencies (to be pruned?)
         'jsmin',
@@ -72,7 +73,6 @@ setup(
 
         # Perhaps require reconsideration
         'matplotlib',  # Pulls in numpy!
-        'dataset',     # Replace with db instead?
         'splinter',    # Replace with direct selenium usage
 
         # Extracted Modules
