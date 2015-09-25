@@ -801,7 +801,7 @@ def get_docs_list(projfolder, cardname=None):
                                 refdoc_fs),
                 ExposedDocument('Project Master Doc',
                                 path.join(project_doc_folder,
-                                          cardname + '-masterdoc.pdf'),
+                                          namebase + '-masterdoc.pdf'),
                                 refdoc_fs),
                 ]
         return rval
