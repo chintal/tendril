@@ -90,7 +90,7 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
 
         .. code-block:: bash
 
-            pyenv install 2.7.6
+            CONFIGURE_OPTS=--enable-shared pyenv install 2.7.6
 
 
 
@@ -285,6 +285,24 @@ Installing the Dependencies
                   - GAF_ROOT = os.path.join(USER_HOME, 'gEDA2')
                   - GEDA_SYMLIB_ROOT = os.path.join(GAF_ROOT, 'symbols')
 
+     c. Install ``pdflatex``. The reference implementation assumes ``texlive-latex`` with
+        an as-yet unspecified set of addons. The following list of ubuntu packages is a
+        complete set which contains the used latex packages, though all of these are likely
+        not needed. ``texlive-latex-recommended`` is a good start.
+
+            - texlive-latex-base
+            - texlive-binaries
+            - texlive-latex-recommended
+            - texlive-fonts-recommended
+            - texlive-font-utils
+            - texlive-fonts-extra
+            - texlive-generic-recommended
+            - texlive-pictures
+            - texlive-science
+            - texlive-extra-utils
+            - texlive-pstricks
+
+     d. Install ``pstoedit``, used to generate DXFs from gerber files.
 
  3. Install packages required specifically for your instance. Look up your instance-specific
     documentation and configurations to figure out what those are.

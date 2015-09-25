@@ -200,6 +200,16 @@ Example configuration for apache:
 
     .. literalinclude:: ../sample/apache2.tendril.conf.sample
 
+Your webserver should also have the necessary permissions to read/write all
+required files (Draft) ::
+
+    (rw) ~/fs
+    (r ) ~/tendril
+    (r ) ~/.tendril
+    (rw) ~/.tendril/cache
+
+This is probably most easily achieved by letting ``wsgi`` run tendril as
+the tendril user.
 
 Setting up Postgresql
 ---------------------
