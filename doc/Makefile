@@ -185,7 +185,7 @@ pseudoxml:
 .PHONY: apidoc
 apidoc:
 	sphinx-apidoc -e -o apidoc/ ../tendril/
-	sphinx-apidoc -e -o devdoc/profiling/ ../profiling/
+	# sphinx-apidoc -e -o devdoc/profiling/ ../profiling/
 
 .PHONY: publish
 publish:
