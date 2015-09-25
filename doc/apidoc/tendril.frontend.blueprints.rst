@@ -10,6 +10,8 @@ Subpackages
     tendril.frontend.blueprints.entityhub
     tendril.frontend.blueprints.gsymlib
     tendril.frontend.blueprints.vendors
+    tendril.frontend.blueprints.customs
+    tendril.frontend.blueprints.testing
 
 Submodules
 ----------
@@ -17,6 +19,7 @@ Submodules
 .. toctree::
 
    tendril.frontend.blueprints.doc
+   tendril.frontend.blueprints.expose
 
 Module contents
 ---------------
