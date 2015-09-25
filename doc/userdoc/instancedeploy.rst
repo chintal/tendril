@@ -140,16 +140,15 @@ Setting up the 'Filesystems'
 
 Create the local folders to store your ``docstore``, ``refdocs``, and ``wallet``.
 Each of these 'filesystems' is used by tendril via ``pyfilesystem`` (:mod:`fs`),
-and can in principle be remote fileststems. for your central instance, though, only
+and can in principle be remote filesystems. For your central instance, though, only
 using them as local folders is supported at present.
 
     .. code-block:: bash
 
-        cd ~
-        mkdir fs
-        mkdir wallet
-        mkdir docstore
-        mkdir refdocs
+        mkdir ~/fs
+        mkdir ~/fs/wallet
+        mkdir ~/fs/docstore
+        mkdir ~/fs/refdocs
 
     .. seealso::
 
@@ -164,7 +163,7 @@ using them as local folders is supported at present.
 
         Using a remote filesystem instead basically requires the serving of
         files by your webserver (through :mod:`tendril.frontend.blueprints.expose`
-        via `x-sendfile``) to be changed to allow this. You could, in
+        via ``x-sendfile``) to be changed to allow this. You could, in
         principle, mount the remote filesystems locally with :mod:`fs.mountfs`.
         However, expect a considerable performance hit. The ideal route would
         probably be to have :mod:`tendril.frontend.blueprints.expose` redirect

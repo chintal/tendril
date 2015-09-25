@@ -22,7 +22,7 @@
                 Require all granted
         </Directory>
 
-        <Directory /path/to/core/tendril>
+        <Directory /path/to/core/tendril/tendril>
                 WSGIProcessGroup tendril
                 WSGIApplicationGroup %{GLOBAL}
                 WSGIScriptReloading On
@@ -31,16 +31,18 @@
                 Require all granted
         </Directory>
 
-        Alias /static   /path/to/core/tendril/frontend/static
-        <Directory /path/to/core/tendril/frontend/static>
+        Alias /static   /path/to/core/tendril/tendril/frontend/static
+        <Directory /path/to/core/tendril/tendril/frontend/static>
                 Order allow,deny
                 Allow from all
+                Require all granted
         </Directory>
 
         Alias /doc      /path/to/core/tendril/doc/_build/dirhtml
         <Directory /path/to/core/tendril/doc/_build/dirhtml>
                 Order allow,deny
                 Allow from all
+                Require all granted
         </Directory>
 
         XSendFile On
@@ -49,7 +51,8 @@
         XSendFilePath   /path/to/refdocs
         XSendFilePath   /path/to/tendril/instance/folder/cache/gsymlib
         XSendFilePath   /path/to/tendril/instance/folder/_static
-        XSendFilePath   /path/to/core/tendril/frontend/static
+        XSendFilePath   /path/to/core/tendril/tendril/frontend/static
+        XSendFilePath   /path/to/core/tendril/doc/_build/dirhtml
 
         # Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
         # error, crit, alert, emerg.

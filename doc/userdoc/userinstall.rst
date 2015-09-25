@@ -324,7 +324,10 @@ Installing the Dependencies
 
             checkoutmanager co
 
- 5. (Optional) Create a 'full' local tendril installation, detaching your copy from requiring
+ 5. (WIP) Create links to your Organization's central Tendril instance's filesystems where
+    appropriate.
+
+ 6. (Optional) Create a 'full' local tendril installation, detaching your copy from requiring
     the central tendril installation to be accessible on the network.
 
         .. warning:: Real synchronization is not implemented yet. While some parts of tendril

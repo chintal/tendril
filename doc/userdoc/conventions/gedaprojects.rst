@@ -62,6 +62,7 @@ the basis used is reasonable. Some suggested guidelines are listed here for refe
 General Structure of Names::
 
     [PROJECT-NAME-WITH-EMBEDDED-VARIABLES]-[HARDWARE-REVISION]-[SPECIAL-CONFIGURATION-FLAGS]
+
 where:
 
         * ``PROJECT-NAME-WITH-EMBEDDED-VARIABLES``
@@ -75,6 +76,7 @@ where:
                 The ``PROJECT-NAME`` itself could generally be of the form::
 
                     [PRODUCT LINE]-[PRIMARY PCB FUNCTION]-[ADDITIONAL INFORMATION]
+
                 Examples:
                  - ``X-TCON-L1`` for Xplore, Temperature Controller, Linear Design 1
                  - ``QASC-iSTRAIN`` for QDA, Active Signal Conditioner, Interactive Strain
@@ -150,3 +152,4 @@ filesystem is :
                     ..
                     |-- [confname-m]-bom.pdf
                     `-- conf-boms.csv
+
