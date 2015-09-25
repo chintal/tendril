@@ -44,7 +44,12 @@ CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 TENDRIL_ROOT = os.path.normpath(
     os.path.join(CONFIG_PATH, os.pardir, os.pardir)
 )
-INSTANCE_ROOT = os.path.join(os.path.expanduser('~chintal'), '.tendril')
+
+INSTANCE_ROOT = os.path.join(os.path.expanduser('~'), '.tendril')
+if os.path.exists(os.path.join(INSTANCE_ROOT, 'redirect')):
+    with open(os.path.join(INSTANCE_ROOT, 'redirect'), 'r') as f:
+        INSTANCE_ROOT = f.read().strip()
+
 INSTANCE_CONFIG_FILE = os.path.join(INSTANCE_ROOT, 'instance_config.py')
 DOX_TEMPLATE_FOLDER = os.path.join(TENDRIL_ROOT, 'dox/templates')
 

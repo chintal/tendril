@@ -114,7 +114,7 @@ details can be worked out, use the following checkouts:
     into ``~/.ssh/config``, create the file if necessary. Your proxy credentials go into
     ``~/.ssh/proxyauth`` in the format ``user:pass``.
 
-        .. code-block::
+        .. code-block:: bash
 
             Host gitlab.com
                 Hostname gitlab.com
