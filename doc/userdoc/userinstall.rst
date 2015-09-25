@@ -41,7 +41,7 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
 
         ``sudo apt-get install git-core curl``
 
- 3. Setup proxy, if any:
+ 2. Setup proxy, if any:
 
         .. code-block:: bash
 
@@ -49,11 +49,11 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
             export https_proxy=http://user:pass@192.168.1.254:3128
             export ftp_proxy=http://user:pass@192.168.1.254:3128
 
- 4. (Proxy) Setup corkscrew to use git through a http proxy, if necessary:
+ 3. (Proxy) Setup corkscrew to use git through a http proxy, if necessary:
 
         TODO
 
- 5. Run the installer:
+ 4. Run the installer:
 
         .. code-block:: bash
 
@@ -61,7 +61,7 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
             https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer \
             | bash
 
- 6. Insert the following at the end of ``~/.bashrc``:
+ 5. Insert the following at the end of ``~/.bashrc``:
 
         .. code-block:: bash
 
@@ -71,7 +71,7 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
                 eval "$(pyenv init -)"
             fi
 
- 7. Install Build Dependencies for Python 2.7:
+ 6. Install Build Dependencies for Python 2.7:
 
         .. code-block:: bash
 
@@ -80,7 +80,7 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
                 libreadline-dev libncurses5-dev libssl1.0.0 tk8.5-dev \
                 zlib1g-dev liblzma-dev
 
- 8. Install Python 2.7.6:
+ 7. Install Python 2.7.6:
 
         Python 2.7.x, where x>=6, should be fine. x<6 is untested. New features were intruduced in 2.7.5, 2.7.6
         that may be necessary for the scripts to run. If system python is 2.7.6 or better, ``pyenv`` isn't
@@ -99,8 +99,7 @@ Getting the Code
 
 The code can be obtained from the version control system. For users, the specific instance of ``tendril``
 applicable to the organization should be checked out from the locally controlled repository. This repository
-should be essentially ``read-only`` with a specific set of people administering the installation. Until the
-details can be worked out, use the following checkouts:
+should be essentially ``read-only`` with a specific set of people administering the installation.
 
     1. Create an ssh key for yourself, if you don't already have one.
 
@@ -109,10 +108,9 @@ details can be worked out, use the following checkouts:
             ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
 
     2. Register the key (``~/.ssh/id_rsa.pub``) on gitlab.
-
     3. (Proxy) Setup ssh to use corkscrew for the git host, if necessary. Put the following
-    into ``~/.ssh/config``, create the file if necessary. Your proxy credentials go into
-    ``~/.ssh/proxyauth`` in the format ``user:pass``.
+       into ``~/.ssh/config``, create the file if necessary. Your proxy credentials go into
+       ``~/.ssh/proxyauth`` in the format ``user:pass``.
 
         .. code-block:: bash
 
@@ -122,21 +120,24 @@ details can be worked out, use the following checkouts:
                 IdentityFile ~/.ssh/id_rsa
                 ProxyCommand corkscrew proxy.host port %h %p ~/.ssh/proxyauth
 
-    1. Get the Organization's fork of tendril core.
+    4. Get the Organization's fork of tendril core.
 
         .. code-block:: bash
 
             git clone git@gitlab.com:<org>/tendril.git
 
-    2. Create a fork of the Organization's instance configuration. For example, clone
+    5. Create a fork of the Organization's instance configuration. For example, clone
        ``gitlab.com/<org>/tendril-instance-<org>.git`` into ``gitlab.com/<username>/tendril-instance-<org>.git``
-
-    2. Get a clone of your fork of the Organization's instance configuration.
+    6. Get a clone of your fork of the Organization's instance configuration.
 
         .. code-block:: bash
 
             git clone git@gitlab.com:<username>/tendril-instance-<org>.git ~/.tendril
-
+            cd ~/.tendril
+            git remote add upstream git@gitlab.com:<org>/tendril-instance-<org>.git
+            git fetch upstream
+            git checkout -b upstream-master upstream/master
+            git checkout master
 
 Setting up virtualenv
 ---------------------
@@ -301,7 +302,7 @@ Installing the Dependencies
           the canonical repository tree.
 
     Beyond this, you can use whatever method or tool you desire to keep the repositories
-    up to date. I recommend `checkoutmanager <https://github.com/reinout/checkoutmanager>`.
+    up to date. I recommend `checkoutmanager <https://github.com/reinout/checkoutmanager>`_.
 
     a. Install ``checkoutmanager``
 
@@ -328,7 +329,12 @@ Installing the Dependencies
     appropriate.
 
  6. (Optional) Create a 'full' local tendril installation, detaching your copy from requiring
-    the central tendril installation to be accessible on the network.
+    the central tendril installation to be accessible on the network. Follow the instructions
+    in the Instance Deployment section to :
+
+        - Setup ``apache``.
+        - Setup the filesystems.
+        - Generate your copy of ``refdocs``.
 
         .. warning:: Real synchronization is not implemented yet. While some parts of tendril
                      are to safe to use in isolation, much of it is not. Use with extreme caution.
@@ -342,12 +348,6 @@ Installing the Dependencies
                            safe to have a local version of the filesystem of, though you should
                            remember that these are copies of the respective filestsyem - which
                            you will have to maintain yourself.
-
-    Follow the instructions in the Instance Deployment section to :
-
-        - Setup ``apache``.
-        - Setup the filesystems.
-        - Generate your copy of ``refdocs``.
 
 
 Maintaining the Installation
@@ -365,12 +365,30 @@ Updating the Core
 Updating the Instance Folder
 ----------------------------
 
+To pull in changes to your organization's instance folder, follow this process in
+your tendril instance folder (``~/.tendril``)
+
+ 1. Fetch updates from upstream and merge into your remote tracking branch :
+
     .. code-block:: bash
 
-        cd ~/.tendril
-        git checkout master
+        git checkout upstream-master
         git pull
 
+ 2. Merge ``upstream-master`` into your ``master``. If you have customizations in place, you
+    may want to merge first into a temporary branch of your ``master`` and make sure nothing
+    breaks.
+
+    .. code-block:: bash
+
+        git checkout master
+        git merge upstream-master
+
+ 3. Push the updates to your private repository.
+
+    .. code-block:: bash
+
+        git push
 
 Contributing to the Instance
 ****************************

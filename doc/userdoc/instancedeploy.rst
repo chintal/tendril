@@ -87,7 +87,7 @@ enough to be contained within the main repository.
 
     .. code-block:: bash
 
-        https://github.com/chintal/tendril.git
+        git remote add upstream https://github.com/chintal/tendril.git
         git fetch upstream
         git checkout -b upstream-master upstream/master
         git checkout master
@@ -187,7 +187,7 @@ basic requirements for the webserver are :
 You should edit the ``tendril.wsgi`` file in your instance root as well,
 and set the correct path to the ``virtualenv`` you have setup for ``tendril``.
 If the ``tendril.wsgi`` file is missing, you should either copy ``tendril.wsgi.sample``
-file, if there is one, you can copy the example below.
+file, if there is one, or you can copy the example below.
 
 Example ``tendril.wsgi``:
 

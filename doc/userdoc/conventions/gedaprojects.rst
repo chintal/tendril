@@ -29,8 +29,7 @@ A gEDA Project
 **************
 
 A ``gEDA Project`` consists of exactly one PCB designed using ``gEDA`` tools. Note that this is different
-from a ``product``, which can contain one or more ``projects`` (of the gEDA variety or other). The folder
-structure listed here is for the standard ``Quazar`` SVN gEDA project.
+from a ``product``, which can contain one or more ``projects`` (of the gEDA variety or other).
 
 Nomenclature
 ~~~~~~~~~~~~

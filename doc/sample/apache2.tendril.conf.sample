@@ -11,9 +11,9 @@
         ServerAdmin webmaster@localhost
 
         WSGIDaemonProcess tendril threads=5
-        WSGIScriptAlias / /path/to/tendril/instance/folder/tendril.wsgi
+        WSGIScriptAlias / /home/tendril/.tendril/tendril.wsgi
 
-        <Directory /path/to/tendril/instance/folder>
+        <Directory /home/tendril/.tendril>
                 WSGIProcessGroup tendril
                 WSGIApplicationGroup %{GLOBAL}
                 WSGIScriptReloading On
@@ -22,7 +22,7 @@
                 Require all granted
         </Directory>
 
-        <Directory /path/to/core/tendril/tendril>
+        <Directory /home/tendril/tendril/tendril>
                 WSGIProcessGroup tendril
                 WSGIApplicationGroup %{GLOBAL}
                 WSGIScriptReloading On
@@ -31,28 +31,28 @@
                 Require all granted
         </Directory>
 
-        Alias /static   /path/to/core/tendril/tendril/frontend/static
-        <Directory /path/to/core/tendril/tendril/frontend/static>
+        Alias /static   /home/tendril/tendril/tendril/frontend/static
+        <Directory /home/tendril/tendril/tendril/frontend/static>
                 Order allow,deny
                 Allow from all
                 Require all granted
         </Directory>
 
-        Alias /doc      /path/to/core/tendril/doc/_build/dirhtml
-        <Directory /path/to/core/tendril/doc/_build/dirhtml>
+        Alias /doc      /home/tendril/tendril/doc/_build/dirhtml
+        <Directory /home/tendril/tendril/doc/_build/dirhtml>
                 Order allow,deny
                 Allow from all
                 Require all granted
         </Directory>
 
         XSendFile On
-        XSendFilePath   /path/to/docstore
-        XSendFilePath   /path/to/wallet
-        XSendFilePath   /path/to/refdocs
-        XSendFilePath   /path/to/tendril/instance/folder/cache/gsymlib
-        XSendFilePath   /path/to/tendril/instance/folder/_static
-        XSendFilePath   /path/to/core/tendril/tendril/frontend/static
-        XSendFilePath   /path/to/core/tendril/doc/_build/dirhtml
+        XSendFilePath   /home/tendril/fs/docstore
+        XSendFilePath   /home/tendril/fs/wallet
+        XSendFilePath   /home/tendril/fs/refdocs
+        XSendFilePath   /home/tendril/fs/instance/folder/cache/gsymlib
+        XSendFilePath   /home/tendril/fs/instance/folder/_static
+        XSendFilePath   /home/tendril/tendril/tendril/frontend/static
+        XSendFilePath   /home/tendril/tendril/doc/_build/dirhtml
 
         # Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
         # error, crit, alert, emerg.
