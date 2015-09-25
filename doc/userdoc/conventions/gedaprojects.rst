@@ -83,7 +83,10 @@ where:
         * ``HARDWARE-REVISION``
                 is a representation of the specific Hardware Revision of
                 the PCB, generally represented as ``Rn``, where ``n`` is a number. Further
-                information in the hardware revision is probably not a good idea.
+                information in the hardware revision is probably not a good idea. Hardware
+                revisions would probably be tracked as branches and not tags since they
+                are mutable, in the sense that configurations may be tweaked after
+                fabrication of the base PCB. This is upto the project maintainer as well.
 
         * ``SPECIAL-CONFIGURATION-FLAGS``
                 is a list of configuration flags to specify parameters
@@ -98,10 +101,10 @@ Project Folder Structure
     [projname]
     `-- hardware
         |-- branches
-        |-- tags
-        |   |-- hR1
-        |   |   `-- [full copy of trunk at a specific revision]
+        |-- hR1
+        |   |   `-- [full copy of trunk at a specific hardware revision]
         |   ..
+        |-- tags
         `-- trunk
             |-- ChangeLog
             |-- gerber                          (all-generated-tendril)
@@ -117,14 +120,26 @@ Project Folder Structure
             |   `-- sourcing.yaml               (generated-tendril-manual)
             |
             |-- schematic
-            |   |-- [schname-1].sch
-            |   ..
-            |   |-- [schname-n].sch
-            |   |-- attribs                     (project-template)
-            |   |-- [projname].proj             (project-template-manual)
-            |   |-- readme.txt                  (project-template-manual)
-            |   `-- configs.yaml                (project-template-manual)
-            |
+                |-- [schname-1].sch
+                ..
+                |-- [schname-n].sch
+                |-- attribs                     (project-template)
+                |-- [projname].proj             (project-template-manual)
+                |-- readme.txt                  (project-template-manual)
+                `-- configs.yaml                (project-template-manual)
+
+The corresponding folder structure that will be generated in the ``refdocs``
+filesystem is :
+::
+
+    [projname]
+    `-- hardware
+        |-- branches
+        |-- hR1
+        |   |   `-- [full copy of trunk at a specific hardware revision]
+        |   ..
+        |-- tags
+        `-- trunk
             `-- doc                             (all-generated-tendril)
                 |-- [projname]-masterdoc.pdf
                 |-- [projname]-configs.pdf
