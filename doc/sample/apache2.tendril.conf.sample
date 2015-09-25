@@ -49,6 +49,7 @@
         XSendFilePath   /path/to/refdocs
         XSendFilePath   /path/to/tendril/instance/folder/cache/gsymlib
         XSendFilePath   /path/to/tendril/instance/folder/_static
+        XSendFilePath   /path/to/core/tendril/frontend/static
 
         # Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
         # error, crit, alert, emerg.

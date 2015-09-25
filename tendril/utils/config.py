@@ -47,12 +47,14 @@ TENDRIL_ROOT = os.path.normpath(
 
 INSTANCE_ROOT = os.path.join(os.path.expanduser('~'), '.tendril')
 if os.path.exists(os.path.join(INSTANCE_ROOT, 'redirect')):
+    print "Found redirect"
     with open(os.path.join(INSTANCE_ROOT, 'redirect'), 'r') as f:
         INSTANCE_ROOT = f.read().strip()
 
 INSTANCE_CONFIG_FILE = os.path.join(INSTANCE_ROOT, 'instance_config.py')
 DOX_TEMPLATE_FOLDER = os.path.join(TENDRIL_ROOT, 'dox/templates')
 
+print "Trying to import instance configuration from " + INSTANCE_CONFIG_FILE
 INSTANCE_CONFIG = import_(INSTANCE_CONFIG_FILE)
 
 AUDIT_PATH = INSTANCE_CONFIG.AUDIT_PATH

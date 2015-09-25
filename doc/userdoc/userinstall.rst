@@ -236,13 +236,16 @@ Installing the Dependencies
 
      a. Install ``sofficehelpers``:
 
-            ``sofficehelpers`` is a collection of scripts to deal with ``libreoffice`` documents.
-            The libreoffice python interface (``uno``) requires the use of the python bundled into libreoffice,
-            and therefore is kept separate from the rest of tendril. There are plenty of other (and simpler) ways
-            to achieve the same effect, inculding a number of uno-based scripts to do this. The custom script is
-            retained for the moment to maintain a functional base upon which additional functionality can be added
-            on as needed. If another solution is to be used instead, appropriate changes should be made
-            to :func:`utils.libreoffice.XLFile._make_csv_files` and :func:`utils.libreoffice.XLFile._parse_sscout`.
+            ``sofficehelpers`` is a collection of scripts to deal with ``libreoffice``
+            documents. The libreoffice python interface (``uno``) requires use of the
+            python bundled into libreoffice, and therefore is kept separate from the
+            rest of tendril. There are plenty of other (and simpler) ways to achieve
+            the same effect, inculding a number of uno-based scripts to do this. The
+            custom script is retained for the moment to maintain a functional base upon
+            which additional functionality can be added on as needed. If another solution
+            is to be used instead, appropriate changes should be made
+            to :func:`utils.libreoffice.XLFile._make_csv_files` and
+            :func:`utils.libreoffice.XLFile._parse_sscout`.
 
             1. Install dependencies:
 
@@ -284,6 +287,64 @@ Installing the Dependencies
 
  3. Install packages required specifically for your instance. Look up your instance-specific
     documentation and configurations to figure out what those are.
+
+ 4. Setup your repository tree. This tree need not be specially created for tendril. You can
+    point to a folder within which all your repositories exist. The following are the
+    constraints you should keep in mind :
+
+        - Any folder with a ``configs.yaml`` in the correct format is assumed to be a
+          gEDA project, and the correct folder structure around it is expected.
+
+        - Most workflows call for specific information stored in a specific location
+          in the repository tree, such as inventory information, for instance. These
+          resources should mirror their location (relative to the repository root) in
+          the canonical repository tree.
+
+    Beyond this, you can use whatever method or tool you desire to keep the repositories
+    up to date. I recommend `checkoutmanager <https://github.com/reinout/checkoutmanager>`.
+
+    a. Install ``checkoutmanager``
+
+        .. code-block:: bash
+
+            pip install checkoutmanager
+
+    b. Setup your ``~/.checkoutmanager.cfg``. Your instance may have a sample in the
+       ``resources`` folder. If it does, you may be able to simply copy the configuration
+       and make whatever local changes you require.
+
+        .. code-block:: bash
+
+            cd ~/.tendril/resources
+            cp checkoutmanager.cfg ~/.checkoutmanager.cfg
+
+    c. Create the checkouts.
+
+        .. code-block:: bash
+
+            checkoutmanager co
+
+ 5. (Optional) Create a 'full' local tendril installation, detaching your copy from requiring
+    the central tendril installation to be accessible on the network.
+
+        .. warning:: Real synchronization is not implemented yet. While some parts of tendril
+                     are to safe to use in isolation, much of it is not. Use with extreme caution.
+                     The following is a non-exhaustive list of potential failures :
+
+                         - ``postgresql`` replication / synchronization is not set up. Anything
+                           that hits the database is likely to fail.
+
+                         - Filesystem synchronization is not setup. Anything that hits ``docstore``
+                           is likely to cause trouble. ``refdocs`` and ``wallet`` are relatively
+                           safe to have a local version of the filesystem of, though you should
+                           remember that these are copies of the respective filestsyem - which
+                           you will have to maintain yourself.
+
+    Follow the instructions in the Instance Deployment section to :
+
+        - Setup ``apache``.
+        - Setup the filesystems.
+        - Generate your copy of ``refdocs``.
 
 
 Maintaining the Installation
