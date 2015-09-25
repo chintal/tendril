@@ -49,9 +49,9 @@ necessary to run Tendril, this is a very strongly recommended step. It allows th
             export https_proxy=http://user:pass@192.168.1.254:3128
             export ftp_proxy=http://user:pass@192.168.1.254:3128
 
- 4. Tell ``git`` to use ``https://`` instead of ``git://`` to get around proxy issues:
+ 4. (Proxy) Setup corkscrew to use git through a http proxy, if necessary:
 
-        ``git config --global url."https://".insteadOf git://``
+        TODO
 
  5. Run the installer:
 
@@ -101,6 +101,26 @@ The code can be obtained from the version control system. For users, the specifi
 applicable to the organization should be checked out from the locally controlled repository. This repository
 should be essentially ``read-only`` with a specific set of people administering the installation. Until the
 details can be worked out, use the following checkouts:
+
+    1. Create an ssh key for yourself, if you don't already have one.
+
+        .. code-block:: bash
+
+            ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+
+    2. Register the key (``~/.ssh/id_rsa.pub``) on gitlab.
+
+    3. (Proxy) Setup ssh to use corkscrew for the git host, if necessary. Put the following
+    into ``~/.ssh/config``, create the file if necessary. Your proxy credentials go into
+    ``~/.ssh/proxyauth`` in the format ``user:pass``.
+
+        .. code-block::
+
+            Host gitlab.com
+                Hostname gitlab.com
+                User git
+                IdentityFile ~/.ssh/id_rsa
+                ProxyCommand corkscrew proxy.host port %h %p ~/.ssh/proxyauth
 
     1. Get the Organization's fork of tendril core.
 
@@ -170,6 +190,14 @@ See `<http://www.simononsoftware.com/virtualenv-tutorial-part-2/>`_ for a more d
 
             workon tendril
 
+ 6. If you've installed ``pyenv``, you can use the following commands instead to setup and
+    use your virtualenv:
+
+        .. code-block:: bash
+
+            pyenv virtualenv 2.7.6 tendril
+            pyenv activate tendril
+            pyenv deactivate
 
 Installing the Dependencies
 ---------------------------
@@ -178,20 +206,31 @@ Installing the Dependencies
 
         .. code-block:: bash
 
-            cd /path/to/tendril/checkout/trunk/
-            pip install -r requirements.txt
+            cd /path/to/tendril/clone
+            pip install -e .
 
-        .. note::
+        .. hint::
 
-            At present, ``requirements.txt`` contains all the dependencies of ``tendril``,
-            including those not actually necessary to run the code. As such, the virtualenv
-            that results is likely to be reasonably heavy (~361M).
+            You can install the package into the virtualenv or even into your
+            system if you really want to. However, due to the present volatile
+            state of the code, you should expect a fairly continuous stream of
+            small changes, most of which aren't going to come with a bump in the
+            version number. This may make upgrading the package a more involved
+            process. This command installs all the dependencies normally, but the
+            tendril package itself redirects to the clone, where you can make
+            changes which instantly propagate to the version you get when you
+            ``import tendril``.
 
-            If a leaner installation is required, the dependencies should be pruned to remove
-            the packages included for :
+        .. hint::
 
-                - Generating documentation
-                - Testing, Profiling
+            The dependencies may require additional libraries (and their
+            development headers) to be installed on your system. A non-exhaustive
+            list of the libraries you should have available is :
+
+              - freetype
+              - libpng
+              - libffi
+              - libpqxx (postgresql)
 
  2. Install dependencies not covered by ``requirements.txt``
 
@@ -216,6 +255,32 @@ Installing the Dependencies
                 .. code-block:: bash
 
                     pip3 install sofficehelpers
+
+     b. (Optional) Install ``gaf 1.9.1`` or the devlopment version from git. This is required
+        for ``gaf export``, which in turn is required to convert ``gschem`` files to pdf on
+        a headless server. Refer to your instance specific conventions and rules to determine
+        if using this version generally is safe.
+
+            .. code-block:: bash
+
+                wget http://ftp.geda-project.org/geda-gaf/unstable/v1.9/1.9.1/geda-gaf-1.9.1.tar.gz
+                tar xvzf geda-gaf-1.9.1.tar.gz
+                cd geda-gaf-1.9.1
+                ./configure --prefix=/opt/geda
+                make
+                make install
+
+            .. seealso::::
+
+                The following config options in your instance config may need to be tweaked to
+                use this version of gEDA/gaf :
+
+                  - GEDA_SCHEME_DIR = "/opt/geda/share/gEDA/scheme"
+                  - USE_SYSTEM_GAF_BIN = False
+                  - GAF_BIN_ROOT = "/opt/geda/bin"
+                  - GAF_ROOT = os.path.join(USER_HOME, 'gEDA2')
+                  - GEDA_SYMLIB_ROOT = os.path.join(GAF_ROOT, 'symbols')
+
 
  3. Install packages required specifically for your instance. Look up your instance-specific
     documentation and configurations to figure out what those are.

@@ -60,6 +60,7 @@ setup(
         'svn',
         'fs',
         'paramiko',
+        'pyyaml',
 
         # Flask Dependencies (to be pruned?)
         'jsmin',

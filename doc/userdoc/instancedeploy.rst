@@ -115,12 +115,9 @@ enough to be contained within the main repository.
 
 
 The fork thus created is what you you would use as the tendril core within
-your organization. If you implement new functionality within tendril, you are
-welcome to keep it to yourself (subject to the terms of the licenses of the
-files involved in your change). You are, of course, encouraged to send
-the changes over for integration into public tendril core, either in the form
-of patches or as a pull request on github.
-
+your organization. You should then follow the instructions in the User
+Installation section to set up your central Tendril installation,
+configuring the instance folder while you do.
 
 Setting up the Instance Folder
 ------------------------------

@@ -105,6 +105,8 @@ from tendril.utils.types.cartesian import CartesianPoint
 from tendril.utils.types.cartesian import CartesianLineSegment
 
 from tendril.utils.config import GEDA_SCHEME_DIR
+from tendril.utils.config import USE_SYSTEM_GAF_BIN
+from tendril.utils.config import GAF_BIN_ROOT
 from tendril.utils.config import TENDRIL_ROOT
 
 
@@ -325,11 +327,18 @@ def conv_gsch2pdf(schpath, docfolder):
     schfname = os.path.splitext(os.path.split(schpath)[1])[0]
     pspath = os.path.join(docfolder, schfname + '.ps')
     pdfpath = os.path.join(docfolder, schfname + '.pdf')
-    gschem_pscmd = "gschem -o" + pspath + \
-                   " -s" + GEDA_SCHEME_DIR + '/print.scm ' + schpath
-    subprocess.call(gschem_pscmd.split(' '))
-    tendril.utils.pdf.conv_ps2pdf(pspath, pdfpath)
-    os.remove(pspath)
+    # TODO fix this
+    if USE_SYSTEM_GAF_BIN:
+        gschem_pscmd = "gschem -o" + pspath + \
+                       " -s" + GEDA_SCHEME_DIR + '/print.scm ' + schpath
+        subprocess.call(gschem_pscmd.split(' '))
+        tendril.utils.pdf.conv_ps2pdf(pspath, pdfpath)
+        os.remove(pspath)
+    else:
+        gaf_pdfcmd = [os.path.join(GAF_BIN_ROOT, 'gaf'),
+                      'export', '-o', pdfpath,
+                      schpath]
+        subprocess.call(gaf_pdfcmd)
     return pdfpath
 
 

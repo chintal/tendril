@@ -2,6 +2,7 @@
 /tests/coverage
 /.cache
 /.tox
+.coverage
 /profiling/*/*/*.profile*
 /*.egg-info
 /dist
