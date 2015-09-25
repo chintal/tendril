@@ -8,7 +8,6 @@ wsgiref==0.1.2
 matplotlib==1.4.3
 jsmin==2.1.2
 psycopg2==2.6.1
-dataset==0.6.0
 pycallgraph==1.0.1
 arrow==0.6.0
 qrcode==5.1
