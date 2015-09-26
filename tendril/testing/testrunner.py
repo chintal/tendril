@@ -322,7 +322,7 @@ def publish_and_print(serialno, devicetype, print_to_paper=False):
     register_document(serialno=serialno, docpath=pdfpath,
                       doctype='TEST-RESULT', efield=devicetype,
                       series='TEST/' + serialnos.get_series(sno=serialno))
-    if print_to_paper:
+    if PRINTER_NAME and print_to_paper:
         os.system('lp -d {1} -o media=a4 {0}'.format(pdfpath, PRINTER_NAME))
 
 
