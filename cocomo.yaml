@@ -15,3 +15,22 @@ LEXP: Nominal
 MODP: Nominal
 TOOL: Low
 SCED: Low
+
+folders:
+  - tendril/boms
+  - tendril/conventions
+  - tendril/dox
+  - tendril/entityhub
+  - tendril/frontend
+  - tendril/gedaif
+  - tendril/inventory
+  - tendril/scripts
+  - tendril/sourcing
+  - tendril/testing
+  - tendril/utils
+  - tests
+  - profiling
+  - alembic
+  - doc/devdoc
+  - doc/userdoc
+  - doc/sample

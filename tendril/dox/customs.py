@@ -845,7 +845,8 @@ def generate_docs(invoice, target_folder=None,
             with open(os.path.join(invoice.source_folder, 'wsno'), 'r') as f:
                 serialno = f.readline()
         else:
-            serialno = serialnos.get_serialno('PINV', efield,
+            serialno = serialnos.get_serialno(series='PINV',
+                                              efield=efield,
                                               register=register)
     if target_folder is None:
         target_folder = invoice.source_folder
@@ -858,7 +859,7 @@ def generate_docs(invoice, target_folder=None,
     )
     if register is True:
         for document in files:
-            docstore.register_document(serialno, docpath=document[0],
+            docstore.register_document(serialno=serialno, docpath=document[0],
                                        doctype=document[1],
                                        efield=efield, series='PINV')
     return serialno

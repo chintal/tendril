@@ -213,7 +213,7 @@ def export_vendor_map_audit(vendor_obj):
         vendor_obj = vendor_list[vendor_obj]
     mapobj = vendor_obj.map
     assert isinstance(mapobj, tendril.entityhub.maps.MapFile)
-    outp = os.path.join(config.vendor_map_audit_folder,
+    outp = os.path.join(config.VENDOR_MAP_AUDIT_FOLDER,
                         vendor_obj.name + '-electronics-audit.csv')
     outf = fsutils.VersionedOutputFile(outp)
     outw = csv.writer(outf)
