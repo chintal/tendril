@@ -28,6 +28,25 @@ function and the :mod:`imp` module, following which all the recognized
 configuration options are imported from the instance configuration
 module into this namespace.
 
+Configuration Options
+---------------------
+
+.. documentedlist::
+    :listobject: tendril.utils.config.all_config_option_groups
+    :header: Option Default Description
+    :spantolast:
+    :descend:
+
+
+Configuration Constants
+-----------------------
+
+.. documentedlist::
+    :listobject: tendril.utils.config.all_config_constant_groups
+    :header: Option Default Description
+    :spantolast:
+    :descend:
+
 """
 
 import os
@@ -599,5 +618,47 @@ config_options_vendors = [
 load_config(config_options_vendors)
 
 
-for k, v in config_module.__dict__.items():
-    print k, v
+def doc_render(group):
+    return [[x.name, x.default, x.doc] for x in group]
+
+
+all_config_option_groups = [
+    [doc_render(config_options_paths),
+     "Options to configure paths for various local resources"],
+    [doc_render(config_options_fs),
+     "Options to configure the 'filesystems' containing instance resources"],
+    [doc_render(config_options_resources),
+     "Options to configure details of various instance resources"],
+    [doc_render(config_options_geda),
+     "Options to configure the gEDA installation and related resources"],
+    [doc_render(config_options_network_caching),
+     "Options to configure network caching behavior"],
+    [doc_render(config_options_proxy),
+     "Options to configure a network proxy"],
+    [doc_render(config_options_repl_proxy),
+     "Options to configure a replicator proxy"],
+    [doc_render(config_options_db),
+     "Options to configure the instance database"],
+    [doc_render(config_options_frontend),
+     "Options to configure the frontend"],
+    [doc_render(config_options_mail),
+     "Options to configure e-mail"],
+    [doc_render(config_options_security),
+     "Options to configure security features"],
+    [doc_render(config_options_company),
+     "Options to configure company details"],
+    [doc_render(config_options_inventory),
+     "Options to configure inventory details"],
+    [doc_render(config_options_vendors),
+     "Options to configure vendor details"]
+]
+
+
+all_config_constant_groups = [
+    [doc_render(config_constants_basic),
+     "Basic config constants"],
+    [doc_render(config_constants_redirected),
+     "Configuration constants, following INSTANCE_ROOT redirection if needed"],
+    [doc_render(config_constants_fs),
+     "Filesystems related constants"]
+]
