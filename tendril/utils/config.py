@@ -255,6 +255,11 @@ config_options_geda = [
         "The path to your gEDA gaf folder (named per the gEDA quickstart "
         "tutorial), within which you have your symbols, footprints, etc. "
     ),
+    ConfigOption(
+        'GEDA_SYMLIB_ROOT',
+        "os.path.join(GAF_ROOT, 'symbols')",
+        "The folder containing your gEDA symbols."
+    ),
 ]
 
 load_config(config_options_geda)
@@ -592,3 +597,7 @@ config_options_vendors = [
 ]
 
 load_config(config_options_vendors)
+
+
+for k, v in config_module.__dict__.items():
+    print k, v
