@@ -86,6 +86,11 @@ config_constants_redirected = [
         'Path to the tendril instance configuration.'
     ),
     ConfigConstant(
+        'LOCAL_CONFIG_FILE',
+        "os.path.join(INSTANCE_ROOT, 'local_config_overrides.py')",
+        'Path to local overrides to the instance configuration.'
+    ),
+    ConfigConstant(
         # TODO deal with an instance specific templates folder
         'DOX_TEMPLATE_FOLDER',
         "os.path.join(TENDRIL_ROOT, 'dox/templates')",
@@ -95,9 +100,9 @@ config_constants_redirected = [
 
 load_constants(config_constants_redirected)
 
-
-print "Trying to import instance configuration from " + INSTANCE_CONFIG_FILE
 INSTANCE_CONFIG = import_(INSTANCE_CONFIG_FILE)
+if os.path.exists(LOCAL_CONFIG_FILE):
+    LOCAL_CONFIG = import_(LOCAL_CONFIG_FILE)
 
 
 class ConfigOption(object):
@@ -108,6 +113,10 @@ class ConfigOption(object):
 
     @property
     def value(self):
+        try:
+            return getattr(LOCAL_CONFIG, self.name)
+        except:
+            pass
         try:
             return getattr(INSTANCE_CONFIG, self.name)
         except AttributeError:
@@ -222,7 +231,7 @@ load_config(config_options_resources)
 config_options_geda = [
     ConfigOption(
         'GEDA_SCHEME_DIR',
-        "/usr/share/gEDA/scheme",
+        "'/usr/share/gEDA/scheme'",
         "The 'scheme' directory of the gEDA installation to use."
     ),
     ConfigOption(
