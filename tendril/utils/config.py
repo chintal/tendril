@@ -472,7 +472,7 @@ def build_db_uri(dbhost, dbport, dbuser, dbpass, dbname):
     :return: The DB URI
     """
     return 'postgresql://' + \
-         dbuser + ":" + dbpass + "@" + dbhost + ':' + dbport + '/' + dbname
+        dbuser + ":" + dbpass + "@" + dbhost + ':' + dbport + '/' + dbname
 
 
 DB_URI = build_db_uri(DATABASE_HOST, DATABASE_PORT,

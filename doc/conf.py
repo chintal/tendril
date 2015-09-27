@@ -20,9 +20,8 @@ import sphinx_rtd_theme
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../'))
-sys.path.insert(0, '/home/chintal/code/virtualenvs/tendril/lib/python2.7/site-packages')
-sys.path.insert(0, '/home/chintal/code/workspaces/pycharm/documentedlist')
-autodoc_default_flags = ['members', 'undoc-members', 'private-members', 'show-inheritance']
+autodoc_default_flags = ['members', 'undoc-members',
+                         'private-members', 'show-inheritance']
 autodoc_member_order = 'bysource'
 autoclass_content = 'init'
 todo_include_todos = True
@@ -48,7 +47,7 @@ extensions = [
     'sphinxcontrib.documentedlist',
 ]
 
-INCLUDE_GA = True
+INCLUDE_GA = os.environ.get('INCLUDE_GA', None) == 'True'
 if INCLUDE_GA:
     extensions.append('sphinxcontrib.googleanalytics')
     googleanalytics_id = 'UA-10367073-7'
