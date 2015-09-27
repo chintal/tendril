@@ -77,6 +77,7 @@ setup(
         # Perhaps require reconsideration
         'matplotlib',  # Pulls in numpy!
         'splinter',    # Replace with direct selenium usage
+        'versioneer',
 
         # Extracted Modules
         'driver2200087',
@@ -86,7 +87,6 @@ setup(
         'pytest',
     ],
     setup_requires=[
-        'versioneer',
         'twine',
         'wheel',
     ],

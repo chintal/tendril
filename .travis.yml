@@ -6,6 +6,10 @@ env:
   - TOX_ENV=docs
   - TOX_ENV=style
 install:
+  - pip install -U pip wheel
   - pip install tox
+cache:
+  directories:
+    - $HOME/.cache/pip
 script:
   - tox -v -e $TOX_ENV
