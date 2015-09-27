@@ -28,72 +28,6 @@ of unit tests can be prepared and run.
 Basic Installation
 ******************
 
-Setting up pyenv
-----------------
-
-``pyenv`` is needed to easily set up multiple python versions on your computer. While not strictly
-necessary to run Tendril, this is a very strongly recommended step. It allows the following :
-
- - Make sure Tendril is run with the correct python version.
- - Run tox tests for any developed code (not yet added).
-
- 1. Install Git:
-
-        ``sudo apt-get install git-core curl``
-
- 2. Setup proxy, if any:
-
-        .. code-block:: bash
-
-            export http_proxy=http://user:pass@192.168.1.254:3128
-            export https_proxy=http://user:pass@192.168.1.254:3128
-            export ftp_proxy=http://user:pass@192.168.1.254:3128
-
- 3. (Proxy) Setup corkscrew to use git through a http proxy, if necessary:
-
-        TODO
-
- 4. Run the installer:
-
-        .. code-block:: bash
-
-            curl -L \
-            https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer \
-            | bash
-
- 5. Insert the following at the end of ``~/.bashrc``:
-
-        .. code-block:: bash
-
-            export PYENV_ROOT="${HOME}/.pyenv"
-            if [ -d "${PYENV_ROOT}" ]; then
-                export PATH="${PYENV_ROOT}/bin:${PATH}"
-                eval "$(pyenv init -)"
-            fi
-
- 6. Install Build Dependencies for Python 2.7:
-
-        .. code-block:: bash
-
-            sudo apt-get build-dep python2.7
-            sudo apt-get install build-essential wget \
-                libreadline-dev libncurses5-dev libssl1.0.0 tk8.5-dev \
-                zlib1g-dev liblzma-dev
-
- 7. Install Python 2.7.6:
-
-        Python 2.7.x, where x>=6, should be fine. x<6 is untested. New features were intruduced in 2.7.5, 2.7.6
-        that may be necessary for the scripts to run. If system python is 2.7.6 or better, ``pyenv`` isn't
-        strictly necessary. However, to standardize the environment in the absense of cross-version testing and
-        intelligent installation scripts, the use of a version-specified python version (as opposed to ``system``)
-        is recommended.
-
-        .. code-block:: bash
-
-            CONFIGURE_OPTS=--enable-shared pyenv install 2.7.6
-
-
-
 Getting the Code
 ----------------
 
@@ -132,9 +66,95 @@ should be essentially ``read-only`` with a specific set of people administering 
 
             git clone git@gitlab.com:<org>/tendril-instance-<org>.git ~/.tendril
 
+
+Setting up pyenv
+----------------
+
+.. info:: ``pyenv`` is needed to easily set up multiple python versions on
+          your computer. While not strictly necessary to run Tendril, this
+          is a very strongly recommended step. It allows the following :
+
+                - Make sure Tendril is run with the correct python version.
+                - Run tox tests for any developed code (not yet added).
+
+ 1. Install Git:
+
+        ``sudo apt-get install git-core curl``
+
+ 2. (Proxy) Setup proxy, if any:
+
+        .. code-block:: bash
+
+            export http_proxy=http://user:pass@192.168.1.254:3128
+            export https_proxy=http://user:pass@192.168.1.254:3128
+            export ftp_proxy=http://user:pass@192.168.1.254:3128
+
+ 3. (Proxy) Setup corkscrew to use git through a http proxy. Proxy should be
+    configured for github.com in ``~/.ssh/config``.
+
+        .. code-block:: bash
+
+            Host github.com
+                Hostname github.com
+                User git
+                IdentityFile ~/.ssh/id_rsa
+                ProxyCommand corkscrew proxy.host port %h %p ~/.ssh/proxyauth
+
+ 4. Run the ``pyenv`` installer:
+
+        .. code-block:: bash
+
+            curl -L \
+            https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer \
+            | bash
+
+ 5. Insert the following at the end of ``~/.bashrc``:
+
+        .. code-block:: bash
+
+            export PYENV_ROOT="${HOME}/.pyenv"
+            if [ -d "${PYENV_ROOT}" ]; then
+                export PATH="${PYENV_ROOT}/bin:${PATH}"
+                eval "$(pyenv init -)"
+            fi
+
+ 6. Install Build Dependencies for Python 2.7:
+
+        .. code-block:: bash
+
+            sudo apt-get build-dep python2.7
+            sudo apt-get install build-essential wget \
+                libreadline-dev libncurses5-dev libssl1.0.0 tk8.5-dev \
+                zlib1g-dev liblzma-dev
+
+ 7. Install Python 2.7.6:
+
+        Python 2.7.x, where x>=6, should be fine. x<6 is untested. New features were intruduced in 2.7.5, 2.7.6
+        that may be necessary for the scripts to run. If system python is 2.7.6 or better, ``pyenv`` isn't
+        strictly necessary. However, to standardize the environment in the absense of cross-version testing and
+        intelligent installation scripts, the use of a version-specified python version (as opposed to ``system``)
+        is recommended.
+
+        .. code-block:: bash
+
+            CONFIGURE_OPTS=--enable-shared pyenv install 2.7.6
+
+ 6. Once you've installed ``pyenv``, you can use the following commands instead to setup and
+    use your virtualenv:
+
+        .. code-block:: bash
+
+            pyenv virtualenv 2.7.6 tendril
+            pyenv deactivate
+            pyenv activate tendril
+
+
 Setting up virtualenv
 ---------------------
-See `<http://www.simononsoftware.com/virtualenv-tutorial-part-2/>`_ for a more detailed explanation.
+
+.. info:: You can skip this step if you've installed ``pyenv``. ``pyenv``
+          includes within the necessary ``virtualenv`` setup and
+          management mechanisms.
 
  1. Install ``virtualenv`` from the standard repository.
 
@@ -159,18 +179,9 @@ See `<http://www.simononsoftware.com/virtualenv-tutorial-part-2/>`_ for a more d
 
  4. Create a new ``virtualenv`` with the correct interpreter version. Don't use system packages.
 
-    If ``pyenv`` is controlling the python version,
-
         .. code-block:: bash
 
-            cd /path/to/tendril/checkout/trunk/
-            mkvirtualenv -p `pyenv which python` --no-site-packages tendril
-
-    If you're just using ``system`` python,
-
-        .. code-block:: bash
-
-            mkvirtualenv --no-site-packages tendril
+            mkvirtualenv tendril
 
  5. ``mkvirtualenv`` leaves you with the new virtualenv active. To deactivate,
 
@@ -184,17 +195,15 @@ See `<http://www.simononsoftware.com/virtualenv-tutorial-part-2/>`_ for a more d
 
             workon tendril
 
- 6. If you've installed ``pyenv``, you can use the following commands instead to setup and
-    use your virtualenv:
-
-        .. code-block:: bash
-
-            pyenv virtualenv 2.7.6 tendril
-            pyenv activate tendril
-            pyenv deactivate
 
 Installing the Dependencies
 ---------------------------
+
+.. info:: The recommended installation is using pyenv, or atleast virtualenv. You can,
+          however, install the dependencies directly to your system if you want to. This
+          installation can be done using pip without vitualenv active, or manually install
+          your linux distribution's packages with it's standard package manager. The
+          dependencies are listed in ``setup.py`` and ``requirements.txt``.
 
  1. Install required python libraries (virtualenv should be active):
 
@@ -206,13 +215,13 @@ Installing the Dependencies
         .. hint::
 
             You can install the package into the virtualenv or even into your
-            system if you really want to. However, due to the present volatile
-            state of the code, you should expect a fairly continuous stream of
-            small changes, most of which aren't going to come with a bump in the
-            version number. This may make upgrading the package a more involved
-            process. This command installs all the dependencies normally, but the
-            tendril package itself redirects to the clone, where you can make
-            changes which instantly propagate to the version you get when you
+            system. However, due to the present volatile state of the code, you
+            should expect a fairly continuous stream of small changes, most of
+            which aren't going to come with a bump in the version number. This
+            may make upgrading the package a more involved process. This command
+            (``-e .``) installs all the dependencies normally, but the tendril
+            package itself redirects to the clone, where you can make changes
+            which instantly propagate to the version you get when you
             ``import tendril``.
 
         .. hint::
@@ -269,8 +278,8 @@ Installing the Dependencies
 
             .. seealso::::
 
-                The following config options in your instance config may need to be tweaked to
-                use this version of gEDA/gaf :
+                The following config options may need to be added to your instance config or local
+                config overrides to use this version of gEDA/gaf :
 
                   - GEDA_SCHEME_DIR = "/opt/geda/share/gEDA/scheme"
                   - USE_SYSTEM_GAF_BIN = False
@@ -280,8 +289,8 @@ Installing the Dependencies
 
      c. Install ``pdflatex``. The reference implementation assumes ``texlive-latex`` with
         an as-yet unspecified set of addons. The following list of ubuntu packages is a
-        complete set which contains the used latex packages, though all of these are likely
-        not needed. ``texlive-latex-recommended`` is a good start.
+        complete set which definitely contains the used latex packages, though not all of
+        these are needed. ``texlive-latex-recommended`` is a good start.
 
             - texlive-latex-base
             - texlive-binaries
@@ -311,6 +320,11 @@ Installing the Dependencies
           in the repository tree, such as inventory information, for instance. These
           resources should mirror their location (relative to the repository root) in
           the canonical repository tree.
+
+        - If you intend to generate ``refdocs`` on your computer and push them to the
+          central instance's refdocs filesystem, you should make sure that the
+          repository tree you have locally exactly mirrors the organization's
+          repository tree.
 
     Beyond this, you can use whatever method or tool you desire to keep the repositories
     up to date. I recommend `checkoutmanager <https://github.com/reinout/checkoutmanager>`_.
