@@ -20,13 +20,47 @@ The Config Module (:mod:`tendril.utils.config`)
 
 This module provides the core configuration for Tendril.
 
-The Tendril configuration file is itself a Python file, and is imported from
-it's default location.
+The Tendril configuration file is itself a Python file, and is imported
+from it's default location (``INSTANCE_ROOT/instance_config.py``, where
+INSTANCE_ROOT is ``~/.tendril``). In case this folder needs to be moved
+elsewhere, such as when it needs to be run via wsgi using the web server's
+user, the INSTANCE_ROOT can be moved by placing a file in the user's
+home directory (``~/.tendril/redirect``), containing the path to the
+actual instance folder.
 
-This module performs the import using the :func:`tendril.utils.fs.import_`
-function and the :mod:`imp` module, following which all the recognized
-configuration options are imported from the instance configuration
-module into this namespace.
+The ``instance_config.py`` file is the primary configuration for Tendril.
+It is intended to be maintained at an Instance level by the tendril
+administrator. Since some parameters may need to be changed per-installation
+to adapt it to the user's setup, an additional configuration file can be
+added in (``INSTANCE_ROOT/local_config_overrides.py``), containing only those
+parameters which the user wishes to override.
+
+When the configuration is parsed during startup, (at the time of the first
+import of the config module) this module performs the import using the
+:func:`tendril.utils.fsutils.import_` function and the :mod:`imp` module.
+Each recognized config option and variable is obtained from the first
+location where it is found from the following list of sources:
+
+    - ``local_config_overrides.py``
+    - ``instance_config.py``
+    - The defaults specified here.
+
+The following constraints should be kept in mind when setting up your
+configuration :
+
+    - The configuration files are all python files. You can execute pretty
+      much whatever you want within them, as long as the final configuration
+      value ends up in the module namespace at the correct variable.
+    - The order of the config parameters is somewhat important. The actual
+      configuration values can be constructed at run time from
+      configurations parameters which already exist in the namespace.
+    - The core config module (this one) uses ``eval()`` to execute the
+      ``default`` strings. The values in ``instance_config`` and
+      ``local_config_overrides``, however, are used as is. As such, each
+      option or constant specified in one of those files must be fully
+      specified within that file - it can't, for instance, use the
+      INSTANCE_ROOT value to construct paths unless it defines it for
+      itself.
 
 Configuration Options
 ---------------------
@@ -60,6 +94,13 @@ CONFIG_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 
 
 class ConfigConstant(object):
+    """
+    A configuration `constant`. This is fully specified in this
+    file and cannot be changed by the user or the instance
+    administrator without modifying the core code.
+
+    The value itself is constructed using ``eval()``.
+    """
     def __init__(self, name, default, doc):
         self.name = name
         self.default = default
@@ -71,6 +112,13 @@ class ConfigConstant(object):
 
 
 def load_constants(constants):
+    """
+    Loads the constants in the provided list into the module
+    namespace.
+
+    :param constants: list of :class:`ConfigConstant`
+    :return: None
+    """
     for option in constants:
         setattr(config_module, option.name, option.value)
 
@@ -125,6 +173,16 @@ if os.path.exists(LOCAL_CONFIG_FILE):
 
 
 class ConfigOption(object):
+    """
+    A configuration `option`. These options can be overridden
+    by specifying them in the ``instance_config`` and
+    ``local_config_overrides`` files.
+
+    If specified in one of those files, the value should be
+    the actual configuration value and not an expression. The
+    default value specified here is used through ``eval()``.
+
+    """
     def __init__(self, name, default, doc):
         self.name = name
         self.default = default
@@ -148,6 +206,13 @@ class ConfigOption(object):
 
 
 def load_config(options):
+    """
+    Loads the options in the provided list into the module
+    namespace.
+
+    :param options: list of :class:`ConfigOption`
+    :return: None
+    """
     for option in options:
         setattr(config_module, option.name, option.value)
 
@@ -396,6 +461,16 @@ load_config(config_options_db)
 
 
 def build_db_uri(dbhost, dbport, dbuser, dbpass, dbname):
+    """
+    Builds a ``postgresql`` DB URI from the parameters provided.
+
+    :param dbhost: Hostname / IP of the database server
+    :param dbport: Port of the database server
+    :param dbuser: Username of the database user
+    :param dbpass: Password of the database user
+    :param dbname: Name of the database
+    :return: The DB URI
+    """
     return 'postgresql://' + \
          dbuser + ":" + dbpass + "@" + dbhost + ':' + dbport + '/' + dbname
 
@@ -619,6 +694,11 @@ load_config(config_options_vendors)
 
 
 def doc_render(group):
+    """
+    Converts a list of :class:`ConfigOption` or :class:`ConfigConstant`
+    into a list compatible with :mod:`sphinxcontrib.documentedlist` for
+    generating the configuration parameter documentation.
+    """
     return [[x.name, x.default, x.doc] for x in group]
 
 

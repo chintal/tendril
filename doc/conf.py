@@ -48,7 +48,7 @@ extensions = [
     'sphinxcontrib.documentedlist',
 ]
 
-INCLUDE_GA = False
+INCLUDE_GA = True
 if INCLUDE_GA:
     extensions.append('sphinxcontrib.googleanalytics')
     googleanalytics_id = 'UA-10367073-7'
