@@ -60,7 +60,14 @@ should be essentially ``read-only`` with a specific set of people administering 
 
             git clone git@gitlab.com:<org>/tendril.git
 
-    5. Get the Organization's instance configuration.
+    5. (Optional) Clone the submodule. (Presently only ``tendril-frontend-static``)
+
+        .. code-block:: bash
+
+            cd tendril
+            git submodule update --init
+
+    6. Get the Organization's instance configuration.
 
         .. code-block:: bash
 
