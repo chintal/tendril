@@ -2,6 +2,7 @@
 
 import os
 from setuptools import setup, find_packages
+import versioneer
 
 
 # Utility function to read the README file.
@@ -14,7 +15,8 @@ def read(fname):
 
 setup(
     name="tendril-framework",
-    version="0.1.0",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author="Chintalagiri Shashank",
     author_email="shashank@chintal.in",
     description='An open-ended framework for handling information, to aid '
@@ -84,6 +86,7 @@ setup(
         'pytest',
     ],
     setup_requires=[
+        'versioneer',
         'twine',
         'wheel',
     ],
@@ -92,7 +95,8 @@ setup(
             'sphinx',
             'sphinx-rtd-theme',
             'sphinxcontrib-documentedlist',
-            'sphinxcontrib-googleanalytics==0.1.dev20150826'
+            'sphinxcontrib-googleanalytics==0.1.dev20150826',
+            'versioneer'
             ]
     },
     platforms='any'

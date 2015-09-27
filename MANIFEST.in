@@ -19,3 +19,5 @@ recursive-include doc *.rst *.py
 recursive-include doc/_static *
 recursive-include doc/sample/ *.sample
 
+include versioneer.py
+include tendril/_version.py
