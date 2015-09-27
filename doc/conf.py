@@ -21,6 +21,7 @@ import sphinx_rtd_theme
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, '/home/chintal/code/virtualenvs/tendril/lib/python2.7/site-packages')
+sys.path.insert(0, '/home/chintal/code/workspaces/pycharm/documentedlist')
 autodoc_default_flags = ['members', 'undoc-members', 'private-members', 'show-inheritance']
 autodoc_member_order = 'bysource'
 autoclass_content = 'init'
@@ -45,10 +46,12 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.documentedlist',
-    # 'sphinxcontrib.googleanalytics',
 ]
 
-googleanalytics_id = 'UA-10367073-7'
+INCLUDE_GA = True
+if INCLUDE_GA:
+    extensions.append('sphinxcontrib.googleanalytics')
+    googleanalytics_id = 'UA-10367073-7'
 
 intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
                        'driver2200087': ('http://driver2200087.readthedocs.org/en/latest', None),

@@ -47,6 +47,7 @@ from tendril.utils.config import DOCUMENT_WALLET_ROOT
 
 from tendril.utils.fsutils import temp_fs
 
+
 wallet_fs = fsopendir(DOCUMENT_WALLET_ROOT)
 wallet_temp_fs = temp_fs.makeopendir('wallet')
 

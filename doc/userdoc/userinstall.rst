@@ -126,18 +126,11 @@ should be essentially ``read-only`` with a specific set of people administering 
 
             git clone git@gitlab.com:<org>/tendril.git
 
-    5. Create a fork of the Organization's instance configuration. For example, clone
-       ``gitlab.com/<org>/tendril-instance-<org>.git`` into ``gitlab.com/<username>/tendril-instance-<org>.git``
-    6. Get a clone of your fork of the Organization's instance configuration.
+    5. Get the Organization's instance configuration.
 
         .. code-block:: bash
 
-            git clone git@gitlab.com:<username>/tendril-instance-<org>.git ~/.tendril
-            cd ~/.tendril
-            git remote add upstream git@gitlab.com:<org>/tendril-instance-<org>.git
-            git fetch upstream
-            git checkout -b upstream-master upstream/master
-            git checkout master
+            git clone git@gitlab.com:<org>/tendril-instance-<org>.git ~/.tendril
 
 Setting up virtualenv
 ---------------------
@@ -343,8 +336,9 @@ Installing the Dependencies
 
             checkoutmanager co
 
- 5. (WIP) Create links to your Organization's central Tendril instance's filesystems where
-    appropriate.
+ 5. Create a ``local_config_overrides.py`` file in ``~/.tendril``, and add the configuration
+    options within it which are different from the instance's default configuration. See the
+    ``local_config_overrides.py.sample`` for an example.
 
  6. (Optional) Create a 'full' local tendril installation, detaching your copy from requiring
     the central tendril installation to be accessible on the network. Follow the instructions
@@ -383,30 +377,12 @@ Updating the Core
 Updating the Instance Folder
 ----------------------------
 
-To pull in changes to your organization's instance folder, follow this process in
-your tendril instance folder (``~/.tendril``)
-
- 1. Fetch updates from upstream and merge into your remote tracking branch :
-
     .. code-block:: bash
 
-        git checkout upstream-master
+        cd ~/.tendril
+        git checkout master
         git pull
 
- 2. Merge ``upstream-master`` into your ``master``. If you have customizations in place, you
-    may want to merge first into a temporary branch of your ``master`` and make sure nothing
-    breaks.
-
-    .. code-block:: bash
-
-        git checkout master
-        git merge upstream-master
-
- 3. Push the updates to your private repository.
-
-    .. code-block:: bash
-
-        git push
 
 Contributing to the Instance
 ****************************

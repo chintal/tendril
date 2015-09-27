@@ -23,6 +23,8 @@ Docstring for expose
 """
 
 import os
+from fs.osfs import OSFS
+from fs.utils import copyfile
 
 from flask import Blueprint
 from flask import send_file
@@ -35,18 +37,43 @@ from tendril.utils.config import DOCUMENT_WALLET_PREFIX
 from tendril.utils.config import REFDOC_ROOT
 from tendril.utils.config import REFDOC_PREFIX
 
+from tendril.utils.fsutils import temp_fs
+from tendril.dox.docstore import refdoc_fs
+from tendril.dox.docstore import docstore_fs
+from tendril.dox.wallet import wallet_fs
+
 expose = Blueprint('expose', __name__)
+temp_expose_fs = temp_fs.makeopendir('expose')
+
+
+def get_sendable_path(fspath, fs, fs_root):
+    if isinstance(fs, OSFS):
+        path = os.path.join(fs_root, fspath)
+    else:
+        path = temp_expose_fs.getsyspath(fspath)
+        if not temp_expose_fs.exists(fspath):
+            temp_expose_fs.makedir(
+                os.path.split(fspath)[0],
+                recursive=True,
+                allow_recreate=True
+            )
+            copyfile(
+                fs, fspath,
+                temp_expose_fs, fspath
+            )
+    return path
 
 
 @expose.route('/<path:path>')
 @login_required
 def static_proxy(path):
+    fspath = path.split(os.path.sep, 1)[1]
     if path.startswith(DOCSTORE_PREFIX):
-        path = os.path.join(DOCSTORE_ROOT, path.split(os.path.sep, 1)[1])
+        path = get_sendable_path(fspath, docstore_fs, DOCSTORE_ROOT)
     elif path.startswith(DOCUMENT_WALLET_PREFIX):
-        path = os.path.join(DOCUMENT_WALLET_ROOT, path.split(os.path.sep, 1)[1])  # noqa
+        path = get_sendable_path(fspath, wallet_fs, DOCUMENT_WALLET_ROOT)
     elif path.startswith(REFDOC_PREFIX):
-        path = os.path.join(REFDOC_ROOT, path.split(os.path.sep, 1)[1])
+        path = get_sendable_path(fspath, refdoc_fs, REFDOC_ROOT)
     else:
         raise IOError('Unknown expose file : ' + path)
     if not os.path.exists(path):
