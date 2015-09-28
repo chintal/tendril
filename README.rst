@@ -14,7 +14,6 @@ The Tendril Framework
 
 .. image:: https://landscape.io/github/chintal/tendril/master/landscape.svg?style=flat
     :target: https://landscape.io/github/chintal/tendril/master
-    :alt: Code Health
 
 An open-ended framework for handling information, to aid development, management, and production cycles
 

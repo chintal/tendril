@@ -62,6 +62,8 @@ intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
                        'fs': ('http://docs.pyfilesystem.org/en/latest', None)
                        }
 
+linkcheck_ignore = [r'https://landscape.io/']
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
