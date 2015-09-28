@@ -66,7 +66,6 @@ Tendril application code.
     tendril.utils.libreoffice
     tendril.utils.log
     tendril.utils.pdf
-    tendril.utils.state
     tendril.utils.vcs
     tendril.utils.www
 
