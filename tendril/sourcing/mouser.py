@@ -243,11 +243,11 @@ class VendorMouser(vendors.VendorBase):
                 pass
         minqty = self._get_resultpage_row_minqty(row)
         mfgpno = self._get_resultpage_row_mfgpno(row)
-        if minqty == -1:
+        if minqty == -1 or unitp is None:
             ns = True
         else:
             ns = False
-        return pno, mfgpno, package, ns, unitp
+        return pno, mfgpno, package, ns
 
     def _get_resultpage_parts(self, soup):
         ptable = soup.find(

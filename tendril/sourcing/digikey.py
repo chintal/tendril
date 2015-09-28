@@ -222,11 +222,11 @@ class VendorDigiKey(vendors.VendorBase):
         package = self._get_resultpage_row_package(row)
         minqty = self._get_resultpage_row_minqty(row)
         mfgpno = self._get_resultpage_row_mfgpno(row)
-        if 'Non-Stock' in minqty:
+        if 'Non-Stock' in minqty or unitp is None:
             ns = True
         else:
             ns = False
-        return pno, mfgpno, package, ns, unitp
+        return pno, mfgpno, package, ns
 
     def _get_resultpage_parts(self, soup):
         ptable = soup.find('table', id='productTable')
