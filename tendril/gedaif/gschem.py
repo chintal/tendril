@@ -107,7 +107,6 @@ from tendril.utils.types.cartesian import CartesianLineSegment
 from tendril.utils.config import GEDA_SCHEME_DIR
 from tendril.utils.config import USE_SYSTEM_GAF_BIN
 from tendril.utils.config import GAF_BIN_ROOT
-from tendril.utils.config import TENDRIL_ROOT
 
 import sym2eps
 

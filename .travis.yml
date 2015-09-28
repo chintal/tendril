@@ -8,8 +8,12 @@ env:
 install:
   - pip install -U pip wheel
   - pip install tox
+  - pip install cookiecutter
 cache:
   directories:
     - $HOME/.cache/pip
+before_script:
+  - cookiecutter --no-input https://github.com/chintal/tendril-instance-cookiecutter.git
+  - mv tendril-instance-folder ~/.tendril
 script:
   - tox -v -e $TOX_ENV
