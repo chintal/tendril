@@ -19,7 +19,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for progressbar
+The Progressbar Util Module (:mod:`tendril.utils.progressbar`)
+==============================================================
+
+This package produces animated progress bars on the terminal. It is
+essentially a copy of pip`s progressbar implementation in pip.utils.ui.
+
+This module maintains the :class:`TendrilProgressBar`, which can be
+used from other modules to provide a consistent feel to progress bars
+across tendril. It currently provides to customizations other than the
+most basic windows compat bits taken from pip's implementation.
+
+.. rubric :: Usage
+
+    >>> from tendril.utils.progressbar import TendrilProgressBar
+    >>> pb = TendrilProgressBar(max=100)
+    >>> for i in range(100):
+    ...     pb.next()
+
 """
 
 from __future__ import absolute_import
