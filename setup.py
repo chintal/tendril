@@ -76,6 +76,8 @@ setup(
         'fs',
         'paramiko',
         'pyyaml',
+        'progress',
+        'colorama',
 
         # Flask Dependencies (to be pruned?)
         'jsmin',

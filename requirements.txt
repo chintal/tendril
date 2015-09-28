@@ -1,3 +1,5 @@
+colorama
+progress
 fs
 paramiko
 svn

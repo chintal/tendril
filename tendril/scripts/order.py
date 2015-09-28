@@ -33,7 +33,7 @@ import tendril.sourcing.electronics
 from tendril.entityhub import projects
 from tendril.gedaif import projfile
 
-from tendril.utils.progressbar.progressbar import ProgressBar
+from tendril.utils.progressbar import TendrilProgressBar
 import tendril.inventory.guidelines
 
 from tendril.utils.config import INSTANCE_ROOT
@@ -235,8 +235,8 @@ if __name__ == '__main__':
 
     unsourced = []
     deferred = []
-    pb = ProgressBar('red', block='#', empty='.')
     nlines = len(cobom.lines)
+    pb = TendrilProgressBar(max=nlines)
 
     # TODO Heavily refactor
 
@@ -244,13 +244,10 @@ if __name__ == '__main__':
         if logger.getEffectiveLevel() >= log.INFO or \
                 (PRIORITIZE is False and USE_STOCK is False):
             percentage = (float(pbidx) / nlines) * 100.00
-            pb.render(
-                int(percentage),
-                "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\n"
-                "Constructing Shortage File, Reservations, and Preparing Orders".format(  # noqa
-                    percentage, line.ident, line.quantity
-                )
-            )
+            pb.next()
+            # "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\n"
+            # "Constructing Shortage File, Reservations, and Preparing Orders".format(  # noqa
+            #     percentage, line.ident, line.quantity
             shortage = 0
         if USE_STOCK is True:
             if PRIORITIZE is False:
