@@ -27,6 +27,19 @@ setup(
     package_dir={'tendril': 'tendril'},
     packages=find_packages(exclude=['profiling', 'contrib', 'doc', 'tests*']),
     include_package_data=True,
+    package_data={
+        'tendril': [
+            # gedaif module
+            'gedaif/templates/*.yaml',
+            # dox module
+            'dox/templates/*.tex',
+            'dox/templates/*/*.tex',
+            # frontend module
+            'frontend/static/*',
+            'frontend/templates/*/*.html',
+            'frontend/blueprints/*/templates/*.html',
+        ]
+    },
     long_description=read('README.rst'),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -82,6 +95,7 @@ setup(
         # Extracted Modules
         'driver2200087',
         'iec60063',
+        'tendril-gedaif-sym2eps',
     ],
     tests_require=[
         'pytest',

@@ -1,23 +1,35 @@
 
-
+# gedaif package data
 recursive-include tendril/gedaif/templates *.yaml
-recursive-include tendril/gedaif/src *.cc
+
+# dox package data
 recursive-include tendril/dox/templates *.tex
+
+# frontent package data
 recursive-include tendril/frontend/static *
 recursive-include tendril/frontend/templates *.html
 recursive-include tendril/frontend/blueprints/*/templates *.html
 
+# tendril metadata files
 include *.rst
 include *.txt
+
+# alembic files
 include alembic.ini
 recursive-include alembic *
+
+# tests
 recursive-include tests *.py
+
+# resources
 recursive-include resources *
 
+# documentation
 include doc/Makefile
 recursive-include doc *.rst *.py
 recursive-include doc/_static *
 recursive-include doc/sample/ *.sample
 
+# versioning
 include versioneer.py
 include tendril/_version.py

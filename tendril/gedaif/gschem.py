@@ -109,6 +109,8 @@ from tendril.utils.config import USE_SYSTEM_GAF_BIN
 from tendril.utils.config import GAF_BIN_ROOT
 from tendril.utils.config import TENDRIL_ROOT
 
+import sym2eps
+
 
 class GschPoint(CartesianPoint):
     unit = 'mil'
@@ -350,23 +352,19 @@ def conv_gsch2png(schpath, outfolder):
     epspath = os.path.join(outfolder, schfname + '.eps')
 
     if ext == '.sym':
-        gschem_epscmd = [
-            os.path.join(TENDRIL_ROOT, 'gedaif', 'bin', 'sym2eps'),
-            schpath, epspath
-        ]
         try:
-            subprocess.check_call(gschem_epscmd)
-            gschem_pngcmd = [
-                "convert", epspath, "-transparent", "white", outpath
-            ]
-            subprocess.call(gschem_pngcmd)
-            try:
-                os.remove(epspath)
-            except OSError:
-                logger.warning("Temporary .eps file not found to remove : " +
-                               epspath)
-        except subprocess.CalledProcessError:
+            sym2eps.convert(schpath, epspath)
+        except RuntimeError:
             logger.error("SYM2EPS Segmentation Fault on symbol : " + schpath)
+        gschem_pngcmd = [
+            "convert", epspath, "-transparent", "white", outpath
+        ]
+        subprocess.call(gschem_pngcmd)
+        try:
+            os.remove(epspath)
+        except OSError:
+            logger.warning("Temporary .eps file not found to remove : " +
+                           epspath)
     elif ext == '.sch':
         gschem_pngcmd = "gschem -p -o" + outpath + " -s" + GEDA_SCHEME_DIR + '/image.scm ' + schpath  # noqa
         subprocess.call(gschem_pngcmd)

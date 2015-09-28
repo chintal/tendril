@@ -30,3 +30,4 @@ Jinja2==2.7.3
 alembic==0.7.6
 sqlalchemy_utils==0.30.16
 pillow==2.9.0
+tendril-gedaif-sym2eps==0.2
