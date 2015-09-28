@@ -244,7 +244,7 @@ if __name__ == '__main__':
         if logger.getEffectiveLevel() >= log.INFO or \
                 (PRIORITIZE is False and USE_STOCK is False):
             percentage = (float(pbidx) / nlines) * 100.00
-            pb.next()
+            pb.next(note=line.ident)
             # "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\n"
             # "Constructing Shortage File, Reservations, and Preparing Orders".format(  # noqa
             #     percentage, line.ident, line.quantity

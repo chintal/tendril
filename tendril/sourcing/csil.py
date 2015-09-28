@@ -204,7 +204,7 @@ def get_csil_prices(params=exparams, rval=None):
             loi = [10]
         else:
             loi = [10]
-        pb.next()
+        pb.next(note="{0} {1}".format(qty, loi))
         # "\n{0:>7.4f}% {1:<40} Qty: {2:<10} DTS: {3:<4}\nGenerating PCB Pricing".format(  # noqa
         #               percentage, params['pcbname'], qty, loi)
         for dt_s in loi:

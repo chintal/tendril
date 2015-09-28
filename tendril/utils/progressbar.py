@@ -27,26 +27,29 @@ essentially a copy of pip`s progressbar implementation in pip.utils.ui.
 
 This module maintains the :class:`TendrilProgressBar`, which can be
 used from other modules to provide a consistent feel to progress bars
-across tendril. It currently provides to customizations other than the
-most basic windows compat bits taken from pip's implementation.
+across tendril. It adds a ``note`` keyword argument to the ``next()``
+function, and renders the note after the suffix of the progress bar.
 
 .. rubric :: Usage
 
     >>> from tendril.utils.progressbar import TendrilProgressBar
     >>> pb = TendrilProgressBar(max=100)
     >>> for i in range(100):
-    ...     pb.next()
+    ...     pb.next(note=i)
 
 """
 
 from __future__ import absolute_import
 from __future__ import division
+from __future__ import print_function
 
 import sys
 import os
 
 import six
-from progress.bar import Bar, IncrementalBar
+from time import time
+from progress.bar import Bar
+from progress.bar import IncrementalBar
 
 try:
     import colorama
@@ -121,3 +124,28 @@ class TendrilProgressBar(WindowsMixin, _BaseBar):
     file = sys.stdout
     message = "%(percent)d%%"
     suffix = "ETA %(eta_td)s"
+
+    def __init__(self, *args, **kwargs):
+        super(TendrilProgressBar, self).__init__(*args, **kwargs)
+        self._note = None
+
+    def next(self, n=1, note=None):
+        if n > 0:
+            now = time()
+            dt = (now - self._ts) / n
+            self._dt.append(dt)
+            self._ts = now
+
+        self.index += n
+        self._note = repr(note)
+        self.update()
+
+    def writeln(self, line):
+        if self.file.isatty():
+            self.clearln()
+            if self._note is not None:
+                line = ' '.join([line, self._note])
+                if len(line) > 80:
+                    line = line[:80]
+            print(line, end='', file=self.file)
+            self.file.flush()

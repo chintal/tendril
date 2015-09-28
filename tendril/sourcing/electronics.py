@@ -86,9 +86,10 @@ def gen_vendor_mapfile(vendor_obj):
                     except AttributeError:
                         print symbol.ident, strategy
                         raise AttributeError
-                    pb.next()
+                    pb.next(note=symbol.ident)
                     # "\n%f%% %s\nGenerating Map File" % (percentage,
                     #                                         symbol.ident))
+        pb.finish()
         outf.close()
         logger.info("Written Electronics Vendor Map to File : " +
                     vendor_obj.name)
@@ -114,8 +115,9 @@ def gen_vendor_mapfile(vendor_obj):
 
             vpnos, strategy = [[pcb], 'CUSTOM']
             outw.writerow(['PCB ' + pcb.strip(), strategy.strip()] + vpnos)
-            pb.next()
+            pb.next(note=pcb)
             # "\n%f%% %s\nGenerating Map File" % (percentage, pcb))
+        pb.finish()
         outf.close()
         logger.info("Written PCB Vendor Map to File : " + vendor_obj.name)
     else:
@@ -228,9 +230,10 @@ def export_vendor_map_audit(vendor_obj):
                                vp.vpartdesc, vp.manufacturer,
                                vp.vqtyavail, vp.abs_moq])
 
-            pb.next()
+            pb.next(note=':'.join([ident, vpno]))
             # "\n%f%% %s;%s\nGenerating Vendor Map Audit" % (
             #         percentage, ident, vpno
+    pb.finish()
     outf.close()
     logger.info("Written Vendor Map Audit to File : " + vendor_obj.name)
 

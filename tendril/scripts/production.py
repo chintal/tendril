@@ -126,9 +126,7 @@ if __name__ == "__main__":
     pb = TendrilProgressBar(max=nlines)
 
     for pbidx, line in enumerate(cobom.lines):
-        pb.next()
-        # "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Reservations".format(  # noqa
-        #     percentage, line.ident, line.quantity
+        pb.next(note=line.ident)
         shortage = 0
         logger.debug("Processing Line : " + line.ident)
         for idx, descriptor in enumerate(cobom.descriptors):
