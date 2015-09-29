@@ -122,7 +122,7 @@ class WindowsMixin(object):
 
 class TendrilProgressBar(WindowsMixin, _BaseBar):
     file = sys.stdout
-    message = "%(percent)d%%"
+    message = "%(percent)3d%%"
     suffix = "ETA %(eta_td)s"
 
     def __init__(self, *args, **kwargs):

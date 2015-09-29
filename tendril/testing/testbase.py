@@ -26,8 +26,7 @@ from collections import namedtuple
 from tendril.utils.fsutils import TEMPDIR
 from tendril.utils.fsutils import get_tempname
 
-# TODO  Replace with colorama or so
-from tendril.utils.progressbar import terminal
+from colorama import Fore
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
@@ -58,10 +57,10 @@ class TestPrepUser(TestPrepBase):
         self._string = string
 
     def run_prep(self):
-        print terminal.YELLOW + self._string + terminal.NORMAL
-        raw_input(terminal.YELLOW +
+        print Fore.YELLOW + self._string + Fore.RESET
+        raw_input(Fore.YELLOW +
                   "Press Enter to continue..." +
-                  terminal.NORMAL)
+                  Fore.RESET)
 
 
 class RunnableTest(object):
@@ -325,14 +324,14 @@ class TestBase(RunnableTest):
 
     def finish(self):
         if self.passed is True:
-            result = terminal.GREEN + '[PASSED]' + terminal.NORMAL
+            result = Fore.GREEN + '[PASSED]' + Fore.RESET
         else:
-            result = terminal.RED + '[FAILED]' + terminal.NORMAL
+            result = Fore.RED + '[FAILED]' + Fore.RESET
         hline = '-' * 80
-        print terminal.YELLOW + hline + terminal.NORMAL
-        print "{0}{1:<70}{2} {3:>9}".format(terminal.YELLOW,
-                                            (self.desc or 'None'),
-                                            terminal.NORMAL,  result)
+        print Fore.YELLOW + hline + Fore.RESET
+        print "{0}{1:<70}{2} {3:>9}".format(
+            Fore.YELLOW, (self.desc or 'None'), Fore.NORMAL, result
+        )
         print "{0}".format(self.title)
         print "{0}".format(repr(self))
 
@@ -375,30 +374,30 @@ class TestSuiteBase(RunnableTest):
         raise NotImplementedError
 
     def render_dox(self):
-        suite_dict = {'desc': self.desc,
-                      'title': self.title,
-                      'ts': self.ts.format(),
-                      'passed':
-                      ('PASSED' if self.passed is True else 'FAILED'),
-                      'tests': [x.render_dox() for x in self._tests]
-                      }
+        suite_dict = {
+            'desc': self.desc,
+            'title': self.title,
+            'ts': self.ts.format(),
+            'passed': ('PASSED' if self.passed is True else 'FAILED'),
+            'tests': [x.render_dox() for x in self._tests]
+        }
         return suite_dict
 
     def finish(self):
         for test in self._tests:
             test.finish()
         hline = '-' * 80
-        hcolor = terminal.CYAN
-        print hcolor + hline + terminal.NORMAL
+        hcolor = Fore.CYAN
+        print hcolor + hline + Fore.RESET
         if self.passed is True:
-            result = terminal.GREEN + '[PASSED]' + terminal.NORMAL
+            result = Fore.GREEN + '[PASSED]' + Fore.RESET
         else:
-            result = terminal.RED + '[FAILED]' + terminal.NORMAL
-        print "{0}{1:<70}{2} {3:>9}".format(hcolor,
-                                            (self.desc or 'None'),
-                                            terminal.NORMAL,  result)
-        print "{0}{1}{2}".format(hcolor, repr(self), terminal.NORMAL)
-        print hcolor + hline + terminal.NORMAL
+            result = Fore.RED + '[FAILED]' + Fore.RESET
+        print "{0}{1:<70}{2} {3:>9}".format(
+            hcolor, (self.desc or 'None'), Fore.NORMAL,  result
+        )
+        print "{0}{1}{2}".format(hcolor, repr(self), Fore.RESET)
+        print hcolor + hline + Fore.RESET
 
     def destroy(self):
         for test in self._tests:
