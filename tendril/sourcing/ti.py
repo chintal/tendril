@@ -134,8 +134,8 @@ class VendorTI(vendors.VendorBase):
         try:
             product = TIElnPart(pno)
         except:
-            return None, None, None, None, None
-        unitp = product._prices[0]._price
+            return None, None, None, None
+        # unitp = product._prices[0]._price
         ns = False
         mfgpno = pno
         package = self._standardize_package(product.package)
