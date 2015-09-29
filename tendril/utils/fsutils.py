@@ -362,7 +362,9 @@ def fsutils_cleanup():
     """
     Called when the python interpreter is shutting down. Cleans up all
     `tendril.utils.fs` related objects and other artifacts created by the
-    module.
+    module. Each user of the TEMPDIR should clean up it's own files and
+    folders before now. If TEMPDIR is non-empty at this point, this
+    function won't delete the folder.
 
     Performs the following tasks:
         - Removes the :data:`TEMPDIR`
