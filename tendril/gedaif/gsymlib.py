@@ -347,7 +347,7 @@ def gen_symlib(path=GEDA_SYMLIB_ROOT, recursive=True,
 
 def _jinja_init():
     templates_path = os.path.join(TENDRIL_ROOT, 'gedaif', 'templates')
-    logger.info("Loading templates from " + templates_path)
+    logger.debug("Loading templates from " + templates_path)
     loader = jinja2.FileSystemLoader(
         searchpath=templates_path
     )

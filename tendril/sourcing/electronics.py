@@ -67,6 +67,7 @@ def gen_vendor_mapfile(vendor_obj):
         for status in ['Active', 'Experimental',
                        'Deprecated', 'Virtual', 'Generator']:
             for symbol in symlib:
+                pb.next(note=symbol.ident)
                 if symbol.status == status and symbol.ident.strip() != "":
                     vpnos, strategy = vendor_obj.search_vpnos(symbol.ident)
                     if vpnos is not None:
@@ -75,9 +76,9 @@ def gen_vendor_mapfile(vendor_obj):
                         # TODO Fix this error (hack around progressbar issue)
                         if strategy not in ['NODEVICE', 'NOVALUE',
                                             'NOT_IMPL']:
-                            logger.warning("Could not find matches for : " +
-                                           symbol.ident +
-                                           '::' + str(strategy) + '\n\n\n')
+                            pb.writeln("Not Found: " +
+                                       symbol.ident + '::' + str(strategy) +
+                                       '\n')
                         vpnos = []
                     try:
                         outw.writerow(
@@ -86,9 +87,6 @@ def gen_vendor_mapfile(vendor_obj):
                     except AttributeError:
                         print symbol.ident, strategy
                         raise AttributeError
-                    pb.next(note=symbol.ident)
-                    # "\n%f%% %s\nGenerating Map File" % (percentage,
-                    #                                         symbol.ident))
         pb.finish()
         outf.close()
         logger.info("Written Electronics Vendor Map to File : " +

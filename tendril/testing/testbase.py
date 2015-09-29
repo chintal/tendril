@@ -27,6 +27,7 @@ from tendril.utils.fsutils import TEMPDIR
 from tendril.utils.fsutils import get_tempname
 
 from colorama import Fore
+from tendril.utils import terminal
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
@@ -327,9 +328,11 @@ class TestBase(RunnableTest):
             result = Fore.GREEN + '[PASSED]' + Fore.RESET
         else:
             result = Fore.RED + '[FAILED]' + Fore.RESET
+        width = terminal.get_terminal_width()
         hline = '-' * 80
         print Fore.YELLOW + hline + Fore.RESET
-        print "{0}{1:<70}{2} {3:>9}".format(
+        fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
+        print fstring.format(
             Fore.YELLOW, (self.desc or 'None'), Fore.NORMAL, result
         )
         print "{0}".format(self.title)
@@ -386,14 +389,16 @@ class TestSuiteBase(RunnableTest):
     def finish(self):
         for test in self._tests:
             test.finish()
-        hline = '-' * 80
+        width = terminal.get_terminal_width()
+        hline = '-' * width
         hcolor = Fore.CYAN
         print hcolor + hline + Fore.RESET
         if self.passed is True:
             result = Fore.GREEN + '[PASSED]' + Fore.RESET
         else:
             result = Fore.RED + '[FAILED]' + Fore.RESET
-        print "{0}{1:<70}{2} {3:>9}".format(
+        fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
+        print fstring.format(
             hcolor, (self.desc or 'None'), Fore.NORMAL,  result
         )
         print "{0}{1}{2}".format(hcolor, repr(self), Fore.RESET)
