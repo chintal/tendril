@@ -32,7 +32,7 @@ import vendors
 
 from tendril.utils import fsutils
 from tendril.utils.types import currency
-from tendril.utils.progressbar import TendrilProgressBar
+from tendril.utils.terminal import TendrilProgressBar
 
 # from utils.config import NETWORK_PROXY_IP
 # from utils.config import NETWORK_PROXY_PORT

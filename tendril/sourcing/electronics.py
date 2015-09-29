@@ -34,7 +34,7 @@ import tendril.gedaif.conffile
 
 from tendril.utils import fsutils
 from tendril.utils import config
-from tendril.utils.progressbar import TendrilProgressBar
+from tendril.utils.terminal import TendrilProgressBar
 
 import tendril.entityhub.maps
 

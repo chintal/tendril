@@ -19,23 +19,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-The Progressbar Util Module (:mod:`tendril.utils.progressbar`)
-==============================================================
+The Terminal Utils Module (:mod:`tendril.utils.terminal`)
+=========================================================
 
-This package produces animated progress bars on the terminal. It is
-essentially a copy of pip`s progressbar implementation in pip.utils.ui.
+This module provides utils for rendering basic UI elements on the terminal.
 
-This module maintains the :class:`TendrilProgressBar`, which can be
-used from other modules to provide a consistent feel to progress bars
-across tendril. It adds a ``note`` keyword argument to the ``next()``
-function, and renders the note after the suffix of the progress bar.
 
-.. rubric :: Usage
-
-    >>> from tendril.utils.progressbar import TendrilProgressBar
-    >>> pb = TendrilProgressBar(max=100)
-    >>> for i in range(100):
-    ...     pb.next(note=i)
+:class:`TendrilProgressBar can be used to produce animated progress bars
+on the terminal. This class (and the code related) to it is essentially a
+copy of pip`s progressbar implementation in pip.utils.ui.
 
 """
 
@@ -94,9 +86,9 @@ _BaseBar = _select_progress_class(IncrementalBar, Bar)
 class WindowsMixin(object):
 
     def __init__(self, *args, **kwargs):
-        # The Windows terminal does not support the hide/show cursor ANSI codes
-        # even with colorama. So we'll ensure that hide_cursor is False on
-        # Windows.
+        # The Windows terminal does not support the hide/show cursor ANSI
+        # codes even with colorama. So we'll ensure that hide_cursor is False
+        # on Windows.
         # This call neds to go before the super() call, so that hide_cursor
         # is set in time. The base progress bar class writes the "hide cursor"
         # code to the terminal in its init, so if we don't set this soon
@@ -111,16 +103,30 @@ class WindowsMixin(object):
         if WINDOWS and colorama:
             self.file = colorama.AnsiToWin32(self.file)
             # The progress code expects to be able to call self.file.isatty()
-            # but the colorama.AnsiToWin32() object doesn't have that, so we'll
-            # add it.
+            # but the colorama.AnsiToWin32() object doesn't have that, so
+            # we'll add it.
             self.file.isatty = lambda: self.file.wrapped.isatty()
             # The progress code expects to be able to call self.file.flush()
-            # but the colorama.AnsiToWin32() object doesn't have that, so we'll
-            # add it.
+            # but the colorama.AnsiToWin32() object doesn't have that, so
+            # we'll add it.
             self.file.flush = lambda: self.file.wrapped.flush()
 
 
 class TendrilProgressBar(WindowsMixin, _BaseBar):
+    """
+    This class can be used from other modules to provide a consistent
+    feel to progress bars across tendril. It adds a ``note`` keyword
+    argument to the ``next()`` function, and renders the note after
+    the suffix of the progress bar.
+
+    .. rubric :: Usage
+
+        >>> from tendril.utils.terminal import TendrilProgressBar
+        >>> pb = TendrilProgressBar(max=100)
+        >>> for i in range(100):
+        ...     pb.next(note=i)
+
+    """
     file = sys.stdout
     message = "%(percent)3d%%"
     suffix = "ETA %(eta_td)s"
@@ -128,6 +134,11 @@ class TendrilProgressBar(WindowsMixin, _BaseBar):
     def __init__(self, *args, **kwargs):
         super(TendrilProgressBar, self).__init__(*args, **kwargs)
         self._note = None
+        self._term_width = 80
+
+    @property
+    def term_width(self):
+        return self._term_width
 
     def next(self, n=1, note=None):
         if n > 0:
@@ -145,7 +156,7 @@ class TendrilProgressBar(WindowsMixin, _BaseBar):
             self.clearln()
             if self._note is not None:
                 line = ' '.join([line, self._note])
-                if len(line) > 80:
-                    line = line[:80]
+                if len(line) > self.term_width:
+                    line = line[:self.term_width]
             print(line, end='', file=self.file)
             self.file.flush()

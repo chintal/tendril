@@ -36,7 +36,7 @@ from tendril.entityhub import projects
 from tendril.entityhub import serialnos
 
 from tendril.utils.pdf import merge_pdf
-from tendril.utils.progressbar import TendrilProgressBar
+from tendril.utils.terminal import TendrilProgressBar
 from tendril.utils.config import INSTANCE_ROOT
 
 from tendril.utils import log

@@ -57,7 +57,7 @@ Tendril application code.
 
 .. toctree::
 
-    tendril.utils.progressbar
+    tendril.utils.terminal
     tendril.utils.types
     tendril.utils.colors
     tendril.utils.config

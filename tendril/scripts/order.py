@@ -33,7 +33,7 @@ import tendril.sourcing.electronics
 from tendril.entityhub import projects
 from tendril.gedaif import projfile
 
-from tendril.utils.progressbar import TendrilProgressBar
+from tendril.utils.terminal import TendrilProgressBar
 import tendril.inventory.guidelines
 
 from tendril.utils.config import INSTANCE_ROOT
