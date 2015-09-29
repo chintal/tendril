@@ -207,10 +207,10 @@ class TendrilProgressBar(WindowsMixin, _BaseBar):
 
     .. rubric :: Usage
 
-        >>> from tendril.utils.terminal import TendrilProgressBar
-        >>> pb = TendrilProgressBar(max=100)
-        >>> for i in range(100):
-        ...     pb.next(note=i)
+    >>> from tendril.utils.terminal import TendrilProgressBar
+    >>> pb = TendrilProgressBar(max=100)
+    >>> for i in range(100):
+    ...     pb.next(note=i)
 
     """
     file = sys.stdout
