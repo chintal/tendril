@@ -29,17 +29,15 @@ from tendril.utils import fsutils
 import pytest
 
 
-def fsutils_tempfs():
+def test_fsutils_tempfs():
     assert os.path.exists(fsutils.TEMPDIR)
     assert os.path.isdir(fsutils.TEMPDIR)
-    assert isinstance(fsutils.TEMPDIR, FS)
-    assert isinstance(fsutils.TEMPDIR, OSFS)
+    assert isinstance(fsutils.temp_fs, FS)
+    assert isinstance(fsutils.temp_fs, OSFS)
 
     tempname = fsutils.get_tempname()
-    assert isinstance(str, tempname)
+    assert isinstance(tempname, str)
     assert not os.path.exists(os.path.join(fsutils.TEMPDIR, tempname))
-
-
 
 
 def test_fsutils():

@@ -56,8 +56,7 @@ def gen_vendor_mapfile(vendor_obj):
         logger.info('Generating electronics mapfile for ' + vendor_obj.name)
         symlib = gsymlib.gen_symlib()
         symlib.sort(key=lambda x: x.ident)
-        nsymbols = len(symlib)
-        pb = TendrilProgressBar(max=nsymbols)
+        pb = TendrilProgressBar(max=len(symlib))
 
         outp = vendor_obj.mappath
         outf = fsutils.VersionedOutputFile(outp)
@@ -67,8 +66,8 @@ def gen_vendor_mapfile(vendor_obj):
         for status in ['Active', 'Experimental',
                        'Deprecated', 'Virtual', 'Generator']:
             for symbol in symlib:
-                pb.next(note=symbol.ident)
                 if symbol.status == status and symbol.ident.strip() != "":
+                    pb.next(note=symbol.ident)
                     vpnos, strategy = vendor_obj.search_vpnos(symbol.ident)
                     if vpnos is not None:
                         vpnos = [('@AG@' + vpno) for vpno in vpnos]
@@ -114,7 +113,6 @@ def gen_vendor_mapfile(vendor_obj):
             vpnos, strategy = [[pcb], 'CUSTOM']
             outw.writerow(['PCB ' + pcb.strip(), strategy.strip()] + vpnos)
             pb.next(note=pcb)
-            # "\n%f%% %s\nGenerating Map File" % (percentage, pcb))
         pb.finish()
         outf.close()
         logger.info("Written PCB Vendor Map to File : " + vendor_obj.name)
