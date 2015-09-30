@@ -44,16 +44,19 @@ def test_www_opener():
 
 
 def test_redirect_cache_301():
+    www.ENABLE_REDIRECT_CACHING = True
     assert isinstance(www.redirect_cache, dict)
     result = www.urlopen('https://jigsaw.w3.org/HTTP/300/301.html')
     assert result.status == 301
     newtarget = www.get_actual_url('https://jigsaw.w3.org/HTTP/300/301.html')
     assert newtarget == 'https://jigsaw.w3.org/HTTP/300/Overview.html'
+    print www.redirect_cache
     result = www.urlopen('https://jigsaw.w3.org/HTTP/300/301.html')
     assert hasattr(result, 'status') == False or result.status == 200
 
 
 def test_redirect_cache_302():
+    www.ENABLE_REDIRECT_CACHING = True
     result = www.urlopen('https://jigsaw.w3.org/HTTP/300/302.html')
     assert result.status == 302
     newtarget = www.get_actual_url('https://jigsaw.w3.org/HTTP/300/302.html')

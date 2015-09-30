@@ -1,11 +1,15 @@
 
 language: python
-python: 2.7
-env:
-  - TOX_ENV=py34
-  - TOX_ENV=py27
-  - TOX_ENV=docs
-  - TOX_ENV=style
+matrix:
+  include:
+    - python: 3.4.3
+      env: TOX_ENV=py34
+    - python: 2.7
+      env: TOX_ENV=py27
+    - python: 2.7
+      env: TOX_ENV=docs
+    - python: 2.7
+      env: TOX_ENV=style
 install:
   - pip install -U pip wheel
   - pip install tox
