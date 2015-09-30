@@ -60,7 +60,6 @@ setup(
         # Confirmed Core Dependencies
         'argparse',
         'psycopg2',
-        'wsgiref',
         'arrow',
         'pillow',
         'qrcode',

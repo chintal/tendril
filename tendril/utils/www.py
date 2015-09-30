@@ -70,27 +70,36 @@ to be hit.
 
 """
 
-from config import NETWORK_PROXY_TYPE
-from config import NETWORK_PROXY_IP
-from config import NETWORK_PROXY_PORT
-from config import NETWORK_PROXY_USER
-from config import NETWORK_PROXY_PASS
+from __future__ import print_function
 
-from config import ENABLE_REDIRECT_CACHING
+from .config import NETWORK_PROXY_TYPE
+from .config import NETWORK_PROXY_IP
+from .config import NETWORK_PROXY_PORT
+from .config import NETWORK_PROXY_USER
+from .config import NETWORK_PROXY_PASS
 
-from config import TRY_REPLICATOR_CACHE_FIRST
-from config import REPLICATOR_PROXY_TYPE
-from config import REPLICATOR_PROXY_IP
-from config import REPLICATOR_PROXY_PORT
-from config import REPLICATOR_PROXY_USER
-from config import REPLICATOR_PROXY_PASS
+from .config import ENABLE_REDIRECT_CACHING
 
-from config import INSTANCE_CACHE
+from .config import TRY_REPLICATOR_CACHE_FIRST
+from .config import REPLICATOR_PROXY_TYPE
+from .config import REPLICATOR_PROXY_IP
+from .config import REPLICATOR_PROXY_PORT
+from .config import REPLICATOR_PROXY_USER
+from .config import REPLICATOR_PROXY_PASS
+
+from .config import INSTANCE_CACHE
 
 from bs4 import BeautifulSoup
-import urllib2
+
+from six.moves.urllib.request import HTTPRedirectHandler
+from six.moves.urllib.request import ProxyHandler
+from six.moves.urllib.request import HTTPPasswordMgrWithDefaultRealm
+from six.moves.urllib.request import ProxyBasicAuthHandler
+from six.moves.urllib.request import build_opener
+from six.moves.urllib.error import HTTPError, URLError
 
 import os
+import six
 import time
 import pickle
 import atexit
@@ -144,15 +153,18 @@ def dump_redirect_cache():
     Called during python interpreter shutdown, this function dumps the
     redirect cache to the file system.
     """
-    with open(REDIR_CACHE_FILE, 'wb') as f:
-        pickle.dump(redirect_cache, f)
-    logger.info('Dumping Redirect Cache to file')
+    if DUMP_REDIR_CACHE_ON_EXIT:
+        with open(REDIR_CACHE_FILE, 'wb') as f:
+            pickle.dump(redirect_cache, f, protocol=2)
+        logger.info('Dumping Redirect Cache to file')
+
+DUMP_REDIR_CACHE_ON_EXIT = True
 
 if ENABLE_REDIRECT_CACHING is True:
     atexit.register(dump_redirect_cache)
 
 
-class CachingRedirectHandler(urllib2.HTTPRedirectHandler):
+class CachingRedirectHandler(HTTPRedirectHandler):
     """
     This handler modifies the behavior of
     :class:`urllib2.HTTPRedirectHandler`, resulting in a HTTP ``301`` or
@@ -169,7 +181,7 @@ class CachingRedirectHandler(urllib2.HTTPRedirectHandler):
         setting the ``result.status`` to ``301`` in case a http ``301`` error
         is encountered.
         """
-        result = urllib2.HTTPRedirectHandler.http_error_301(
+        result = HTTPRedirectHandler.http_error_301(
             self, req, fp, code, msg, headers)
         result.status = code
         return result
@@ -180,7 +192,7 @@ class CachingRedirectHandler(urllib2.HTTPRedirectHandler):
         setting the ``result.status`` to ``302`` in case a http ``302`` error
         is encountered.
         """
-        result = urllib2.HTTPRedirectHandler.http_error_302(
+        result = HTTPRedirectHandler.http_error_302(
             self, req, fp, code, msg, headers)
         result.status = code
         return result
@@ -203,7 +215,7 @@ def _test_opener(openr):
     try:
         openr.open('http://www.google.com', timeout=5)
         return True
-    except urllib2.URLError:
+    except URLError:
         return False
 
 
@@ -231,29 +243,29 @@ def _create_opener():
         proxyurl = 'http://' + NETWORK_PROXY_IP
         if NETWORK_PROXY_PORT:
             proxyurl += ':' + NETWORK_PROXY_PORT
-        proxy_handler = urllib2.ProxyHandler({NETWORK_PROXY_TYPE: proxyurl})
+        proxy_handler = ProxyHandler({NETWORK_PROXY_TYPE: proxyurl})
         if NETWORK_PROXY_USER is not None:
             use_proxy_auth = True
-            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr = HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(
                 None, proxyurl, NETWORK_PROXY_USER, NETWORK_PROXY_PASS
             )
-            proxy_auth_handler = urllib2.ProxyBasicAuthHandler(password_mgr)
+            proxy_auth_handler = ProxyBasicAuthHandler(password_mgr)
     if use_proxy:
         if use_proxy_auth:
-            openr = urllib2.build_opener(
+            openr = build_opener(
                 proxy_handler, proxy_auth_handler, CachingRedirectHandler
             )
         else:
-            openr = urllib2.build_opener(
+            openr = build_opener(
                 proxy_handler, CachingRedirectHandler
             )
     else:
-        openr = urllib2.build_opener(CachingRedirectHandler)
+        openr = build_opener(CachingRedirectHandler)
     openr.addheaders = [('User-agent', 'Mozilla/5.0')]
     if _test_opener(openr) is True:
         return openr
-    openr = urllib2.build_opener(CachingRedirectHandler)
+    openr = build_opener(CachingRedirectHandler)
     openr.addheaders = [('User-agent', 'Mozilla/5.0')]
     return openr
 
@@ -281,27 +293,27 @@ def _create_replicator_opener():
         proxyurl = 'http://' + REPLICATOR_PROXY_IP
         if REPLICATOR_PROXY_PORT:
             proxyurl += ':' + REPLICATOR_PROXY_PORT
-        proxy_handler = urllib2.ProxyHandler(
+        proxy_handler = ProxyHandler(
             {REPLICATOR_PROXY_TYPE: proxyurl}
         )
         if REPLICATOR_PROXY_USER is not None:
             use_proxy_auth = True
-            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr = HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(
                 None, proxyurl, REPLICATOR_PROXY_USER, REPLICATOR_PROXY_PASS
             )
-            proxy_auth_handler = urllib2.ProxyBasicAuthHandler(password_mgr)
+            proxy_auth_handler = ProxyBasicAuthHandler(password_mgr)
     if use_proxy:
         if use_proxy_auth:
-            openr = urllib2.build_opener(
+            openr = build_opener(
                 proxy_handler, proxy_auth_handler, CachingRedirectHandler
             )
         else:
-            openr = urllib2.build_opener(
+            openr = build_opener(
                 proxy_handler, CachingRedirectHandler
             )
     else:
-        openr = urllib2.build_opener(CachingRedirectHandler)
+        openr = build_opener(CachingRedirectHandler)
     openr.addheaders = [('User-agent', 'Mozilla/5.0')]
     return openr
 
@@ -333,14 +345,14 @@ def urlopen(url):
             except AttributeError:
                 pass
             return page
-        except urllib2.HTTPError, e:
+        except HTTPError as e:
             logger.error("HTTP Error : " + str(e.code) + str(url))
             if e.code == 500:
                 time.sleep(0.5)
                 retries -= 1
             else:
                 retries = 0
-        except urllib2.URLError, e:
+        except URLError as e:
             logger.error("URL Error : " + str(e.errno) + " " + str(e.reason))
             retries = 0
 
@@ -355,14 +367,14 @@ def urlopen(url):
             except AttributeError:
                 pass
             return page
-        except urllib2.HTTPError, e:
+        except HTTPError as e:
             logger.error("HTTP Error : " + str(e.code) + str(url))
             if e.code == 500:
                 time.sleep(0.5)
                 retries -= 1
             else:
                 retries = 0
-        except urllib2.URLError, e:
+        except URLError as e:
             logger.error("URL Error : " + str(e.errno) + " " + str(e.reason))
             retries = 0
     return None
@@ -387,7 +399,10 @@ class WWWCachedFetcher:
 
     def fetch(self, url, max_age=500000):
         # Use MD5 hash of the URL as the filename
-        filepath = md5(url).hexdigest()
+        if six.PY3 or (six.PY2 and isinstance(url, unicode)):
+            filepath = md5(url.encode('utf-8')).hexdigest()
+        else:
+            filepath = md5(url).hexdigest()
         if self.cache_fs.exists(filepath):
             # TODO This seriously needs cleaning up.
             if int(time.time()) - int(time.mktime(self.cache_fs.getinfo(filepath)['modified_time'].timetuple())) < max_age:  # noqa
@@ -395,7 +410,7 @@ class WWWCachedFetcher:
         # Retrieve over HTTP and cache, using rename to avoid collisions
         data = urlopen(url).read()
         fd, temppath = tempfile.mkstemp()
-        fp = os.fdopen(fd, 'w')
+        fp = os.fdopen(fd, 'wb')
         fp.write(data)
         fp.close()
         # This can be pretty expensive if the move is across a real filesystem
