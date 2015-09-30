@@ -68,6 +68,26 @@ to be hit.
 - :data:`tendril.utils.config.REPLICATOR_PROXY_USER`
 - :data:`tendril.utils.config.REPLICATOR_PROXY_PASS`
 
+This module also provides the :class:`WWWCachedFetcher` class,
+an instance of which is available in :data:`cached_fetcher`, which
+is subsequently used by :func:`get_soup` and any application code
+that want's cached results.
+
+Overall, caching should look something like this :
+
+- WWWCacheFetcher provides short term (~5 days)
+  caching, aggressively expriring whatever is here.
+
+- RedirectCacheHandler is something of a special case, handling
+  redirects which otherwise would be incredibly expensive.
+  Unfortunately, this layer is also the dumbest cacher, and
+  does not expire anything, ever. To 'invalidate' something in
+  this cache, the entire cache needs to be nuked. It may be
+  worthwhile to consider moving this to redis instead.
+
+- http-replicator provides an underlying caching layer which
+  is HTTP1.1 compliant.
+
 """
 
 from __future__ import print_function
@@ -382,17 +402,14 @@ def urlopen(url):
 
 class WWWCachedFetcher:
     # TODO improve this to use / provide a decent caching layer.
-    # Overall, caching should look something like this :
-    # - WWWCacheFetcher / this layer provides short term (~5 days)
-    #   caching, aggressively expriring whatever is here.
-    # - RedirectCacheHandler is something of a special case, handling
-    #   redirects which otherwise would be incredibly expensive.
-    #   Unfortunately, this layer is also the dumbest cacher, and
-    #   does not expire anything, ever. To 'invalidate' something in
-    #   this cache, the entire cache needs to be nuked. It may be
-    #   worthwhile to consider moving this to redis instead.
-    # - http-replicator provides an underlying caching layer which
-    #   is HTTP1.1 compliant.
+    """
+    This class implements a simple filesystem cache which
+    can be used to create and obtain from cached www requests.
+
+    The cache is stored in the ``cache_fs`` filesystem, with
+    a filename constructed from the md5 sum of the url (encoded as
+    ``utf-8`` if necessary).
+    """
 
     def __init__(self, cache_dir=WWW_CACHE):
         self.cache_fs = fsopendir(cache_dir)
@@ -420,6 +437,8 @@ class WWWCachedFetcher:
                  self.cache_fs, filepath)
         return data
 
+#: The module's :class:`WWWCachedFetcher` instance which should be
+#: used whenever cached results are desired.
 cached_fetcher = WWWCachedFetcher()
 
 
