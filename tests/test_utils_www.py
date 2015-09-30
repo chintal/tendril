@@ -93,3 +93,5 @@ def test_www_errors():
         www.get_soup('http://httpstat.us/404')
     with pytest.raises(URLError):
         www.get_soup('httpd://httpstat.us/404')
+    result = www.urlopen('http://httpstat.us/500')
+    assert result is None
