@@ -25,6 +25,8 @@ Docstring for test_utils_www
 import six
 from tendril.utils import www
 from hashlib import md5
+import pytest
+from six.moves.urllib.error import HTTPError, URLError
 www.DUMP_REDIR_CACHE_ON_EXIT = False
 
 
@@ -50,7 +52,6 @@ def test_redirect_cache_301():
     assert result.status == 301
     newtarget = www.get_actual_url('https://jigsaw.w3.org/HTTP/300/301.html')
     assert newtarget == 'https://jigsaw.w3.org/HTTP/300/Overview.html'
-    print www.redirect_cache
     result = www.urlopen('https://jigsaw.w3.org/HTTP/300/301.html')
     assert hasattr(result, 'status') == False or result.status == 200
 
@@ -86,3 +87,9 @@ def test_cached_fetcher():
     assert soup is not None
     assert fs.exists(filepath)
 
+
+def test_www_errors():
+    with pytest.raises(HTTPError):
+        www.get_soup('http://httpstat.us/404')
+    with pytest.raises(URLError):
+        www.get_soup('httpd://httpstat.us/404')

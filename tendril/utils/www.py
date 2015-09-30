@@ -351,10 +351,10 @@ def urlopen(url):
                 time.sleep(0.5)
                 retries -= 1
             else:
-                retries = 0
+                raise
         except URLError as e:
             logger.error("URL Error : " + str(e.errno) + " " + str(e.reason))
-            retries = 0
+            raise
 
     while retries > 0:
         try:
@@ -373,10 +373,10 @@ def urlopen(url):
                 time.sleep(0.5)
                 retries -= 1
             else:
-                retries = 0
+                raise
         except URLError as e:
             logger.error("URL Error : " + str(e.errno) + " " + str(e.reason))
-            retries = 0
+            raise
     return None
 
 
