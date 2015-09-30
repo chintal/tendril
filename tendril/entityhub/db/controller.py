@@ -42,9 +42,11 @@ def get_series_obj(series=None, session=None):
 @with_db
 def create_series_obj(series=None, start_seed=None, session=None):
     if not series or not isinstance(series, str):
-        raise ValueError('series should be a string, got : ' + repr(series))
+        raise ValueError('series should be a string, got : ' +
+                         repr(series))
     if not start_seed or not isinstance(series, str):
-        raise ValueError('start_seed should be a string, got : ' + repr(start_seed))
+        raise ValueError('start_seed should be a string, got : ' +
+                         repr(start_seed))
     sobj = SerialNumberSeries(series=series, last_seed=start_seed)
     session.add(sobj)
     session.flush()

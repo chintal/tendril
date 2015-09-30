@@ -36,7 +36,7 @@ from tendril.entityhub import projects
 from tendril.entityhub import serialnos
 
 from tendril.utils.pdf import merge_pdf
-from tendril.utils.progressbar.progressbar import ProgressBar
+from tendril.utils.terminal import TendrilProgressBar
 from tendril.utils.config import INSTANCE_ROOT
 
 from tendril.utils import log
@@ -122,17 +122,11 @@ if __name__ == "__main__":
         cobom.dump(f)
 
     unsourced = []
-    pb = ProgressBar('red', block='#', empty='.')
     nlines = len(cobom.lines)
+    pb = TendrilProgressBar(max=nlines)
 
     for pbidx, line in enumerate(cobom.lines):
-        percentage = (float(pbidx) / nlines) * 100.00
-        pb.render(
-            int(percentage),
-            "\n{0:>7.4f}% {1:<40} Qty:{2:<4}\nConstructing Reservations".format(  # noqa
-                percentage, line.ident, line.quantity
-            )
-        )
+        pb.next(note=line.ident)
         shortage = 0
         logger.debug("Processing Line : " + line.ident)
         for idx, descriptor in enumerate(cobom.descriptors):

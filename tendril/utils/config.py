@@ -83,10 +83,12 @@ Configuration Constants
 
 """
 
+from __future__ import print_function
+
 import os
 import sys
 import inspect
-from fsutils import import_
+from .fsutils import import_
 
 
 config_module = sys.modules[__name__]
@@ -141,7 +143,7 @@ load_constants(config_constants_basic)
 
 
 if os.path.exists(os.path.join(INSTANCE_ROOT, 'redirect')):
-    print "Found redirect"
+    print("Found redirect")
     with open(os.path.join(INSTANCE_ROOT, 'redirect'), 'r') as f:
         INSTANCE_ROOT = f.read().strip()
 
@@ -200,8 +202,8 @@ class ConfigOption(object):
             try:
                 return eval(self.default)
             except SyntaxError:
-                print "Required config option not set in " \
-                      "instance config : " + self.name
+                print("Required config option not set in "
+                      "instance config : " + self.name)
                 raise
 
 
@@ -472,7 +474,7 @@ def build_db_uri(dbhost, dbport, dbuser, dbpass, dbname):
     :return: The DB URI
     """
     return 'postgresql://' + \
-         dbuser + ":" + dbpass + "@" + dbhost + ':' + dbport + '/' + dbname
+        dbuser + ":" + dbpass + "@" + dbhost + ':' + dbport + '/' + dbname
 
 
 DB_URI = build_db_uri(DATABASE_HOST, DATABASE_PORT,

@@ -134,12 +134,12 @@ class VendorTI(vendors.VendorBase):
         try:
             product = TIElnPart(pno)
         except:
-            return None, None, None, None, None
+            return None, None, None, None
+        # unitp = product._prices[0]._price
         ns = False
         mfgpno = pno
         package = self._standardize_package(product.package)
-        unitp = product._prices[0]._price
-        return pno, mfgpno, package, ns, unitp
+        return pno, mfgpno, package, ns
 
     def _process_search_soup(self, soup):
         ptable = soup.find('table',

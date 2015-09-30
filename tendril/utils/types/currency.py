@@ -124,7 +124,7 @@ class CurrencyDefinition(object):
     def _get_exchval(code):
         """
         Obtains the exchange rate of the currency definition's :attr:`code`
-        using the `<https://fixer.io>`_ JSON API. The native currency is used
+        using the `<http://fixer.io>`_ JSON API. The native currency is used
         as the reference.
 
         :param code: The currency code for which the exchange rate is needed.

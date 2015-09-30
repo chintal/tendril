@@ -22,14 +22,14 @@
 Docstring for measurements
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import time
 import arrow
 
-from tendril.utils.progressbar import terminal
+from colorama import Fore
 from tendril.utils.types.electromagnetic import Voltage
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 class TestMeasurementBase(object):
@@ -215,7 +215,7 @@ class TestUserMeasurement(TestMeasurementBase):
     def do_measurement(self):
         while self.input_valid is False:
             self._user_input = raw_input(
-                terminal.CYAN + self._string + ' [y/n] : ' + terminal.NORMAL
+                Fore.CYAN + self._string + ' [y/n] : ' + Fore.RESET
             ).strip()
         self._ts = arrow.utcnow()
 

@@ -21,7 +21,6 @@ gEDA gsymlib Module documentation (:mod:`gedaif.gsymlib`)
 
 import os
 import csv
-import logging
 
 import yaml
 import jinja2
@@ -37,6 +36,9 @@ import tendril.utils.fsutils
 import tendril.conventions.electronics
 
 from gschem import conv_gsch2png
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 class GedaSymbol(object):
@@ -277,7 +279,7 @@ class GSymGeneratorFile(object):
                         self._ivalues.append(gendata['values'])
                 return values
         else:
-            logging.ERROR("Config file schema is not supported")
+            logger.ERROR("Config file schema is not supported")
 
     @property
     def values(self):
@@ -344,8 +346,10 @@ def gen_symlib(path=GEDA_SYMLIB_ROOT, recursive=True,
 
 
 def _jinja_init():
+    templates_path = os.path.join(TENDRIL_ROOT, 'gedaif', 'templates')
+    logger.debug("Loading templates from " + templates_path)
     loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(TENDRIL_ROOT, 'gedaif', 'templates')
+        searchpath=templates_path
     )
     renderer = jinja2.Environment(loader=loader)
     template_file = 'generator.gen.yaml'

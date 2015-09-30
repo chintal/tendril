@@ -2,6 +2,7 @@
 
 import os
 from setuptools import setup, find_packages
+import versioneer
 
 
 # Utility function to read the README file.
@@ -14,7 +15,8 @@ def read(fname):
 
 setup(
     name="tendril-framework",
-    version="0.1.0",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author="Chintalagiri Shashank",
     author_email="shashank@chintal.in",
     description='An open-ended framework for handling information, to aid '
@@ -25,6 +27,19 @@ setup(
     package_dir={'tendril': 'tendril'},
     packages=find_packages(exclude=['profiling', 'contrib', 'doc', 'tests*']),
     include_package_data=True,
+    package_data={
+        'tendril': [
+            # gedaif module
+            'gedaif/templates/*.yaml',
+            # dox module
+            'dox/templates/*.tex',
+            'dox/templates/*/*.tex',
+            # frontend module
+            'frontend/static/*',
+            'frontend/templates/*/*.html',
+            'frontend/blueprints/*/templates/*.html',
+        ]
+    },
     long_description=read('README.rst'),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -45,7 +60,6 @@ setup(
         # Confirmed Core Dependencies
         'argparse',
         'psycopg2',
-        'wsgiref',
         'arrow',
         'pillow',
         'qrcode',
@@ -61,6 +75,8 @@ setup(
         'fs',
         'paramiko',
         'pyyaml',
+        'progress',
+        'colorama',
 
         # Flask Dependencies (to be pruned?)
         'jsmin',
@@ -75,10 +91,12 @@ setup(
         # Perhaps require reconsideration
         'matplotlib',  # Pulls in numpy!
         'splinter',    # Replace with direct selenium usage
+        'versioneer',
 
         # Extracted Modules
         'driver2200087',
         'iec60063',
+        'tendril-gedaif-sym2eps',
     ],
     tests_require=[
         'pytest',
@@ -92,7 +110,8 @@ setup(
             'sphinx',
             'sphinx-rtd-theme',
             'sphinxcontrib-documentedlist',
-            'sphinxcontrib-googleanalytics==0.1.dev20150826'
+            'sphinxcontrib-googleanalytics==0.1.dev20150826',
+            'versioneer'
             ]
     },
     platforms='any'

@@ -102,9 +102,8 @@ Project Folder Structure
     [projname]
     `-- hardware
         |-- branches
-        |-- hR1
-        |   |   `-- [full copy of trunk at a specific hardware revision]
-        |   ..
+        |   |-- hR1
+        |   ..    `-- [full copy of trunk at a specific hardware revision]
         |-- tags
         `-- trunk
             |-- ChangeLog
@@ -112,14 +111,12 @@ Project Folder Structure
             |   |-- [projname].[layer].gbr or cnc
             |   ..
             |-- [projname]-gerber.zip           (generated-tendril)
-            |
             |-- pcb
             |   |-- [projname].cmd              (generated-gsch2pcb)
             |   |-- [projname].dxf              (generated-tendril)
             |   |-- [projname].net              (generated-gsch2pcb)
             |   |-- [projname].pcb
             |   `-- sourcing.yaml               (generated-tendril-manual)
-            |
             |-- schematic
                 |-- [schname-1].sch
                 ..

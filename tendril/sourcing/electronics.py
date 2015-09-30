@@ -34,7 +34,7 @@ import tendril.gedaif.conffile
 
 from tendril.utils import fsutils
 from tendril.utils import config
-from tendril.utils.progressbar.progressbar import ProgressBar
+from tendril.utils.terminal import TendrilProgressBar
 
 import tendril.entityhub.maps
 
@@ -56,20 +56,18 @@ def gen_vendor_mapfile(vendor_obj):
         logger.info('Generating electronics mapfile for ' + vendor_obj.name)
         symlib = gsymlib.gen_symlib()
         symlib.sort(key=lambda x: x.ident)
-        pb = ProgressBar('red', block='#', empty='.')
+        pb = TendrilProgressBar(max=len(symlib))
 
         outp = vendor_obj.mappath
         outf = fsutils.VersionedOutputFile(outp)
         outw = csv.writer(outf)
         outw.writerow(('Canonical', 'Strategy', 'Lparts'))
 
-        nsymbols = len(symlib)
-        counter = 0
-
         for status in ['Active', 'Experimental',
                        'Deprecated', 'Virtual', 'Generator']:
             for symbol in symlib:
                 if symbol.status == status and symbol.ident.strip() != "":
+                    pb.next(note=symbol.ident)
                     vpnos, strategy = vendor_obj.search_vpnos(symbol.ident)
                     if vpnos is not None:
                         vpnos = [('@AG@' + vpno) for vpno in vpnos]
@@ -77,9 +75,9 @@ def gen_vendor_mapfile(vendor_obj):
                         # TODO Fix this error (hack around progressbar issue)
                         if strategy not in ['NODEVICE', 'NOVALUE',
                                             'NOT_IMPL']:
-                            logger.warning("Could not find matches for : " +
-                                           symbol.ident +
-                                           '::' + str(strategy) + '\n\n\n')
+                            pb.writeln("Not Found: " +
+                                       symbol.ident + '::' + str(strategy) +
+                                       '\n')
                         vpnos = []
                     try:
                         outw.writerow(
@@ -88,12 +86,7 @@ def gen_vendor_mapfile(vendor_obj):
                     except AttributeError:
                         print symbol.ident, strategy
                         raise AttributeError
-                    counter += 1
-                    percentage = counter * 100.00 / nsymbols
-                    pb.render(
-                        int(percentage),
-                        "\n%f%% %s\nGenerating Map File" % (percentage,
-                                                            symbol.ident))
+        pb.finish()
         outf.close()
         logger.info("Written Electronics Vendor Map to File : " +
                     vendor_obj.name)
@@ -101,15 +94,13 @@ def gen_vendor_mapfile(vendor_obj):
         logger.info('Generating PCB mapfile for ' + vendor_obj.name)
 
         pcblib = projects.pcbs
-        pb = ProgressBar('red', block='#', empty='.')
+        nsymbols = len(pcblib)
+        pb = TendrilProgressBar(max=nsymbols)
 
         outp = vendor_obj.mappath
         outf = fsutils.VersionedOutputFile(outp)
         outw = csv.writer(outf)
         outw.writerow(('Canonical', 'Strategy', 'Lparts'))
-
-        nsymbols = len(pcblib)
-        counter = 0
 
         for pcb, folder in pcblib.iteritems():
             # conf = gedaif.conffile.ConfigsFile(folder)
@@ -121,11 +112,8 @@ def gen_vendor_mapfile(vendor_obj):
 
             vpnos, strategy = [[pcb], 'CUSTOM']
             outw.writerow(['PCB ' + pcb.strip(), strategy.strip()] + vpnos)
-            counter += 1
-            percentage = counter * 100.00 / nsymbols
-            pb.render(
-                int(percentage),
-                "\n%f%% %s\nGenerating Map File" % (percentage, pcb))
+            pb.next(note=pcb)
+        pb.finish()
         outf.close()
         logger.info("Written PCB Vendor Map to File : " + vendor_obj.name)
     else:
@@ -217,18 +205,16 @@ def export_vendor_map_audit(vendor_obj):
                         vendor_obj.name + '-electronics-audit.csv')
     outf = fsutils.VersionedOutputFile(outp)
     outw = csv.writer(outf)
-    pb = ProgressBar('red', block='#', empty='.')
     total = mapobj.length()
-    count = 0
+    pb = TendrilProgressBar(max=total)
     for ident in mapobj.get_idents():
         for vpno in mapobj.get_all_partnos(ident):
-            count += 1
             try:
                 vp = vendor_obj.get_vpart(vpno, ident)
             except:
-                print "Error while getting part {0} from {1}".format(
+                logger.error("Error while getting part {0} from {1}".format(
                     vpno, vendor_obj.name
-                )
+                ))
                 raise
             try:
                 assert isinstance(vp, vendors.VendorElnPartBase)
@@ -240,13 +226,10 @@ def export_vendor_map_audit(vendor_obj):
                                vp.vpartdesc, vp.manufacturer,
                                vp.vqtyavail, vp.abs_moq])
 
-            percentage = count * 100.00 / total
-            pb.render(
-                int(percentage),
-                "\n%f%% %s;%s\nGenerating Vendor Map Audit" % (
-                    percentage, ident, vpno
-                )
-            )
+            pb.next(note=':'.join([ident, vpno]))
+            # "\n%f%% %s;%s\nGenerating Vendor Map Audit" % (
+            #         percentage, ident, vpno
+    pb.finish()
     outf.close()
     logger.info("Written Vendor Map Audit to File : " + vendor_obj.name)
 

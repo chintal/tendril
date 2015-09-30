@@ -153,11 +153,15 @@ using them as local folders is supported at present.
     .. seealso::
 
         These folders can be wherever you want them to be. Just make sure to set
-        the following configuration options :
+        the following configuration options in your local config overrides :
 
             - DOCUMENT_WALLET_ROOT
             - DOCSTORE_ROOT
             - REFDOC_ROOT
+
+        Your instance_config itself would benefit from having the reference to
+        the XML-RPC endpoint for the filesystem, allowing your users to connect
+        directly to it. See the next section for details.
 
     .. hint::
 
@@ -169,6 +173,10 @@ using them as local folders is supported at present.
         probably be to have :mod:`tendril.frontend.blueprints.expose` redirect
         you to the correct URL of the remote resource instead.
 
+Exposing the Filesystems over http via XML-RPC
+----------------------------------------------
+
+TODO
 
 Setting up Apache
 -----------------

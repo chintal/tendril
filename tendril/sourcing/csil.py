@@ -32,7 +32,7 @@ import vendors
 
 from tendril.utils import fsutils
 from tendril.utils.types import currency
-from tendril.utils.progressbar.progressbar import ProgressBar
+from tendril.utils.terminal import TendrilProgressBar
 
 # from utils.config import NETWORK_PROXY_IP
 # from utils.config import NETWORK_PROXY_PORT
@@ -191,7 +191,7 @@ def get_csil_prices(params=exparams, rval=None):
         time.sleep(0.5)
     oldt = newt
     oldtt = newtt
-    pb = ProgressBar('red', block='#', empty='.')
+    pb = TendrilProgressBar(max=[max(params['qty'])])
     for qty in params['qty'][2:]:
         lined = {}
         while browser.find_by_name('ctl00$ContentPlaceHolder1$txtQuantity')[0].value != '':  # noqa
@@ -204,11 +204,9 @@ def get_csil_prices(params=exparams, rval=None):
             loi = [10]
         else:
             loi = [10]
-        percentage = (float(qty) / max(params['qty'])) * 100.00
-        pb.render(int(percentage),
-                  "\n{0:>7.4f}% {1:<40} Qty: {2:<10} DTS: {3:<4}\nGenerating PCB Pricing".format(  # noqa
-                      percentage, params['pcbname'], qty, loi)
-                  )
+        pb.next(note="{0} {1}".format(qty, loi))
+        # "\n{0:>7.4f}% {1:<40} Qty: {2:<10} DTS: {3:<4}\nGenerating PCB Pricing".format(  # noqa
+        #               percentage, params['pcbname'], qty, loi)
         for dt_s in loi:
             dt_idx = delivery_times.index(dt_s)
             dts = delivery_times[dt_idx:dt_idx + 3]
