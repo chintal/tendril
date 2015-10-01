@@ -9,7 +9,7 @@
 
 <p></p>
 
-<h2> Inventory Locations </h2>
+<h3> Inventory Locations </h3>
 
 <div class="small-12 columns">
     <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
@@ -24,5 +24,53 @@
         {% endfor %}
     </ul>
 </div>
+
+<h3> Combined Inventory Status </h3>
+
+<div class="small-12 columns" data-magellan-destination="locstatus">
+<a name="locstatus"></a>
+        <div class="small-12 columns">
+            <table id="loc_status_table" class="display" data-paging='false'>
+                <thead>
+                <tr>
+                    <th class="min-tablet">Idx</th>
+                    <th class="all">Ident</th>
+                    {% for loc in stage.locs %}
+                    <th class="min-tablet"> {{ loc._name }}-AQ</th>
+                    {% endfor %}
+                    <th class="min-tablet">Total Reserved</th>
+                    <th class="all">Net Available Qty</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for ident in stage.idents %}
+                    <tr>
+                        <td> {{ loop.index }} </td>
+                        <td> {{ ident }} </td>
+                        {% for loc in stage.locs %}
+                            <td> {{ loc.get_ident_qty(ident) or '' }} </td>
+                        {% endfor %}
+                        <td> {{ stage.inv.get_total_reservations(ident) or '' }} </td>
+                        <td> {{ stage.inv.get_total_availability(ident) or '' }} </td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#loc_status_table').DataTable({
+                    /* Disable initial sort */
+                    "aaSorting": [],
+                    {% include 'parts/datatable_defaults.html' %}
+                });
+                table.buttons().container()
+                    .appendTo( '#loc_status_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            });
+        </script>
+</div>
+
 
 {% endblock %}
