@@ -65,8 +65,10 @@ def get_terminal_width():
 def get_terminal_size():
     """
     getTerminalSize()
-     - get width and height of console
-     - works on linux,os x,windows,cygwin(windows)
+
+    - get width and height of console
+    - works on linux,os x,windows,cygwin(windows)
+
     Taken from https://gist.github.com/jtriley/1108174
     """
     current_os = platform.system()
