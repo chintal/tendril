@@ -37,7 +37,12 @@ produce the output files after constructing the appropriate stage.
 import render
 import os
 
+import docstore
 import labelmaker
+
+from tendril.entityhub import serialnos
+from tendril.utils.db import with_db
+from tendril.boms.outputbase import load_cobom_from_file
 
 
 def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
@@ -111,3 +116,45 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
     render.render_pdf(stage, template, outpath)
 
     return outpath, indentsno
+
+
+def get_all_indents(limit=None):
+    return docstore.get_docs_list_for_sno_doctype(
+        serialno=None, doctype='INVENTORY INDENT', limit=limit
+    )
+
+
+def get_indent_docs(serialno=None):
+    rval = []
+    rval.extend(docstore.get_docs_list_for_serialno(serialno=serialno))
+    return rval
+
+
+@with_db
+def get_indent_production_order(serialno=None, session=None):
+    parents = serialnos.get_parent_serialnos(sno=serialno, session=session)
+    prod_sno = None
+    for parent in parents:
+        # TODO fix this
+        if parent.parent.sno.startswith('PROD'):
+            prod_sno = parent.parent.sno
+            break
+    if not prod_sno:
+        return None
+    return prod_sno
+
+
+def get_indent_cobom(serialno=None):
+    try:
+        cobom_path = docstore.get_docs_list_for_sno_doctype(
+            serialno=serialno, doctype='PRODUCTION COBOM CSV'
+        )[0].path
+    except IndexError:
+        return None
+    with docstore.docstore_fs.open(cobom_path, 'r') as f:
+        cobom = load_cobom_from_file(
+            f, os.path.splitext(os.path.split(cobom_path)[1])[0]
+        )
+    return cobom
+
+

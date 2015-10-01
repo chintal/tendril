@@ -244,70 +244,67 @@ class CompositeOutputBom(object):
                     self.lines.remove(line)
 
 
-def load_cobom_from_file(cobompath, tf=None):
+def load_cobom_from_file(f, name, tf=None):
     bomlist = []
-    if os.path.exists(cobompath):
-        logger.info("Loading Cobom File : " + cobompath)
-        with open(cobompath, 'r') as f:
-            header = []
-            reader = csv.reader(f)
-            for line in reader:
-                line = [elem.strip() for elem in line]
-                if line[0] == 'device':
-                    header = line
-                    break
+    header = []
+    reader = csv.reader(f)
+    for line in reader:
+        line = [elem.strip() for elem in line]
+        if line[0] == 'device':
+            header = line
+            break
 
-            logger.info('Inserting External Boms')
-            oboms = []
-            for head in header[1:-1]:
-                logger.info('Creating Bom : ' + head)
-                obom_descriptor = OutputElnBomDescriptor(head,
-                                                         None,
-                                                         head, None)
-                obom = OutputBom(obom_descriptor)
-                oboms.append(obom)
+    logger.info('Inserting External Boms')
+    oboms = []
+    for head in header[1:-1]:
+        logger.info('Creating Bom : ' + head)
+        obom_descriptor = OutputElnBomDescriptor(head,
+                                                 None,
+                                                 head, None)
+        obom = OutputBom(obom_descriptor)
+        oboms.append(obom)
 
-            for line in reader:
-                line = [elem.strip() for elem in line]
-                if line[0] == '':
-                    continue
-                if line[0] == 'END':
-                    break
-                if tf and not tf.has_contextual_repr(line[0]):
-                    print line[0] + ' Possibly not recognized'
-                if tf:
-                    device, value, footprint = parse_ident(
-                        tf.get_canonical_repr(line[0])
-                    )
+    for line in reader:
+        line = [elem.strip() for elem in line]
+        if line[0] == '':
+            continue
+        if line[0] == 'END':
+            break
+        if tf and not tf.has_contextual_repr(line[0]):
+            print line[0] + ' Possibly not recognized'
+        if tf:
+            device, value, footprint = parse_ident(
+                tf.get_canonical_repr(line[0])
+            )
+        else:
+            device, value, footprint = parse_ident(line[0])
+        logger.debug("Trying to insert line : " + line[0])
+        # print base_tf.get_canonical_repr(line[0])
+        from tendril.boms.electronics import EntityElnComp
+        item = EntityElnComp()
+        item.define('Undef', device, value, footprint)
+        for idx, col in enumerate(line[1:-1]):
+            if col != '':
+                if device and fpiswire(device):
+                    length = Length(col)
+                    if length > 0:
+                        wireitem = EntityElnComp()
+                        wireitem.define(
+                            'Undef', device, value, str(length)
+                        )
+                        oboms[idx].insert_component(wireitem)
                 else:
-                    device, value, footprint = parse_ident(line[0])
-                logger.debug("Trying to insert line : " + line[0])
-                # print base_tf.get_canonical_repr(line[0])
-                from tendril.boms.electronics import EntityElnComp
-                item = EntityElnComp()
-                item.define('Undef', device, value, footprint)
-                for idx, col in enumerate(line[1:-1]):
-                    if col != '':
-                        if device and fpiswire(device):
-                            length = Length(col)
-                            if length > 0:
-                                wireitem = EntityElnComp()
-                                wireitem.define(
-                                    'Undef', device, value, str(length)
-                                )
-                                oboms[idx].insert_component(wireitem)
-                        else:
-                            num = int(col)
-                            if num > 0:
-                                for i in range(num):
-                                    oboms[idx].insert_component(item)
+                    num = int(col)
+                    if num > 0:
+                        for i in range(num):
+                            oboms[idx].insert_component(item)
 
-            for obom in oboms:
-                logger.info('Inserting External Bom : ' +
-                            obom.descriptor.configname)
-                bomlist.append(obom)
+    for obom in oboms:
+        logger.info('Inserting External Bom : ' +
+                    obom.descriptor.configname)
+        bomlist.append(obom)
     cobom = CompositeOutputBom(
         bomlist,
-        name=os.path.splitext(os.path.split(cobompath)[1])[0]
+        name=name
     )
     return cobom

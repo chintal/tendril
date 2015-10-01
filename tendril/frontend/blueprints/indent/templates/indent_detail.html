@@ -1,0 +1,106 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="indent"><a href="#indent">Indent</a></dd>
+        <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+{% block main %}
+
+<p></p>
+
+<h4>Indent {{ stage.indent_sno }}</h4>
+<h6>for Production Order {{ stage.prod_sno }}</h6>
+
+<div class="small-12 columns" data-magellan-destination="order">
+<a name="indent"></a>
+
+    <div class="small-12 columns">
+        <div class="small-12 columns text-center">
+            <h5>Indent Composite Bom</h5>
+        </div>
+        {% if stage.cobom %}
+        <div class="small-12 columns">
+            <table id="cobom_table" class="display" data-paging='false'>
+                <thead>
+                <tr>
+                    <th class="all">Ident</th>
+                    {% for earmark in stage.cobom.descriptors %}
+                    <th class="min-tablet"> {{ earmark.configname }}x{{ earmark.multiplier }}</th>
+                    {% endfor %}
+                    <th class="all">Quantity</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for line in stage.cobom.lines %}
+                    <tr>
+                        <td> {{ line.ident }} </td>
+                        {% for column in line.columns %}
+                        <th class="min-tablet"> {{ column }} </th>
+                        {% endfor %}
+                        <td> {{ line.quantity }} </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#cobom_table').DataTable({
+                    /* Disable initial sort */
+                    "aaSorting": [],
+                    {% include 'parts/datatable_defaults.html' %}
+                });
+                table.buttons().container()
+                    .appendTo( '#cobom_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            });
+        </script>
+        {% else %}
+        <div class="row">
+        <div class="small-6 columns small-centered text-center alert panel radius"> Indent Cobom Not Found! </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<div class="small-12 medium-6 columns" data-magellan-destination="documentation">
+
+
+    <div class="text-center">
+        <h5>Related Documentation</h5>
+    </div>
+    <div class="small-12 columns">
+    <a href="/production/order/{{ stage.prod_sno }}">
+        <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+            <div class="text-center">Production Order</div>
+            <div class="text-center"><b>{{ stage.prod_sno }}</b></div>
+        </div>
+    </a>
+    </div>
+</div>
+<div class="small-12 medium-6 columns" data-magellan-destination="documentation">
+    
+    <div class="text-center">
+        <h5> Indent Documentation </h5>
+    </div>
+    <a name="documentation"></a>
+        <ul class="doclinklist">
+            {% for doc in stage.docs %}
+                {% include 'parts/doc_link_list_element.html' %}
+            {% endfor %}
+        </ul>
+</div>
+
+
+{% endblock %}
