@@ -221,7 +221,7 @@ class TendrilProgressBar(WindowsMixin, _BaseBar):
     def __init__(self, *args, **kwargs):
         super(TendrilProgressBar, self).__init__(*args, **kwargs)
         self._note = None
-        self._term_width = get_terminal_size()[0]
+        self._term_width = get_terminal_width()
 
     @property
     def term_width(self):

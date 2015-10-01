@@ -34,3 +34,6 @@ folders:
   - doc/devdoc
   - doc/userdoc
   - doc/sample
+
+addlang:
+  - html
