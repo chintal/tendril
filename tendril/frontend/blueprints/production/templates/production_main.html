@@ -1,0 +1,43 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<p></p>
+
+<h2>Production</h2>
+
+<div class="small-10 medium-6 columns header panel radius">
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+        <h6>Recent Production Orders</h6>
+    </div>
+    <div class="small-12 columns">
+        <ul class="doclinklist">
+            {% for doc in stage.latest_prod %}
+            <li>
+                <a href="/production/order/{{ doc.filename }}">
+                    <div class="button small-12 columns info radius active-tb shadow mrgn-20-top">
+                        <div class="row text-center"><b>{{ doc.filename }}</b></div>
+                        <div class="row text-center">{{ doc.efield }}</div>
+                        <div class="row text-center">{{ doc.ts }}</div>
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+            <li>
+                <a href="/production/order/">
+                    <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+                        <div class="text-center"><b>All</b></div>
+                    </div>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+
+{% endblock %}

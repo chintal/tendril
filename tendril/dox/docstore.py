@@ -49,11 +49,12 @@ local_fs = fsopendir('/')
 
 
 class ExposedDocument(object):
-    def __init__(self, desc, fspath, fs, ts=None):
+    def __init__(self, desc, fspath, fs, ts=None, efield=None):
         self.desc = desc
         self.path = fspath
         self.fs = fs
         self.ts = ts
+        self.efield = efield
         self._get_fs_prefix()
 
     def _get_fs_prefix(self):
@@ -98,7 +99,8 @@ def get_docs_list_for_serialno(serialno):
         rval.append(ExposedDocument(document.doctype,
                                     document.docpath,
                                     docstore_fs,
-                                    document.created_at))
+                                    document.created_at,
+                                    document.efield))
     return rval
 
 
@@ -110,7 +112,8 @@ def get_docs_list_for_doctype(doctype, limit=None):
         rval.append(ExposedDocument(document.doctype,
                                     document.docpath,
                                     docstore_fs,
-                                    document.created_at))
+                                    document.created_at,
+                                    document.efield))
     return rval
 
 
@@ -123,7 +126,8 @@ def get_docs_list_for_sno_doctype(serialno, doctype, limit=None):
         rval.append(ExposedDocument(document.doctype,
                                     document.docpath,
                                     docstore_fs,
-                                    document.created_at))
+                                    document.created_at,
+                                    document.efield))
     return rval
 
 

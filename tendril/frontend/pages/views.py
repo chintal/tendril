@@ -34,14 +34,24 @@ def home_page():
     return render_template('pages/home_page.html')
 
 
-@app.route('/sourcing/main.html')
+@app.route('/sourcing/')
 @login_required
 def landing_sourcing():
     stage = {'crumbroot': '/sourcing',
-             'breadcrumbs': [Crumb(name="Sourcing", path="main.html")],
+             'breadcrumbs': [Crumb(name="Sourcing", path="")],
              }
     return render_template('pages/land_sourcing.html', stage=stage,
                            pagetitle='Sourcing')
+
+
+@app.route('/inventory/')
+@login_required
+def landing_inventory():
+    stage = {'crumbroot': '/inventory',
+             'breadcrumbs': [Crumb(name="Inventory", path="")],
+             }
+    return render_template('pages/land_inventory.html', stage=stage,
+                           pagetitle='Inventory')
 
 
 @app.route('/instanceassets/logo.png')
