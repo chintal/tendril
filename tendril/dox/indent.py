@@ -156,5 +156,3 @@ def get_indent_cobom(serialno=None):
             f, os.path.splitext(os.path.split(cobom_path)[1])[0]
         )
     return cobom
-
-

@@ -35,15 +35,12 @@ produce the output files after constructing the appropriate stage.
 
 import os
 import yaml
-from fs import path
 
 from tendril.boms import electronics as boms_electronics
-from tendril.boms.outputbase import load_cobom_from_file
 from tendril.entityhub import projects
 from tendril.entityhub import serialnos
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.utils.pdf import merge_pdf
-from tendril.utils.fsutils import temp_fs
 
 import render
 import docstore
@@ -297,4 +294,3 @@ def get_production_order_data(serialno=None):
         snomap_data = yaml.load(f)
 
     return order_yaml_data, snomap_data
-

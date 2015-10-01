@@ -61,6 +61,8 @@ configuration :
       specified within that file - it can't, for instance, use the
       INSTANCE_ROOT value to construct paths unless it defines it for
       itself.
+    - Configuration constants will be set in the instance and local config
+      modules. Configuration options will not.
 
 Configuration Options
 ---------------------
@@ -125,6 +127,24 @@ def load_constants(constants):
         setattr(config_module, option.name, option.value)
 
 
+# def set_config_contants(constants):
+#     """
+#     Sets the configuration constants in the Instance and Local
+#     configuration modules.
+#
+#     :param constants: list of :class:`ConfigConstant`
+#     :return: None
+#
+#     """
+#     global LOCAL_CONFIG
+#     global INSTANCE_CONFIG
+#
+#     for option in constants:
+#         setattr(INSTANCE_CONFIG, option.name, option.value)
+#         if LOCAL_CONFIG is not None:
+#             setattr(LOCAL_CONFIG, option.name, option.value)
+
+
 config_constants_basic = [
     ConfigConstant(
         'TENDRIL_ROOT',
@@ -169,9 +189,14 @@ config_constants_redirected = [
 
 load_constants(config_constants_redirected)
 
+
 INSTANCE_CONFIG = import_(INSTANCE_CONFIG_FILE)
+LOCAL_CONFIG = None
 if os.path.exists(LOCAL_CONFIG_FILE):
     LOCAL_CONFIG = import_(LOCAL_CONFIG_FILE)
+
+# set_config_contants(config_constants_basic)
+# set_config_contants(config_constants_redirected)
 
 
 class ConfigOption(object):
@@ -294,7 +319,7 @@ config_constants_fs = [
 ]
 
 load_constants(config_constants_fs)
-
+# set_config_contants(config_constants_fs)
 
 config_options_resources = [
     ConfigOption(

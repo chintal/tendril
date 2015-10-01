@@ -114,6 +114,9 @@ def init_app(app, db):
     from tendril.frontend.blueprints.indent import indent
     app.register_blueprint(indent, url_prefix='/inventory/indent')
 
+    from tendril.frontend.blueprints.inventory import inventory
+    app.register_blueprint(inventory, url_prefix='/inventory/location')
+
     return app
 
 

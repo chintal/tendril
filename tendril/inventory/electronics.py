@@ -95,6 +95,7 @@ class InventoryLocation(object):
         self._dname = dname
         self._lines = []
         self._code = None
+        self._get_code()
 
         self._reader = reader
         if reader is not None:
@@ -171,6 +172,10 @@ class InventoryLocation(object):
 
     def commit_reservations(self):
         pass
+
+    @property
+    def lines(self):
+        return self._lines
 
 
 def init_inventory_locations():
