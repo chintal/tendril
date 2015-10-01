@@ -314,7 +314,6 @@ class NumericalUnitBase(UnitBase):
             else:
                 return 1
         else:
-            print self, other
             raise NotImplementedError(
                 "Comparison of : " + repr(self) + ", " + repr(other)
             )

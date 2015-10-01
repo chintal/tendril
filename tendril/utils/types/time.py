@@ -21,8 +21,8 @@ See the COPYING, README, and INSTALL files for more information
 
 import arrow.arrow
 
-from unitbase import NumericalUnitBase
-from unitbase import parse_none
+from .unitbase import NumericalUnitBase
+from .unitbase import parse_none
 
 from decimal import Decimal
 from numbers import Number

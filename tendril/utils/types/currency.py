@@ -53,9 +53,12 @@ from tendril.utils.config import BASE_CURRENCY
 from tendril.utils.config import BASE_CURRENCY_SYMBOL
 
 from tendril.utils import www
-import urllib
-import urllib2
+
+from six.moves.urllib.request import Request
+from six.moves.urllib.parse import urlencode
+
 import json
+import codecs
 import numbers
 
 
@@ -140,13 +143,13 @@ class CurrencyDefinition(object):
         apiurl = 'http://api.fixer.io/latest?'
         params = {'base': BASE_CURRENCY,
                   'symbols': code}
-        request = urllib2.Request(apiurl + urllib.urlencode(params))
+        request = Request(apiurl + urlencode(params))
         response = www.urlopen(request)
-        data = json.load(response)
+        reader = codecs.getreader("utf-8")
+        data = json.load(reader(response))
         try:
             rate = 1 / float(data['rates'][code])
         except KeyError:
-            print data
             raise KeyError(code)
         return rate
 
@@ -360,6 +363,9 @@ class CurrencyValue(object):
             return self.native_value / other.native_value
         else:
             raise NotImplementedError
+
+    def __truediv__(self, other):
+        return self.__div__(other)
 
     def __rmul__(self, other):
         return self.__mul__(other)
