@@ -187,6 +187,10 @@ apidoc:
 	sphinx-apidoc -e -o apidoc/ ../tendril/
 	# sphinx-apidoc -e -o devdoc/profiling/ ../profiling/
 
+.PHONY: publishcoverage
+publishcoverage:
+	rsync -azP --delete ../tests/coverage/* tendril@braavos:~/html/coverage
+
 .PHONY: publish
-publish:
+publish: publishcoverage
 	rsync -azP --delete $(BUILDDIR)/dirhtml/ tendril@braavos:~/html/doc

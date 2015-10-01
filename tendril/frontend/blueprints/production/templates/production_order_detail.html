@@ -1,0 +1,112 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="order"><a href="#order">Order</a></dd>
+        <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
+        <dd data-magellan-arrival="snomap"><a href="#snomap">Serial Map</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+{% block main %}
+
+<p></p>
+
+<h4>Production Order {{ stage.order_sno }}</h4>
+<h3>{{ stage.order_yaml.title }}</h3>
+
+<div class="small-12 medium-6 columns" data-magellan-destination="order">
+<a name="order"></a>
+    
+    <div class="small-12 columns">
+        <div class="small-12 columns text-center">
+            <h5>Modules for Production</h5>
+        </div>
+        <div class="small-12 columns">
+            <table id="order_table" class="display" data-paging='false'>
+                <thead>
+                <tr>
+                    <th class="all">Card</th>
+                    <th class="all">Quantity</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for card, qty in stage.order_yaml.cards.iteritems() %}
+                    <tr>
+                        <td> {{ card }} </td>
+                        <td> {{ qty }} </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#order_table').DataTable({
+                    /* Disable initial sort */
+                    "aaSorting": [],
+                    {% include 'parts/datatable_defaults.html' %}    
+                });
+                table.buttons().container()
+                    .appendTo( '#order_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            });
+        </script>
+    </div>
+    
+    
+    <div class="small-12 columns panel radius">
+        <div class="small-12 columns text-center">
+            <h5>Related Documentation</h5>
+        </div>
+        <div class="small-12 columns">
+        <a href="/inventory/indent/{{ stage.order_indentsno }}">
+            <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+                <div class="text-center">Inventory Indent</div>
+                <div class="text-center"><b>{{ stage.order_indentsno }}</b></div>
+            </div>
+        </a>
+        </div>
+    </div>
+    
+</div>
+
+<div class="small-12 medium-6 columns" data-magellan-destination="documentation">
+<div class="text-center">
+    <h5> Order Documentation </h5>
+</div>
+<a name="documentation"></a>
+    <ul class="doclinklist">
+        {% for doc in stage.docs %}
+            {% include 'parts/doc_link_list_element.html' %}
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="small-12 medium-6 columns end" data-magellan-destination="snomap">
+<div class="text-center">
+    <h5> Serial Number Map </h5>
+</div>
+<a name="snomap"></a>
+    <div class="small-12 columns">
+        <ul id="snomap_table" class="pricing-table">
+            {% for k, v in stage.order_snomap.iteritems() %}
+            <li class="title"> {{ k }} </li>
+                {% for idx, sno in v.iteritems() %}
+                <li class="bullet-item active-tb"> {{ sno }} </li>
+                {% endfor %}
+            {% endfor %}
+            <li></li>
+        </ul>
+    </div>    
+</div>
+
+
+{% endblock %}

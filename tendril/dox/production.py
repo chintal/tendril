@@ -35,6 +35,7 @@ produce the output files after constructing the appropriate stage.
 
 
 import os
+import yaml
 
 from tendril.boms import electronics as boms_electronics
 from tendril.entityhub import projects
@@ -43,6 +44,7 @@ from tendril.gedaif.conffile import ConfigsFile
 from tendril.utils.pdf import merge_pdf
 
 import render
+import docstore
 
 
 def gen_pcb_am(projfolder, configname, outfolder, sno=None,
@@ -264,3 +266,32 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
     template = 'production-order-template.tex'
     render.render_pdf(stage, template, outpath)
     return outpath
+
+
+def get_all_production_orders(limit=None):
+    return docstore.get_docs_list_for_sno_doctype(
+        serialno=None, doctype='PRODUCTION ORDER', limit=limit
+    )
+
+
+def get_production_order_docs(serialno=None):
+    rval = []
+    rval.extend(docstore.get_docs_list_for_serialno(serialno=serialno))
+    return rval
+
+
+def get_production_order_data(serialno=None):
+
+    order_path = docstore.get_docs_list_for_sno_doctype(
+        serialno=serialno, doctype='PRODUCTION ORDER YAML'
+    )[0].path
+    with docstore.docstore_fs.open(order_path, 'r') as f:
+        order_yaml_data = yaml.load(f)
+
+    snomap_path = docstore.get_docs_list_for_sno_doctype(
+        serialno=serialno, doctype='SNO MAP'
+    )[0].path
+    with docstore.docstore_fs.open(snomap_path, 'r') as f:
+        snomap_data = yaml.load(f)
+
+    return order_yaml_data, snomap_data

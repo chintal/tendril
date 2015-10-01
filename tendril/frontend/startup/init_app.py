@@ -108,6 +108,9 @@ def init_app(app, db):
     from tendril.frontend.blueprints.testing import testing
     app.register_blueprint(testing, url_prefix='/testing')
 
+    from tendril.frontend.blueprints.production import production
+    app.register_blueprint(production, url_prefix='/production')
+
     return app
 
 

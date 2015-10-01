@@ -1,0 +1,29 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<p></p>
+
+<h2> All Production Orders </h2>
+
+<div class="small-12 columns">
+    <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
+        {% for doc in stage.docs %}
+        <li>
+            <a href="/production/order/{{ doc.filename }}"
+               class="small-12 columns button info radius active-tb shadow mrgn-20-top">
+                <div class="row text-center"><b>{{ doc.filename }}</b></div>
+                <div class="row text-center">{{ doc.efield }}</div>
+                <div class="row text-center">{{ doc.ts }}</div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}
