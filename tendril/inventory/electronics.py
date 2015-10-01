@@ -48,9 +48,12 @@ class InventoryLine(object):
 
     @property
     def avail_qty(self):
-        if fpiswire_ident(self._ident):
-            return Length(str(self._qty) + 'm') - self.reserved_qty
-        else:
+        try:
+            if fpiswire_ident(self._ident):
+                return Length(str(self._qty) + 'm') - self.reserved_qty
+            else:
+                return self._qty - self.reserved_qty
+        except AttributeError:
             return self._qty - self.reserved_qty
 
     @property
@@ -61,10 +64,14 @@ class InventoryLine(object):
         return reserved
 
     def reserve_qty(self, value, earmark):
-        if fpiswire_ident(self._ident) and not isinstance(value, Length):
-            value = Length(str(value) + 'm')
+        try:
+            if fpiswire_ident(self._ident) and not isinstance(value, Length):
+                value = Length(str(value) + 'm')
+        except AttributeError:
+            pass
         if value > self.avail_qty:
             raise ValueError
+
         logger.debug("Reserving " + self.ident + " in " +
                      self._parent._dname + " for " + earmark +
                      " : " + str(value))

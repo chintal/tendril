@@ -38,8 +38,16 @@ def status(location_idx=None):
     # Presently only supports getting the latest result. A way to allow
     # any result to be retrieved would be nice.
     if location_idx is None:
-        stage = {'locs': invelectronics.inventory_locations,
+        locs = invelectronics.inventory_locations
+        idents = []
+        for loc in locs:
+            for line in loc.lines:
+                if line.ident not in idents:
+                    idents.append(line.ident)
+        stage = {'idents': idents,
+                 'locs': locs,
                  'crumbroot': '/inventory',
+                 'inv': invelectronics,
                  'breadcrumbs': [Crumb(name="Inventory", path="/"),
                                  Crumb(name="Status", path="location/")],
                  }
