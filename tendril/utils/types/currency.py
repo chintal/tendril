@@ -273,7 +273,7 @@ class CurrencyValue(object):
         return self.native_string
 
     def __float__(self):
-        return self.native_value
+        return float(self.native_value)
 
     def __add__(self, other):
         """
@@ -381,7 +381,7 @@ class CurrencyValue(object):
 
         :rtype: :class:`CurrencyValue`
         """
-        if other == 0:
+        if isinstance(other, numbers.Number) and other == 0:
             return self
         elif not isinstance(other, CurrencyValue):
             raise NotImplementedError
@@ -395,6 +395,13 @@ class CurrencyValue(object):
 
         Comparison with all other Types / Classes is not supported.
         """
+        if isinstance(other, numbers.Number) and other == 0:
+            if self.native_value > 0:
+                return 1
+            if self.native_value == 0:
+                return 0
+            if self.native_value < 0:
+                return -1
         if not isinstance(other, CurrencyValue):
             raise NotImplementedError
         if self.native_value == other.native_value:

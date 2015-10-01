@@ -187,9 +187,15 @@ apidoc:
 	sphinx-apidoc -e -o apidoc/ ../tendril/
 	# sphinx-apidoc -e -o devdoc/profiling/ ../profiling/
 
+.PHONY: testcoverage
+testcoverage:
+	py.test -c=../.coveragerc --cov=../tendril --cov-report=html ../
+	rm -r _static/test-coverage
+	mv htmlcov _static/test-coverage
+
 .PHONY: publishcoverage
 publishcoverage:
-	rsync -azP --delete ../tests/coverage/* tendril@braavos:~/html/coverage
+	rsync -azP --delete _static/test-coverage/* tendril@braavos:~/html/coverage
 
 .PHONY: publish
 publish: publishcoverage

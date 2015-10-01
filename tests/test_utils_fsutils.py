@@ -42,5 +42,13 @@ def test_fsutils_tempfs():
     # assert not os.path.exists(fsutils.TEMPDIR)
 
 
-def test_fsutils():
-    pass
+def test_fsutils_mro():
+    # TODO This should be tested alongside reload
+    class TestClass1(object):
+        pass
+
+    class TestClass2(TestClass1):
+        pass
+
+    obj = TestClass2()
+    assert fsutils.get_parent(obj) == TestClass1

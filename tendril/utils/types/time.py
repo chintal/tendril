@@ -67,7 +67,12 @@ class TimeSpan(NumericalUnitBase):
         _dostr = None
         _parse_func = parse_none
         if isinstance(value, TimeDelta):
-            value = value.microseconds / Decimal('1000.0') + value.seconds + \
+            if value.years != 0 or value.months != 0:
+                raise ValueError(
+                    'TimeDelta instances used to construct TimeSpan instances'
+                    'cannot have non-zero years and months.'
+                )
+            value = value.microseconds / Decimal('1000000.0') + value.seconds + \
                 value.minutes * 60 + value.hours * 3600 + \
                 value.days * 3600 * 24
         elif not isinstance(value, Number):
