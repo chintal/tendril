@@ -12,6 +12,7 @@ Subpackages
     tendril.frontend.blueprints.vendors
     tendril.frontend.blueprints.customs
     tendril.frontend.blueprints.testing
+    tendril.frontend.blueprints.production
 
 Submodules
 ----------
