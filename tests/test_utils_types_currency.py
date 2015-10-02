@@ -149,5 +149,5 @@ def test_currency_values():
     assert cv2 > cv1
     assert fcv1 == cv1 * 10
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         cv1 > 10

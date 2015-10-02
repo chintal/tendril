@@ -68,17 +68,12 @@ class TypedComparisonMixin(object):
     def _compare(self, other, method):
         if self.__class__ != other.__class__:
             if not isinstance(other, numbers.Number) or other != 0:
-                raise NotImplementedError(
+                raise TypeError(
                     "Comparison of : " + repr(self) + ", " + repr(other)
                 )
             else:
                 return method(self._cmpkey(), other)
-        try:
-            return method(self._cmpkey(), other._cmpkey())
-        except (AttributeError, TypeError):
-            # _cmpkey not implemented, or return different type,
-            # so I can't compare with "other".
-            return NotImplemented
+        return method(self._cmpkey(), other._cmpkey())
 
     def __lt__(self, other):
         return self._compare(other, lambda s, o: s < o)
@@ -324,8 +319,14 @@ class NumericalUnitBase(UnitBase):
                 "Division of : " + repr(self) + " / " + repr(other)
             )
 
+    def __rdiv__(self, other):
+        raise NotImplementedError
+
     def __truediv__(self, other):
         return self.__div__(other)
+
+    def __rtruediv__(self, other):
+        return self.__rdiv__(other)
 
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -345,6 +346,9 @@ class NumericalUnitBase(UnitBase):
             return self
         else:
             return self.__add__(other.__mul__(-1))
+
+    def __rsub__(self, other):
+        return other.__sub__(self)
 
     def __abs__(self):
         if self._value < 0:
