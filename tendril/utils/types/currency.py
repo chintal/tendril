@@ -61,6 +61,8 @@ import json
 import codecs
 import numbers
 
+from .unitbase import TypedComparisonMixin
+
 
 class CurrencyDefinition(object):
     """
@@ -176,7 +178,7 @@ class CurrencyDefinition(object):
 native_currency_defn = CurrencyDefinition(BASE_CURRENCY, BASE_CURRENCY_SYMBOL)
 
 
-class CurrencyValue(object):
+class CurrencyValue(TypedComparisonMixin):
     """
     Instances of this class define a specific currency value, or a certain
     sum of money.
@@ -207,7 +209,7 @@ class CurrencyValue(object):
         __sub__
         __mul__
         __div__
-        __cmp__
+        _cmpkey
 
     """
     def __init__(self, val, currency_def):
@@ -394,25 +396,11 @@ class CurrencyValue(object):
         else:
             return self.__add__(other.__mul__(-1))
 
-    def __cmp__(self, other):
+    def _cmpkey(self):
         """
         The comparison of two :class:`CurrencyValue` instances behaves
         identically to the comparison of the operands' :attr:`native_value`.
 
         Comparison with all other Types / Classes is not supported.
         """
-        if isinstance(other, numbers.Number) and other == 0:
-            if self.native_value > 0:
-                return 1
-            if self.native_value == 0:
-                return 0
-            if self.native_value < 0:
-                return -1
-        if not isinstance(other, CurrencyValue):
-            raise NotImplementedError
-        if self.native_value == other.native_value:
-            return 0
-        elif self.native_value < other.native_value:
-            return -1
-        else:
-            return 1
+        return self.native_value

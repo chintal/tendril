@@ -45,12 +45,18 @@ def test_parser_frequency():
 
 def test_type_frequency():
     f1 = time.Frequency('10Hz')
+
     tp1 = 1 / f1
     assert isinstance(tp1, time.TimeSpan)
     assert tp1.timedelta.microseconds == 100000
+
     tp1 = 10 / f1
     assert isinstance(tp1, time.TimeSpan)
     assert tp1.timedelta.seconds == 1
+
+    f2 = f1 / 10
+    assert isinstance(f2, time.Frequency)
+    assert f2.value == 1
 
 
 def test_type_timespan():

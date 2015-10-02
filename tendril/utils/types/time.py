@@ -60,6 +60,9 @@ class Frequency(NumericalUnitBase):
         if isinstance(other, Number):
             return TimeSpan(Decimal(other) / self._value)
 
+    def __rtruediv__(self, other):
+        return self.__rdiv__(other)
+
 
 class TimeSpan(NumericalUnitBase):
     def __init__(self, value):
