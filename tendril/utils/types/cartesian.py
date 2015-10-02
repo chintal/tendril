@@ -22,7 +22,7 @@ See the COPYING, README, and INSTALL files for more information
 import math
 
 from decimal import Decimal
-from lengths import Length
+from .lengths import Length
 
 
 class CartesianPoint(object):

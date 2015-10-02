@@ -181,10 +181,9 @@ def test_dummyunit():
         d1 < 0
 
     # TODO work out py3 behavior
-
     # with pytest.raises(NotImplementedError):
     #     d1 == d2
-
+    #
     # with pytest.raises(NotImplementedError):
     #     d1 == 0
 

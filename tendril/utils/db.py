@@ -161,7 +161,7 @@ def commit_metadata():
     """
     from tendril.entityhub.db import model  # noqa
     from tendril.inventory.db import model  # noqa
-    from tendril.dox.db import model  # noqa
-    from tendril.testing.db import model  # noqa
+    from tendril.dox.db import model        # noqa
+    from tendril.testing.db import model    # noqa
 
     DeclBase.metadata.create_all(engine)
