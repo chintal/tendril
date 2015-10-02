@@ -36,7 +36,7 @@ def get_config():
     cfg = VersioneerConfig()
     cfg.VCS = "git"
     cfg.style = "pep440"
-    cfg.tag_prefix = "tendril-framework-"
+    cfg.tag_prefix = ""
     cfg.parentdir_prefix = "tendril-framework-"
     cfg.versionfile_source = "tendril/_version.py"
     cfg.verbose = True

@@ -160,9 +160,6 @@ class UnitBase(object):
     def __sub__(self, other):
         raise NotImplementedError
 
-    def __cmp__(self, other):
-        raise NotImplementedError
-
     def _cmpkey(self):
         raise NotImplementedError
 
@@ -170,7 +167,7 @@ class UnitBase(object):
         return str(self._value) + self._dostr
 
 
-class NumericalUnitBase(UnitBase, TypedComparisonMixin):
+class NumericalUnitBase(TypedComparisonMixin, UnitBase):
     """
     The base class for all :mod:`tendril.utils.types` numerical units.
 
@@ -217,7 +214,7 @@ class NumericalUnitBase(UnitBase, TypedComparisonMixin):
         __sub__
         __mul__
         __div__
-        __cmp__
+        __cmpkey
 
     """
     def __init__(self, value, _orders, _dostr, _parse_func):
