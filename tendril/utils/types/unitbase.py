@@ -170,7 +170,7 @@ class UnitBase(object):
         return str(self._value) + self._dostr
 
 
-class NumericalUnitBase(UnitBase):
+class NumericalUnitBase(UnitBase, TypedComparisonMixin):
     """
     The base class for all :mod:`tendril.utils.types` numerical units.
 
@@ -356,7 +356,7 @@ class NumericalUnitBase(UnitBase):
         else:
             return self
 
-    def __cmp__(self, other):
+    def _cmpkey(self):
         """
         The comparison of two Unit type class instances of the
         same type behaves identically to the comparison of the
@@ -364,17 +364,7 @@ class NumericalUnitBase(UnitBase):
 
         Comparison with all other Types / Classes is not supported.
         """
-        if self.__class__ == other.__class__:
-            if self.value == other.value:
-                return 0
-            elif self.value < other.value:
-                return -1
-            else:
-                return 1
-        else:
-            raise NotImplementedError(
-                "Comparison of : " + repr(self) + ", " + repr(other)
-            )
+        return self._value
 
     @property
     def natural_repr(self):

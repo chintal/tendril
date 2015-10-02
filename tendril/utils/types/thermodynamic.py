@@ -17,18 +17,18 @@
 
 
 from decimal import Decimal
-from unitbase import NumericalUnitBase
+from .unitbase import NumericalUnitBase
 
 
 def parse_temperature(value):
-    num_val = Decimal(value[:-1])
+    num_val = Decimal(value[:-1].strip())
     ostr = value[-1:]
     if ostr == 'C':
         return num_val + Decimal('273.14')
     elif ostr == 'K':
         return num_val
     elif ostr == 'F':
-        return ((num_val - 32) * 5) / 9
+        return ((num_val - 32) * 5) / 9 + Decimal('273.14')
 
 
 class Temperature(NumericalUnitBase):
