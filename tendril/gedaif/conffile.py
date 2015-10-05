@@ -188,7 +188,12 @@ class ConfigsFile(object):
         try:
             return self.configdata['pcbdetails']['status']
         except KeyError:
-            raise KeyError(self._projectfolder)
+            try:
+                return self.configdata['paneldetails']['status']
+            except KeyError:
+                raise KeyError(
+                    "pcbdetails.status not in: " + self._projectfolder
+                )
 
     @property
     def pcbdescriptors(self):
