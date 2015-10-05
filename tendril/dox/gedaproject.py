@@ -83,6 +83,7 @@ from tendril.boms import outputbase as boms_outputbase
 import render
 from fs import path
 from fs.utils import copyfile
+from fs.errors import PermissionDeniedError
 
 from docstore import ExposedDocument
 from docstore import refdoc_fs
@@ -99,10 +100,13 @@ logger = log.get_logger(__name__, log.DEFAULT)
 def get_project_doc_folder(projectfolder):
     projectfolder = os.path.relpath(projectfolder, PROJECTS_ROOT)
     pth = path.join(projectfolder, 'doc')
-    if not refdoc_fs.exists(pth):
-        refdoc_fs.makedir(pth, recursive=True)
-    if not refdoc_fs.exists(path.join(pth, 'confdocs')):
-        refdoc_fs.makedir(path.join(pth, 'confdocs'), recursive=True)
+    try:
+        if not refdoc_fs.exists(pth):
+            refdoc_fs.makedir(pth, recursive=True)
+        if not refdoc_fs.exists(path.join(pth, 'confdocs')):
+            refdoc_fs.makedir(path.join(pth, 'confdocs'), recursive=True)
+    except PermissionDeniedError:
+        return None
     return pth
 
 
@@ -741,6 +745,8 @@ def get_docs_list(projfolder, cardname=None):
                          "Skipping : " + projfolder)
             return
     project_doc_folder = get_project_doc_folder(projfolder)
+    if not project_doc_folder:
+        return []
     if not cardname:
         # Get all docs linked to the project
         rval = [ExposedDocument('Project Master Doc',
