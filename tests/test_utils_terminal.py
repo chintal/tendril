@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 # Copyright (C) 2015 Chintalagiri Shashank
 #
-# This file is part of Tendril.
+# This file is part of tendril.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,28 +18,27 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Docstring for test_utils_terminal
+"""
 
-from decimal import Decimal
-from .unitbase import NumericalUnitBase
-
-
-def parse_temperature(value):
-    num_val = Decimal(value[:-1].strip())
-    ostr = value[-1:]
-    if ostr == 'C':
-        return num_val + Decimal('273.14')
-    elif ostr == 'K':
-        return num_val
-    elif ostr == 'F':
-        return ((num_val - 32) * 5) / 9 + Decimal('273.14')
+from tendril.utils import terminal
+from progress.bar import IncrementalBar
 
 
-class Temperature(NumericalUnitBase):
-    def __init__(self, value):
-        _ostrs = ['C', 'F', 'K']
-        _dostr = 'K'
-        _parse_func = parse_temperature
-        super(Temperature, self).__init__(value, _ostrs, _dostr, _parse_func)
+def test_terminal_width():
+    width = terminal.get_terminal_width()
+    assert isinstance(width, int)
 
-    def __repr__(self):
-        return str(self._value) + self._dostr
+
+def test_progressbar_base():
+    assert terminal._BaseBar == IncrementalBar
+
+
+def test_tendril_progressbar():
+    width = terminal.get_terminal_width()
+
+    pb = terminal.TendrilProgressBar(max=10)
+    assert pb.term_width == width
+    for i in range(10):
+        pb.next(note=str(i))

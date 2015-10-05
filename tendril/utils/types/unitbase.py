@@ -45,6 +45,7 @@ while the older ones still need to be migrated to this form.
 from math import log10
 from math import floor
 from decimal import Decimal
+import six
 import numbers
 
 
@@ -52,6 +53,48 @@ def round_to_n(x, n):
     if x:
         return round(x, -int(floor(log10(x))) + (n - 1))
     return 0
+
+
+class TypedComparisonMixin(object):
+    """
+    This mixin allows implementing comparison operators in a Python 3
+    compatible way.
+
+    Two instances of a class are compared using their :func:`_cmpkey`
+    methods. If the instances have a different ``__class__``, the
+    comparison is not implemented. A single exception is implemented,
+    for when the other instance is of a numerical type, with value 0.
+    """
+    def _compare(self, other, method):
+        if self.__class__ != other.__class__:
+            if not isinstance(other, numbers.Number) or other != 0:
+                raise TypeError(
+                    "Comparison of : " + repr(self) + ", " + repr(other)
+                )
+            else:
+                return method(self._cmpkey(), other)
+        return method(self._cmpkey(), other._cmpkey())
+
+    def __lt__(self, other):
+        return self._compare(other, lambda s, o: s < o)
+
+    def __le__(self, other):
+        return self._compare(other, lambda s, o: s <= o)
+
+    def __eq__(self, other):
+        return self._compare(other, lambda s, o: s == o)
+
+    def __ge__(self, other):
+        return self._compare(other, lambda s, o: s >= o)
+
+    def __gt__(self, other):
+        return self._compare(other, lambda s, o: s > o)
+
+    def __ne__(self, other):
+        return self._compare(other, lambda s, o: s != o)
+
+    def _cmpkey(self):
+        raise NotImplementedError
 
 
 class UnitBase(object):
@@ -77,7 +120,7 @@ class UnitBase(object):
 
     """
     def __init__(self, value, _dostr, _parse_func):
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, (six.text_type, six.string_types)):
             value = _parse_func(value)
         elif isinstance(value, numbers.Number):
             if not isinstance(value, Decimal):
@@ -117,14 +160,14 @@ class UnitBase(object):
     def __sub__(self, other):
         raise NotImplementedError
 
-    def __cmp__(self, other):
+    def _cmpkey(self):
         raise NotImplementedError
 
     def __repr__(self):
         return str(self._value) + self._dostr
 
 
-class NumericalUnitBase(UnitBase):
+class NumericalUnitBase(TypedComparisonMixin, UnitBase):
     """
     The base class for all :mod:`tendril.utils.types` numerical units.
 
@@ -171,7 +214,7 @@ class NumericalUnitBase(UnitBase):
         __sub__
         __mul__
         __div__
-        __cmp__
+        __cmpkey
 
     """
     def __init__(self, value, _orders, _dostr, _parse_func):
@@ -273,6 +316,15 @@ class NumericalUnitBase(UnitBase):
                 "Division of : " + repr(self) + " / " + repr(other)
             )
 
+    def __rdiv__(self, other):
+        raise NotImplementedError
+
+    def __truediv__(self, other):
+        return self.__div__(other)
+
+    def __rtruediv__(self, other):
+        return self.__rdiv__(other)
+
     def __rmul__(self, other):
         return self.__mul__(other)
 
@@ -292,13 +344,16 @@ class NumericalUnitBase(UnitBase):
         else:
             return self.__add__(other.__mul__(-1))
 
+    def __rsub__(self, other):
+        return other.__sub__(self)
+
     def __abs__(self):
         if self._value < 0:
             return self.__class__(self._value * -1)
         else:
             return self
 
-    def __cmp__(self, other):
+    def _cmpkey(self):
         """
         The comparison of two Unit type class instances of the
         same type behaves identically to the comparison of the
@@ -306,18 +361,7 @@ class NumericalUnitBase(UnitBase):
 
         Comparison with all other Types / Classes is not supported.
         """
-        if self.__class__ == other.__class__:
-            if self.value == other.value:
-                return 0
-            elif self.value < other.value:
-                return -1
-            else:
-                return 1
-        else:
-            print self, other
-            raise NotImplementedError(
-                "Comparison of : " + repr(self) + ", " + repr(other)
-            )
+        return self._value
 
     @property
     def natural_repr(self):

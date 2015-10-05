@@ -47,7 +47,7 @@ class TransformFile(object):
         return self._status[contextual.strip()]
 
     def get_contextual_repr(self, canonical):
-        for (k, v) in self._transform:
+        for (k, v) in self._transform.iteritems():
             if v == canonical.strip():
                 return k
         return None

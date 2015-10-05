@@ -1,3 +1,4 @@
+/doc/_static/test-coverage
 /tests/.coverage
 /tests/coverage
 /.cache

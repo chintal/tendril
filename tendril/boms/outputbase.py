@@ -19,7 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-import os
 import csv
 from entitybase import EntityBase
 

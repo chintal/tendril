@@ -19,9 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 from sqlalchemy.sql import exists
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
@@ -30,6 +27,9 @@ import tendril.utils.db
 from model import InventoryLocationCode
 
 from tendril.utils.config import INVENTORY_LOCATIONS
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 def get_inventorylocationcode(name, create=False):

@@ -53,10 +53,15 @@ from tendril.utils.config import BASE_CURRENCY
 from tendril.utils.config import BASE_CURRENCY_SYMBOL
 
 from tendril.utils import www
-import urllib
-import urllib2
+
+from six.moves.urllib.request import Request
+from six.moves.urllib.parse import urlencode
+
 import json
+import codecs
 import numbers
+
+from .unitbase import TypedComparisonMixin
 
 
 class CurrencyDefinition(object):
@@ -140,13 +145,13 @@ class CurrencyDefinition(object):
         apiurl = 'http://api.fixer.io/latest?'
         params = {'base': BASE_CURRENCY,
                   'symbols': code}
-        request = urllib2.Request(apiurl + urllib.urlencode(params))
+        request = Request(apiurl + urlencode(params))
         response = www.urlopen(request)
-        data = json.load(response)
+        reader = codecs.getreader("utf-8")
+        data = json.load(reader(response))
         try:
             rate = 1 / float(data['rates'][code])
         except KeyError:
-            print data
             raise KeyError(code)
         return rate
 
@@ -173,7 +178,7 @@ class CurrencyDefinition(object):
 native_currency_defn = CurrencyDefinition(BASE_CURRENCY, BASE_CURRENCY_SYMBOL)
 
 
-class CurrencyValue(object):
+class CurrencyValue(TypedComparisonMixin):
     """
     Instances of this class define a specific currency value, or a certain
     sum of money.
@@ -204,7 +209,7 @@ class CurrencyValue(object):
         __sub__
         __mul__
         __div__
-        __cmp__
+        _cmpkey
 
     """
     def __init__(self, val, currency_def):
@@ -273,7 +278,7 @@ class CurrencyValue(object):
         return self.native_string
 
     def __float__(self):
-        return self.native_value
+        return float(self.native_value)
 
     def __add__(self, other):
         """
@@ -361,6 +366,9 @@ class CurrencyValue(object):
         else:
             raise NotImplementedError
 
+    def __truediv__(self, other):
+        return self.__div__(other)
+
     def __rmul__(self, other):
         return self.__mul__(other)
 
@@ -381,25 +389,18 @@ class CurrencyValue(object):
 
         :rtype: :class:`CurrencyValue`
         """
-        if other == 0:
+        if isinstance(other, numbers.Number) and other == 0:
             return self
         elif not isinstance(other, CurrencyValue):
             raise NotImplementedError
         else:
             return self.__add__(other.__mul__(-1))
 
-    def __cmp__(self, other):
+    def _cmpkey(self):
         """
         The comparison of two :class:`CurrencyValue` instances behaves
         identically to the comparison of the operands' :attr:`native_value`.
 
         Comparison with all other Types / Classes is not supported.
         """
-        if not isinstance(other, CurrencyValue):
-            raise NotImplementedError
-        if self.native_value == other.native_value:
-            return 0
-        elif self.native_value < other.native_value:
-            return -1
-        else:
-            return 1
+        return self.native_value
