@@ -351,19 +351,27 @@ def conv_gsch2png(schpath, outfolder):
     epspath = os.path.join(outfolder, schfname + '.eps')
 
     if ext == '.sym':
-        try:
-            sym2eps.convert(schpath, epspath)
-        except RuntimeError:
-            logger.error("SYM2EPS Segmentation Fault on symbol : " + schpath)
-        gschem_pngcmd = [
-            "convert", epspath, "-transparent", "white", outpath
-        ]
-        subprocess.call(gschem_pngcmd)
-        try:
-            os.remove(epspath)
-        except OSError:
-            logger.warning("Temporary .eps file not found to remove : " +
-                           epspath)
+        if USE_SYSTEM_GAF_BIN:
+            try:
+                sym2eps.convert(schpath, epspath)
+            except RuntimeError:
+                logger.error("SYM2EPS Segmentation Fault on symbol : " + schpath)
+            gschem_pngcmd = [
+                "convert", epspath, "-transparent", "white", outpath
+            ]
+            subprocess.call(gschem_pngcmd)
+            try:
+                os.remove(epspath)
+            except OSError:
+                logger.warning("Temporary .eps file not found to remove : " +
+                               epspath)
+        else:
+            gaf_pngcmd = [
+                os.path.join(GAF_BIN_ROOT, 'gaf'),
+                'export', '-c', '-o', outpath,
+                schpath
+            ]
+            subprocess.call(gaf_pngcmd)
     elif ext == '.sch':
         gschem_pngcmd = "gschem -p -o" + outpath + " -s" + GEDA_SCHEME_DIR + '/image.scm ' + schpath  # noqa
         subprocess.call(gschem_pngcmd)
