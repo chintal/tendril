@@ -41,6 +41,7 @@ from fs.opener import fsopendir
 from fs.utils import copyfile
 from fs import path
 from fs.errors import NoSysPathError
+from fs.rpcfs import RPCFS
 
 from tendril.utils.config import DOCUMENT_WALLET
 from tendril.utils.config import DOCUMENT_WALLET_ROOT
@@ -48,7 +49,10 @@ from tendril.utils.config import DOCUMENT_WALLET_ROOT
 from tendril.utils.fsutils import temp_fs
 
 
-wallet_fs = fsopendir(DOCUMENT_WALLET_ROOT)
+if DOCUMENT_WALLET_ROOT.startswith('rpc://'):
+    wallet_fs = RPCFS('http://' + DOCUMENT_WALLET_ROOT[6:])
+else:
+    wallet_fs = fsopendir(DOCUMENT_WALLET_ROOT)
 wallet_temp_fs = temp_fs.makeopendir('wallet')
 
 

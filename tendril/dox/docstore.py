@@ -23,6 +23,7 @@ import os
 from fs.opener import fsopendir
 from fs.utils import copyfile
 from fs import path
+from fs.rpcfs import RPCFS
 
 from tendril.utils.db import with_db
 
@@ -41,10 +42,19 @@ from wallet import wallet_fs
 from tendril.utils import log
 
 logger = log.get_logger(__name__, log.INFO)
-docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
+if DOCSTORE_ROOT.startswith('rpc://'):
+    docstore_fs = RPCFS('http://' + DOCSTORE_ROOT[len('rpc://'):])
+else:
+    docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
+
+if REFDOC_ROOT.startswith('rpc://'):
+    refdoc_fs = RPCFS('http://' + REFDOC_ROOT[len('rpc://'):])
+else:
+    refdoc_fs = fsopendir(REFDOC_ROOT)
+
+
 workspace_fs = fsopendir(os.path.join(INSTANCE_ROOT, 'scratch'),
                          create_dir=True)
-refdoc_fs = fsopendir(REFDOC_ROOT)
 local_fs = fsopendir('/')
 
 
