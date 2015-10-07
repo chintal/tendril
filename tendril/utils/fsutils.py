@@ -55,6 +55,7 @@ import base64
 
 from fs.opener import fsopendir
 from fs.errors import ResourceNotFoundError
+from xmlrpclib import Fault
 
 from datetime import datetime
 from collections import namedtuple
@@ -222,6 +223,9 @@ def get_file_mtime(f, fs=None):
         try:
             return fs.getinfo(f)['modified_time']
         except ResourceNotFoundError:
+            return None
+        except Fault:
+            # RPCFS seems to raise this if the file does not exist.
             return None
 
 

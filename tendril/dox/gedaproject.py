@@ -106,6 +106,9 @@ def get_project_doc_folder(projectfolder):
         if not refdoc_fs.exists(path.join(pth, 'confdocs')):
             refdoc_fs.makedir(path.join(pth, 'confdocs'), recursive=True)
     except PermissionDeniedError:
+        logger.warning(
+            "Permission denied when creating folder for " + projectfolder
+        )
         return None
     return pth
 
