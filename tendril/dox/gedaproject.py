@@ -715,7 +715,11 @@ def generate_docs(projfolder):
 
     """
     configfile = conffile.ConfigsFile(projfolder)
-    namebase = configfile.configdata['pcbname']
+    try:
+        namebase = configfile.configdata['pcbname']
+    except KeyError:
+        logger.error("pcbname Key Not Found in configs.yaml, skipping")
+        return
     if namebase is None:
         try:
             namebase = configfile.configdata['cblname']
