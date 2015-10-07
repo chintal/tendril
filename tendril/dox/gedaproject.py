@@ -106,6 +106,9 @@ def get_project_doc_folder(projectfolder):
         if not refdoc_fs.exists(path.join(pth, 'confdocs')):
             refdoc_fs.makedir(path.join(pth, 'confdocs'), recursive=True)
     except PermissionDeniedError:
+        logger.warning(
+            "Permission denied when creating folder for " + projectfolder
+        )
         return None
     return pth
 
@@ -471,6 +474,9 @@ def gen_pcb_pdf(projfolder):
     pcb_mtime = fsutils.get_file_mtime(
         os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb')
     )
+    if pcb_mtime is None:
+        logger.warning("PCB does not seem to exist for : " + projfolder)
+        return
     docfolder = get_project_doc_folder(projfolder)
     pdffile = path.join(docfolder,
                         configfile.configdata['pcbname'] + '-pcb.pdf')
@@ -529,6 +535,9 @@ def gen_pcb_gbr(projfolder):
     pcb_mtime = fsutils.get_file_mtime(
         os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb')
     )
+    if pcb_mtime is None:
+        logger.warning("PCB does not seem to exist for : " + projfolder)
+        return
     gbrfolder = os.path.join(configfile.projectfolder, 'gerber')
     outf_mtime = None
     if not os.path.exists(gbrfolder):
@@ -585,6 +594,9 @@ def gen_pcb_dxf(projfolder):
     pcb_mtime = fsutils.get_file_mtime(
         os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb')
     )
+    if pcb_mtime is None:
+        logger.warning("PCB does not seem to exist for : " + projfolder)
+        return
     dxffile = os.path.join(configfile.projectfolder, 'pcb',
                            gpf.pcbfile + '.dxf')
     outf_mtime = fsutils.get_file_mtime(dxffile)
