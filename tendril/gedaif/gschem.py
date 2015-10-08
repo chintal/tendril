@@ -355,7 +355,9 @@ def conv_gsch2png(schpath, outfolder):
             try:
                 sym2eps.convert(schpath, epspath)
             except RuntimeError:
-                logger.error("SYM2EPS Segmentation Fault on symbol : " + schpath)
+                logger.error(
+                    "SYM2EPS Segmentation Fault on symbol : " + schpath
+                )
             gschem_pngcmd = [
                 "convert", epspath, "-transparent", "white", outpath
             ]
