@@ -55,6 +55,11 @@ DEFAULT = logging.INFO
 
 def init():
     logging.basicConfig(level=logging.DEBUG)
+    silence = [
+        logging.getLogger('passlib.utils.compat')
+    ]
+    for logger in silence:
+        logger.setLevel(logging.WARNING)
 
 
 def get_logger(name, level):
