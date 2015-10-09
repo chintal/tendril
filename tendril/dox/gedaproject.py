@@ -113,7 +113,7 @@ def get_project_doc_folder(projectfolder):
     return pth
 
 
-def gen_confbom(projfolder, configname):
+def gen_confbom(projfolder, configname, force=False):
     """
     Generates a PDF of the BOM for a specified configuration of a gEDA
     project.
@@ -156,7 +156,7 @@ def gen_confbom(projfolder, configname):
     outpath = path.join(docfolder, 'confdocs', configname + '-bom.pdf')
     outf_mtime = fsutils.get_file_mtime(outpath, fs=refdoc_fs)
 
-    if outf_mtime is not None and outf_mtime > sch_mtime:
+    if not force and outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + outpath)
         return outpath
 
@@ -184,7 +184,7 @@ def gen_confbom(projfolder, configname):
     return outpath
 
 
-def gen_configdoc(projfolder, namebase):
+def gen_configdoc(projfolder, namebase, force=False):
     """
     Generate a PDF documenting the configs of the project. The document should
     include a reasonably thorough representation of the contents of the
@@ -208,7 +208,7 @@ def gen_configdoc(projfolder, namebase):
     pass
 
 
-def gen_schpdf(projfolder, namebase):
+def gen_schpdf(projfolder, namebase, force=False):
     """
     Generates a PDF file of all the project schematics listed in the
     gEDA project file. This function does not ise jinja2 and latex. It
@@ -235,7 +235,7 @@ def gen_schpdf(projfolder, namebase):
     schpdfpath = path.join(docfolder, namebase + '-schematic.pdf')
     outf_mtime = fsutils.get_file_mtime(schpdfpath, fs=refdoc_fs)
 
-    if outf_mtime is not None and outf_mtime > sch_mtime:
+    if not force and outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + schpdfpath)
         return schpdfpath
 
@@ -262,7 +262,7 @@ def gen_schpdf(projfolder, namebase):
         return schpdfpath
 
 
-def gen_masterdoc(projfolder, namebase):
+def gen_masterdoc(projfolder, namebase, force=False):
     """
     Generates a PDF file of the project's Master documentation. It uses
     other document generator functions to make the various parts of the
@@ -296,7 +296,7 @@ def gen_masterdoc(projfolder, namebase):
     masterdocfile = path.join(docfolder, namebase + '-masterdoc.pdf')
     outf_mtime = fsutils.get_file_mtime(masterdocfile, fs=refdoc_fs)
 
-    if outf_mtime is not None and outf_mtime > sch_mtime:
+    if not force and outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + masterdocfile)
         return masterdocfile
 
@@ -304,8 +304,8 @@ def gen_masterdoc(projfolder, namebase):
                 'Last modified : ' + str(sch_mtime) +
                 '; Last Created : ' + str(outf_mtime))
 
-    pdffiles = [gen_configdoc(projfolder, namebase),
-                gen_schpdf(projfolder, namebase)]
+    pdffiles = [gen_configdoc(projfolder, namebase, force=False),
+                gen_schpdf(projfolder, namebase, force=False)]
 
     for p in pdffiles:
         if p and not workspace_fs.exists(p):
@@ -326,7 +326,7 @@ def gen_masterdoc(projfolder, namebase):
     return masterdocfile
 
 
-def gen_confpdf(projfolder, configname, namebase):
+def gen_confpdf(projfolder, configname, namebase, force=False):
     """
     Generates a PDF file of the documentation for a specific configuration
     of a project. It uses other document generator functions to make the
@@ -362,7 +362,7 @@ def gen_confpdf(projfolder, configname, namebase):
     confdocfile = path.join(docfolder, 'confdocs', configname + '-doc.pdf')
     outf_mtime = fsutils.get_file_mtime(confdocfile, fs=refdoc_fs)
 
-    if outf_mtime is not None and outf_mtime > sch_mtime:
+    if not force and outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + confdocfile)
         return confdocfile
 
@@ -392,7 +392,7 @@ def gen_confpdf(projfolder, configname, namebase):
     return confdocfile
 
 
-def gen_cobom_csv(projfolder, namebase):
+def gen_cobom_csv(projfolder, namebase, force=False):
     """
     Generates a CSV file in the
     :mod:`tendril.boms.outputbase.CompositeOutputBom` format, including the
@@ -423,7 +423,7 @@ def gen_cobom_csv(projfolder, namebase):
     cobom_csv_path = path.join(docfolder, 'confdocs', 'conf-boms.csv')
     outf_mtime = fsutils.get_file_mtime(cobom_csv_path, fs=refdoc_fs)
 
-    if outf_mtime is not None and outf_mtime > sch_mtime:
+    if not force and outf_mtime is not None and outf_mtime > sch_mtime:
         logger.debug('Skipping up-to-date ' + cobom_csv_path)
         return cobom_csv_path
 
@@ -433,7 +433,7 @@ def gen_cobom_csv(projfolder, namebase):
 
     bomlist = []
     for cfn in configfile.configdata['configurations']:
-        gen_confpdf(projfolder, cfn['configname'], namebase)
+        gen_confpdf(projfolder, cfn['configname'], namebase, force=False)
         lbom = boms_electronics.import_pcb(projfolder)
         lobom = lbom.create_output_bom(cfn['configname'])
         bomlist.append(lobom)
@@ -447,7 +447,7 @@ def gen_cobom_csv(projfolder, namebase):
             writer.writerow([line.ident] + line.columns)
 
 
-def gen_pcb_pdf(projfolder):
+def gen_pcb_pdf(projfolder, force=False):
     """
     Generates a PDF file of the PCB layers for the PCB provided by the
     gEDA project.
@@ -482,7 +482,7 @@ def gen_pcb_pdf(projfolder):
                         configfile.configdata['pcbname'] + '-pcb.pdf')
     outf_mtime = fsutils.get_file_mtime(pdffile, fs=refdoc_fs)
 
-    if outf_mtime is not None and outf_mtime > pcb_mtime:
+    if not force and outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + pdffile)
         return pdffile
 
@@ -503,7 +503,7 @@ def gen_pcb_pdf(projfolder):
     return pdffile
 
 
-def gen_pcb_gbr(projfolder):
+def gen_pcb_gbr(projfolder, force=False):
     """
     Generates gerber files for the PCB provided by the gEDA project, and also
     creates a ``zip`` file of the generated gerbers.
@@ -545,7 +545,7 @@ def gen_pcb_gbr(projfolder):
     else:
         outf_mtime = fsutils.get_folder_mtime(gbrfolder)
 
-    if outf_mtime is not None and outf_mtime > pcb_mtime:
+    if not force and outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + gbrfolder)
         return gbrfolder
 
@@ -564,7 +564,7 @@ def gen_pcb_gbr(projfolder):
     return gbrfolder
 
 
-def gen_pcb_dxf(projfolder):
+def gen_pcb_dxf(projfolder, force=False):
     """
     Generates a DXF file of the PCB provided by the gEDA project.
 
@@ -601,7 +601,7 @@ def gen_pcb_dxf(projfolder):
                            gpf.pcbfile + '.dxf')
     outf_mtime = fsutils.get_file_mtime(dxffile)
 
-    if outf_mtime is not None and outf_mtime > pcb_mtime:
+    if not force and outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + dxffile)
         return dxffile
 
@@ -615,7 +615,7 @@ def gen_pcb_dxf(projfolder):
     return dxffile
 
 
-def gen_pcbpricing(projfolder, namebase):
+def gen_pcbpricing(projfolder, namebase, force=False):
     """
     Generates a PDF file with the pricing of the (bare) PCB provided by the
     gEDA project.
@@ -656,7 +656,7 @@ def gen_pcbpricing(projfolder, namebase):
     plotfile = path.join(docfolder, namebase + '-pricing.pdf')
     outf_mtime = fsutils.get_file_mtime(plotfile, fs=refdoc_fs)
 
-    if outf_mtime is not None and outf_mtime > pcbpricing_mtime:
+    if not force and outf_mtime is not None and outf_mtime > pcbpricing_mtime:
         logger.debug('Skipping up-to-date ' + pcbpricingfp)
         return pcbpricingfp
 
@@ -703,7 +703,7 @@ def gen_pcbpricing(projfolder, namebase):
     return plotfile
 
 
-def generate_docs(projfolder):
+def generate_docs(projfolder, force=False):
     """
     Generates all the docs for a specified gEDA project.
 
@@ -739,13 +739,13 @@ def generate_docs(projfolder):
             logger.error("Project does not have a known identifier. "
                          "Skipping : " + projfolder)
             return
-    gen_masterdoc(projfolder, namebase)
-    gen_cobom_csv(projfolder, namebase)
+    gen_masterdoc(projfolder, namebase, force)
+    gen_cobom_csv(projfolder, namebase, force)
     if configfile.configdata['pcbname'] is not None:
-        gen_pcb_pdf(projfolder)
-        gen_pcb_gbr(projfolder)
-        gen_pcb_dxf(projfolder)
-        gen_pcbpricing(projfolder, namebase)
+        gen_pcb_pdf(projfolder, force)
+        gen_pcb_gbr(projfolder, force)
+        gen_pcb_dxf(projfolder, force)
+        gen_pcbpricing(projfolder, namebase, force)
 
 
 def get_docs_list(projfolder, cardname=None):
