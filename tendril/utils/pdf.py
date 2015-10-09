@@ -30,6 +30,8 @@ import os
 import subprocess
 
 import tendril.dox.wallet
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 def merge_pdf(pdflist, outfilepath, remove_sources=False):
@@ -53,7 +55,10 @@ def merge_pdf(pdflist, outfilepath, remove_sources=False):
     if remove_sources is True:
         for f in pdflist:
             if not tendril.dox.wallet.is_in_wallet(f):
-                os.remove(f)
+                try:
+                    os.remove(f)
+                except OSError:
+                    logger.warning("Could not delete file after merge: " + f)
     return outfilepath
 
 

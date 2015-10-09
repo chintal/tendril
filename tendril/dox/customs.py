@@ -54,6 +54,8 @@ produce the output files after constructing the appropriate stage.
 
 """
 
+from __future__ import print_function
+
 import os
 import datetime
 import copy
@@ -69,7 +71,7 @@ from tendril.utils.db import with_db
 from tendril.entityhub import serialnos
 from tendril.utils.fsutils import get_tempname
 from tendril.utils.fsutils import temp_fs
-
+from tendril.utils.terminal import TendrilProgressBar
 from tendril.utils.config import COMPANY_GOVT_POINT
 
 
@@ -733,11 +735,14 @@ def gen_verification_checklist(invoice, target_folder, serialno):
             applicable against this section.
 
     """
+    print("Generating Customs Duty Verification Checklist")
     outpath = os.path.join(
         target_folder,
         "customs-verification-duties-" + str(invoice.inv_no) + ".pdf"
     )
     summary = []
+    pb = TendrilProgressBar(max=len(invoice.hssections))
+    print("Collating Section Summaries...")
     for section in invoice.hssections:
         secsum = {'section': section,
                   'code': section.code,
@@ -769,6 +774,11 @@ def gen_verification_checklist(invoice, target_folder, serialno):
                        invoice.getsection_lines(hssection=section)]),
                   }
         summary.append(secsum)
+        pb.next(note=section.code)
+    pb.finish()
+    print("Constructing Stage...")
+    pb = TendrilProgressBar(max=len(invoice.lines))
+    pb_summary = TendrilProgressBar(max=len(summary))
     stage = {'date': datetime.date.today().isoformat(),
              'signatory': COMPANY_GOVT_POINT,
              'inv_no': invoice.inv_no,
@@ -777,10 +787,13 @@ def gen_verification_checklist(invoice, target_folder, serialno):
              'lines': invoice.lines,
              'summary': summary,
              'invoice': invoice,
-             'sno': serialno + '.7'}
-    outpath = render.render_pdf(stage,
-                                'customs/verification-duties.tex',
-                                outpath)
+             'sno': serialno + '.7',
+             'pb': pb,
+             'pb_summary': pb_summary}
+    print("Rendering...")
+    outpath = render.render_pdf(
+        stage, 'customs/verification-duties.tex', outpath
+    )
     return outpath, 'CUST-VERIF-BOE'
 
 
