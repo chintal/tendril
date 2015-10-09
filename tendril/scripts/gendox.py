@@ -23,16 +23,21 @@ import os
 import argparse
 
 from tendril.gedaif.conffile import NoGedaProjectException
+from tendril.gedaif import conffile
 from tendril.entityhub import projects
 from tendril.dox import gedaproject
 from tendril.utils import log
 logger = log.get_logger("gendox", log.DEFAULT)
 
 
-def regenerate_all(force=False):
+def regenerate_all(force=False, dry_run=False):
     for project in projects.projects:
-        logger.info("Checking " + project)
-        gedaproject.generate_docs(projects.projects[project], force=force)
+        if dry_run:
+            conffile.ConfigsFile(projects.projects[project])
+            logger.info("Will check " + projects.projects[project])
+        else:
+            logger.info("Checking " + projects.projects[project])
+            gedaproject.generate_docs(projects.projects[project], force=force)
 
 
 if __name__ == '__main__':
@@ -42,21 +47,29 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         'projfolders', metavar='PATH', type=str, nargs='*',
-        help='gEDA Project Folder(s), or leave empty for all'
+        help='gEDA Project Folder(s), ignored for --all'
     )
     parser.add_argument(
-        '--force', action='store_true', default=False,
+        '--force', '-f', action='store_true', default=False,
         help='Regenerate documentation even if it seems to be up-to-date'
     )
     parser.add_argument(
         '--all', '-a', action='store_true', default=False,
         help='Regenerate documentation for all projects'
     )
+    parser.add_argument(
+        '--recurse', '-r', action='store_true', default=False,
+        help='Recursively search for projects under each provided folder'
+    )
+    parser.add_argument(
+        '--dry-run', '-n', action='store_true', default=False,
+        help="Dry run only. Don't do anything which can change the filesystem"
+    )
 
     args = parser.parse_args()
     force = args.force
     if args.all:
-        regenerate_all(force=force)
+        regenerate_all(force=force, dry_run=args.dry_run)
     else:
         if not len(args.projfolders):
             parser.print_help()
@@ -64,17 +77,31 @@ if __name__ == '__main__':
             if not os.path.isabs(projfolder):
                 projfolder = os.path.join(os.getcwd(), projfolder)
                 projfolder = os.path.normpath(projfolder)
-            try:
-                gedaproject.generate_docs(projfolder, force=force)
-                logger.info("Checked " + projfolder)
-            except NoGedaProjectException:
-                # Make a guess.
-                if os.path.split(projfolder)[1] == 'configs.yaml':
-                    projfolder == os.path.split(projfolder)[0]
-                if os.path.split(projfolder)[1] == 'schematic':
-                    projfolder == os.path.split(projfolder)[0]
+            targets = [projfolder]
+            if args.recurse:
+                lprojects, lpcbs, lcards, lcard_reporoot = \
+                    projects.get_projects(projfolder)
+                targets.extend([lprojects[x] for x in lprojects.keys()])
+            for target in targets:
                 try:
-                    gedaproject.generate_docs(projfolder, force=force)
-                    logger.info("Checked " + projfolder)
+                    if args.dry_run is False:
+                        gedaproject.generate_docs(target, force=force)
+                        logger.info("Checked " + target)
+                    else:
+                        conffile.ConfigsFile(target)
+                        logger.info("Will check " + target)
                 except NoGedaProjectException:
-                    logger.error("No gEDA Project found at " + projfolder)
+                    # Make a guess.
+                    if os.path.split(target)[1] == 'configs.yaml':
+                        target == os.path.split(target)[0]
+                    if os.path.split(target)[1] == 'schematic':
+                        target == os.path.split(target)[0]
+                    try:
+                        if args.dry_run is False:
+                            gedaproject.generate_docs(target, force=force)
+                            logger.info("Checked " + target)
+                        else:
+                            conffile.ConfigsFile(target)
+                            logger.info("Will check " + target)
+                    except NoGedaProjectException:
+                        logger.error("No gEDA Project found at " + target)
