@@ -388,7 +388,8 @@ def regenerate_symlib():
     global index_upper
     index_upper = gen_index(gsymlib, upper=True)
     global generator_names
-    generator_names = [os.path.splitext(x.fname)[0] + '.gen' for x in generators]
+    generator_names = [os.path.splitext(x.fname)[0] + '.gen'
+                       for x in generators]
     global gsymlib_idents
     gsymlib_idents = index.keys()
 
