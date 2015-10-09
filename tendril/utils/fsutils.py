@@ -55,7 +55,7 @@ import base64
 
 from fs.opener import fsopendir
 from fs.errors import ResourceNotFoundError
-from xmlrpclib import Fault
+from six.moves.xmlrpc_client import Fault
 
 from datetime import datetime
 from collections import namedtuple

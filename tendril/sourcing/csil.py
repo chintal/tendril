@@ -45,7 +45,7 @@ from tendril.dox import purchaseorder
 
 from selenium.webdriver.remote.remote_connection import LOGGER
 from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
+logger = log.get_logger(__name__, log.DEBUG)
 LOGGER.setLevel(log.WARNING)
 
 user = None
@@ -80,8 +80,8 @@ def get_csil_prices(params=exparams, rval=None):
     if rval is None:
         rval = {}
     delivery_codes = {
-        3: '3#333',
-        5: '5#334',
+        # 3: '3#333',
+        # 5: '5#334',
         7: '7#529',
         10: '10#1452',
         12: '12#7271',
@@ -139,7 +139,7 @@ def get_csil_prices(params=exparams, rval=None):
     if 'time' in params.keys():
         values['ctl00$ContentPlaceHolder1$ddlDelTerms'] = delivery_codes[params['time']]  # noqa
     else:
-        values['ctl00$ContentPlaceHolder1$ddlDelTerms'] = delivery_codes[5]
+        values['ctl00$ContentPlaceHolder1$ddlDelTerms'] = delivery_codes[7]
 
     if not browser.is_element_present_by_id('shortNotiText', wait_time=100):
         raise Exception
@@ -191,7 +191,7 @@ def get_csil_prices(params=exparams, rval=None):
         time.sleep(0.5)
     oldt = newt
     oldtt = newtt
-    pb = TendrilProgressBar(max=[max(params['qty'])])
+    pb = TendrilProgressBar(max=len(params['qty']))
     for qty in params['qty'][2:]:
         lined = {}
         while browser.find_by_name('ctl00$ContentPlaceHolder1$txtQuantity')[0].value != '':  # noqa
@@ -480,7 +480,7 @@ def generate_pcb_pricing(projfolder, noregen=True, forceregen=False):
                 return pricingfp
     logger.info('Generating PCB Pricing for ' + pricingfp)
     if pcbparams['layers'] == 4:
-        pcbparams['qty'] = range(80)
+        pcbparams['qty'] = range(20)
     else:
         pcbparams['qty'] = range(260)
     sourcingdata = get_csil_prices(pcbparams)
