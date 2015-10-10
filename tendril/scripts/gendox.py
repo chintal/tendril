@@ -26,6 +26,8 @@ from tendril.gedaif.conffile import NoGedaProjectException
 from tendril.gedaif import conffile
 from tendril.entityhub import projects
 from tendril.dox import gedaproject
+from tendril.utils.config import PROJECTS_ROOT
+from tendril.utils.fsutils import in_directory
 from tendril.utils import log
 logger = log.get_logger("gendox", log.DEFAULT)
 
@@ -77,6 +79,12 @@ if __name__ == '__main__':
             if not os.path.isabs(projfolder):
                 projfolder = os.path.join(os.getcwd(), projfolder)
                 projfolder = os.path.normpath(projfolder)
+            if not in_directory(projfolder, PROJECTS_ROOT):
+                logger.error(
+                    'Provided directory does not seem to be under the '
+                    'tendril PROJECTS_ROOT. Skipping ' + projfolder
+                )
+                continue
             targets = [projfolder]
             if args.recurse:
                 lprojects, lpcbs, lcards, lcard_reporoot = \

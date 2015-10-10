@@ -345,6 +345,19 @@ def gen_symlib(path=GEDA_SYMLIB_ROOT, recursive=True,
     return symbols
 
 
+def gen_index(symlist, upper=False):
+    lindex = {}
+    for symbol in symlist:
+        ident = symbol.ident
+        if upper:
+            ident = ident.upper()
+        if ident in lindex.keys():
+            lindex[ident].append(symbol)
+        else:
+            lindex[ident] = [symbol]
+    return lindex
+
+
 def _jinja_init():
     templates_path = os.path.join(TENDRIL_ROOT, 'gedaif', 'templates')
     logger.debug("Loading templates from " + templates_path)
@@ -358,9 +371,30 @@ def _jinja_init():
 
 
 generators = []
-gsymlib = gen_symlib(GEDA_SYMLIB_ROOT)
-generator_names = [os.path.splitext(x.fname)[0] + '.gen' for x in generators]
-gsymlib_idents = [x.ident for x in gsymlib]
+gsymlib = []
+index = {}
+index_upper = {}
+generator_names = []
+gsymlib_idents = []
+
+
+def regenerate_symlib():
+    global generators
+    generators = []
+    global gsymlib
+    gsymlib = gen_symlib(GEDA_SYMLIB_ROOT)
+    global index
+    index = gen_index(gsymlib)
+    global index_upper
+    index_upper = gen_index(gsymlib, upper=True)
+    global generator_names
+    generator_names = [os.path.splitext(x.fname)[0] + '.gen'
+                       for x in generators]
+    global gsymlib_idents
+    gsymlib_idents = index.keys()
+
+
+regenerate_symlib()
 
 
 def get_generator(gen):
@@ -376,24 +410,19 @@ def is_recognized(ident):
 
 
 def get_symbol(ident, case_insensitive=False, get_all=False):
-    rval = []
-    for symbol in gsymlib:
-        if case_insensitive is False:
-            if symbol.ident == ident:
-                rval.append(symbol)
-        else:
-            if symbol.ident.upper() == ident.upper():
-                rval.append(symbol)
-    if not get_all:
-        try:
-            return rval[0]
-        except KeyError:
-            raise ValueError(ident)
+    if case_insensitive is False:
+        if ident in index.keys():
+            if not get_all:
+                return index[ident][0]
+            else:
+                return index[ident]
     else:
-        if len(rval) > 0:
-            return rval
-        else:
-            raise ValueError(ident)
+        if ident.upper() in index_upper.keys():
+            if not get_all:
+                return index_upper[ident.upper()][0]
+            else:
+                return index_upper[ident.upper()]
+    raise ValueError(ident)
 
 
 def get_symbol_folder(ident, case_insensitive=False):

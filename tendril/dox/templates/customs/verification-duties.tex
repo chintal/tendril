@@ -86,9 +86,11 @@
       &  & \texttt{%{{ line.hs_section.name|escape_latex%}}} & \multicolumn{2}{r}{\textbf{\texttt{Assessable Value}}} & \texttt{\bfseries %{{line.assessableprice.native_string|escape_latex%}}} & \texttt{%{{line.acvd.notification%}}} & \texttt{%{{line.acvd.title%}} (%{{line.acvd.rate%}}\%)} & \texttt{%{{line.acvd.value.native_string|escape_latex%}}} & \\\nopagebreak[4]
       &  &  &  & &  & \multicolumn{2}{r}{\textbf{\texttt{Total Duties Payable}}} & \texttt{\bfseries %{{line.dutypayable.native_string|escape_latex%}}} & \\
       \hline
+      %{{ stage.pb.next(note=line.idx + ' ' + line.ident) or '' %}}
     %{ endfor %} 
 \end{tabularx}
 
+%{{ stage.pb.finish() or '' %}}
 
 \newpage
 \section*{Duty Summary per HS Code}
@@ -114,9 +116,10 @@
       & \texttt{IDXs} & \multirow{3}{*}[\normalbaselineskip]{\parbox{0.2\textwidth}{\texttt{%{for idx in line.idxs %}%{{idx%}}%{if not loop.last %}, %{endif%}%{endfor%}}}} & \texttt{%{{ line.section.cec_notif|escape_latex %}}} & \texttt{Edu Cess} & \texttt{%{{ line.section.cec %}}\%} & \texttt{%{{ line.cec.native_string|escape_latex %}}} & \\\nopagebreak[4]
       &  &  & \texttt{%{{ line.section.cshec_notif|escape_latex %}}} & \texttt{S\&HE Cess} & \texttt{%{{ line.section.cshec %}}\%} & \texttt{%{{ line.cshec.native_string|escape_latex %}}} & \\\nopagebreak[4]
       &  &  & \texttt{%{{ line.section.acvd_notif|escape_latex %}}} & \texttt{SAD} & \texttt{%{{ line.section.acvd %}}\%} & \texttt{%{{ line.acvd.native_string|escape_latex %}}} & \\\hline
+     %{{ stage.pb_summary.next(note=line.code + ' ' + line.name) or '' %}}
     %{ endfor %}
 \end{tabularx}
- 
+%{{ stage.pb_summary.finish() or '' %}}
 \end{center}
 
 \renewcommand{\arraystretch}{2}

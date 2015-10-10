@@ -27,7 +27,7 @@ from db import controller
 from sqlalchemy.orm.exc import NoResultFound
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 def get_series(sno):

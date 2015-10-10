@@ -43,6 +43,8 @@ generate their output files.
 
 """
 
+from __future__ import print_function
+
 import os
 import subprocess
 import jinja2
@@ -63,6 +65,7 @@ from tendril.utils.colors import tableau20
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
+FNULL = open(os.devnull, 'w')
 
 
 def format_currency(value):
@@ -230,8 +233,9 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
                     os.path.split(outpath)[0]).split(' ')
     pdflatex_cmd.append(texpath)
 
+    print("Generating " + os.path.split(outpath)[1])
     for i in range(3):
-        subprocess.call(pdflatex_cmd)
+        subprocess.call(pdflatex_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
     if remove_sources is True:
         os.remove(texpath)
@@ -286,7 +290,7 @@ def render_lineplot(outf, plotdata, title, note):
     try:
         ymax = max([max(l) for l in ylists])
     except ValueError:
-        print ylists
+        print(ylists)
         raise ValueError
     xmin = min([min(l) for l in xlists])
     xmax = max([max(l) for l in xlists])

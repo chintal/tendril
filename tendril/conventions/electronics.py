@@ -141,6 +141,10 @@ nofp_strs = [
     "USB CABLE"
 ]
 
+nofp_pattern = r"^(?:%s)" % '|'.join(nofp_strs)
+rex_nofp = re.compile(nofp_pattern)
+
+
 fpiswire_strs = [
     "CABLE ROUND",
     "WIRE",
@@ -148,30 +152,34 @@ fpiswire_strs = [
     "SLEEVE SHRINK",
 ]
 
+wire_pattern = r"^(?:%s)" % '|'.join(fpiswire_strs)
+rex_wire = re.compile(wire_pattern)
+
+
 fpismodlen_strs = [
     "CABLE SIP SSC",
     "CONN DF13 WIRE"
 ]
 
+modlen_pattern = r"^(?:%s)" % '|'.join(fpismodlen_strs)
+rex_modlen = re.compile(modlen_pattern)
+
 
 def no_fp(device):
-    for st in nofp_strs:
-        if device.startswith(st):
-            return True
+    if rex_nofp.match(device):
+        return True
     return False
 
 
 def fpismodlen(device):
-    for st in fpismodlen_strs:
-        if device.startswith(st):
-            return True
+    if rex_modlen.match(device):
+        return True
     return False
 
 
 def fpiswire(device):
-    for st in fpiswire_strs:
-        if device.startswith(st):
-            return True
+    if rex_wire.match(device):
+        return True
     return False
 
 

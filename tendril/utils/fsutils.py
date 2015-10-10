@@ -37,9 +37,11 @@ or python libraries.
     get_folder_mtime
     get_file_mtime
     get_file_hash
+    in_directory
     VersionedOutputFile
 
     import_
+    get_parent
 
 """
 
@@ -251,6 +253,27 @@ def get_file_hash(filepath, hasher=None, blocksize=65536):
             hasher.update(buf)
             buf = afile.read(blocksize)
     return base64.b64encode(hasher.digest())
+
+
+def in_directory(path, directory):
+    """
+    Naive check of whether a path is located at or within a specified
+    directory.
+
+    .. warning:: :func:`os.path.commonprefix` should not actually
+                 be trusted here.
+
+    :param path:
+    :param directory:
+    :return: True, if path is contained under the directory's tree.
+    """
+    directory = os.path.normpath(
+        os.path.join(os.path.realpath(directory), '')
+    )
+    path = os.path.normpath(os.path.realpath(path))
+    if path == directory:
+        return True
+    return os.path.commonprefix([path, directory]) == directory
 
 
 class VersionedOutputFile:
