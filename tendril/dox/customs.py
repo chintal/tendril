@@ -774,9 +774,8 @@ def gen_verification_checklist(invoice, target_folder, serialno):
                        invoice.getsection_lines(hssection=section)]),
                   }
         summary.append(secsum)
-        pb.next(note=section.code)
+        pb.next(note=section.code + ' ' + section.name)
     pb.finish()
-    print("Constructing Stage...")
     pb = TendrilProgressBar(max=len(invoice.lines))
     pb_summary = TendrilProgressBar(max=len(summary))
     stage = {'date': datetime.date.today().isoformat(),
