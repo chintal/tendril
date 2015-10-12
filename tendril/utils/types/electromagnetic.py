@@ -195,8 +195,8 @@ class Resistance(NumericalUnitBase):
 
 class Capacitance(NumericalUnitBase):
     def __init__(self, value):
-        _ostrs = ['pF', 'nF', 'uF', 'mF']
-        _dostr = 'nF'
+        _ostrs = ['pF', 'nF', 'uF', 'mF', 'F']
+        _dostr = 'F'
         _parse_func = parse_capacitance
         super(Capacitance, self).__init__(value, _ostrs, _dostr, _parse_func)
 
