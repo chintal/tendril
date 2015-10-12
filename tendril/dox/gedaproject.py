@@ -98,6 +98,7 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 
 def get_project_doc_folder(projectfolder):
+    projectfolder = os.path.realpath(projectfolder)
     projectfolder = os.path.relpath(projectfolder, PROJECTS_ROOT)
     pth = path.join(projectfolder, 'doc')
     try:
