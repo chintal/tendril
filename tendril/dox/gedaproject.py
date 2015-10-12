@@ -434,7 +434,7 @@ def gen_cobom_csv(projfolder, namebase, force=False):
 
     bomlist = []
     for cfn in configfile.configdata['configurations']:
-        gen_confpdf(projfolder, cfn['configname'], namebase, force=False)
+        gen_confpdf(projfolder, cfn['configname'], namebase, force=force)
         lbom = boms_electronics.import_pcb(projfolder)
         lobom = lbom.create_output_bom(cfn['configname'])
         bomlist.append(lobom)
