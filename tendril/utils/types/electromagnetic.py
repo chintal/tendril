@@ -39,20 +39,59 @@ def parse_resistance(value):
     elif ostr == 'K':
         return num_val * 1000
     elif ostr == 'M':
-        return num_val * 1000 * 1000
+        return num_val * 1000000
+    elif ostr == 'G':
+        return num_val * 1000000000
 
 
 def parse_capacitance(value):
-    num_val = Decimal(value[:-2])
-    ostr = value[-2:]
-    if ostr == 'pF':
-        return num_val / 1000
-    elif ostr == 'nF':
+    value = value.strip()
+
+    try:
+        num_val = Decimal(value[:-1])
+        ostr = value[-1:]
+    except InvalidOperation:
+        num_val = Decimal(value[:-2])
+        ostr = value[-2:]
+
+    if ostr == 'F':
         return num_val
-    elif ostr == 'uF':
-        return num_val * 1000
     elif ostr == 'mF':
-        return num_val * 1000 * 1000
+        return num_val / 1000
+    elif ostr == 'uF':
+        return num_val / 1000000
+    elif ostr == 'nF':
+        return num_val / 1000000000
+    elif ostr == 'pF':
+        return num_val / 1000000000000
+    elif ostr == 'fF':
+        return num_val / 1000000000000000
+    else:
+        raise ValueError
+
+
+def parse_inductance(value):
+    value = value.strip()
+
+    try:
+        num_val = Decimal(value[:-1])
+        ostr = value[-1:]
+    except InvalidOperation:
+        num_val = Decimal(value[:-2])
+        ostr = value[-2:]
+
+    if ostr == 'H':
+        return num_val
+    elif ostr == 'mH':
+        return num_val / 1000
+    elif ostr == 'uH':
+        return num_val / 1000000
+    elif ostr == 'nH':
+        return num_val / 1000000000
+    elif ostr == 'pH':
+        return num_val / 1000000000000
+    else:
+        raise ValueError
 
 
 def parse_voltage(value):
@@ -81,6 +120,32 @@ def parse_voltage(value):
         raise ValueError
 
 
+def parse_charge(value):
+    value = value.strip()
+
+    try:
+        num_val = Decimal(value[:-1])
+        ostr = value[-1:]
+    except InvalidOperation:
+        num_val = Decimal(value[:-2])
+        ostr = value[-2:]
+
+    if ostr == 'C':
+        return num_val
+    elif ostr == 'mC':
+        return num_val / 1000
+    elif ostr == 'uC':
+        return num_val / 1000000
+    elif ostr == 'nC':
+        return num_val / 1000000000
+    elif ostr == 'pC':
+        return num_val / 1000000000000
+    elif ostr == 'fC':
+        return num_val / 1000000000000000
+    else:
+        raise ValueError
+
+
 def parse_current(value):
     value = value.strip()
     try:
@@ -91,17 +156,17 @@ def parse_current(value):
         ostr = value[-2:]
 
     if ostr == 'A':
-        return num_val * 1000
-    elif ostr == 'mA':
         return num_val
-    elif ostr == 'uA':
+    elif ostr == 'mA':
         return num_val / 1000
-    elif ostr == 'nA':
+    elif ostr == 'uA':
         return num_val / 1000000
-    elif ostr == 'pA':
+    elif ostr == 'nA':
         return num_val / 1000000000
-    elif ostr == 'fA':
+    elif ostr == 'pA':
         return num_val / 1000000000000
+    elif ostr == 'fA':
+        return num_val / 1000000000000000
     else:
         raise ValueError
 
@@ -134,6 +199,14 @@ class Capacitance(NumericalUnitBase):
         _dostr = 'nF'
         _parse_func = parse_capacitance
         super(Capacitance, self).__init__(value, _ostrs, _dostr, _parse_func)
+
+
+class Inductance(NumericalUnitBase):
+    def __init__(self, value):
+        _ostrs = ['pH', 'nH', 'uH', 'mH', 'H']
+        _dostr = 'H'
+        _parse_func = parse_inductance
+        super(Inductance, self).__init__(value, _ostrs, _dostr, _parse_func)
 
 
 class Voltage(NumericalUnitBase):
@@ -170,6 +243,14 @@ class CurrentAC(Current):
 
 class CurrentDC(Current):
     pass
+
+
+class Charge(NumericalUnitBase):
+    def __init__(self, value):
+        _ostrs = ['fC', 'pC', 'nC', 'uC', 'mC', 'C']
+        _dostr = 'C'
+        _parse_func = parse_charge
+        super(Charge, self).__init__(value, _ostrs, _dostr, _parse_func)
 
 
 def parse_voltage_gain(value):
