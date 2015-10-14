@@ -53,63 +53,6 @@ class MotifLM3150(MotifBase):
         super(MotifLM3150, self).__init__(identifier)
         self._configdict = None
 
-    def validate(self):
-        logger.debug(str(self._configdict))
-        logger.debug('Vin_typ: ' + str(self.Vin_typ))
-        logger.debug('RFB1: ' + str(self.RFB1))
-        logger.debug('RFB2: ' + str(self.RFB2))
-        logger.debug('Vout: ' + str(self.Vout))
-        logger.debug('RON: ' + str(self.RON))
-        logger.debug('Fsw: ' + str(self.Fsw))
-        logger.debug('CFF: ' + str(self.CFF))
-        logger.debug('ET_max: ' + str(self.ET_max))
-        logger.debug('ET_min: ' + str(self.ET_min))
-        logger.debug('L: ' + str(self.L1))
-        logger.debug('Co_min: ' + str(self.Co_min))
-        logger.debug('Co_ESR_max: ' + str(self.Co_ESR_max))
-        logger.debug('Co_ESR_min_1: ' + str(self.Co_ESR_min_1))
-        logger.debug('Co_ESR_min_2: ' + str(self.Co_ESR_min_2))
-        logger.debug('Co_ESR_min: ' + str(self.Co_ESR_min))
-        logger.debug('FET_Vds_min: ' + str(self.fet_Vds_min))
-        logger.debug('FET_Qgtotal_max: ' + str(self.fet_Qgtotal_max))
-        logger.debug('FET_Qgh: ' + str(self.fet_Qgh))
-        logger.debug('FET_Qgl: ' + str(self.fet_Qgl))
-        logger.debug('FET_Qgtotal: ' + str(self.fet_Qgtotal))
-        logger.debug('Pdh: ' + str(self.Pdh))
-        logger.debug('Pdl: ' + str(self.Pdl))
-        logger.debug('RLIM: ' + str(self.RLIM))
-        logger.debug('Ci_min: ' + str(self.Ci_min))
-        logger.debug('Ci_imin: ' + str(self.Ci_imin))
-        logger.debug('Cdi_min: ' + str(self.Cdi_min))
-
-    def listing(self):
-        pass
-
-    def get_configdict_stub(self):
-        stub = {'desc': 'LM3150 Simple Switcher',
-                'Vref': '0.6V',
-                'Imin': '1mA',
-                'Rseries': 'E24',
-                'Rmin': '10E',
-                'Rmax': '10M',
-                'Cseries': 'E12',
-                'Cmin': '1pF',
-                'Cmax': '100nF',
-                'Iout': '10A',
-                'Vin_min': '10V',
-                'Vin_max': '26V',
-                'Ton_min': '200ns',
-                'Toff_min': '450ns',
-                'Toff_fet': '100ns',
-                'fet_Qg_hs_5V': '',
-                'fet_Qg_ls_6V': '',
-                'fet_Rdson': '',
-                'L_num': '',
-                'Co_num': '',
-                'Vout': '',
-                }
-        return stub
-
     def _get_Vout(self, rfb1, rfb2):
         rval = self._vref * \
                ((Resistance(rfb1) + Resistance(rfb2)) / Resistance(rfb1))
@@ -217,7 +160,7 @@ class MotifLM3150(MotifBase):
 
         Zfb = self.RFB1 * (self.RFB2 / (self.RFB1 + self.RFB2))
         target_cff = Capacitance(
-            (self.Vout / self.Vin_min) / (self.Fsw.value * Zfb)
+            (self.Vout / self.Vin_min) / (self.Fsw.value * Zfb.value)
         )
 
         logger.debug('target_cff: {0}'.format(target_cff))
@@ -351,18 +294,6 @@ class MotifLM3150(MotifBase):
         self.validate()
 
     @property
-    def RFB1(self):
-        elem = self.get_elem_by_idx('RFB1')
-        assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
-
-    @property
-    def RFB2(self):
-        elem = self.get_elem_by_idx('RFB2')
-        assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
-
-    @property
     def Vout(self):
         return self._get_Vout(self.RFB1, self.RFB2)
 
@@ -372,12 +303,6 @@ class MotifLM3150(MotifBase):
         self._autoset_fsw()
         self._autoset_Cff()
         self._autoset_ET()
-
-    @property
-    def RON(self):
-        elem = self.get_elem_by_idx('RON')
-        assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
 
     @property
     def Fsw(self):
@@ -395,6 +320,24 @@ class MotifLM3150(MotifBase):
         self._autoset_fet()
         self._autoset_ilim()
         self._autoset_Ci()
+
+    @property
+    def RFB1(self):
+        elem = self.get_elem_by_idx('RFB1')
+        assert elem.data['device'] in ['RES SMD', 'RES THRU']
+        return Resistance(electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0]))  # noqa
+
+    @property
+    def RFB2(self):
+        elem = self.get_elem_by_idx('RFB2')
+        assert elem.data['device'] in ['RES SMD', 'RES THRU']
+        return Resistance(electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0]))  # noqa
+
+    @property
+    def RON(self):
+        elem = self.get_elem_by_idx('RON')
+        assert elem.data['device'] in ['RES SMD', 'RES THRU']
+        return Resistance(electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0]))  # noqa
 
     @property
     def L1(self):
@@ -416,10 +359,97 @@ class MotifLM3150(MotifBase):
     def CFF(self):
         elem = self.get_elem_by_idx('CFF')
         assert elem.data['device'] in ['CAP CER SMD', 'CAP CER THRU']
-        return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])  # noqa
+        return Capacitance(electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0]))  # noqa
 
     @property
     def RLIM(self):
         elem = self.get_elem_by_idx('RLIM')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
+        return Resistance(electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0]))  # noqa
+
+    def validate(self):
+        pass
+
+    def listing(self):
+        pass
+
+    @property
+    def parameters_base(self):
+        p_derived = [
+            ('Vin_typ', "Typical Input Voltage", "(Vin_min + Vin_max)/2"),
+        ]
+        p_vout = [
+            ('RFB1', "Lower Feedback Resistor", ''),
+            ('RFB2', "Upper Feedback Resistor", ''),
+            ('CFF', "Feed Forward Capacitor", ''),
+            ('Vout', "Actual Output Voltage", self._configdict['Vout']),
+        ]
+        p_fsw = [
+            ('RON', "On-Time Setting Resistor", ''),
+            ('Fsw', "Actual Switching Frequency", ''),
+        ]
+        p_l = [
+            ('ET_max', "Minimum Volt-Second Constant", ''),
+            ('ET_min', "Maximum Volt-Second Constant", ''),
+            ('L1', "Inductance", ''),
+        ]
+        p_co = [
+            ('Co_min', "Minimum Ouptut Capacitance", ''),
+            ('Co_ESR_max', "Maximum Output Capacitor ESR", ''),
+            ('Co_ESR_min', "Minimum Output Capacitor ESR", ''),
+        ]
+        p_ci = [
+            ('Ci_min', "Minimum Input Capacitance", ''),
+            ('Ci_imin', "Input Capacitor Current", ''),
+            ('Cdi_min', "Minimum Input Damping Capacitor", '5 x Input Capacitance'),
+        ]
+        p_fet = [
+            ('fet_Vds_min', "Minimum FET Vds rating", ''),
+            ('fet_Qgtotal_max', "Maximum total FET gate charge", ''),
+            ('fet_Qgh', "Act. High side FET gate charge", ''),
+            ('fet_Qgl', "Act. Low side FET gate charge", ''),
+            ('fet_Qgtotal', "Total Act. FET gate charge", ''),
+            ('Pdh', "High Side MOSFET Dissipation", ''),
+            ('Pdl', "Low Side MOSFET Dissipation", ''),
+        ]
+        p_lim = [
+            ('RLIM', "Current Limit Resistance", ''),
+        ]
+        parameters = [
+            (p_derived, "Derived Parameters"),
+            (p_vout, "Output Voltage Setting"),
+            (p_fsw, "Switching Frequency Selection"),
+            (p_l, "Inductor Selection"),
+            (p_co, "Output Capacitor Selection"),
+            (p_ci, "Input Capacitor Selection"),
+            (p_fet, "FET Selection"),
+            (p_lim, "Current Limit Setting"),
+        ]
+        return parameters
+
+    @property
+    def configdict_base(self):
+        inputs = [
+            ('desc', 'LM3150 Simple Switcher', 'description', str),
+            ('Vref', '0.6V', 'Reference for Output Voltage', Voltage),
+            ('Rseries', 'E24', 'Resistance Series', str),
+            ('Rmin', '10E', 'Minimum Resistance', str),
+            ('Rmax', '10M', 'Maximum Resistance', str),
+            ('Cseries', 'E12', 'Capacitance Series', str),
+            ('Cmin', '1pF', 'Minimum Capacitance', str),
+            ('Cmax', '100nF', 'Maximum Capacitance', str),
+            ('Iout', '10A', 'Rated Output Current', Current),
+            ('Vin_min', '10V', 'Minimum Input Voltage', Voltage),
+            ('Vin_max', '26V', 'Maximum Input Voltage', Voltage),
+            ('Ton_min', '200ns', 'Minimum On Time', TimeSpan),
+            ('Toff_min', '450ns', 'Minimum Off Time', TimeSpan),
+            ('Toff_fet', '100ns', 'MOSFET Turn-off Time', TimeSpan),
+            ('fet_Qg_hs_5V', '', 'High Side FET Gate Charge', Charge),
+            ('fet_Qg_ls_6V', '', 'Low Side FET Gate Charge', Charge),
+            ('fet_Rdson', '', 'MOSFET Rdson', Resistance),
+            ('L_num', '', 'Effective Inductance', Inductance),
+            ('Co_num', '', 'Effective Output Capacitance', Capacitance),
+            ('Ci_num', '', 'Effective Input Capacitance', Capacitance),
+            ('Vout', '', 'Output Voltage', Voltage),
+        ]
+        return inputs

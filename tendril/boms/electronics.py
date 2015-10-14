@@ -312,6 +312,10 @@ class EntityElnBom(EntityBomBase):
         self.create_groups()
         self.populate_bom()
 
+    @property
+    def motifs(self):
+        return self._motifs
+
     def create_groups(self):
         groupnamelist = [x['name'] for x in self.configurations.grouplist]
         if 'default' not in groupnamelist:

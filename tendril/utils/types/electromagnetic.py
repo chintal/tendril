@@ -232,7 +232,7 @@ class DiodeVoltageDC(VoltageDC):
 class Current(NumericalUnitBase):
     def __init__(self, value):
         _ostrs = ['fA', 'pA', 'nA', 'uA', 'mA', 'A']
-        _dostr = 'mA'
+        _dostr = 'A'
         _parse_func = parse_current
         super(Current, self).__init__(value, _ostrs, _dostr, _parse_func)
 
