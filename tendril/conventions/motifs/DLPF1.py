@@ -29,6 +29,10 @@ from tendril.conventions import electronics
 from tendril.conventions.motifs.motifbase import MotifBase
 from tendril.gedaif import gsymlib
 
+from tendril.utils.types.electromagnetic import Capacitance
+from tendril.utils.types.electromagnetic import Resistance
+from tendril.utils.types.time import Frequency
+
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
@@ -36,7 +40,6 @@ logger = log.get_logger(__name__, log.DEFAULT)
 class MotifDLPF1(MotifBase):
     def __init__(self, identifier):
         super(MotifDLPF1, self).__init__(identifier)
-        self._configdict = None
 
     def configure(self, configdict):
         # Set Resistances
@@ -50,7 +53,7 @@ class MotifDLPF1(MotifBase):
 
     def _set_biases(self):
         if 'pbias' not in self._configdict.keys():
-            log.WARNING('Positive terminal bias not defined : ' + self.refdes)
+            logger.warning('Positive terminal bias not defined : ' + self.refdes)
         else:
             if self._configdict['pbias'] != '-1':
                 self.get_elem_by_idx('R3').data['value'] = electronics.construct_resistor(self._configdict['pbias'], '0.125W')  # noqa
@@ -61,7 +64,7 @@ class MotifDLPF1(MotifBase):
                     pass
 
         if 'pbias' not in self._configdict.keys():
-            log.WARNING('Positive terminal bias not defined : ' + self.refdes)
+            logger.warning('Positive terminal bias not defined : ' + self.refdes)
         else:
             if self._configdict['nbias'] != '-1':
                 self.get_elem_by_idx('R4').data['value'] = electronics.construct_resistor(self._configdict['nbias'], '0.125W')  # noqa
@@ -73,7 +76,7 @@ class MotifDLPF1(MotifBase):
 
     @property
     def Fdiff(self):
-        return 1 / (2 * pi * float(self.R1) * float(2 * self.C1 + self.C2))  # noqa
+        return Frequency(1 / (2 * pi * float(self.R1) * float(2 * self.C1 + self.C2)))  # noqa
 
     @property
     def Fcm(self):
@@ -146,21 +149,31 @@ class MotifDLPF1(MotifBase):
 
     def validate(self):
         logger.debug("Validating Motif : " + self.refdes)
-        logger.debug('R1 : ' + str(self.R1))
-        logger.debug('R2 : ' + str(self.R2))
-        logger.debug('C1 : ' + str(self.C1))
-        logger.debug('C2 : ' + str(self.C2))
-        logger.debug('C3 : ' + str(self.C3))
-        logger.debug('Fdiff : ' + str(self.Fdiff))
-        logger.debug('Fcm : ' + str(self.Fcm))
         assert self.R1 == self.R2
         assert self.C3 == self.C2
         assert self.C1 >= 10 * self.C2
 
-    def get_configdict_stub(self):
-        stub = {'desc': "Differential Low Pass RFI and AAF filter",
-                'Fdiff': "15000Hz",
-                'R1': "50E",
-                'Cseries': "E6", 'Cmin': "1pF", 'Cmax': "1uF",
-                'pbias': '-1', 'nbias': '-1'}
-        return stub
+    @property
+    def parameters_base(self):
+        p_fc = [
+            ('Fdiff', "Differential Cutoff Frequency", ''),
+            ('Fcm', "Common Mode Cutoff Frequency", ''),
+        ]
+        parameters = [
+            (p_fc, "Filter Parameters"),
+        ]
+        return parameters
+
+    @property
+    def configdict_base(self):
+        inputs = [
+            ('desc', "Differential Low Pass RFI and AAF filter", 'description', str),
+            ('Cseries', 'E6', 'Capacitance Series', str),
+            ('Cmin', '1pF', 'Minimum Capacitance', str),
+            ('Cmax', '100nF', 'Maximum Capacitance', str),
+            ('Fdiff', "15000Hz", 'Differential Cutoff Frequency', str),
+            ('R1', "50E", 'Input Resistance Value', str),
+            ('pbias', '-1', 'IN+ Bias', str),
+            ('nbias', '-1', 'IN- Bias', str),
+        ]
+        return inputs

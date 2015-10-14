@@ -19,32 +19,19 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, None)
-
 import iec60063
 
 from tendril.conventions.motifs.motifbase import MotifBase
 from tendril.conventions import electronics
 from tendril.gedaif import gsymlib
 
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
+
 
 class MotifInampGainBase(MotifBase):
     def __init__(self, identifier):
         super(MotifInampGainBase, self).__init__(identifier)
-        self._configdict = None
-
-    def validate(self):
-        logger.debug("Validating Motif : " + self.refdes)
-        logger.debug("RES : " + str(self.R1) + " GAIN : " + str(self.gain))
-
-    def get_configdict_stub(self):
-        stub = {'desc': 'Instrumentation Amplifier Gain',
-                'gain': '1',
-                'Rseries': 'E12',
-                'Rmin': '10E',
-                'Rmax': '10M'}
-        return stub
 
     def configure(self, configdict):
         self._configdict = configdict
@@ -93,3 +80,28 @@ class MotifInampGainBase(MotifBase):
             if rval > required_res_val:
                 self.get_elem_by_idx('R1').data['value'] = gsymlib.find_resistor(lastval, r1_fp, r1_dev)  # noqa
                 break
+
+    @property
+    def parameters_base(self):
+        p_gain = [
+            ('R1', "Gain Setting Resistance", ''),
+            ('gain', "Amplifier DC Gain", ''),
+        ]
+        parameters = [
+            (p_gain, "Gain Setting"),
+        ]
+        return parameters
+
+    @property
+    def configdict_base(self):
+        inputs = [
+            ('desc', 'Instrumentation Amplifier Gain', 'description', str),
+            ('Rseries', 'E24', 'Resistance Series', str),
+            ('Rmin', '10E', 'Minimum Resistance', str),
+            ('Rmax', '10M', 'Maximum Resistance', str),
+            ('gain', "1", 'Amplifier DC gain', str),
+        ]
+        return inputs
+
+    def validate(self):
+        pass
