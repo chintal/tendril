@@ -35,6 +35,9 @@ from tendril.utils.config import INSTANCE_CACHE
 import tendril.utils.fsutils
 import tendril.conventions.electronics
 
+from tendril.utils.types.electromagnetic import Resistance
+from tendril.utils.types.electromagnetic import Capacitance
+
 from gschem import conv_gsch2png
 
 from tendril.utils import log
@@ -433,6 +436,12 @@ def get_symbol_folder(ident, case_insensitive=False):
 
 
 def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
+    if isinstance(capacitance, str):
+        capacitance = Capacitance(capacitance)
+    if isinstance(capacitance, Capacitance):
+        capacitance = capacitance._value
+    if footprint[0:3] == "MY-":
+        footprint = footprint[3:]
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
             cap, volt = tendril.conventions.electronics.parse_capacitor(symbol.value)  # noqa
@@ -443,6 +452,12 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
 
 
 def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
+    if isinstance(resistance, str):
+        resistance = Resistance(resistance)
+    if isinstance(resistance, Resistance):
+        resistance = resistance._value
+    if footprint[0:3] == "MY-":
+        footprint = footprint[3:]
     if device == 'RES THRU':
         if resistance in [tendril.conventions.electronics.parse_resistance(x)  # noqa
                           for x in iec60063.gen_vals(iec60063.get_series('E24'), iec60063.res_ostrs)]:  # noqa

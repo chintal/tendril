@@ -63,7 +63,6 @@ def test_type_timespan():
 
     ts1 = time.TimeSpan(10)
     assert ts1.timedelta.seconds == 10
-    assert repr(ts1) == '0:0:0:0:0:10:0'
 
     ts1 = time.TimeSpan(0.1)
     assert ts1.timedelta.microseconds == 100000
@@ -76,6 +75,8 @@ def test_type_timespan():
     ))
     assert ts1.timedelta.seconds == 90061
     assert ts1.timedelta.microseconds == 1
+
+    # TODO Test string parser
 
     with pytest.raises(ValueError):
         time.TimeSpan(time.TimeDelta(years=1))

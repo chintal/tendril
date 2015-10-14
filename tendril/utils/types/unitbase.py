@@ -246,11 +246,9 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
         if isinstance(other, numbers.Number) and other == 0:
             return self
         elif self.__class__ == other.__class__:
-            return self.__class__(self.value + other.value)
+            return self.__class__(self._value + other._value)
         else:
-            raise NotImplementedError(
-                "Addition of : " + repr(self) + " + " + repr(other)
-            )
+            return NotImplemented
 
     def __radd__(self, other):
         if other == 0:
@@ -269,7 +267,7 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
         """
         if isinstance(other, numbers.Number):
             if isinstance(self, Percentage):
-                return other * self.value / 100
+                return self.__class__(other * self.value / 100)
             if isinstance(self, GainBase):
                 return self.__class__(other * self.value)
             return self.__class__(other * self.value)
@@ -284,9 +282,7 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
                 raise TypeError("Gain is of a different type.")
             return self.__class__(self.value * other.value)
         else:
-            raise NotImplementedError(
-                "Multiplication of : " + repr(self) + " x " + repr(other)
-            )
+            return NotImplemented
 
     def __div__(self, other):
         """
@@ -312,12 +308,10 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
         elif isinstance(other, self.__class__):
             return self.value / other.value
         else:
-            raise NotImplementedError(
-                "Division of : " + repr(self) + " / " + repr(other)
-            )
+            return NotImplemented
 
     def __rdiv__(self, other):
-        raise NotImplementedError
+        return NotImplemented
 
     def __truediv__(self, other):
         return self.__div__(other)
@@ -429,25 +423,25 @@ class DummyUnit(UnitBase):
         super(DummyUnit, self).__init__(value, None, None)
 
     def __add__(self, other):
-        raise NotImplementedError
+        return NotImplemented
 
     def __radd__(self, other):
-        raise NotImplementedError
+        return NotImplemented
 
     def __mul__(self, other):
-        raise NotImplementedError
+        return NotImplemented
 
     def __div__(self, other):
-        raise NotImplementedError
+        return NotImplemented
 
     def __rmul__(self, other):
-        raise NotImplementedError
+        return NotImplemented
 
     def __sub__(self, other):
-        raise NotImplementedError
+        return NotImplemented
 
     def __cmp__(self, other):
-        raise NotImplementedError
+        return NotImplemented
 
     def __repr__(self):
         return "Dummy Unit"

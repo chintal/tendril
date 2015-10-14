@@ -21,14 +21,14 @@ See the COPYING, README, and INSTALL files for more information
 
 from math import fabs
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import iec60063
 
 from tendril.conventions.motifs.motifbase import MotifBase
 from tendril.conventions import electronics
 from tendril.gedaif import gsymlib
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class MotifLREGS1(MotifBase):
@@ -63,7 +63,7 @@ class MotifLREGS1(MotifBase):
                                              self._configdict['Rmin'],
                                              self._configdict['Rmax'])
 
-        required_res_val = fabs(self.Vref * 1000 / self.Imin)
+        required_res_val = fabs(self.Vref / self.Imin)
 
         rval = None
         lastval = None

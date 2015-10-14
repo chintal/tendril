@@ -24,6 +24,7 @@ import os
 import shutil
 
 from tendril.conventions.motifs import create_motif_object
+from tendril.conventions.electronics import ident_transform
 
 import projfile
 
@@ -46,6 +47,14 @@ class BomLine(object):
 
     def __repr__(self):
         return self.data.__repr__()
+
+    def __getattr__(self, item):
+        if item in self.data.keys():
+            return self.data[item]
+        elif item == 'ident':
+            return ident_transform(self.data['device'], self.data['value'], self.data['footprint'])
+        else:
+            raise AttributeError
 
 
 class GedaBomParser(object):

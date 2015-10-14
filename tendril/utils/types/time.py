@@ -22,7 +22,7 @@ See the COPYING, README, and INSTALL files for more information
 import arrow.arrow
 
 from .unitbase import NumericalUnitBase
-from .unitbase import parse_none
+from .unitbase import Percentage
 
 from decimal import Decimal
 from numbers import Number
@@ -57,18 +57,49 @@ class Frequency(NumericalUnitBase):
         super(Frequency, self).__init__(value, _ostrs, _dostr, _parse_func)
 
     def __rdiv__(self, other):
+        if isinstance(other, Percentage):
+            other = other.value / 100
+            return TimeSpan(other / self._value)
         if isinstance(other, Number):
-            return TimeSpan(Decimal(other) / self._value)
+            if not isinstance(other, Decimal):
+                other = Decimal(other)
+            return TimeSpan(other / self._value)
+        return NotImplemented
 
     def __rtruediv__(self, other):
         return self.__rdiv__(other)
 
 
+def parse_time(string):
+    # TODO integrate with unitbase core parser
+    rex = re.compile(r'^((?P<number>\d+(.\d+)*)(?P<order>[fpnum])?s)$')
+    try:
+        rdict = rex.search(string).groupdict()
+        num = Decimal(rdict['number'])
+        order = rdict['order']
+        if order == 'f':
+            return num / 1000000000000000
+        elif order == 'p':
+            return num / 1000000000000
+        elif order == 'n':
+            return num / 1000000000
+        elif order == 'u':
+            return num / 1000000
+        elif order == 'm':
+            return num / 1000
+        elif order is None:
+            return num
+    except:
+        raise ValueError("String parsing for timespan is only implemented "
+                         "for seconds and smaller. Use TimeDelta constructs "
+                         "if your times are longer.")
+
+
 class TimeSpan(NumericalUnitBase):
     def __init__(self, value):
-        _ostrs = None
-        _dostr = None
-        _parse_func = parse_none
+        _ostrs = ['fs', 'ps', 'ns', 'us', 'ms', 's']
+        _dostr = 's'
+        _parse_func = parse_time
         if isinstance(value, TimeDelta):
             if value.years != 0 or value.months != 0:
                 raise ValueError(
@@ -78,19 +109,36 @@ class TimeSpan(NumericalUnitBase):
             value = value.microseconds / Decimal('1000000.0') + value.seconds + \
                 value.minutes * 60 + value.hours * 3600 + \
                 value.days * 3600 * 24
-        elif not isinstance(value, Number):
-            raise TypeError("Only numerical time spans (in seconds) "
-                            "are supported at this time")
+        elif not isinstance(value, Number) and not isinstance(value, str):
+            raise TypeError(
+                "Can't construct timespan object from {0}".format(value)
+            )
         super(TimeSpan, self).__init__(value, _ostrs, _dostr, _parse_func)
 
     def __repr__(self):
-        return repr(self.timedelta)
+        if self._value >= 60:
+            return repr(self.timedelta)
+        else:
+            return super(TimeSpan, self).__repr__()
 
     @property
     def timedelta(self):
         seconds = int(self._value)
         microseconds = int((self._value-seconds) * 1000000)
         return TimeDelta(seconds=seconds, microseconds=microseconds)
+
+    def __rdiv__(self, other):
+        if isinstance(other, Percentage):
+            other = other.value / 100
+            return Frequency(other / self._value)
+        if isinstance(other, Number):
+            if not isinstance(other, Decimal):
+                other = Decimal(other)
+            return Frequency(other / self._value)
+        return NotImplemented
+
+    def __rtruediv__(self, other):
+        return self.__rdiv__(other)
 
 
 class TimeStamp(arrow.arrow.Arrow):
@@ -112,7 +160,7 @@ class TimeStamp(arrow.arrow.Arrow):
                              seconds=self.second-other.second,
                              microseconds=self.microsecond-other.microsecond)
         else:
-            raise NotImplementedError
+            return NotImplemented
 
     def __add__(self, other):
         if isinstance(other, TimeDelta):
@@ -133,9 +181,7 @@ class TimeStamp(arrow.arrow.Arrow):
             #                             microseconds=other.microsecond)
             raise ValueError
         else:
-            raise NotImplementedError("Add not implemented for " +
-                                      repr(self.__class__) + " + " +
-                                      repr(other.__class__))
+            return NotImplemented
 
 
 class TimeDelta(object):
@@ -161,7 +207,7 @@ class TimeDelta(object):
                 microseconds=self.microseconds - other.microseconds
             )
         else:
-            raise NotImplementedError
+            return NotImplemented
 
     def __add__(self, other):
         if isinstance(other, TimeDelta):
@@ -175,7 +221,7 @@ class TimeDelta(object):
                 microseconds=self.microseconds + other.microseconds
             )
         else:
-            raise NotImplementedError
+            return NotImplemented
 
     def __repr__(self):
         return ':'.join(

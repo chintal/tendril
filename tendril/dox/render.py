@@ -50,9 +50,6 @@ import subprocess
 import jinja2
 
 import numpy
-import matplotlib
-matplotlib.use('Agg')
-from matplotlib import pyplot
 
 from tendril.utils.config import DOX_TEMPLATE_FOLDER
 from tendril.utils.config import COMPANY_LOGO_PATH
@@ -62,6 +59,12 @@ from tendril.utils.config import COMPANY_ADDRESS_LINE
 from tendril.utils.config import COMPANY_IEC
 
 from tendril.utils.colors import tableau20
+from tendril.utils.types.unitbase import NumericalUnitBase
+from decimal import Decimal
+
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
@@ -96,6 +99,12 @@ def escape_latex(string, aggressive=True):
     :return: Latex-safe string
 
     """
+    if isinstance(string, NumericalUnitBase):
+        string = string.quantized_repr
+    elif isinstance(string, Decimal):
+        string = str(string.quantize(Decimal('.01')))
+    elif not isinstance(string, str):
+        string = str(string)
     if string is not None:
         string = string.replace('\\', '\\\\')
         string = string.replace('$', '\$')

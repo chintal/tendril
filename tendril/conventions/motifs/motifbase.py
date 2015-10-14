@@ -29,6 +29,7 @@ class MotifBase(object):
         self._ident = None
         self._elements = []
         self.refdes = identifier
+        self._configdict = None
 
     @property
     def refdes(self):
@@ -39,12 +40,17 @@ class MotifBase(object):
         value = value.split(':')[0]
         self._type, self._ident = value.split('.')
 
+    @property
+    def desc(self):
+        return self._configdict['desc']
+
+    @property
+    def elements(self):
+        return self._elements
+
     def _line_generator(self):
         for elem in self._elements:
             yield elem
-
-    def get_configdict_stub(self):
-        raise NotImplementedError
 
     def configure(self, configdict):
         raise NotImplementedError
@@ -70,3 +76,38 @@ class MotifBase(object):
     @property
     def listing(self):
         raise NotImplementedError
+
+    @property
+    def configdict_base(self):
+        raise NotImplementedError
+
+    def get_configdict_stub(self):
+        stub = {}
+        for parameter in self.configdict_base:
+            stub[parameter[0]] = parameter[1]
+        return stub
+
+    @property
+    def parameters_base(self):
+        raise NotImplementedError
+
+    @property
+    def parameters(self):
+        parameters = []
+        for group in self.parameters_base:
+            parameters.append(([
+                (e[1], e[0], e[2], self.__getattribute__(e[0])) for e in group[0]
+            ], group[1]))
+        return parameters
+
+    @property
+    def inputs(self):
+        inputs = []
+        for parameter in self.configdict_base:
+            if parameter[0] is not 'desc':
+                inputs.append((
+                    parameter[0],
+                    parameter[3](self._configdict[parameter[0]]),
+                    parameter[2]
+                ))
+        return inputs

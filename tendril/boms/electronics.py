@@ -42,9 +42,6 @@ Module Members:
 
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import copy
 
@@ -58,6 +55,9 @@ from outputbase import OutputBom
 from entitybase import EntityBase
 from entitybase import EntityGroupBase
 from entitybase import EntityBomBase
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 class EntityElnComp(EntityBase):
@@ -312,6 +312,10 @@ class EntityElnBom(EntityBomBase):
         self.create_groups()
         self.populate_bom()
 
+    @property
+    def motifs(self):
+        return self._motifs
+
     def create_groups(self):
         groupnamelist = [x['name'] for x in self.configurations.grouplist]
         if 'default' not in groupnamelist:
@@ -474,7 +478,8 @@ class EntityElnBom(EntityBomBase):
                 logger.error("Motif not defined : " + key)
                 continue
             for item in motif.get_line_gen():
-                if item.data['group'] in outgroups and \
+                item_group = item.data['group']
+                if item_group == 'unknown' or item_group in outgroups and \
                         item.data['fillstatus'] != 'DNP':
                     outbom.insert_component(EntityElnComp(item))
 
