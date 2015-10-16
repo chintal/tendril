@@ -39,6 +39,7 @@ DEVICE_CLASSES_DOC = [
     ('CAP TANT THRU', 'THRU Tantalum Capacitors'),
     ('CAP CER THRU', 'THRU Ceramic Capacitors'),
     ('CAP ELEC THRU', 'THRU Electrolytic Capacitors'),
+    ('CAP AL SMD', 'SMD Aluminum Electrolytic and Polymer Capacitors'),
     ('CAP POLY THRU', 'THRU Poly Capacitors'),
     ('CAP PAPER THRU', 'THRU Paper Capacitors'),
     ('INDUCTOR SMD', 'SMD Inductors'),
