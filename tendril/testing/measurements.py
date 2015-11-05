@@ -26,7 +26,8 @@ import time
 import arrow
 
 from colorama import Fore
-from tendril.utils.types.electromagnetic import Voltage
+from tendril.utils.types.electromagnetic import Voltage, Current
+from tendril.utils.types.time import Frequency
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
@@ -205,6 +206,197 @@ class DCVoltageMeasurement(TestSimpleMeasurement):
         self._input = Voltage(result_db_obj['input']['v'])
         self._ts = arrow.get(result_db_obj['timestamp'])
 
+class ACVoltageMeasurement(TestSimpleMeasurement):
+    def __init__(self):
+        super(ACVoltageMeasurement, self).__init__()
+        self._outputchannel = None
+        self._inputtype = None
+        self._inputchannel = None
+
+    def do_measurement(self):
+        """
+        This function is present only because the instrument return value is
+        not of a SignalPoint Type. Instrument classes should be changed to
+        use Signal Point type instead and this class should fall back to the
+        parent's implementation.
+        """
+        logger.debug("Making measurement : " + repr(self))
+        if self._output is not None:
+            if self._outputchannel is None:
+                raise IOError("Output channel is not defined")
+            self._outputchannel.set(self._output)
+
+        if self.stime is not None:
+            time.sleep(self.stime)
+
+        if self._inputtype is not None:
+            if self._inputchannel is None:
+                raise IOError("Input channel is not defined")
+            self._input = self._inputchannel.get()
+            # if self._input.unitclass and \
+            #         not self._input.unitclass == self._inputtype:
+            #     raise TypeError(
+            #         "Expected " + self._inputtype.unitclass +
+            #         ", got " + type(self._input)
+            #     )
+        logger.info("Measured Voltage: " + repr(self._input))
+        self._ts = arrow.utcnow()
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, value):
+        self._parent = value
+        self._inputtype = Voltage
+        if self._parent._offline is not True:
+            self._inputchannel = self._parent.instrument.ac_voltage_input
+
+    @property
+    def input_voltage(self):
+        return self._input
+
+    def yesorno(self):
+        pass
+
+    def render(self):
+        return {
+            'input': {'v': repr(self._input)},
+            'timestamp': self._ts.isoformat()
+            }
+
+    def load_result_from_obj(self, result_db_obj):
+        self._input = Voltage(result_db_obj['input']['v'])
+        self._ts = arrow.get(result_db_obj['timestamp'])
+
+class FrequencyMeasurement(TestSimpleMeasurement):
+    def __init__(self):
+        super(FrequencyMeasurement, self).__init__()
+        self._outputchannel = None
+        self._inputtype = None
+        self._inputchannel = None
+
+    def do_measurement(self):
+        """
+        This function is present only because the instrument return value is
+        not of a SignalPoint Type. Instrument classes should be changed to
+        use Signal Point type instead and this class should fall back to the
+        parent's implementation.
+        """
+        logger.debug("Making measurement : " + repr(self))
+        if self._output is not None:
+            if self._outputchannel is None:
+                raise IOError("Output channel is not defined")
+            self._outputchannel.set(self._output)
+
+        if self.stime is not None:
+            time.sleep(self.stime)
+
+        if self._inputtype is not None:
+            if self._inputchannel is None:
+                raise IOError("Input channel is not defined")
+            self._input = self._inputchannel.get()
+            # if self._input.unitclass and \
+            #         not self._input.unitclass == self._inputtype:
+            #     raise TypeError(
+            #         "Expected " + self._inputtype.unitclass +
+            #         ", got " + type(self._input)
+            #     )
+        logger.info("Measured Frequency: " + repr(self._input))
+        self._ts = arrow.utcnow()
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, value):
+        self._parent = value
+        self._inputtype = Frequency
+        if self._parent._offline is not True:
+            self._inputchannel = self._parent.instrument.frequency_input
+
+    @property
+    def input_frequency(self):
+        return self._input
+
+    def yesorno(self):
+        pass
+
+    def render(self):
+        return {
+            'input': {'hz': repr(self._input)},
+            'timestamp': self._ts.isoformat()
+            }
+
+    def load_result_from_obj(self, result_db_obj):
+        self._input = Frequency(result_db_obj['input']['hz'])
+        self._ts = arrow.get(result_db_obj['timestamp'])
+
+class DCCurrentMeasurement(TestSimpleMeasurement):
+    def __init__(self):
+        super(DCCurrentMeasurement, self).__init__()
+        self._outputchannel = None
+        self._inputtype = None
+        self._inputchannel = None
+
+    def do_measurement(self):
+        """
+        This function is present only because the instrument return value is
+        not of a SignalPoint Type. Instrument classes should be changed to
+        use Signal Point type instead and this class should fall back to the
+        parent's implementation.
+        """
+        logger.debug("Making measurement : " + repr(self))
+        if self._output is not None:
+            if self._outputchannel is None:
+                raise IOError("Output channel is not defined")
+            self._outputchannel.set(self._output)
+
+        if self.stime is not None:
+            time.sleep(self.stime)
+
+        if self._inputtype is not None:
+            if self._inputchannel is None:
+                raise IOError("Input channel is not defined")
+            self._input = self._inputchannel.get()
+            # if self._input.unitclass and \
+            #         not self._input.unitclass == self._inputtype:
+            #     raise TypeError(
+            #         "Expected " + self._inputtype.unitclass +
+            #         ", got " + type(self._input)
+            #     )
+        logger.info("Measured Current: " + repr(self._input))
+        self._ts = arrow.utcnow()
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, value):
+        self._parent = value
+        self._inputtype = Current
+        if self._parent._offline is not True:
+            self._inputchannel = self._parent.instrument.current_input
+
+    @property
+    def input_current(self):
+        return self._input
+
+    def yesorno(self):
+        pass
+
+    def render(self):
+        return {
+            'input': {'i': repr(self._input)},
+            'timestamp': self._ts.isoformat()
+            }
+
+    def load_result_from_obj(self, result_db_obj):
+        self._input = Current(result_db_obj['input']['i'])
+        self._ts = arrow.get(result_db_obj['timestamp'])
 
 class TestUserMeasurement(TestMeasurementBase):
     def __init__(self, string):
