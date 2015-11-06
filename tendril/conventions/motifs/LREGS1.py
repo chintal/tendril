@@ -34,17 +34,6 @@ logger = log.get_logger(__name__, log.DEFAULT)
 class MotifLREGS1(MotifBase):
     def __init__(self, identifier):
         super(MotifLREGS1, self).__init__(identifier)
-        self._configdict = None
-
-    def get_configdict_stub(self):
-        stub = {'desc': 'Positive LDO Output Voltage Setter',
-                'regulator': '',
-                'Vref': '1.225V',
-                'Imin': '1mA',
-                'Rseries': 'E12',
-                'Rmin': '10E',
-                'Rmax': '10M'}
-        return stub
 
     def configure(self, configdict):
         self._configdict = configdict
@@ -73,12 +62,6 @@ class MotifLREGS1(MotifBase):
             if rval >= required_res_val:
                 self.get_elem_by_idx('R2').data['value'] = gsymlib.find_resistor(lastval, r2_fp, r2_dev)  # noqa
                 break
-
-    def validate(self):
-        logger.debug("Validating Motif : " + self.refdes)
-        logger.debug(" Vout: " + str(self.Vout) +
-                     " R2:" + str(self.R2) +
-                     " R1:" + str(self.R1))
 
     @property
     def Vout(self):
@@ -134,3 +117,31 @@ class MotifLREGS1(MotifBase):
     @property
     def listing(self):
         return [('Vout', self.Vout)]
+
+    def validate(self):
+        pass
+
+    @property
+    def parameters_base(self):
+        p_vout = [
+            ('R1', "Lower Feedback Resistor", ''),
+            ('R2', "Upper Feedback Resistor", ''),
+            ('Vout', "Actual Output Voltage", self._configdict['Vout']),
+        ]
+        parameters = [
+            (p_vout, "Output Voltage Setting"),
+        ]
+        return parameters
+
+    @property
+    def configdict_base(self):
+        inputs = [
+            ('desc', 'Positive LDO Output Voltage Setter', 'description', str),
+            ('Vref', '1.225V', 'Internal Reference for Output Voltage Feedback', str),
+            ('Rseries', 'E24', 'Resistance Series', str),
+            ('Rmin', '10E', 'Minimum Resistance', str),
+            ('Rmax', '10M', 'Maximum Resistance', str),
+            ('Imin', '1mA', 'Minimum Load Current for Regulation', str),
+            ('Vout', '', 'Output Voltage', str),
+        ]
+        return inputs

@@ -22,25 +22,22 @@ This file needs to be refactored quite a bit
 """
 
 from math import pi
-
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 import iec60063
 
 from tendril.conventions.motifs.motifbase import MotifBase
 from tendril.conventions import electronics
 from tendril.gedaif import gsymlib
 
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
+
 
 class MotifLPF1(MotifBase):
     def __init__(self, identifier):
         super(MotifLPF1, self).__init__(identifier)
-        self._configdict = None
 
     def configure(self, configdict):
         # Set Resistances
-
         self.get_elem_by_idx('R1').data['value'] = electronics.construct_resistor(configdict['R1'], '0.125W')  # noqa
 
         # Set Frequency
@@ -99,3 +96,25 @@ class MotifLPF1(MotifBase):
                 'Cseries': "E6", 'Cmin': "1pF", 'Cmax': "1uF",
                 }
         return stub
+
+    @property
+    def parameters_base(self):
+        p_fc = [
+            ('Fc', "Filter Cutoff Frequency", ''),
+        ]
+        parameters = [
+            (p_fc, "Filter Parameters"),
+        ]
+        return parameters
+
+    @property
+    def configdict_base(self):
+        inputs = [
+            ('desc', "Simple Single Pole Low Pass Filter", 'description', str),
+            ('Cseries', 'E6', 'Capacitance Series', str),
+            ('Cmin', '1pF', 'Minimum Capacitance', str),
+            ('Cmax', '100nF', 'Maximum Capacitance', str),
+            ('Fc', "15000Hz", 'Filter Cutoff Frequency', str),
+            ('R1', "50E", 'Input Resistance Value', str),
+        ]
+        return inputs

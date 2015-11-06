@@ -82,6 +82,7 @@
 
 \section{Motifs}
 %{ for motif in stage.bom.motifs %}
+  %{ if motif %}
   \subsection{%{{ motif.refdes %}}}
     %{{ motif.desc %}}
     \subsubsection*{Provided Design Inputs}
@@ -113,6 +114,7 @@
 	%{{ element.motif|escape_latex %}} & %{{ element.refdes %}} & %{{ element.ident %}} & %{ if element.fillstatus != 'unknown' %}%{{ element.fillstatus %}}%{ endif %} & \\\hline
       %{ endfor %}
     \end{tabularx}
+  %{ endif %}
 %{ endfor %}
 
 \end{center}

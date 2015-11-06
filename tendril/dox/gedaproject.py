@@ -165,6 +165,7 @@ def gen_confbom(projfolder, configname, force=False):
                 'Last modified : ' + str(sch_mtime) +
                 '; Last Created : ' + str(outf_mtime))
     bom = boms_electronics.import_pcb(projfolder)
+    bom.configure_motifs(configname)
     obom = bom.create_output_bom(configname)
 
     stage = {'configname': obom.descriptor.configname,

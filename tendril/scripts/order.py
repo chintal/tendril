@@ -62,6 +62,7 @@ if __name__ == '__main__':
     IS_INDICATIVE = False
     indication_context = None
     PRIORITIZE = False
+    PRELIMINARY = False
     IMMEDIATE_EARMARKS = []
 
     if 'preshort' in data.keys():
@@ -79,6 +80,8 @@ if __name__ == '__main__':
     if 'prioritize' in data.keys():
         PRIORITIZE = data['prioritize']
         IMMEDIATE_EARMARKS = data['immediate']
+    if 'preliminary' in data.keys():
+        PRELIMINARY = data['preliminary']
 
     # Define base transforms for external data
     base_tf_0 = tendril.inventory.electronics.inventory_locations[0]._reader.tf  # noqa
@@ -203,7 +206,13 @@ if __name__ == '__main__':
     if isinstance(data['cards'], dict):
         logger.info('Generating Card BOMs')
         for k, v in data['cards'].iteritems():
-            bom = tendril.boms.electronics.import_pcb(projects.cards[k])
+            try:
+                bom = tendril.boms.electronics.import_pcb(projects.cards[k])
+            except KeyError:
+                if not PRELIMINARY:
+                    raise
+                logger.warning("Card not found. Not adding : " + k)
+                continue
             obom = bom.create_output_bom(k)
             obom.multiply(v)
             logger.info(

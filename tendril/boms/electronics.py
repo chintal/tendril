@@ -307,14 +307,18 @@ class EntityElnBom(EntityBomBase):
         self.projfolder = configfile.projectfolder
 
         self.configurations = EntityElnBomConf(configfile)
+        self._included_motifs = []
         self._motifs = []
         self._configured_for = None
         self.create_groups()
         self.populate_bom()
 
     @property
-    def motifs(self):
-        return self._motifs
+    def motifs(self, all_defined=False):
+        if all_defined:
+            return self._motifs
+        else:
+            return self._included_motifs
 
     def create_groups(self):
         groupnamelist = [x['name'] for x in self.configurations.grouplist]
@@ -398,6 +402,7 @@ class EntityElnBom(EntityBomBase):
 
     def configure_motifs(self, configname):
         self._configured_for = configname
+        self._included_motifs = []
         motifconfs = self.configurations.get_configuration_motifs(configname)
         if motifconfs is not None:
             for key, motifconf in motifconfs.iteritems():
@@ -416,6 +421,7 @@ class EntityElnBom(EntityBomBase):
                             motifconf_act.update(baseconf)
                 motifconf_act.update(motifconf)
                 motif.configure(motifconf_act)
+                self._included_motifs.append(motif)
 
     def create_output_bom(self, configname):
         if configname not in self.configurations.get_configurations():
