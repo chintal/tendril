@@ -84,7 +84,7 @@ def test_type_timespan():
     with pytest.raises(ValueError):
         time.TimeSpan(time.TimeDelta(months=1))
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         time.TimeSpan('100')
 
     # TODO Test arithmetic
