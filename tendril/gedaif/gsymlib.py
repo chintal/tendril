@@ -31,6 +31,7 @@ from tendril.utils.config import GEDA_SYMLIB_ROOT
 from tendril.utils.config import AUDIT_PATH
 from tendril.utils.config import TENDRIL_ROOT
 from tendril.utils.config import INSTANCE_CACHE
+from tendril.utils.config import MAKE_GSYMLIB_IMG_CACHE
 
 import tendril.utils.fsutils
 import tendril.conventions.electronics
@@ -89,7 +90,8 @@ class GedaSymbol(object):
         if os.path.exists(self._img_repr_path):
             if tendril.utils.fsutils.get_file_mtime(self._img_repr_path) > tendril.utils.fsutils.get_file_mtime(self.fpath):  # noqa
                 return
-        conv_gsch2png(self.fpath, outfolder)
+        if MAKE_GSYMLIB_IMG_CACHE:
+            conv_gsch2png(self.fpath, outfolder)
 
     @property
     def img_repr_fname(self):
