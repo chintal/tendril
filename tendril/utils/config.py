@@ -371,6 +371,11 @@ config_options_geda = [
         "os.path.join(GAF_ROOT, 'symbols')",
         "The folder containing your gEDA symbols."
     ),
+    ConfigOption(
+        'MAKE_GSYMLIB_IMG_CACHE',
+        "True",
+        "Whether or not to generate the gsymlib image cache."
+    )
 ]
 
 load_config(config_options_geda)
