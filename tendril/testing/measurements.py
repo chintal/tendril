@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 # Copyright (C) 2015 Chintalagiri Shashank
+# Copyright (C) 2015 Anurag Kar
 #
 # This file is part of tendril.
 #
@@ -206,6 +207,7 @@ class DCVoltageMeasurement(TestSimpleMeasurement):
         self._input = Voltage(result_db_obj['input']['v'])
         self._ts = arrow.get(result_db_obj['timestamp'])
 
+
 class ACVoltageMeasurement(TestSimpleMeasurement):
     def __init__(self):
         super(ACVoltageMeasurement, self).__init__()
@@ -269,6 +271,7 @@ class ACVoltageMeasurement(TestSimpleMeasurement):
     def load_result_from_obj(self, result_db_obj):
         self._input = Voltage(result_db_obj['input']['v'])
         self._ts = arrow.get(result_db_obj['timestamp'])
+
 
 class FrequencyMeasurement(TestSimpleMeasurement):
     def __init__(self):
@@ -334,6 +337,7 @@ class FrequencyMeasurement(TestSimpleMeasurement):
         self._input = Frequency(result_db_obj['input']['hz'])
         self._ts = arrow.get(result_db_obj['timestamp'])
 
+
 class DCCurrentMeasurement(TestSimpleMeasurement):
     def __init__(self):
         super(DCCurrentMeasurement, self).__init__()
@@ -397,6 +401,7 @@ class DCCurrentMeasurement(TestSimpleMeasurement):
     def load_result_from_obj(self, result_db_obj):
         self._input = Current(result_db_obj['input']['i'])
         self._ts = arrow.get(result_db_obj['timestamp'])
+
 
 class TestUserMeasurement(TestMeasurementBase):
     def __init__(self, string):
