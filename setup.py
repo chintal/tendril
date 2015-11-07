@@ -12,6 +12,71 @@ import versioneer
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+install_requirements = [
+    # Confirmed Core Dependencies
+    'argparse',
+    'psycopg2',
+    'arrow',
+    'pillow',
+    'qrcode',
+    'beautifulsoup4',
+    'PyPDF2',
+    'lxml',
+    'idstring',
+    'jinja2',
+    'SQLAlchemy',
+    'sqlalchemy_utils',
+    'alembic',
+    'svn',
+    'fs',
+    'paramiko',
+    'pyyaml',
+    'progress',
+    'colorama',
+
+    # Flask Dependencies (to be pruned?)
+    'jsmin',
+    'cssmin',
+    'Flask',
+    "Flask-Login==0.2.11",
+    "Flask-User==0.6.1",
+    "Flask-Principal",
+    'Flask-Migrate',
+    'Flask-Assets',
+
+    # Perhaps require reconsideration
+    'matplotlib',  # Pulls in numpy!
+    'splinter',    # Replace with direct selenium usage
+    'versioneer',
+
+    # Extracted Modules
+    'driver2200087',
+    'iec60063',
+    'tendril-gedaif-sym2eps'
+]
+
+test_requirements = [
+    'pytest',
+],
+
+setup_requirements = [
+    'twine',
+    'wheel',
+],
+
+doc_requirements = [
+    'sphinx',
+    'sphinx-rtd-theme',
+    'sphinxcontrib-documentedlist',
+    'sphinxcontrib-googleanalytics==0.1.dev20150826',
+    'versioneer'
+]
+
+script_entry_points = [
+    'tendril-gendox = tendril.scripts.gendox:main',
+    'tendril-writecalib = tendril.scripts.writecalib:main',
+]
+
 
 setup(
     name="tendril-framework",
@@ -56,63 +121,14 @@ setup(
         "Natural Language :: English",
         "Operating System :: OS Independent",
     ],
-    install_requires=[
-        # Confirmed Core Dependencies
-        'argparse',
-        'psycopg2',
-        'arrow',
-        'pillow',
-        'qrcode',
-        'beautifulsoup4',
-        'PyPDF2',
-        'lxml',
-        'idstring',
-        'jinja2',
-        'SQLAlchemy',
-        'sqlalchemy_utils',
-        'alembic',
-        'svn',
-        'fs',
-        'paramiko',
-        'pyyaml',
-        'progress',
-        'colorama',
-
-        # Flask Dependencies (to be pruned?)
-        'jsmin',
-        'cssmin',
-        'Flask',
-        "Flask-Login==0.2.11",
-        "Flask-User==0.6.1",
-        "Flask-Principal",
-        'Flask-Migrate',
-        'Flask-Assets',
-
-        # Perhaps require reconsideration
-        'matplotlib',  # Pulls in numpy!
-        'splinter',    # Replace with direct selenium usage
-        'versioneer',
-
-        # Extracted Modules
-        'driver2200087',
-        'iec60063',
-        'tendril-gedaif-sym2eps',
-    ],
-    tests_require=[
-        'pytest',
-    ],
-    setup_requires=[
-        'twine',
-        'wheel',
-    ],
+    install_requires=install_requirements,
+    tests_require=test_requirements,
+    setup_requires=setup_requirements,
     extras_require={
-        'doc': [
-            'sphinx',
-            'sphinx-rtd-theme',
-            'sphinxcontrib-documentedlist',
-            'sphinxcontrib-googleanalytics==0.1.dev20150826',
-            'versioneer'
-            ]
+        'doc': doc_requirements
+    },
+    entry_points={
+        'console_scripts': script_entry_points
     },
     platforms='any'
 )

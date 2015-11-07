@@ -48,10 +48,10 @@ def run(serialno=None):
     #     )
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(
         description='Write calibration parameters to device.',
-        prog='python -m tendril.scripts.writecalib'
+        prog='tendril-writecalib'
     )
     parser.add_argument(
         'serialno', metavar='SNO', type=str, nargs='?',
@@ -68,6 +68,12 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
+    if not args.serialno and not args.detect:
+        parser.print_help()
+        return
+    if args.dry_run:
+        print "Dry run not yet implemented. Not doing anything."
+        return
     if not args.serialno:
         try:
             mactype = args.detect[0]
@@ -78,3 +84,7 @@ if __name__ == '__main__':
     else:
         sno = args.serialno
     run(sno)
+
+
+if __name__ == '__main__':
+    main()
