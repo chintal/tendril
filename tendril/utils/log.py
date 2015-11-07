@@ -62,7 +62,7 @@ def init():
         logger.setLevel(logging.WARNING)
 
 
-def get_logger(name, level):
+def get_logger(name, level=None):
     """
     Get a logger with the specified ``name`` and an optional ``level``.
 

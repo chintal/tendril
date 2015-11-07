@@ -35,6 +35,11 @@ def test_log_default():
     assert logger.name == "SP_Default_Logger"
     assert logger.level == log.DEFAULT
 
+    logger = log.get_logger("YA_Default_Logger")
+    assert logger.name == "YA_Default_Logger"
+    assert logger.level == log.DEFAULT
+
+
 
 def test_log_other():
     logger = log.get_logger("Critical_Logger", log.CRITICAL)
