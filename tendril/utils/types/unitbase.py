@@ -441,7 +441,7 @@ class DummyUnit(UnitBase):
         return NotImplemented
 
     def __cmp__(self, other):
-        return NotImplemented
+        raise NotImplementedError
 
     def __repr__(self):
         return "Dummy Unit"

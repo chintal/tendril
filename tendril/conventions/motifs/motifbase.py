@@ -96,7 +96,7 @@ class MotifBase(object):
         parameters = []
         for group in self.parameters_base:
             parameters.append(([
-                (e[1], e[0], e[2], self.__getattribute__(e[0])) for e in group[0]
+                (e[1], e[0], e[2], self.__getattribute__(e[0])) for e in group[0]  # noqa
             ], group[1]))
         return parameters
 

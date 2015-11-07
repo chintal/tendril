@@ -136,29 +136,29 @@ def test_dummyunit():
 
     assert repr(d1) == 'Dummy Unit'
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         d1 + d2
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         d1 + 0
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         0 + d1
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         d1 - d2
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         d1 - 0
 
     # TODO Figure this out
     # with pytest.raises(NotImplementedError):
     #     0 - d1
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         d1 * 10
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         10 * d1
 
     with pytest.raises((NotImplementedError, TypeError)):

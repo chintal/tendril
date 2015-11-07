@@ -55,7 +55,7 @@ class MotifLM3150(MotifBase):
 
     def _get_Vout(self, rfb1, rfb2):
         rval = self._vref * \
-               ((Resistance(rfb1) + Resistance(rfb2)) / Resistance(rfb1))
+            ((Resistance(rfb1) + Resistance(rfb2)) / Resistance(rfb1))
         return rval
 
     def _set_vout(self, target_vout):
@@ -123,7 +123,7 @@ class MotifLM3150(MotifBase):
             TimeSpan(self._configdict['Toff_fet'])
         self.fs_max_offtime = (1 - self.d_max.value / 100) / self.toff_min
 
-        self.fs_max = Percentage('80%') * min([self.fs_max_ontime, self.fs_max_offtime])
+        self.fs_max = Percentage('80%') * min([self.fs_max_ontime, self.fs_max_offtime])  # noqa
 
         self.target_ron = Resistance(
             self.Vout.value / (Charge('100pC').value * self.fs_max.value)
@@ -179,7 +179,7 @@ class MotifLM3150(MotifBase):
     def _autoset_Co(self):
         Co_min_k = (Decimal(70))
         self.Co_min = Capacitance(
-             Co_min_k / ((self.Fsw.value ** 2) * self.L1.value)
+            Co_min_k / ((self.Fsw.value ** 2) * self.L1.value)
         )
 
         self.Co_ESR_max = Resistance(
@@ -272,7 +272,7 @@ class MotifLM3150(MotifBase):
                 self.get_elem_by_idx('COUT' + str(idx)).data['fillstatus'] = 'DNP'  # noqa
 
         self.get_elem_by_idx('L1').data['value'] = self._configdict['L_pno']
-        self.get_elem_by_idx('CDIN').data['value'] = self._configdict['Cdi_pno']
+        self.get_elem_by_idx('CDIN').data['value'] = self._configdict['Cdi_pno']  # noqa
 
     def configure(self, configdict):
         self._configdict = configdict
@@ -467,12 +467,16 @@ class MotifLM3150(MotifBase):
             ('fet_Qg_ls_6V', '', 'Low Side FET Gate Charge', Charge),
             ('fet_Rdson', '', 'MOSFET Rdson', Resistance),
             ('L_num', '', 'Effective Inductance', Inductance),
-            ('Co_num', '', 'Capacitance of Each Output Capacitance', Capacitance),
-            ('Co_mult_max', 2, "Max Number of Output Capacitors in Parallel", int),
+            ('Co_num', '',
+             'Capacitance of Each Output Capacitance', Capacitance),
+            ('Co_mult_max', 2,
+             "Max Number of Output Capacitors in Parallel", int),
             ('Co_mult', 1, "Number of Output Capacitors in Parallel", int),
             ('Co_esr', '10m', "Output Capacitor ESR", Resistance),
-            ('Ci_num', '', 'Capacitance of Each Input Capacitor', Capacitance),
-            ('Ci_mult_max', 3, "Max Number of Input Capacitors in Parallel", int),
+            ('Ci_num', '',
+             'Capacitance of Each Input Capacitor', Capacitance),
+            ('Ci_mult_max', 3,
+             "Max Number of Input Capacitors in Parallel", int),
             ('Ci_mult', 1, "Number of Input Capacitors in Parallel", int),
             ('Ci_esr', '10m', "Input Capacitor ESR", Resistance),
             ('Vout', '', 'Output Voltage', Voltage),
