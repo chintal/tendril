@@ -42,10 +42,10 @@ def regenerate_all(force=False, dry_run=False):
             gedaproject.generate_docs(projects.projects[project], force=force)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(
         description='(Re-)Generate gEDA project documentation.',
-        prog='python -m tendril.scripts.gendox'
+        prog='tendril-gendox'
     )
     parser.add_argument(
         'projfolders', metavar='PATH', type=str, nargs='*',
@@ -113,3 +113,7 @@ if __name__ == '__main__':
                             logger.info("Will check " + target)
                     except NoGedaProjectException:
                         logger.error("No gEDA Project found at " + target)
+
+
+if __name__ == '__main__':
+    main()
