@@ -40,7 +40,7 @@ from tendril.utils.terminal import TendrilProgressBar
 from tendril.utils.config import INSTANCE_ROOT
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 if __name__ == "__main__":
