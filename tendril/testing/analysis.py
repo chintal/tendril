@@ -26,7 +26,7 @@ from matplotlib import pyplot
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
-rex_class = re.compile(ur'^<class \'(?P<cl>[a-zA-Z0-9.]+)\'>$')
+rex_class = re.compile(ur'^<class \'(?P<cl>[a-zA-Z0-9._]+)\'>$')
 
 
 def sort_by_order(desc, order):
@@ -108,7 +108,7 @@ def get_test_suite_objects(serialno=None, order_by='FILE_ORDER',
 
         for test_db_obj in suite_db_obj.tests:
             class_name = rex_class.match(test_db_obj.test_class).group('cl')
-
+            
             test_obj = get_test_object(class_name, offline=True)
             test_obj.desc = test_db_obj.desc
             test_obj.title = test_db_obj.title
