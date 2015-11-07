@@ -131,6 +131,8 @@ def get_reader(elec_inven_data_idx):
     reader = None
     if sdict['type'] == 'QuazarStockXLS':
         fpath = sdict['fpath']
+        if not os.path.isabs(fpath):
+            fpath = config.get_svn_path(fpath)
         sname = sdict['sname']
         location = sdict['location']
         tfpath = sdict['tfpath']
