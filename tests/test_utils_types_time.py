@@ -23,6 +23,7 @@ Docstring for test_utils_types_times
 """
 
 from tendril.utils.types import time
+from tendril.utils.types.unitbase import Percentage
 from decimal import Decimal
 import pytest
 
@@ -58,25 +59,47 @@ def test_type_frequency():
     assert isinstance(f2, time.Frequency)
     assert f2.value == 1
 
+    tp2 = Percentage(50) / f1
+    assert isinstance(tp2, time.TimeSpan)
+    assert tp2.timedelta.microseconds == 50000
+
+
+def test_parser_timespan():
+    assert time.parse_time('10s') == Decimal('10')
+    assert time.parse_time('10.2s') == Decimal('10.2')
+    assert time.parse_time('10ms') == Decimal('0.010')
+    assert time.parse_time('10.2ms') == Decimal('0.0102')
+    assert time.parse_time('10us') == Decimal('0.000010')
+    assert time.parse_time('10.2us') == Decimal('0.0000102')
+    assert time.parse_time('10ns') == Decimal('0.000000010')
+    assert time.parse_time('10.2ns') == Decimal('0.0000000102')
+    assert time.parse_time('10ps') == Decimal('0.000000000010')
+    assert time.parse_time('10.2ps') == Decimal('0.0000000000102')
+    assert time.parse_time('10fs') == Decimal('0.000000000000010')
+    assert time.parse_time('10.2fs') == Decimal('0.0000000000000102')
+    with pytest.raises(ValueError):
+        assert time.parse_time('10.5') == Decimal('0.0105')
+
 
 def test_type_timespan():
 
     ts1 = time.TimeSpan(10)
     assert ts1.timedelta.seconds == 10
+    assert repr(ts1) == '10s'
 
-    ts1 = time.TimeSpan(0.1)
+    ts1 = time.TimeSpan(Decimal('0.1'))
     assert ts1.timedelta.microseconds == 100000
+    assert repr(ts1) == '100.0ms'
 
     ts1 = time.TimeSpan(3610)
     assert ts1.timedelta.seconds == 3610
+    assert repr(ts1) == repr(ts1.timedelta)
 
     ts1 = time.TimeSpan(time.TimeDelta(
         days=1, hours=1, minutes=1, seconds=1, microseconds=1
     ))
     assert ts1.timedelta.seconds == 90061
     assert ts1.timedelta.microseconds == 1
-
-    # TODO Test string parser
 
     with pytest.raises(ValueError):
         time.TimeSpan(time.TimeDelta(years=1))
@@ -87,7 +110,14 @@ def test_type_timespan():
     with pytest.raises(ValueError):
         time.TimeSpan('100')
 
-    # TODO Test arithmetic
+    ts1 = time.TimeSpan(Decimal('0.1'))
+    f1 = 1 / ts1
+    assert isinstance(f1, time.Frequency)
+    assert f1.value == Decimal('10')
+
+    f1 = Percentage(50) / ts1
+    assert isinstance(f1, time.Frequency)
+    assert f1.value == Decimal('5')
 
 
 def test_time_factory():
