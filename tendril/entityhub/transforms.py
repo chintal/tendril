@@ -22,6 +22,14 @@ EntityHub Transforms Module documentation (:mod:`entityhub.transforms`)
 import csv
 
 
+class ContextualReprNotRecognized(Exception):
+    pass
+
+
+class NoCanonicalReprInContext(Exception):
+    pass
+
+
 class TransformFile(object):
     def __init__(self, tfpath):
         self._transform = {}
@@ -38,13 +46,22 @@ class TransformFile(object):
                     self._status[row[0].strip()] = ''
 
     def get_canonical_repr(self, contextual):
-        return self._transform[contextual.strip()]
+        try:
+            return self._transform[contextual.strip()]
+        except KeyError:
+            raise ContextualReprNotRecognized(contextual)
 
     def get_ideal_repr(self, contextual):
-        return self._ideal[contextual.strip()]
+        try:
+            return self._ideal[contextual.strip()]
+        except KeyError:
+            raise ContextualReprNotRecognized(contextual)
 
     def get_status(self, contextual):
-        return self._status[contextual.strip()]
+        try:
+            return self._status[contextual.strip()]
+        except KeyError:
+            raise ContextualReprNotRecognized(contextual)
 
     def get_contextual_repr(self, canonical):
         for (k, v) in self._transform.iteritems():

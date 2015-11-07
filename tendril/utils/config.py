@@ -127,6 +127,10 @@ def load_constants(constants):
         setattr(config_module, option.name, option.value)
 
 
+def get_svn_path(fpath):
+    return os.path.join(SVN_ROOT, fpath)
+
+
 # def set_config_contants(constants):
 #     """
 #     Sets the configuration constants in the Instance and Local
