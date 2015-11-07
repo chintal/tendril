@@ -270,7 +270,9 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
                 return self.__class__(other * self.value / 100)
             if isinstance(self, GainBase):
                 return self.__class__(other * self.value)
-            return self.__class__(other * self.value)
+            if isinstance(other, Decimal):
+                return self.__class__(self.value * other)
+            return self.__class__(self.value * Decimal(other))
         if isinstance(other, Percentage):
             return self.__class__(self.value * other.value / 100)
         if isinstance(other, GainBase):
