@@ -34,9 +34,20 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
+class SeriesNotFound(Exception):
+    pass
+
+
+class SerialNoNotFound(Exception):
+    pass
+
+
 @with_db
 def get_series_obj(series=None, session=None):
-    return session.query(SerialNumberSeries).filter_by(series=series).one()
+    try:
+        return session.query(SerialNumberSeries).filter_by(series=series).one()
+    except NoResultFound:
+        raise SeriesNotFound('Series {0} is not defined.'.format(series))
 
 
 @with_db
@@ -75,7 +86,10 @@ def get_serialnos_by_series(series=None, session=None):
 def get_serialno_object(sno=None, session=None):
     if sno is None:
         raise AttributeError("sno cannot be None")
-    return session.query(SerialNumber).filter_by(sno=sno).one()
+    try:
+        return session.query(SerialNumber).filter_by(sno=sno).one()
+    except NoResultFound:
+        raise SerialNoNotFound("Serial No {0} not defined.".format(sno))
 
 
 @with_db

@@ -107,9 +107,14 @@ def delete_serialno(sno, recurse=False, session=None):
 
 @with_db
 def get_serialno(series=None, efield=None, register=True,
-                 start_seed='100A', session=None):
+                 start_seed='100A', create_series=False, session=None):
     series = series.upper()
-    series_obj = controller.get_series_obj(series=series, session=session)
+    try:
+        series_obj = controller.get_series_obj(series=series, session=session)
+    except controller.SeriesNotFound:
+        if not create_series:
+            raise
+        series_obj = None
     if series_obj is not None:
         last_seed = series_obj.last_seed
         logger.debug("Found last seed for series " + str(series) +
