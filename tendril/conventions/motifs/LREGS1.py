@@ -137,7 +137,8 @@ class MotifLREGS1(MotifBase):
     def configdict_base(self):
         inputs = [
             ('desc', 'Positive LDO Output Voltage Setter', 'description', str),
-            ('Vref', '1.225V', 'Internal Reference for Output Voltage Feedback', str),
+            ('Vref', '1.225V',
+             'Internal Reference for Output Voltage Feedback', str),
             ('Rseries', 'E24', 'Resistance Series', str),
             ('Rmin', '10E', 'Minimum Resistance', str),
             ('Rmax', '10M', 'Maximum Resistance', str),

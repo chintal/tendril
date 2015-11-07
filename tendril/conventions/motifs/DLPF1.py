@@ -29,8 +29,9 @@ from tendril.conventions import electronics
 from tendril.conventions.motifs.motifbase import MotifBase
 from tendril.gedaif import gsymlib
 
-from tendril.utils.types.electromagnetic import Capacitance
-from tendril.utils.types.electromagnetic import Resistance
+# TODO change implementation to use units instead of numbers
+from tendril.utils.types.electromagnetic import Capacitance  # noqa
+from tendril.utils.types.electromagnetic import Resistance  # noqa
 from tendril.utils.types.time import Frequency
 
 from tendril.utils import log
@@ -53,7 +54,9 @@ class MotifDLPF1(MotifBase):
 
     def _set_biases(self):
         if 'pbias' not in self._configdict.keys():
-            logger.warning('Positive terminal bias not defined : ' + self.refdes)
+            logger.warning(
+                'Positive terminal bias not defined : ' + self.refdes
+            )
         else:
             if self._configdict['pbias'] != '-1':
                 self.get_elem_by_idx('R3').data['value'] = electronics.construct_resistor(self._configdict['pbias'], '0.125W')  # noqa
@@ -63,8 +66,10 @@ class MotifDLPF1(MotifBase):
                 except KeyError:
                     pass
 
-        if 'pbias' not in self._configdict.keys():
-            logger.warning('Positive terminal bias not defined : ' + self.refdes)
+        if 'nbias' not in self._configdict.keys():
+            logger.warning(
+                'Negative terminal bias not defined : ' + self.refdes
+            )
         else:
             if self._configdict['nbias'] != '-1':
                 self.get_elem_by_idx('R4').data['value'] = electronics.construct_resistor(self._configdict['nbias'], '0.125W')  # noqa
@@ -167,7 +172,8 @@ class MotifDLPF1(MotifBase):
     @property
     def configdict_base(self):
         inputs = [
-            ('desc', "Differential Low Pass RFI and AAF filter", 'description', str),
+            ('desc', "Differential Low Pass RFI and AAF filter",
+             'description', str),
             ('Cseries', 'E6', 'Capacitance Series', str),
             ('Cmin', '1pF', 'Minimum Capacitance', str),
             ('Cmax', '100nF', 'Maximum Capacitance', str),

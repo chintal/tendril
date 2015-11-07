@@ -52,7 +52,11 @@ class BomLine(object):
         if item in self.data.keys():
             return self.data[item]
         elif item == 'ident':
-            return ident_transform(self.data['device'], self.data['value'], self.data['footprint'])
+            return ident_transform(
+                self.data['device'],
+                self.data['value'],
+                self.data['footprint']
+            )
         else:
             raise AttributeError
 

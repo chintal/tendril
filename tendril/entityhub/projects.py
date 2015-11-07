@@ -95,7 +95,7 @@ def get_projects(basefolder=None):
                     os.path.relpath(os.path.join(root, d), basefolder)
                 ] = os.path.join(root, d)
                 cf = conffile.ConfigsFile(os.path.join(root, d))
-                if 'pcbname' in cf.configdata.keys() and cf.configdata['pcbname'] is not None:
+                if 'pcbname' in cf.configdata.keys() and cf.configdata['pcbname'] is not None:  # noqa
                     lpcbs[cf.configdata['pcbname']] = os.path.join(root, d)
                 for config in cf.configdata['configurations']:
                     lcards[config['configname']] = os.path.join(root, d)
