@@ -25,6 +25,7 @@ import csv
 from tendril.utils.config import ELECTRONICS_INVENTORY_DATA
 from tendril.utils.types.lengths import Length
 from tendril.conventions.electronics import fpiswire_ident
+from tendril.entityhub.transforms import ContextualReprNotRecognized
 
 import acquire
 from db.controller import get_inventorylocationcode
@@ -116,8 +117,12 @@ class InventoryLocation(object):
         return self._dname
 
     def _load_from_reader(self):
-        for (ident, qty) in self._reader.tf_row_gen:
-            self._lines.append(InventoryLine(ident, qty, self))
+        try:
+            for (ident, qty) in self._reader.tf_row_gen:
+                self._lines.append(InventoryLine(ident, qty, self))
+        except ContextualReprNotRecognized:
+            logger.error("Inventory has unrecognized components.")
+            raise ContextualReprNotRecognized
 
     def get_ident_qty(self, ident):
         avail_qty = 0
@@ -185,13 +190,30 @@ class InventoryLocation(object):
         return self._lines
 
 
-def init_inventory_locations():
+def init_inventory_locations(regen=True):
     for idx, item in enumerate(ELECTRONICS_INVENTORY_DATA):
         logger.info("Acquiring Inventory Location : " + item['location'])
-        reader = acquire.get_reader(idx)
-        inventory_locations.append(
-            InventoryLocation(item['sname'], item['location'], reader)
-        )
+        retries = 1
+        while retries:
+            try:
+                reader = acquire.get_reader(idx)
+                inventory_locations.append(
+                    InventoryLocation(item['sname'], item['location'], reader)
+                )
+                break
+            except ContextualReprNotRecognized:
+                if not regen:
+                    raise
+                retries -= 1
+                logger.warning(
+                    "Regenerating Transform for Inventory "
+                    "Location {0}.".format(idx)
+                )
+                logger.warning(
+                    "All inventory functions will be unreliable "
+                    "until the transform is manually verified."
+                )
+                acquire.gen_canonical_transform(idx)
 
 
 def get_total_availability(ident):

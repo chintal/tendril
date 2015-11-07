@@ -32,7 +32,7 @@ from tendril.gedaif import gsymlib
 from tendril.entityhub import transforms
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class InventoryReaderBase(object):
@@ -94,7 +94,9 @@ class StockXlsReader(InventoryReaderBase):
                 date = datetime.datetime.strptime(
                     match.group(), '%d/%m/%Y').date()
             except AttributeError:
-                print "Tried to match " + item
+                logger.debug(
+                    "Mangled Balance Column. Tried to match :" + item
+                )
                 return None
             return date
         return None
@@ -150,6 +152,8 @@ def gen_canonical_transform(elec_inven_data_idx, regen=True):
     sdict = config.ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx]
     if sdict['type'] == 'QuazarStockXLS':
         fpath = sdict['fpath']
+        if not os.path.isabs(fpath):
+            fpath = config.get_svn_path(fpath)
         sname = sdict['sname']
         location = sdict['location']
         tfpath = sdict['tfpath']
