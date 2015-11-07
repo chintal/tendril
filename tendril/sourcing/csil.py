@@ -45,7 +45,7 @@ from tendril.dox import purchaseorder
 
 from selenium.webdriver.remote.remote_connection import LOGGER
 from tendril.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.DEFAULT)
 LOGGER.setLevel(log.WARNING)
 
 user = None
