@@ -156,7 +156,12 @@ class MotifDLPF1(MotifBase):
         logger.debug("Validating Motif : " + self.refdes)
         assert self.R1 == self.R2
         assert self.C3 == self.C2
-        assert self.C1 >= 10 * self.C2
+        try:
+            assert self.C1 >= 10 * self.C2
+        except AssertionError:
+            print 'C1 ' + str(self.C1)
+            print 'C2 ' + str(self.C2)
+            # raise
 
     @property
     def parameters_base(self):

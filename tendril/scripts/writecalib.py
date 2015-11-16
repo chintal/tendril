@@ -77,7 +77,7 @@ def main():
     if not args.serialno:
         try:
             mactype = args.detect[0]
-            sno = macs.get_device_mac(mactype)
+            sno = macs.get_sno_from_device(mactype)
         except:
             logger.error("Got exception when trying to detect serialno")
             raise
