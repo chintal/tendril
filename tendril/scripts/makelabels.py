@@ -14,6 +14,21 @@ if __name__ == '__main__':
     snos = [x.sno for x in
             controller.get_serialnos_by_efield(efield="QSENS-PRESSURE-GA-R2")
             ]
+    #snos += [x.sno for x in
+    #        controller.get_serialnos_by_efield(efield="QASC-T1-RTD-R3")
+    #        ]
+    #snos += [x.sno for x in
+    #        controller.get_serialnos_by_efield(efield="QASC-LVDT-AD598-R2")
+    #        ]
+    #snos += [x.sno for x in
+    #        controller.get_serialnos_by_efield(efield="CBL-STRAIN-HBC-A-120E")
+    #        ]
+    #snos += [x.sno for x in
+    #         controller.get_serialnos_by_efield(efield="CBL-STRAIN-QBC-120E")
+    #         ]
+    #snos += [x.sno for x in
+    #         controller.get_serialnos_by_efield(efield="CBL-PIEZO")
+    #         ]
     for sno in snos:
         product = products.get_product_by_core(serialnos.get_serialno_efield(sno=sno))  # noqa
         if product is not None:

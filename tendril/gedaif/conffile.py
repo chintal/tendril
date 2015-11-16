@@ -93,7 +93,7 @@ class ConfigsFile(object):
 
     def testvars(self, configname):
         rval = {}
-        for motif in self.configdata['motiflist']:
+        for motif in self.motiflist:
             for k, v in self.configdata['motiflist'][motif].iteritems():
                 rval[':'.join([motif, k])] = v
         for configuration in self.configdata['configurations']:
@@ -102,9 +102,10 @@ class ConfigsFile(object):
                     rval.update(configuration['testvars'])
                 except KeyError:
                     pass
-                for motif in configuration['motiflist']:
-                    for k, v in configuration['motiflist'][motif].iteritems():
-                        rval[':'.join([motif, k])] = v
+                if "motiflist" in configuration.keys():
+                    for motif in configuration['motiflist']:
+                        for k, v in configuration['motiflist'][motif].iteritems():
+                            rval[':'.join([motif, k])] = v
         return rval
 
     @property

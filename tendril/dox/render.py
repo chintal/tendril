@@ -230,25 +230,30 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
     stage['company_email'] = COMPANY_EMAIL
     stage['company_address_line'] = COMPANY_ADDRESS_LINE
     stage['company_iec'] = COMPANY_IEC
+    
     texpath = os.path.splitext(outpath)[0] + ".tex"
     with open(texpath, "wb") as f:
         f.write(template.render(stage=stage, **kwargs))
+        f.flush()
 
-    texpath = os.path.splitext(outpath)[0] + ".tex"
     auxpath = os.path.splitext(outpath)[0] + ".aux"
     logpath = os.path.splitext(outpath)[0] + ".log"
 
     pdflatex_cmd = ("pdflatex -interaction=batchmode -output-directory=" +
                     os.path.split(outpath)[0]).split(' ')
+    print (os.path.split(outpath)[0])
     pdflatex_cmd.append(texpath)
 
-    print("Generating " + os.path.split(outpath)[1])
+    print(pdflatex_cmd)
     for i in range(3):
-        subprocess.call(pdflatex_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(pdflatex_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        print (out, err)
+        #subprocess.call(pdflatex_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
     if remove_sources is True:
-        os.remove(texpath)
-        os.remove(auxpath)
+        #os.remove(texpath)
+        #os.remove(auxpath)
         os.remove(logpath)
 
     return outpath

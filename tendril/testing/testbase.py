@@ -333,7 +333,7 @@ class TestBase(RunnableTest):
         print Fore.YELLOW + hline + Fore.RESET
         fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
         print fstring.format(
-            Fore.YELLOW, (self.desc or 'None'), Fore.NORMAL, result
+            Fore.YELLOW, (self.desc or 'None'), Fore.WHITE, result
         )
         print "{0}".format(self.title)
         print "{0}".format(repr(self))
@@ -399,7 +399,7 @@ class TestSuiteBase(RunnableTest):
             result = Fore.RED + '[FAILED]' + Fore.RESET
         fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
         print fstring.format(
-            hcolor, (self.desc or 'None'), Fore.NORMAL,  result
+            hcolor, (self.desc or 'None'), Fore.WHITE,  result
         )
         print "{0}{1}{2}".format(hcolor, repr(self), Fore.RESET)
         print hcolor + hline + Fore.RESET
