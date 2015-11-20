@@ -25,7 +25,7 @@
 
 <div class="small-12 medium-6 columns" data-magellan-destination="order">
 <a name="order"></a>
-    
+
     <div class="small-12 columns">
         <div class="small-12 columns text-center">
             <h5>Modules for Production</h5>
@@ -53,15 +53,15 @@
                 var table = $('#order_table').DataTable({
                     /* Disable initial sort */
                     "aaSorting": [],
-                    {% include 'parts/datatable_defaults.html' %}    
+                    {% include 'parts/datatable_defaults.html' %}
                 });
                 table.buttons().container()
                     .appendTo( '#order_table_wrapper .small-12.medium-6.columns:eq(0)' );
             });
         </script>
     </div>
-    
-    
+
+
     <div class="small-12 columns panel radius">
         <div class="small-12 columns text-center">
             <h5>Related Documentation</h5>
@@ -73,9 +73,14 @@
                 <div class="text-center"><b>{{ stage.order_indentsno }}</b></div>
             </div>
         </a>
+        <a href="/production/manifests/{{ stage.order_sno }}">
+            <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+                <div class="text-center">Collated Assembly Manifests</div>
+            </div>
+        </a>
         </div>
     </div>
-    
+
 </div>
 
 <div class="small-12 medium-6 columns" data-magellan-destination="documentation">
@@ -105,7 +110,7 @@
             {% endfor %}
             <li></li>
         </ul>
-    </div>    
+    </div>
 </div>
 
 

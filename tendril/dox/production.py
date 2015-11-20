@@ -36,10 +36,14 @@ produce the output files after constructing the appropriate stage.
 import os
 import yaml
 
+from fs.utils import copyfile
+
 from tendril.boms import electronics as boms_electronics
 from tendril.entityhub import projects
 from tendril.entityhub import serialnos
 from tendril.gedaif.conffile import ConfigsFile
+from tendril.utils.fsutils import temp_fs
+from tendril.utils.fsutils import get_tempname
 from tendril.utils.pdf import merge_pdf
 
 import render
@@ -294,3 +298,24 @@ def get_production_order_data(serialno=None):
         snomap_data = yaml.load(f)
 
     return order_yaml_data, snomap_data
+
+
+def get_production_order_manifest_set(serialno):
+    workspace = temp_fs.makeopendir(get_tempname())
+    children = serialnos.get_child_serialnos(sno=serialno)
+    manifests = []
+    for child in children:
+        am = docstore.get_docs_list_for_sno_doctype(child, 'ASSEMBLY MANIFEST')
+        if len(am) == 1:
+            am = am[0]
+            copyfile(am.fs, am.path, workspace, am.filename, overwrite=True)
+            manifests.append(workspace.getsyspath(am.filename))
+    if len(manifests):
+        output = merge_pdf(manifests,
+                           os.path.join(
+                               workspace.getsyspath('/'),
+                               serialno + '.pdf'
+                           ),
+                           remove_sources=True)
+        return output
+    return None

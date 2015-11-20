@@ -85,7 +85,7 @@ def get_parent_serialnos(sno=None, session=None):
 def get_child_serialnos(sno=None, session=None):
     if sno is None:
         raise AttributeError("child cannot be None")
-    return controller.get_serialno_object(sno=sno, session=session).children
+    return controller.get_child_snos(serialno=sno, session=session)
 
 
 @with_db
