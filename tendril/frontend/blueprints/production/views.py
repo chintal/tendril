@@ -25,7 +25,7 @@ Docstring for views
 from flask import render_template
 from flask_user import login_required
 from flask import abort
-from flask import send_file
+from flask import Response
 
 from . import production as blueprint
 
@@ -34,12 +34,20 @@ from tendril.utils.fsutils import Crumb
 
 
 @blueprint.route('/manifests/<order_sno>')
+@login_required
 def manifests(order_sno=None):
     if not order_sno:
         abort(404)
     rfile = dxproduction.get_production_order_manifest_set(order_sno)
-    # TODO figure out how to delete this file later on.
-    return send_file(rfile, as_attachment=True)
+    if not rfile:
+        return "Didn't get a manifest set!"
+    # TODO This is horrible.
+    try:
+        content = open(rfile).read()
+        return Response(content, mimetype="application/pdf")
+    except IOError as exc:
+        return str(exc)
+    # TODO Figure out how to delete the file later on.
 
 
 @blueprint.route('/order/<order_sno>')
