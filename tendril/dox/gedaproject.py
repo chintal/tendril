@@ -590,18 +590,14 @@ def gen_pcb_gbr(projfolder, force=False):
     This function does not use jinja2 and latex. It relies on
     :func:`tendril.gedaif.pcb.conv_pcb2gbr` instead.
 
-    The generated gerber files are retained in the source tree instead of
-    being moved to the refdoc filesystem due to the relative sensitivity of
-    gerber files to version mismatches.
-
     :param projfolder: The gEDA project folder.
     :type projfolder: str
     :return: The output file path.
 
     .. rubric:: Paths
 
-    * Output Files :  ``<projfolder>/gerber/*``
-    * Output Zip File : ``<projfolder>/<pcbfile>-gerber.zip``
+    * Output Files :  ``<project_doc_folder>/../gerber/*``
+    * Output Zip File : ``<project_doc_folder>/../<pcbfile>-gerber.zip``
     * Source Files : The project's `.pcb` file.
 
     """
@@ -613,7 +609,8 @@ def gen_pcb_gbr(projfolder, force=False):
     if pcb_mtime is None:
         logger.warning("PCB does not seem to exist for : " + projfolder)
         return
-    gbrfolder = os.path.join(configfile.projectfolder, 'gerber')
+    docfolder = get_project_doc_folder(projfolder)
+    gbrfolder = os.path.join(docfolder, os.pardir, 'gerber')
     outf_mtime = None
     if not os.path.exists(gbrfolder):
         os.makedirs(gbrfolder)
@@ -650,10 +647,6 @@ def gen_pcb_dxf(projfolder, force=False):
     This function does not use jinja2 and latex. It relies on
     :func:`tendril.gedaif.pcb.conv_pcb2dxf` instead.
 
-    The generated DXF file is retained in the source tree instead of
-    being moved to the refdoc filesystem since is it not just
-    expositional, and is a source file for other processes.
-
     :param projfolder: The gEDA project folder.
     :type projfolder: str
     :return: The output file path.
@@ -672,7 +665,8 @@ def gen_pcb_dxf(projfolder, force=False):
     if pcb_mtime is None:
         logger.warning("PCB does not seem to exist for : " + projfolder)
         return
-    dxffile = os.path.join(configfile.projectfolder, 'pcb',
+    docfolder = get_project_doc_folder(projfolder)
+    dxffile = os.path.join(docfolder, os.pardir,
                            gpf.pcbfile + '.dxf')
     outf_mtime = fsutils.get_file_mtime(dxffile)
 
@@ -865,14 +859,12 @@ def get_docs_list(projfolder, cardname=None):
                                      path.join(project_doc_folder,
                                                namebase + '-pricing.pdf'),
                                      refdoc_fs),
-                     # TODO This needs to be fixed.
                      ExposedDocument(namebase + ' PCB DXF',
-                                     path.join(projfolder, 'pcb',
+                                     path.join(project_doc_folder, os.pardir,
                                                gpf.pcbfile + '.dxf'),
                                      refdoc_fs),
-                     # TODO This needs to be fixed.
                      ExposedDocument(namebase + ' PCB Gerber',
-                                     path.join(projfolder,
+                                     path.join(project_doc_folder, os.pardir,
                                                gpf.pcbfile + '-gerber.zip'),
                                      refdoc_fs),
                      ])
