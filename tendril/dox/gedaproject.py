@@ -66,7 +66,6 @@ names. Each function specifies the paths it operates on.
 import os
 import csv
 import yaml
-import glob
 import shutil
 
 from tendril.gedaif import gschem
@@ -566,6 +565,7 @@ def gen_pcb_pdf(projfolder, force=False):
                 '; Last Created : ' + str(outf_mtime))
 
     workspace_folder = workspace_fs.getsyspath(path.dirname(pdffile))
+
     workspace_fs.makedir(path.dirname(pdffile),
                          recursive=True, allow_recreate=True)
 
@@ -610,12 +610,13 @@ def gen_pcb_gbr(projfolder, force=False):
         logger.warning("PCB does not seem to exist for : " + projfolder)
         return
     docfolder = get_project_doc_folder(projfolder)
+
     gbrfolder = os.path.join(docfolder, os.pardir, 'gerber')
     outf_mtime = None
-    if not os.path.exists(gbrfolder):
-        os.makedirs(gbrfolder)
+    if not refdoc_fs.exists(gbrfolder):
+        refdoc_fs.makedir(gbrfolder)
     else:
-        outf_mtime = fsutils.get_folder_mtime(gbrfolder)
+        outf_mtime = fsutils.get_folder_mtime(gbrfolder, fs=refdoc_fs)
 
     if not force and outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + gbrfolder)
@@ -624,15 +625,34 @@ def gen_pcb_gbr(projfolder, force=False):
     logger.info('Regenerating ' + gbrfolder + os.linesep +
                 'Last modified : ' + str(pcb_mtime) +
                 '; Last Created : ' + str(outf_mtime))
-    glb = os.path.join(configfile.projectfolder, 'gerber', '*')
-    rf = glob.glob(glb)
+    rf = refdoc_fs.listdir(gbrfolder, files_only=True, full=True)
     for f in rf:
-        os.remove(f)
+        refdoc_fs.remove(f)
+
+    workspace_folder = workspace_fs.getsyspath(gbrfolder)
+    workspace_fs.makedir(gbrfolder,
+                         recursive=True, allow_recreate=True)
+
     gbrfolder = pcb.conv_pcb2gbr(
-        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb')
+        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
+        workspace_folder
     )
-    zfile = os.path.join(projfolder, gpf.pcbfile + '-gerber.zip')
+
+    zfile = os.path.join(
+        workspace_folder, os.pardir, gpf.pcbfile + '-gerber.zip'
+    )
     fsutils.zipdir(gbrfolder, zfile)
+
+    for f in os.listdir(workspace_folder):
+        fpath = os.path.relpath(
+            os.path.join(workspace_folder, f), workspace_fs.getsyspath('/')
+        )
+        copyfile(workspace_fs, fpath, refdoc_fs, fpath, overwrite=True)
+    zfpath = os.path.relpath(
+        os.path.join(workspace_folder, zfile), workspace_fs.getsyspath('/')
+    )
+    copyfile(workspace_fs, zfpath, refdoc_fs, zfpath, overwrite=True)
+
     return gbrfolder
 
 
@@ -660,15 +680,16 @@ def gen_pcb_dxf(projfolder, force=False):
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
     pcb_mtime = fsutils.get_file_mtime(
-        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb')
+        os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
     )
     if pcb_mtime is None:
         logger.warning("PCB does not seem to exist for : " + projfolder)
         return
     docfolder = get_project_doc_folder(projfolder)
-    dxffile = os.path.join(docfolder, os.pardir,
-                           gpf.pcbfile + '.dxf')
-    outf_mtime = fsutils.get_file_mtime(dxffile)
+    dxffile = path.normpath(os.path.join(docfolder, os.pardir,
+                            configfile.configdata['pcbname'] + '.dxf'))
+
+    outf_mtime = fsutils.get_file_mtime(dxffile, fs=refdoc_fs)
 
     if not force and outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + dxffile)
@@ -677,10 +698,17 @@ def gen_pcb_dxf(projfolder, force=False):
     logger.info('Regenerating ' + dxffile + os.linesep +
                 'Last modified : ' + str(pcb_mtime) +
                 '; Last Created : ' + str(outf_mtime))
-    dxffile = pcb.conv_pcb2dxf(
+
+    workspace_folder = workspace_fs.getsyspath(path.dirname(dxffile))
+    workspace_fs.makedir(path.dirname(dxffile),
+                         recursive=True, allow_recreate=True)
+
+    pcb.conv_pcb2dxf(
         os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
-        configfile.configdata['pcbname']
+        workspace_folder, configfile.configdata['pcbname']
     )
+
+    copyfile(workspace_fs, dxffile, refdoc_fs, dxffile, overwrite=True)
     return dxffile
 
 
@@ -860,8 +888,10 @@ def get_docs_list(projfolder, cardname=None):
                                                namebase + '-pricing.pdf'),
                                      refdoc_fs),
                      ExposedDocument(namebase + ' PCB DXF',
-                                     path.join(project_doc_folder, os.pardir,
-                                               gpf.pcbfile + '.dxf'),
+                                     path.join(
+                                         project_doc_folder, os.pardir,
+                                         configfile.configdata['pcbname'] +
+                                         '.dxf'),
                                      refdoc_fs),
                      ExposedDocument(namebase + ' PCB Gerber',
                                      path.join(project_doc_folder, os.pardir,
