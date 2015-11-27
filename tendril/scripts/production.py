@@ -25,8 +25,6 @@ import argparse
 
 import tendril.boms.electronics
 import tendril.boms.outputbase
-
-import tendril.inventory.electronics
 import tendril.dox.production
 import tendril.dox.indent
 import tendril.dox.docstore
@@ -44,11 +42,12 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
-def main(orderfolder=None, orderfile_r='order.yaml',
-         register=None):
-
+def main(orderfolder=None, orderfile_r=None,
+         register=None, verbose=True):
+    import tendril.inventory.electronics
     bomlist = []
-
+    if orderfile_r is None:
+        orderfile_r = 'order.yaml'
     if orderfolder is None:
         orderfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'production')
 
@@ -69,8 +68,11 @@ def main(orderfolder=None, orderfile_r='order.yaml',
             snomap = yaml.load(f)
 
     if register is None:
-        if data['register'] is True:
-            REGISTER = True
+        if 'register' in data.keys():
+            if data['register'] is True:
+                REGISTER = True
+            else:
+                REGISTER = False
         else:
             REGISTER = False
     else:
@@ -111,21 +113,24 @@ def main(orderfolder=None, orderfile_r='order.yaml',
 
     # Generate Tendril Requisitions, confirm production viability.
 
-    logger.info('Generating Card BOMs')
+    if verbose:
+        print('Generating Card BOMs')
     for k, v in data['cards'].iteritems():
         bom = tendril.boms.electronics.import_pcb(projects.cards[k])
         obom = bom.create_output_bom(k)
         obom.multiply(v)
-        logger.info('Inserting Card Bom : ' + obom.descriptor.configname +
-                    ' x' + str(obom.descriptor.multiplier))
+        print('Inserting Card Bom : {0} x{1}'.format(
+            obom.descriptor.configname, obom.descriptor.multiplier
+        ))
         bomlist.append(obom)
 
     cobom = tendril.boms.outputbase.CompositeOutputBom(bomlist)
     cobom.collapse_wires()
 
     with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
-        logger.info('Exporting Composite Output BOM to File : ' + os.linesep +
-                    os.path.join(orderfolder, 'cobom.csv'))
+        if verbose:
+            print('Exporting Composite Output BOM to File : ' + os.linesep +
+                  os.path.join(orderfolder, 'cobom.csv'))
         cobom.dump(f)
 
     unsourced = []
@@ -165,17 +170,18 @@ def main(orderfolder=None, orderfile_r='order.yaml',
             unsourced.append((line.ident, shortage))
 
     if len(unsourced) > 0:
-        logger.warning("Shortage of the following components: ")
+        print("Shortage of the following components: ")
         for elem in unsourced:
-            logger.warning("{0:<40}{1:>5}".format(elem[0], elem[1]))
+            print("{0:<40}{1:>5}".format(elem[0], elem[1]))
         if HALT_ON_SHORTAGE is True:
-            logger.info("Halt on shortage is set. Reversing changes "
-                        "and exiting")
+            print ("Halt on shortage is set. Reversing changes "
+                   "and exiting")
             exit()
 
     # TODO Transfer Reservations
     # Generate Indent
-    logger.info("Generating Indent")
+    if verbose:
+        print("Generating Indent")
 
     indentfolder = orderfolder
     if 'indentsno' in snomap.keys():
@@ -195,12 +201,13 @@ def main(orderfolder=None, orderfile_r='order.yaml',
                                                doctype='INVENTORY INDENT',
                                                efield=title)
     else:
-        logger.info(
+        print(
             "Not Registering Document : INVENTORY INDENT - " + indentsno
         )
 
     # Generate Production Order
-    logger.info("Generating Production Order")
+    if verbose:
+        print("Generating Production Order")
     if REGISTER is True:
         tendril.dox.docstore.register_document(serialno=indentsno,
                                                docpath=os.path.join(orderfolder, 'cobom.csv'),  # noqa
@@ -208,12 +215,12 @@ def main(orderfolder=None, orderfile_r='order.yaml',
                                                efield=title)
         serialnos.link_serialno(child=indentsno, parent=PROD_ORD_SNO)
     else:
-        logger.info("Not registering used serial number : " +
-                    PROD_ORD_SNO)
-        logger.info("Not Registering Document : PRODUCTION COBOM CSV - " +
-                    indentsno)
-        logger.info("Not Linking Serial Nos : " + indentsno +
-                    ' to parent ' + PROD_ORD_SNO)
+        print("Not registering used serial number : " +
+              PROD_ORD_SNO)
+        print("Not Registering Document : PRODUCTION COBOM CSV - " +
+              indentsno)
+        print("Not Linking Serial Nos : " + indentsno +
+              ' to parent ' + PROD_ORD_SNO)
 
     snos = []
     addldocs = []
@@ -354,13 +361,13 @@ def main(orderfolder=None, orderfile_r='order.yaml',
                                                doctype='PRODUCTION ORDER YAML',  # noqa
                                                efield=data['title'])
     else:
-        logger.info(
+        print(
             "Not registering document : DEVICE LABELS " + PROD_ORD_SNO
         )
-        logger.info(
+        print(
             "Not registering document : PRODUCTION ORDER " + PROD_ORD_SNO
         )
-        logger.info(
+        print(
             "Not registering document : PRODUCTION ORDER YAML " + PROD_ORD_SNO
         )
 
@@ -394,12 +401,16 @@ def entry_point():
         help="Register on the database, publish any/all files. "
              "The setting here will override anything in the order file."
     )
+    parser.add_argument(
+        '--verbose', '-v', action='store_true', default=None,
+        help="Increase output verbosity."
+    )
 
     args = parser.parse_args()
-    register = args.execute
     main(orderfolder=args.order_folder,
          orderfile_r=args.order_file,
-         register=register)
+         register=args.execute,
+         verbose=args.verbose)
 
 if __name__ == '__main__':
     main()
