@@ -390,17 +390,13 @@ def entry_point():
              'Defaults to order.yaml'
     )
     parser.add_argument(
-        '--dry-run', '-n', action='store_true', default=None,
-        help="Don't register anything on the database, don't publish any "
-             "files. Use to preview order. Serial numbers will be incorrect. "
+        '--execute', '-e', action='store_true', default=None,
+        help="Register on the database, publish any/all files. "
              "The setting here will override anything in the order file."
     )
 
     args = parser.parse_args()
-    if args.dry_run is None:
-        register = None
-    else:
-        register = not args.dry_run
+    register = args.execute
     main(orderfolder=args.order_folder,
          orderfile_r=args.order_file,
          register=register)

@@ -49,6 +49,7 @@ def main():
     args = parser.parse_args()
     if not args.serialno:
         parser.print_help()
+        exit()
     docstore.copy_docs_to_workspace(serialno=args.serialno,
                                     workspace=args.workspace,
                                     clearws=args.clear_ws,
