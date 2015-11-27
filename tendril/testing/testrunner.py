@@ -271,7 +271,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder,
 
 
 def run_electronics_test(serialno, devicetype, projectfolder,
-                         incremental=True):
+                         incremental=True, stale=5):
     offline = False
     suites = []
     for suite in get_electronics_test_suites(serialno, devicetype,
@@ -284,8 +284,7 @@ def run_electronics_test(serialno, devicetype, projectfolder,
                     descr=suite.desc
                 )
                 if latest and latest.passed and \
-                        latest.created_at.floor('day') == \
-                        arrow.utcnow().floor('day'):
+                        (arrow.utcnow() - latest.created_at).days < stale:
                     suite_needs_be_run = False
                     suite.destroy()
                 else:
@@ -326,7 +325,8 @@ def publish_and_print(serialno, devicetype, print_to_paper=False):
         os.system('lp -d {1} -o media=a4 {0}'.format(pdfpath, PRINTER_NAME))
 
 
-def run_test(serialno=None):
+def run_test(serialno=None, force=False, stale=5):
+
     if serialno is None:
         raise AttributeError("serialno cannot be None")
     logger.info("Staring Test for Serial No : " + serialno)
@@ -339,7 +339,9 @@ def run_test(serialno=None):
     except KeyError:
         raise AttributeError("Project for " + devicetype + " not found.")
 
-    suites = run_electronics_test(serialno, devicetype, projectfolder)
+    incremental = not force
+    suites = run_electronics_test(serialno, devicetype, projectfolder,
+                                  incremental=incremental, stale=stale)
 
     user_input = raw_input("Write to device [y/N] ?: ").strip()
     if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
