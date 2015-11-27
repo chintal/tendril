@@ -19,8 +19,9 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-import yaml
 import os
+import yaml
+import argparse
 
 import tendril.boms.electronics
 import tendril.boms.outputbase
@@ -43,12 +44,15 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
-if __name__ == "__main__":
+def main(orderfolder=None, orderfile_r='order.yaml',
+         register=None):
 
     bomlist = []
 
-    orderfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'production')
-    orderfile = os.path.join(orderfolder, 'order.yaml')
+    if orderfolder is None:
+        orderfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'production')
+
+    orderfile = os.path.join(orderfolder, orderfile_r)
 
     with open(orderfile, 'r') as f:
         data = yaml.load(f)
@@ -64,10 +68,13 @@ if __name__ == "__main__":
         with open(os.path.join(orderfolder, 'snomap.yaml'), 'r') as f:
             snomap = yaml.load(f)
 
-    if data['register'] is True:
-        REGISTER = True
+    if register is None:
+        if data['register'] is True:
+            REGISTER = True
+        else:
+            REGISTER = False
     else:
-        REGISTER = False
+        REGISTER = register
 
     if data['halt_on_shortage'] is True:
         HALT_ON_SHORTAGE = True
@@ -364,3 +371,39 @@ if __name__ == "__main__":
                                                docpath=os.path.join(orderfolder, 'snomap.yaml'),  # noqa
                                                doctype='SNO MAP',
                                                efield=data['title'])
+
+
+def entry_point():
+    parser = argparse.ArgumentParser(
+        description='Generate production orders and associated documentation.',
+        prog='tendril-production'
+    )
+    parser.add_argument(
+        '--order-folder', '-d', metavar='PATH', type=str, nargs='?',
+        help='Path to the order folder. Search location for order files and '
+             'write location for output files. Defaults to '
+             'INSTANCE_FOLDER/scratch/production.'
+    )
+    parser.add_argument(
+        '--order-file', metavar='PATH', type=str, nargs='?',
+        help='Relative path to the order file (yaml) from the order-folder. '
+             'Defaults to order.yaml'
+    )
+    parser.add_argument(
+        '--dry-run', '-n', action='store_true', default=None,
+        help="Don't register anything on the database, don't publish any "
+             "files. Use to preview order. Serial numbers will be incorrect. "
+             "The setting here will override anything in the order file."
+    )
+
+    args = parser.parse_args()
+    if args.dry_run is None:
+        register = None
+    else:
+        register = not args.dry_run
+    main(orderfolder=args.order_folder,
+         orderfile_r=args.order_file,
+         register=register)
+
+if __name__ == '__main__':
+    main()
