@@ -34,9 +34,6 @@ from tendril.utils import fsutils
 from tendril.utils.types import currency
 from tendril.utils.terminal import TendrilProgressBar
 
-# from utils.config import NETWORK_PROXY_IP
-# from utils.config import NETWORK_PROXY_PORT
-
 from tendril.utils.config import VENDORS_DATA
 
 from tendril.gedaif import projfile
@@ -468,6 +465,14 @@ def generate_pcb_pricing(projfolder, noregen=True, forceregen=False):
             projfolder)
         return None
 
+    try:
+        searchparams = gpf.configsfile.configdata['pcbdetails']['indicativepricing']
+    except KeyError:
+        searchparams = {
+            'qty': 20,
+            'dterm': 7,
+        }
+
     pricingfp = os.path.join(gpf.configsfile.projectfolder,
                              'pcb', 'sourcing.yaml')
 
@@ -479,13 +484,12 @@ def generate_pcb_pricing(projfolder, noregen=True, forceregen=False):
                 logger.info('Skipping up-to-date ' + pricingfp)
                 return pricingfp
     logger.info('Generating PCB Pricing for ' + pricingfp)
-    if pcbparams['layers'] == 4:
-        pcbparams['qty'] = range(20)
-    else:
-        pcbparams['qty'] = range(260)
+
+    pcbparams['qty'] = range(searchparams['qty'])
     sourcingdata = get_csil_prices(pcbparams)
     dumpdata = {'params': pcbparams,
                 'pricing': sourcingdata}
+
     with open(pricingfp, 'w') as pricingf:
         pricingf.write(yaml.dump(dumpdata))
 
