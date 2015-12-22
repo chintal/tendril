@@ -33,6 +33,7 @@ install_requirements = [
     'pyyaml',
     'progress',
     'colorama',
+    'pcb-tools',
 
     # Flask Dependencies (to be pruned?)
     'jsmin',

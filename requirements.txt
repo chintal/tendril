@@ -1,3 +1,4 @@
+pcb-tools
 colorama
 progress
 fs
@@ -13,7 +14,7 @@ psycopg2==2.6.1
 pycallgraph==1.0.1
 arrow==0.6.0
 qrcode==5.1
-splinter==0.7.0
+splinter>=0.7.0
 iec60063==0.1
 Flask-Login==0.2.11
 Flask-User==0.6.1

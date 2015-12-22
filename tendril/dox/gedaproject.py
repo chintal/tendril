@@ -59,6 +59,7 @@ names. Each function specifies the paths it operates on.
     gen_pcb_pdf
     gen_pcb_gbr
     gen_pcb_dxf
+    gen_pcb_img
     gen_pcbpricing
 
 """
@@ -72,6 +73,7 @@ from tendril.gedaif import gschem
 from tendril.gedaif import conffile
 from tendril.gedaif import projfile
 from tendril.gedaif import pcb
+from tendril.gedaif import gerberfiles
 
 from tendril.utils import pdf
 from tendril.utils import fsutils
@@ -610,13 +612,15 @@ def gen_pcb_gbr(projfolder, force=False):
         logger.warning("PCB does not seem to exist for : " + projfolder)
         return
     docfolder = get_project_doc_folder(projfolder)
-
+    imgfolder = os.path.join(docfolder, os.pardir, 'img')
     gbrfolder = os.path.join(docfolder, os.pardir, 'gerber')
     outf_mtime = None
     if not refdoc_fs.exists(gbrfolder):
         refdoc_fs.makedir(gbrfolder)
     else:
         outf_mtime = fsutils.get_folder_mtime(gbrfolder, fs=refdoc_fs)
+    if not refdoc_fs.exists(imgfolder):
+        refdoc_fs.makedir(imgfolder)
 
     if not force and outf_mtime is not None and outf_mtime > pcb_mtime:
         logger.debug('Skipping up-to-date ' + gbrfolder)
@@ -638,6 +642,19 @@ def gen_pcb_gbr(projfolder, force=False):
         workspace_folder
     )
 
+    workspace_fs.makedir(imgfolder,
+                         recursive=True, allow_recreate=True)
+
+    img_workspace_folder = workspace_fs.getsyspath(imgfolder)
+    gen_pcb_img(gbrfolder, outfolder=img_workspace_folder,
+                outfname=gpf.pcbfile, force=False)
+
+    for f in os.listdir(img_workspace_folder):
+        fpath = os.path.relpath(
+            os.path.join(img_workspace_folder, f), workspace_fs.getsyspath('/')
+        )
+        copyfile(workspace_fs, fpath, refdoc_fs, fpath, overwrite=True)
+
     zfile = os.path.join(
         workspace_folder, os.pardir, gpf.pcbfile + '-gerber.zip'
     )
@@ -654,6 +671,15 @@ def gen_pcb_gbr(projfolder, force=False):
     copyfile(workspace_fs, zfpath, refdoc_fs, zfpath, overwrite=True)
 
     return gbrfolder
+
+
+def gen_pcb_img(gbrfolder, outfolder, outfname, force=False):
+    gfiles = [os.path.join(gbrfolder, x) for x in os.listdir(gbrfolder)]
+    from gerber.layers import available_dialects
+    pcbctx = gerberfiles.TendrilPCBCairoContext(
+        gfiles, available_dialects['geda'], verbose=False
+    )
+    pcbctx.render(output_filename=os.path.join(outfolder, outfname))
 
 
 def gen_pcb_dxf(projfolder, force=False):
