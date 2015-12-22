@@ -99,6 +99,8 @@ def pcbs(pcbname=None):
                                 key=lambda y: y['name']) +
                          sorted([x for x in stage_pcbs if x['configdata'].status == 'Active'],  # noqa
                                 key=lambda y: y['name']) +
+                         sorted([x for x in stage_pcbs if x['configdata'].status == 'WIP'],  # noqa
+                                key=lambda y: y['name']) +
                          sorted([x for x in stage_pcbs if x['configdata'].status == 'Deprecated'],  # noqa
                                 key=lambda y: y['name']),
                  'crumbroot': '/entityhub',

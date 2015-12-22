@@ -32,6 +32,9 @@
             {% if pcb.configdata.status == 'Active' %}
               <span class="right label radius success">Active</span>
             {% endif %}
+            {% if pcb.configdata.status == 'WIP' %}
+              <span class="right label radius alert">WIP</span>
+            {% endif %}
             {% if pcb.configdata.status == 'Deprecated' %}
               <span class="right label radius alert">Deprecated</span>
             {% endif %}
