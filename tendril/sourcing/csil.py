@@ -466,6 +466,15 @@ def generate_pcb_pricing(projfolder, noregen=True, forceregen=False):
         return None
 
     try:
+        if gpf.configsfile.configdata['pcbdetails']['params']['panelize'] is True:
+            logger.warning(
+                'Not obtaining pricing for panelized pcb : ' + projfolder
+            )
+            return None
+    except KeyError:
+        pass
+
+    try:
         searchparams = gpf.configsfile.configdata['pcbdetails']['indicativepricing']
     except KeyError:
         searchparams = {
