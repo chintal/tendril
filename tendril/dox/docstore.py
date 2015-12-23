@@ -87,6 +87,10 @@ class ExposedDocument(object):
         return ext.strip('.').lower()
 
     @property
+    def exists(self):
+        return self.fs.exists(self.path)
+
+    @property
     def filename(self):
         return path.splitext(path.split(self.path)[1])[0]
 

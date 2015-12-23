@@ -871,6 +871,39 @@ def generate_docs(projfolder, force=False):
         gen_pcbpricing(projfolder, namebase, force)
 
 
+def get_img_list(projfolder, cardname=None):
+    configfile = conffile.ConfigsFile(projfolder)
+    gpf = projfile.GedaProjectFile(configfile.projectfolder)
+    namebase = configfile.configdata['pcbname']
+
+    project_doc_folder = get_project_doc_folder(projfolder)
+    if not project_doc_folder:
+        return []
+
+    project_img_folder = os.path.join(project_doc_folder, os.pardir, 'img')
+    rval = [
+        ExposedDocument(
+            namebase + ' PCB Top View',
+            path.join(project_img_folder, gpf.pcbfile + '.top.png'),
+            refdoc_fs
+        ),
+        ExposedDocument(
+            namebase + ' PCB Bottom View',
+            path.join(project_img_folder, gpf.pcbfile + '.bottom.png'),
+            refdoc_fs
+        ),
+        ExposedDocument(
+            namebase + ' PCB Layers',
+            path.join(project_img_folder, gpf.pcbfile + '.devel.png'),
+            refdoc_fs
+        )
+    ]
+    for img in rval:
+        if not img.exists:
+            rval.remove(img)
+    return rval
+
+
 def get_docs_list(projfolder, cardname=None):
     configfile = conffile.ConfigsFile(projfolder)
     namebase = configfile.configdata['pcbname']

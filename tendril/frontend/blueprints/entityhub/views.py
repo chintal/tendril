@@ -29,6 +29,7 @@ from tendril.entityhub import products as ehproducts
 
 from tendril.boms.electronics import import_pcb
 from tendril.dox.gedaproject import get_docs_list
+from tendril.dox.gedaproject import get_img_list
 from tendril.gedaif.conffile import ConfigsFile
 
 from tendril.utils.fsutils import Crumb
@@ -112,6 +113,7 @@ def pcbs(pcbname=None):
         stage = {'name': pcbname,
                  'configdata': ConfigsFile(ehprojects.pcbs[pcbname]),
                  'docs': get_docs_list(ehprojects.pcbs[pcbname]),
+                 'imgs': get_img_list(ehprojects.pcbs[pcbname]),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Bare PCBs", path="pcbs/"),

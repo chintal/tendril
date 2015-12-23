@@ -49,6 +49,7 @@ bundles = {
         'js/foundation/foundation.magellan.js',
         'js/foundation/foundation.equalizer.js',
         'js/foundation/foundation.alert.js',
+        'js/foundation/foundation.clearing.js',
         'js/foundation/foundation.tooltip.js',
         'js/vendor/stickyFooter.js',
         output='gen/foundation.js',

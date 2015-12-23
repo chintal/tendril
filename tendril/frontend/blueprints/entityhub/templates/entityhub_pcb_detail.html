@@ -78,11 +78,6 @@
 </div>
 
 <!-- Documentation -->
-    <!-- TODO : The following sections were originally intended. If rendering those
-                is feasible, it may be preferable to including the corresponding PDF 
-                links. -->
-    <!-- Rendering of Image -->
-    <!-- Pricing Information -->
 <div class="small-12 medium-6 columns">
 <h3> Documentation </h3>
 <a name="documentation"></a>
@@ -93,6 +88,22 @@
     </ul>
 </div>
 </div>
+
+<!-- Rendering of Image -->
+<div class="row">
+    <ul class="large-block-grid-3 clearing-thumbs" data-clearing>
+        {% for img in stage.imgs %}
+        <li>
+          <a class="th" href="{{ img.exposed_url }}">
+              <img data-caption="{{ img.desc }}" src="{{ img.exposed_url }}" />
+          </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+    <!-- Pricing Information -->
+
 
 <!-- Inventory Information -->
 <!-- Product Utilization Information -->
