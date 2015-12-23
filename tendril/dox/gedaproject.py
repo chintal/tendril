@@ -738,6 +738,15 @@ def gen_pcb_dxf(projfolder, force=False):
     return dxffile
 
 
+def get_pcbpricing_data(projfolder):
+    pcbpricingfp = os.path.join(projfolder, 'pcb', 'sourcing.yaml')
+    if not os.path.exists(pcbpricingfp):
+        return None
+    with open(pcbpricingfp, 'r') as f:
+        data = yaml.load(f)
+    return data
+
+
 def gen_pcbpricing(projfolder, namebase, force=False):
     """
     Generates a PDF file with the pricing of the (bare) PCB provided by the

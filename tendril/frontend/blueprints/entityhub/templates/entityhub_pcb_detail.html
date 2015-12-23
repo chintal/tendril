@@ -11,6 +11,7 @@
     <dl class="sub-nav">
         <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
         <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
+        <dd data-magellan-arrival="costing"><a href="#costing">Costing</a></dd>
         <dd data-magellan-arrival="configurations"><a href="#configurations">Configurations</a></dd>
     </dl>
 </div>
@@ -102,14 +103,22 @@
     </ul>
 </div>
 
-    <!-- Pricing Information -->
-
+<div class="row">
+<!-- Pricing Information -->
+    {% if stage.costing %}
+    <div class="small-12 medium-6 columns">
+    <h3> Costing </h3>
+    <a name="costing"></a>
+        {{ stage.costing|safe }}
+    </div>
+    {% endif %}
 
 <!-- Inventory Information -->
 <!-- Product Utilization Information -->
+</div>
 
 <div class="row" data-magellan-destination="configurations">
-<h4> Configurations </h4>
+<h3> Configurations </h3>
 <a name="configurations"></a>
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-2" data-equalizer>
     {% for configuration in stage.configdata.configurations %}

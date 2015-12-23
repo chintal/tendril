@@ -34,6 +34,7 @@ install_requirements = [
     'progress',
     'colorama',
     'pcb-tools',
+    'python-nvd3',
 
     # Flask Dependencies (to be pruned?)
     'jsmin',

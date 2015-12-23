@@ -21,6 +21,7 @@ See the COPYING, README, and INSTALL files for more information
 
 from flask import render_template
 from flask_user import login_required
+from nvd3 import lineChart
 
 from . import entityhub as blueprint
 
@@ -30,9 +31,11 @@ from tendril.entityhub import products as ehproducts
 from tendril.boms.electronics import import_pcb
 from tendril.dox.gedaproject import get_docs_list
 from tendril.dox.gedaproject import get_img_list
+from tendril.dox.gedaproject import get_pcbpricing_data
 from tendril.gedaif.conffile import ConfigsFile
 
 from tendril.utils.fsutils import Crumb
+from tendril.utils.types.currency import BASE_CURRENCY_SYMBOL
 
 
 @blueprint.route('/cards/<cardname>')
@@ -88,6 +91,45 @@ def cards(cardname=None):
                                pagetitle=cardname + " Card Details")
 
 
+def get_pcb_costing_chart(projectfolder):
+    data = get_pcbpricing_data(projectfolder)
+    if not data:
+        return None
+    # TODO Figure out how to have a second y-axis for the total.
+    # Keys : dterm
+    datasets = {}
+
+    for qty in sorted(data['pricing'].keys()):
+        p = data['pricing'][qty]
+        for dterm in p.keys():
+            if dterm not in datasets.keys():
+                datasets[dterm] = {}
+            datasets[dterm][qty] = p[dterm]
+
+    chart = lineChart(name="costingChart", x_is_date=False,
+                      jquery_on_ready=True,
+                      use_interactive_guideline=True,
+                      y_axis_format="function(d) { return '" +
+                                    BASE_CURRENCY_SYMBOL +
+                                    "' + d3.format(',f')(d)}",
+                      y_custom_format=True,
+                      height=300,
+                      )
+
+    for dterm in datasets.keys():
+        x_data = sorted(datasets[dterm].keys())
+        y_data = [datasets[dterm][x] for x in x_data]
+        chart.add_serie(y=y_data, x=x_data, name=str(dterm) + ' days')
+
+    x_data = sorted(datasets[10].keys())
+    totals = [(y * x_data[i]) for i, y in
+              enumerate([datasets[10][x] for x in x_data])]
+    chart.add_serie(y=totals, x=x_data, name='Total@10')
+
+    chart.buildcontent()
+    return chart.htmlcontent
+
+
 @blueprint.route('/pcbs/<pcbname>')
 @blueprint.route('/pcbs/')
 @login_required
@@ -114,6 +156,7 @@ def pcbs(pcbname=None):
                  'configdata': ConfigsFile(ehprojects.pcbs[pcbname]),
                  'docs': get_docs_list(ehprojects.pcbs[pcbname]),
                  'imgs': get_img_list(ehprojects.pcbs[pcbname]),
+                 'costing': get_pcb_costing_chart(ehprojects.pcbs[pcbname]),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Bare PCBs", path="pcbs/"),

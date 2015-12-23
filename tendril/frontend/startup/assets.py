@@ -79,12 +79,27 @@ bundles = {
         'js/datatables/dataTables.select.js',
         'js/datatables/dataTables.keyTable.js',
         output='gen/datatables.js',
-        filters='jsmin'),
+        filters='jsmin'
+    ),
 
     'tendril_css': Bundle(
         'css/tendril.css',
         output='gen/tendril.css',
-        filters='cssmin'),
+        filters='cssmin'
+    ),
+
+    'nvd3_js': Bundle(
+        'js/d3/d3.js',
+        'js/d3/nv.d3.js',
+        output='gen/nv.d3.js',
+        filters='jsmin'
+    ),
+
+    'nvd3_css': Bundle(
+        'css/nv.d3.css',
+        output='gen/nv.d3.css',
+        filters='cssmin'
+    )
 }
 
 

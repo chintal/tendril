@@ -1,3 +1,4 @@
+python-nvd3
 pcb-tools
 colorama
 progress
@@ -29,7 +30,7 @@ idstring==1.0.3
 wheel==0.24.0
 cssmin==0.2.0
 Flask==0.10.1
-Jinja2==2.7.3
+Jinja2>=2.7.3
 alembic==0.7.6
 sqlalchemy_utils==0.30.16
 pillow==2.9.0
