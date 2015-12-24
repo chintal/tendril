@@ -10,6 +10,9 @@
 <div data-magellan-expedition="sticky">
     <dl class="sub-nav">
         <dd data-magellan-arrival="documentation"><a href="#documentation">Download</a></dd>
+        <dd data-magellan-arrival="results"><a href="#documentation">Results</a></dd>
+        <dd data-magellan-arrival="graphs"><a href="#documentation">Graphs</a></dd>
+        <dd data-magellan-arrival="instruments"><a href="#documentation">Instruments</a></dd>
     </dl>
 </div>
 {% endblock %}
@@ -18,13 +21,59 @@
 
 <p></p>
 
-<h3>Test Result</h3>
-<h4> for {{ stage.docs[0].filename|replace('TEST-REPORT-', '') }} </h4>
+<h3> {{ stage.docs[0].filename|replace('TEST-REPORT-', '') }} Test & Calibration Report </h3>
 
-{{ stage }}
-
+<div class="row">
+<!-- Metadata -->
 <div class="small-12 medium-6 columns">
-<h5> Rendered Report </h5>
+<a name="metadata"></a>
+    <div class="small-12 columns">
+        <table id="metadata_table" class="display" width="100%">
+            <tbody>
+                <tr>
+                    <td class="dt-right" scope="row"> Model </td>
+                    <td> <b>{{ stage.devicetype }}</b> </td>
+                </tr>
+                <tr>
+                    <td class="dt-right" scope="row"> Serial No. </td>
+                    <td> <b>{{ stage.sno }}</b> </td>
+                </tr>
+                <tr>
+                    <td class="dt-right" scope="row"> Test Definitions </td>
+                    <td> R{{ stage.svnrevision }} configs </td>
+                </tr>
+                <tr>
+                    <td class="dt-right" scope="row"> Test Date </td>
+                    <td> {{ stage.testdate }} </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        {{ stage.desc }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#metadata_table').DataTable({
+                /* Disable initial sort */
+                "aaSorting": [],
+                responsive: true,
+                "bAutoWidth": false,
+                "paging": false,
+                "ordering": false,
+                "info": false,
+                "searching": false,
+            });
+        });
+    </script>
+</div>
+
+
+<!-- Downloads -->
+<div class="small-12 medium-6 columns">
+<h4> Download </h4>
 <a name="documentation"></a>
     <ul class="doclinklist">
         {% for doc in stage.docs %}
@@ -32,5 +81,95 @@
         {% endfor %}
     </ul>
 </div>
+</div>
+
+<!-- Result -->
+<div class="small-12 columns">
+<h4> Test Result </h4>
+<a name="results"></a>
+<div class="small-12 columns">
+        <table id="suite_table" class="row-border" width="100%">
+        {% for suite in stage.suites %}
+            <thead>
+            <tr>
+                <th class="all"></th>
+                <th class="all">{{ suite.desc }}</th>
+                <th class="all">{{ suite.title }}</th>
+                <th class="all">{{ suite.ts }}</th>
+                <th class="all">{{ suite.passed }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for test in suite.tests %}
+                <tr>
+                    <td> {{ loop.index }} </td>
+                    <td> {{ test.desc }} </td>
+                    <td> {{ test.title }} </td>
+                    <td> {{ test.ts }} </td>
+                    <td> {{ test.passed }} </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        {% endfor %}
+        </table>
+    </div>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#suite_table').DataTable({
+                "aaSorting": [],
+                responsive: true,
+                "paging": false,
+                "ordering": false,
+                "info": false,
+                "searching": false,
+            });
+        });
+    </script>
+</div>
+
+<!-- Instrument -->
+<div class="row">
+<div class="small-12 medium-6 columns">
+    <a name="instruments"></a>
+    <div class="small-12 columns">
+        <h5> Instruments </h5>
+    </div>
+    <div class="small-12 columns">
+        <table id="instruments_table" class="display" width="100%">
+            <thead>
+            <tr>
+                <th class="all">IDX</th>
+                <th class="all">Instrument</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for instrument in stage.instruments|dictsort(False, 'value') %}
+                <tr>
+                    <td> {{ instrument.1 }} </td>
+                    <td> {{ instrument.0 }} </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#instruments_table').DataTable({
+                /* Disable initial sort */
+                "aaSorting": [],
+                responsive: true,
+                "paging": false,
+                "ordering": false,
+                "info": false,
+                "searching": false,
+            });
+        });
+    </script>
+</div>
+</div>
+
+<!-- Graphs -->
+
+
 
 {% endblock %}
