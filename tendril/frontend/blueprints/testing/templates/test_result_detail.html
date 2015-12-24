@@ -9,7 +9,7 @@
 <!-- Magellan -->
 <div data-magellan-expedition="sticky">
     <dl class="sub-nav">
-        <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
+        <dd data-magellan-arrival="documentation"><a href="#documentation">Download</a></dd>
     </dl>
 </div>
 {% endblock %}
@@ -20,6 +20,8 @@
 
 <h3>Test Result</h3>
 <h4> for {{ stage.docs[0].filename|replace('TEST-REPORT-', '') }} </h4>
+
+{{ stage }}
 
 <div class="small-12 medium-6 columns">
 <h5> Rendered Report </h5>

@@ -190,6 +190,8 @@ class TestBase(RunnableTest):
         self.ts = arrow.utcnow()
 
     def _load_variable(self, name, typeclass):
+        if isinstance(self.variables[name], typeclass):
+            return self.variables[name]
         try:
             rv = typeclass(self.variables[name])
             return rv
@@ -207,6 +209,8 @@ class TestBase(RunnableTest):
                     logger.error("Bomobject configured for " +
                                  self._bom_object.configured_for)
                     raise
+            if isinstance(value, typeclass):
+                return value
             value = typeclass(value)
         except KeyError:
             raise
