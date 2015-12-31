@@ -107,27 +107,24 @@ class ProductBase(object):
 
 def get_folder_products(path):
     products = []
-    print ("looking in :", path)
-    
+
     files = [f for f in os.listdir(path)
              if os.path.isfile(os.path.join(path, f))]
-    
+
     for f in files:
         if f.endswith('.product.yaml'):
             products.append(ProductBase(os.path.join(path, f)))
             print (f)
-    
-    print (products)
+
     return products
 
 
 def gen_productlib(path=PRODUCTS_ROOT, recursive=True):
-    print ("Product root : ", PRODUCTS_ROOT)
     products = []
     if recursive:
         for root, dirs, files in os.walk(path):
             products += get_folder_products(root)
-            
+
     else:
         products = get_folder_products(path)
     return products
@@ -139,7 +136,6 @@ def get_product_by_ident(ident):
     for product in productlib:
         if product.name == ident:
             return product
-    print ("Could not find product for core : " + ident)
     logger.error("Could not find product for ident : " + ident)
 
 
@@ -147,7 +143,6 @@ def get_product_by_core(core):
     for product in productlib:
         if product.core == core:
             return product
-    print ("Could not find product for core : " + core)
     logger.error("Could not find product for core : " + core)
 
 
