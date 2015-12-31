@@ -579,7 +579,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
         self._get_data()
 
     def _get_data(self):
-        soup = self._get_product_soup()
+        soup, href = self._get_product_soup()
         for price in self._get_prices(soup):
             self.add_price(price)
         try:
@@ -589,8 +589,10 @@ class MouserElnPart(vendors.VendorElnPartBase):
             self.vpartdesc = self._get_description(soup)
             self.vqtyavail = self._get_avail_qty(soup)
             self.package = self._get_package(soup)
-        except AttributeError:
+        except (AttributeError, IndexError):
             logger.error("Failed to acquire part information : " + self.vpno)
+            logger.error(href)
+            raise
             # TODO raise AttributeError
 
     def _get_product_soup(self):
@@ -608,9 +610,9 @@ class MouserElnPart(vendors.VendorElnPartBase):
             logger.error(
                 "Unable to open Mouser product start page : " + self.vpno
             )
-            return
+            return None, None
         if soup.find('div', id='productdetail-box1'):
-            return soup
+            return soup, url
         else:
             stable = soup.find(
                 'table',
@@ -621,7 +623,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
             link = srow.find('a', id=re.compile(r'lnkMouserPartNumber'))
             href = urlparse.urljoin(url, link.attrs['href'])
             soup = www.get_soup(href)
-            return soup
+            return soup, href
 
     def _get_prices(self, soup):
         ptable = soup.find(id='ctl00_ContentMain_divPricing')
@@ -712,7 +714,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
         if not datasheet_div:
             return
         datasheet_link = datasheet_div.find_all(
-            'a', text=re.compile('Data Sheet')
+            'a', text=re.compile(r'Data\s?sheet', re.IGNORECASE)
         )[0].attrs['href']
         return datasheet_link.strip().encode('ascii', 'replace')
 

@@ -141,7 +141,7 @@ class VendorDigiKey(vendors.VendorBase):
         if device.startswith('IC'):
             catstrings = ['Integrated Circuits (ICs)',
                           'Isolators']
-            subcatstrings = None
+            subcatstrings = ['Interface - Controllers']
         elif device.startswith('DIODE'):
             catstrings = ['Discrete Semiconductor Products']
             subcatstrings = ['Diodes, Rectifiers - Single']
@@ -167,16 +167,18 @@ class VendorDigiKey(vendors.VendorBase):
         if result is False:
             return False, None, 'CATEGORY UNKNOWN'
         newurlpart = None
-        for index in indexes:
-            if not subcatstrings:
-                catname = index.findAll('a')[0].text
-                if catname in catstrings:
-                    newurlpart = index.find('a').attrs['href']
-            else:
+        if subcatstrings is not None:
+            for index in indexes:
                 subcats = index.findAll('li')
                 for subcat in subcats:
                     if subcat.find('a').text in subcatstrings:
                         newurlpart = subcat.find('a').attrs['href']
+        if newurlpart is None:
+            for index in indexes:
+                catname = index.findAll('a')[0].text
+                if catname in catstrings:
+                    newurlpart = index.find('a').attrs['href']
+
         if newurlpart is None:
             return False, None, 'CATEGORY NOT FOUND'
         else:

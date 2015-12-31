@@ -81,11 +81,11 @@ def gen_vendor_mapfile(vendor_obj):
                         vpnos = []
                     try:
                         outw.writerow(
-                            [symbol.ident.strip(), strategy.strip()] + vpnos
+                            [symbol.ident.strip(), (strategy or '').strip()] + vpnos
                         )
                     except AttributeError:
                         print symbol.ident, strategy
-                        raise AttributeError
+                        raise
         pb.finish()
         outf.close()
         logger.info("Written Electronics Vendor Map to File : " +
