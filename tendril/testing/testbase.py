@@ -191,6 +191,8 @@ class TestBase(RunnableTest):
 
     def _load_variable(self, name, typeclass):
         try:
+            if isinstance(self.variables[name], typeclass):
+                return self.variables[name]
             rv = typeclass(self.variables[name])
             return rv
         except ValueError:
@@ -207,7 +209,8 @@ class TestBase(RunnableTest):
                     logger.error("Bomobject configured for " +
                                  self._bom_object.configured_for)
                     raise
-            value = typeclass(value)
+            if not isinstance(value, typeclass):
+                value = typeclass(value)
         except KeyError:
             raise
         return value
