@@ -94,7 +94,8 @@
         if (!d){
             return '';
         }
-        var rval = '<table class="embedtable" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
+        var rval = '<div class="large-6 medium-12 columns">'
+        rval += '<table class="embedtable" width="100%" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
         if (d.lines){
             for(var i=0, len=d.lines.length; i < len; i++){
                 rval += '<tr><td>' + d.lines[i].desc + '</td>'
@@ -102,10 +103,11 @@
                         + '<td class="text-center">' + d.lines[i].measured + '</td>'
                         + '</tr>';
             }
-            rval += '</table>';
-        }
-        if (d.instrument){
-            rval += '<br>Instrument : ' + d.instrument + ' ' + d.inststr + '<br>';
+            rval += '</table></div>';
+            if (d.instrument){
+                rval += '<div class="large-5 medium-12 columns">Instrument : ';
+                rval += d.instrument + ' ' + d.inststr + '</div>';
+            }
         }
         return rval;
     }
@@ -149,7 +151,7 @@
                     {% elif test.passed == 'FAILED' %}
                         resultcell-fail
                     {% endif %}
-                    "> {{ test.passed }} </td>
+                    ">{{ test.passed }}</td>
 
                     <script>
                     {% if test.lines %}
@@ -185,6 +187,12 @@
                 "ordering": false,
                 "info": false,
                 "searching": false,
+                "columnDefs":[
+                    {"width": "1em", "targets": 0},
+                    {"width": "10em", "targets": 1},
+                    {"width": "12em", "targets": 4},
+                    {"width": "7em", "targets": 5},
+                ],
             });
 
             // Add event listener for opening and closing details
