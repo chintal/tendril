@@ -63,6 +63,12 @@ def init_app(app, db):
         return s
     app.jinja_env.filters['latex_render'] = latex_render_filter
 
+    from .helpers import lineplot_filter
+    app.jinja_env.filters['lineplot'] = lineplot_filter
+
+    from .helpers import histogram_filter
+    app.jinja_env.filters['histogram'] = histogram_filter
+
     # Setup Flask-Mail
     mail = Mail(app)  # noqa
 

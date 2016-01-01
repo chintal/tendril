@@ -89,14 +89,16 @@
     var details = {};
 
     /* Formatting function for row details */
-    function format ( d ) {
+    function format ( d, namebase ) {
         // `d` is the original data object for the row
         if (!d){
             return '';
         }
-        var rval = '<div class="large-6 medium-12 columns">'
-        rval += '<table class="embedtable" width="100%" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
+        var rval = '';
+        rval += '<div class="row">';
         if (d.lines){
+            rval += '<div class="large-6 medium-12 columns">';
+            rval += '<table class="embedtable" width="100%" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
             for(var i=0, len=d.lines.length; i < len; i++){
                 rval += '<tr><td>' + d.lines[i].desc + '</td>'
                         + '<td class="text-center">' + d.lines[i].expected + '</td>'
@@ -104,14 +106,83 @@
                         + '</tr>';
             }
             rval += '</table></div>';
-            if (d.instrument){
-                rval += '<div class="large-5 medium-12 columns">Instrument : ';
-                rval += d.instrument + ' ' + d.inststr + '</div>';
-            }
         }
+        if (d.instrument){
+            rval += '<div class="large-5 medium-12 columns">Instrument : ';
+            rval += d.instrument + ' ' + d.inststr + '</div>';
+        }
+        rval += '</div>';
+        if (d.graphs.length > 0){
+            rval += '<div class="row">';
+            namebase = namebase.split('.').join('_');
+            for(var i=0, len=d.graphs.length; i<len; i++){
+                rval += '<div id="GRAPH_' + namebase + '_' + i + '" class="large-5 medium-12 columns"></div>';
+            }
+            rval += '</div>';
+        }
+
         return rval;
     }
 
+    function render_graph(gdef, tid){
+        nv.addGraph(function() {
+            var chart = nv.models.lineChart()
+                        .margin({left: 70})  //Adjust chart margins to give the x-axis some breathing room.
+                        .useInteractiveGuideline(true)  //We want nice looking tooltips and a guideline!
+                        .showYAxis(true)        //Show the y-axis
+                        .showXAxis(true)        //Show the x-axis
+            ;
+
+            chart.xAxis     //Chart x-axis settings
+              .axisLabel(gdef.params.xlabel)
+              .tickFormat(d3.format(',.1f'));
+
+            if(gdef.params.xscale == 'log'){
+                chart.xScale(d3.scale.log());
+            }
+
+            chart.yAxis     //Chart y-axis settings
+              .axisLabel(gdef.params.ylabel)
+              .tickFormat(d3.format(',.1f'));
+
+            if(gdef.params.yscale == 'log'){
+                chart.yScale(d3.scale.log());
+            }
+
+            /* Done setting the chart up? Time to render it!*/
+            var points = []
+            for(var j=0, plen=gdef.x.length; j<plen; j++){
+                points.push({x: gdef.x[j], y:gdef.y[j]})
+            }
+            var myData = [
+                {
+                    values: points,
+                    key: gdef.title
+                }
+            ];
+
+            d3.select('#'+ tid).append('svg') //Select the <svg> element you want to render the chart in.
+              .datum(myData)         //Populate the <svg> element with chart data...
+              .style({ 'width': '100%', 'height': '350px' }) //Finally, render the chart!
+              .call(chart);
+
+
+            //Update the chart when window resizes.
+            nv.utils.windowResize(function() { chart.update() });
+            return chart;
+            });
+    }
+
+    function render_graphs(d, namebase){
+        if (d.graphs.length > 0){
+            for(var i=0, len=d.graphs.length; i<len; i++){
+                namebase = namebase.split('.').join('_');
+                var tid = "GRAPH_" + namebase + "_" + i;
+                var gdef = d.graphs[i];
+                render_graph(gdef, tid);
+            }
+        }
+    }
 
 </script>
 
@@ -154,8 +225,8 @@
                     ">{{ test.passed }}</td>
 
                     <script>
-                    {% if test.lines %}
                     details['{{test.desc}}'] = {};
+                    {% if test.lines %}
                     details['{{test.desc}}']['lines'] = [
                         {% for l in test.lines %}
                             {'desc': '{{ l.desc }}',
@@ -211,7 +282,8 @@
                 }
                 else {
                     // Open this row
-                    row.child( format(details[data_id]) ).show();
+                    row.child( format(details[data_id], data_id) ).show();
+                    render_graphs( details[data_id], data_id );
                     tr.addClass('shown');
                 }
             });
