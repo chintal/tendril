@@ -114,7 +114,6 @@ def get_folder_products(path):
     for f in files:
         if f.endswith('.product.yaml'):
             products.append(ProductBase(os.path.join(path, f)))
-            print (f)
 
     return products
 
@@ -148,7 +147,7 @@ def get_product_by_core(core):
 
 def get_product_calibformat(devicetype):
     info = get_product_by_core(devicetype)
-    if info != None:
+    if info is not None:
         return info.calibformat
 
 
