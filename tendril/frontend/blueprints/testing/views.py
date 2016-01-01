@@ -105,12 +105,9 @@ def get_test_report(serialno=None, session=None):
 
     suites = analysis.get_test_suite_objects(serialno=serialno.sno,
                                              session=session)
-    graphs = []
     instruments = {}
     for suite in suites:
         for test in suite._tests:
-            graphs.extend(test.graphs)
-            graphs.extend(test.histograms)
             if test._inststr is not None and \
                     test._inststr not in instruments.keys():
                 instruments[test._inststr] = len(instruments.keys()) + 1
@@ -122,7 +119,6 @@ def get_test_report(serialno=None, session=None):
              'desc': gcf.description(devicetype),
              'svnrevision': vcs.get_path_revision(projectfolder),
              'svnrepo': vcs.get_path_repository(projectfolder),
-             'graphs': graphs,
              'instruments': instruments
              }
 

@@ -21,6 +21,7 @@ See the COPYING, README, and INSTALL files for more information
 
 import os
 import arrow
+import json
 from collections import namedtuple
 
 from tendril.utils.fsutils import TEMPDIR
@@ -239,6 +240,8 @@ class TestBase(RunnableTest):
         raise NotImplementedError
 
     def render_dox(self):
+        gd = [{'x': x, 'y': y, 'title': t, 'params': p} for x, y, p, t in self.graphs_data]
+        graphs_data = json.dumps(gd)
         test_dict = {'desc': self.desc,
                      'title': self.title,
                      'ts': self.ts.format(),
@@ -249,6 +252,7 @@ class TestBase(RunnableTest):
                      'instrument': self._inststr,
                      'lines': self.lines,
                      'passfailonly': self.passfailonly,
+                     'graphs_data': graphs_data,
                      }
         return test_dict
 

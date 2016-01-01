@@ -168,10 +168,13 @@
                              },
                         {% endfor %}
                      ];
-                    {% if test.instrument %}
-                    details['{{test.desc}}']['instrument'] = '{{ stage.instruments.get(test.instrument) }}';
-                    details['{{test.desc}}']['inststr'] = '{{ test.instrument }}';
                     {% endif %}
+                    {% if test.instrument %}
+                        details['{{test.desc}}']['instrument'] = '{{ stage.instruments.get(test.instrument) }}';
+                        details['{{test.desc}}']['inststr'] = '{{ test.instrument }}';
+                    {% endif %}
+                    {% if test.graphs_data %}
+                        details['{{test.desc}}']['graphs'] = JSON.parse('{{ test.graphs_data|safe }}');
                     {% endif %}
                     </script>
                 </tr>
