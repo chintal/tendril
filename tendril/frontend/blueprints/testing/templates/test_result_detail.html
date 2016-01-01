@@ -22,7 +22,7 @@
 <p></p>
 
 <h3> {{ stage.docs[0].filename|replace('TEST-REPORT-', '') }} Test & Calibration Report </h3>
-
+<!-- TODO Make the tables responsive and improve the layout -->
 <div class="row">
 <!-- Metadata -->
 <div class="small-12 medium-6 columns">
@@ -54,20 +54,21 @@
             </tbody>
         </table>
     </div>
-    <script type="text/javascript">
-        $(document).ready( function () {
-            var table = $('#metadata_table').DataTable({
-                /* Disable initial sort */
-                "aaSorting": [],
-                responsive: true,
-                "bAutoWidth": false,
-                "paging": false,
-                "ordering": false,
-                "info": false,
-                "searching": false,
-            });
-        });
-    </script>
+    <!-- TODO colspan breaks datatables -->
+    <!--<script type="text/javascript">-->
+        <!--$(document).ready( function () {-->
+            <!--var table = $('#metadata_table').DataTable({-->
+                <!--/* Disable initial sort */-->
+                <!--"aaSorting": [],-->
+                <!--responsive: true,-->
+                <!--"bAutoWidth": false,-->
+                <!--"paging": false,-->
+                <!--"ordering": false,-->
+                <!--"info": false,-->
+                <!--"searching": false,-->
+            <!--});-->
+        <!--});-->
+    <!--</script>-->
 </div>
 
 
@@ -84,38 +85,100 @@
 </div>
 
 <!-- Result -->
+<script type="text/javascript">
+    var details = {};
+
+    /* Formatting function for row details */
+    function format ( d ) {
+        // `d` is the original data object for the row
+        if (!d){
+            return '';
+        }
+        var rval = '<table class="embedtable" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
+        if (d.lines){
+            for(var i=0, len=d.lines.length; i < len; i++){
+                rval += '<tr><td>' + d.lines[i].desc + '</td>'
+                        + '<td class="text-center">' + d.lines[i].expected + '</td>'
+                        + '<td class="text-center">' + d.lines[i].measured + '</td>'
+                        + '</tr>';
+            }
+            rval += '</table>';
+        }
+        if (d.instrument){
+            rval += '<br>Instrument : ' + d.instrument + ' ' + d.inststr + '<br>';
+        }
+        return rval;
+    }
+
+
+</script>
+
 <div class="small-12 columns">
 <h4> Test Result </h4>
 <a name="results"></a>
 <div class="small-12 columns">
-        <table id="suite_table" class="clean row-border" width="100%">
+
         {% for suite in stage.suites %}
+        <table id="suite_table_{{ loop.index }}" class="responsive cleantable row-border" width="100%">
             <thead>
             <tr>
                 <th class="all"></th>
                 <th class="all">{{ suite.desc }}</th>
+                <th> </th>
                 <th class="all">{{ suite.title }}</th>
-                <th class="all">{{ suite.ts }}</th>
-                <th class="all">{{ suite.passed }}</th>
+                <th class="desktop">{{ suite.ts }}</th>
+                <th class="all text-center
+                {% if suite.passed == 'PASSED' %}
+                    resulthead-pass
+                {% elif suite.passed == 'FAILED' %}
+                    resulthead-fail
+                {% endif %}">{{ suite.passed }}</th>
             </tr>
             </thead>
             <tbody>
             {% for test in suite.tests %}
-                <tr>
+                <tr data-id='{{ test.desc }}'>
                     <td> {{ loop.index }} </td>
                     <td> {{ test.desc }} </td>
+                    <td class="details-control"> </td>
                     <td> {{ test.title }} </td>
                     <td> {{ test.ts }} </td>
-                    <td> {{ test.passed }} </td>
+                    <td class="text-center
+                    {% if test.passed == 'PASSED' %}
+                        resultcell-pass
+                    {% elif test.passed == 'FAILED' %}
+                        resultcell-fail
+                    {% endif %}
+                    "> {{ test.passed }} </td>
+
+                    <script>
+                    {% if test.lines %}
+                    details['{{test.desc}}'] = {};
+                    details['{{test.desc}}']['lines'] = [
+                        {% for l in test.lines %}
+                            {'desc': '{{ l.desc }}',
+                             {% if l.expected %}
+                             'expected': '{{ l.expected|latex_render|safe }}',
+                             {% else %}
+                             'expected': '',
+                             {% endif %}
+                             'measured': '{{ l.measured|latex_render|safe }}'
+                             },
+                        {% endfor %}
+                     ];
+                    {% if test.instrument %}
+                    details['{{test.desc}}']['instrument'] = '{{ stage.instruments.get(test.instrument) }}';
+                    details['{{test.desc}}']['inststr'] = '{{ test.instrument }}';
+                    {% endif %}
+                    {% endif %}
+                    </script>
                 </tr>
             {% endfor %}
             </tbody>
-        {% endfor %}
         </table>
-    </div>
-    <script type="text/javascript">
+        <script type="text/javascript">
         $(document).ready( function () {
-            var table = $('#suite_table').DataTable({
+            var table = $('#suite_table_{{ loop.index }}').DataTable({
                 "aaSorting": [],
                 responsive: true,
                 "paging": false,
@@ -123,8 +186,29 @@
                 "info": false,
                 "searching": false,
             });
+
+            // Add event listener for opening and closing details
+            $('#suite_table_{{ loop.index }} tbody').on('click', 'td.details-control', function () {
+                var tr = $(this).closest('tr');
+                var data_id = tr.attr('data-id');
+                var row = table.row( tr );
+
+                if ( row.child.isShown() ) {
+                    // This row is already open - close it
+                    row.child.hide();
+                    tr.removeClass('shown');
+                }
+                else {
+                    // Open this row
+                    row.child( format(details[data_id]) ).show();
+                    tr.addClass('shown');
+                }
+            });
         });
     </script>
+        {% endfor %}
+
+    </div>
 </div>
 
 <!-- Instrument -->
@@ -169,7 +253,4 @@
 </div>
 
 <!-- Graphs -->
-
-
-
 {% endblock %}

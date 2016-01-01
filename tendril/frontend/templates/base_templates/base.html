@@ -153,9 +153,10 @@
             act_on_hidden_el: false
         }
     });
-    $('.autoscale').textfill({
-        maxFontPixels: 28,
-    });
+    <!-- TODO fix the JS error this causes -->
+    <!--$('.autoscale').textfill({-->
+        <!--maxFontPixels: 28,-->
+    <!--});-->
     $(document).on('close.fndtn.alert', function(event) {
         $(document).foundation('reflow');
     });

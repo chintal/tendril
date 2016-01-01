@@ -55,6 +55,14 @@ def init_app(app, db):
         return s.strip()
     app.jinja_env.filters['strip'] = strip
 
+    def latex_render_filter(s):
+        # TODO make this generic
+        if not isinstance(s, str):
+            s = str(s)
+        s = s.replace('$\pm$', '&plusmn;')
+        return s
+    app.jinja_env.filters['latex_render'] = latex_render_filter
+
     # Setup Flask-Mail
     mail = Mail(app)  # noqa
 
