@@ -25,6 +25,7 @@ from urllib2 import unquote
 from collections import namedtuple
 
 from flask import render_template, abort, request
+from flask import jsonify
 from flask_user import login_required
 
 import tendril.gedaif.gsymlib
@@ -151,6 +152,8 @@ def get_geda_generator_context(gen):
 @login_required
 def main(path=None, ident=None, gen=None):
     stage = {'crumbroot': "/gsymlib"}
+    if path == 'idents.json':
+        return jsonify(idents=tendril.gedaif.gsymlib.gsymlib_idents)
     if path is None and ident is None and gen is None:
         stage.update(get_geda_browser_context(None))
         return render_template('gsymlib_browse.html', stage=stage,

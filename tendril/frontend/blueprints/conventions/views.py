@@ -109,7 +109,6 @@ def get_devices():
 @blueprint.route('/', methods=['GET'])
 @login_required
 def main():
-
     stage = {'motifs': get_motifs(),
              'devices': get_devices(),
              'guidelines': guidelines.electronics_qty.get_guideline_table()}

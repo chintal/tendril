@@ -41,7 +41,7 @@ def indent(indent_sno=None):
         docs = dxindent.get_all_indents()
         stage = {'docs': docs,
                  'crumbroot': '/inventory',
-                 'breadcrumbs': [Crumb(name="Inventory", path="/"),
+                 'breadcrumbs': [Crumb(name="Inventory", path=""),
                                  Crumb(name="Indent", path="indent/")],
                  }
         return render_template('indent.html', stage=stage,
@@ -56,7 +56,7 @@ def indent(indent_sno=None):
                  'prod_sno': prod_sno,
                  'cobom': cobom,
                  'crumbroot': '/inventory',
-                 'breadcrumbs': [Crumb(name="Inventory", path="/"),
+                 'breadcrumbs': [Crumb(name="Inventory", path=""),
                                  Crumb(name="Indent", path="indent/"),
                                  Crumb(name=indent_sno, path="indent/" + indent_sno)],  # noqa
                  }
