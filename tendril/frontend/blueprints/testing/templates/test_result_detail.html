@@ -10,8 +10,9 @@
 <div data-magellan-expedition="sticky">
     <dl class="sub-nav">
         <dd data-magellan-arrival="documentation"><a href="#documentation">Download</a></dd>
-        <dd data-magellan-arrival="results"><a href="#documentation">Results</a></dd>
-        <dd data-magellan-arrival="graphs"><a href="#documentation">Graphs</a></dd>
+        {% for suite in stage.suites %}
+        <dd data-magellan-arrival="{{ suite.desc|replace('.','_') }}"><a href="#{{ suite.desc|replace('.','_') }}">{{ suite.desc }}</a></dd>
+        {% endfor %}
         <dd data-magellan-arrival="instruments"><a href="#documentation">Instruments</a></dd>
     </dl>
 </div>
@@ -73,7 +74,7 @@
 
 
 <!-- Downloads -->
-<div class="small-12 medium-6 columns">
+<div class="small-12 medium-6 columns" data-magellan-destination="documentation">
 <h4> Download </h4>
 <a name="documentation"></a>
     <ul class="doclinklist">
@@ -192,14 +193,15 @@
 <div class="small-12 columns">
 
         {% for suite in stage.suites %}
-        <table id="suite_table_{{ loop.index }}" class="responsive cleantable row-border" width="100%">
+        <a name="{{ suite.desc|replace('.','_') }}"></a>
+        <table id="suite_table_{{ loop.index }}" class="responsive cleantable row-border" width="100%" data-magellan-destination="{{ suite.desc|replace('.','_') }}">
             <thead>
             <tr>
                 <th class="all"></th>
                 <th class="all">{{ suite.desc }}</th>
                 <th> </th>
                 <th class="all">{{ suite.title }}</th>
-                <th class="desktop">{{ suite.ts }}</th>
+                <th class="desktop text-right">{{ suite.ts }}</th>
                 <th class="all text-center
                 {% if suite.passed == 'PASSED' %}
                     resulthead-pass
@@ -215,7 +217,7 @@
                     <td> {{ test.desc }} </td>
                     <td class="details-control"> </td>
                     <td> {{ test.title }} </td>
-                    <td> {{ test.ts }} </td>
+                    <td class="text-right"> {{ test.ts }} </td>
                     <td class="text-center
                     {% if test.passed == 'PASSED' %}
                         resultcell-pass
@@ -264,7 +266,7 @@
                 "columnDefs":[
                     {"width": "1em", "targets": 0},
                     {"width": "10em", "targets": 1},
-                    {"width": "12em", "targets": 4},
+                    {"width": "16em", "targets": 4},
                     {"width": "7em", "targets": 5},
                 ],
             });
@@ -296,7 +298,7 @@
 
 <!-- Instrument -->
 <div class="row">
-<div class="small-12 medium-6 columns">
+<div class="small-12 medium-6 columns" data-magellan-destination="instruments">
     <a name="instruments"></a>
     <div class="small-12 columns">
         <h5> Instruments </h5>
