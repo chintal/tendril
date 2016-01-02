@@ -135,7 +135,7 @@ def results(device_sno=None):
         docs = dxtesting.get_all_test_reports()
         stage = {'docs': docs,
                  'crumbroot': '/testing',
-                 'breadcrumbs': [Crumb(name="Testing", path="/"),
+                 'breadcrumbs': [Crumb(name="Testing", path=""),
                                  Crumb(name="Results", path="result/")],
                  }
         return render_template('test_results.html', stage=stage,
@@ -144,7 +144,7 @@ def results(device_sno=None):
         docs = dxtesting.get_latest_test_report(device_sno)
         stage = {'docs': docs,
                  'crumbroot': '/testing',
-                 'breadcrumbs': [Crumb(name="Testing", path="/"),
+                 'breadcrumbs': [Crumb(name="Testing", path=""),
                                  Crumb(name="Reports", path="result/"),
                                  Crumb(name=device_sno, path="result/" + device_sno)],  # noqa
                  }
@@ -159,7 +159,7 @@ def main():
     latest = dxtesting.get_all_test_reports(limit=5)
     stage = {'latest': latest,
              'crumbroot': '/testing',
-             'breadcrumbs': [Crumb(name="Testing", path="/")],
+             'breadcrumbs': [Crumb(name="Testing", path="")],
              }
     return render_template('testing_main.html', stage=stage,
                            pagetitle='Testing')

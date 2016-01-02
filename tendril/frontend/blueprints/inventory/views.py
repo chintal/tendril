@@ -48,7 +48,7 @@ def status(location_idx=None):
                  'locs': locs,
                  'crumbroot': '/inventory',
                  'inv': invelectronics,
-                 'breadcrumbs': [Crumb(name="Inventory", path="/"),
+                 'breadcrumbs': [Crumb(name="Inventory", path=""),
                                  Crumb(name="Status", path="location/")],
                  }
         return render_template('status.html', stage=stage,
@@ -57,7 +57,7 @@ def status(location_idx=None):
         loc = invelectronics.inventory_locations[int(location_idx)]
         stage = {'loc': loc,
                  'crumbroot': '/inventory',
-                 'breadcrumbs': [Crumb(name="Inventory", path="/"),
+                 'breadcrumbs': [Crumb(name="Inventory", path=""),
                                  Crumb(name="Status", path="location/"),
                                  Crumb(name=loc.name, path="location/" + location_idx)],  # noqa
                  }

@@ -7,7 +7,9 @@
     <ul class="breadcrumbs">
         {% for crumb in stage.breadcrumbs %}
         <li {% if loop.last %} class="current" {% endif %}>
-            <a href=" {{ stage.crumbroot }}/{{ crumb.path }}">{{ crumb.name }}</a>
+            <a href=" {{ stage.crumbroot }}/{{ crumb.path }}">
+                {{ crumb.name }}
+            </a>
         </li>
         {% endfor %}
         {%  if pagetitle %}
