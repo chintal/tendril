@@ -110,7 +110,13 @@ class StockXlsReader(InventoryReaderBase):
             try:
                 qty = int(row[self._colqty])
             except ValueError:
-                qty = float(row[self._colqty])
+                try:
+                    qty = float(row[self._colqty])
+                except ValueError:
+                    logger.error("Could not parse quantity for ident {0} {1}"
+                                 "".format(row[self._colident],
+                                           row[self._colqty]))
+                    qty = 0
             yield (row[self._colident],
                    qty)
         self._csvfile.close()
