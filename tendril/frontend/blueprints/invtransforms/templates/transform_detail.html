@@ -1,0 +1,75 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<p></p>
+
+<h4> Inventory Location {{ stage.loc.name }} ({{ stage.loc._name }})</h4>
+
+<div class="small-12 columns">
+    {% if stage.loc._reader._xlf %}
+    <ul style="list-style-type: none;">
+        <li class="small-12 medium-6 large-8 columns panel radius text-center"> 
+            <b>File Path</b> <br> 
+            {{ stage.loc._reader.filepath }} 
+        </li>
+        <li class="small-12 medium-3 large-2 columns panel radius text-center"> 
+            Sheet Name <br> 
+            <b>{{ stage.loc._reader.sheetname }}</b> 
+        </li>
+        <li class="small-12 medium-3 large-2 columns panel radius text-center"> 
+            Quantity Date <br> 
+            <b>{{ stage.loc._reader.qtydate }} </b>
+        </li>
+    </ul>
+    {% endif %}
+</div>
+
+<div class="small-12 columns" data-magellan-destination="locstatus">
+<a name="locstatus"></a>
+        <div class="small-12 columns">
+            <table id="loc_status_table" class="display" data-paging='false'>
+                <thead>
+                <tr>
+                    <th class="min-tablet">Idx</th>
+                    <th class="all">Canonical Representation</th>
+                    <th class="min-desktop">Contextual Representation</th>
+                    <th class="all">Available Qty</th>
+                    <th class="min-tablet">Reserved Qty</th>
+                    <th class="all">Net Available Qty</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for line in stage.loc.lines %}
+                    <tr>
+                        <td> {{ loop.index }} </td>
+                        <td> {{ line.ident }} </td>
+                        <td> {{ stage.loc._reader.tf.get_contextual_repr(line.ident) }} </td>
+                        <td> {{ line._qty }} </td>
+                        <td> {{ line.reserved_qty }} </td>
+                        <td> {{ line.avail_qty }} </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#loc_status_table').DataTable({
+                    /* Disable initial sort */
+                    "aaSorting": [],
+                    {% include 'parts/datatable_defaults.html' %}
+                });
+                table.buttons().container()
+                    .appendTo( '#loc_status_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            });
+        </script>
+</div>
+
+
+{% endblock %}

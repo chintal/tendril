@@ -1,0 +1,75 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<p></p>
+
+<h3> Inventory Transforms </h3>
+
+<div class="small-12 columns">
+    <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
+        {% for loc in stage.locs %}
+        <li>
+            <a href="/inventory/transform/{{ loop.index0 }}"
+               class="small-12 columns button info radius active-tb shadow mrgn-20-top">
+                <div class="row text-center"><b>{{ loc._code }}-{{ loc._name }}</b></div>
+                <div class="row text-center">{{ loc.name }}</div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<h3> Reverse Transforms Overview </h3>
+
+<div class="small-12 columns" data-magellan-destination="locstatus">
+<a name="locstatus"></a>
+        <div class="small-12 columns">
+            <table id="transform_overview_table" class="display" data-paging='false'>
+                <thead>
+                <tr>
+                    <th class="min-tablet">Idx</th>
+                    <th class="all">Ident</th>
+                    {% for loc in stage.locs %}
+                    <th class="min-tablet"> {{ loc._name }}-AQ</th>
+                    {% endfor %}
+                    <th class="min-tablet">Total Reserved</th>
+                    <th class="all">Net Available Qty</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for ident in stage.idents %}
+                    <tr>
+                        <td> {{ loop.index }} </td>
+                        <td> {{ ident }} </td>
+                        {% for loc in stage.locs %}
+                            <td> {{ loc.get_ident_qty(ident) or '' }} </td>
+                        {% endfor %}
+                        <td> {{ stage.inv.get_total_reservations(ident) or '' }} </td>
+                        <td> {{ stage.inv.get_total_availability(ident) or '' }} </td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#transform_overview_table').DataTable({
+                    /* Disable initial sort */
+                    "aaSorting": [],
+                    {% include 'parts/datatable_defaults.html' %}
+                });
+                table.buttons().container()
+                    .appendTo( '#loc_status_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            });
+        </script>
+</div>
+
+{% endblock %}

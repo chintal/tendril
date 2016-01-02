@@ -133,6 +133,9 @@ def init_app(app, db):
     from tendril.frontend.blueprints.inventory import inventory
     app.register_blueprint(inventory, url_prefix='/inventory/location')
 
+    from tendril.frontend.blueprints.invtransforms import invtransforms
+    app.register_blueprint(invtransforms, url_prefix='/inventory/transform')
+
     return app
 
 

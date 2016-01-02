@@ -25,7 +25,7 @@ Docstring for views
 from flask import render_template
 from flask_user import login_required
 
-from . import inventory as blueprint
+from . import invtransforms as blueprint
 
 from tendril.inventory import electronics as invelectronics
 from tendril.utils.fsutils import Crumb
@@ -34,7 +34,7 @@ from tendril.utils.fsutils import Crumb
 @blueprint.route('/<location_idx>')
 @blueprint.route('/')
 @login_required
-def status(location_idx=None):
+def transforms(location_idx=None):
     if location_idx is None:
         locs = invelectronics.inventory_locations
         idents = []
@@ -47,17 +47,17 @@ def status(location_idx=None):
                  'crumbroot': '/inventory',
                  'inv': invelectronics,
                  'breadcrumbs': [Crumb(name="Inventory", path=""),
-                                 Crumb(name="Status", path="location/")],
+                                 Crumb(name="Transforms", path="transforms/")],
                  }
-        return render_template('status.html', stage=stage,
-                               pagetitle="All Inventory Locations")
+        return render_template('overview.html', stage=stage,
+                               pagetitle="All Inventory Transforms")
     else:
         loc = invelectronics.inventory_locations[int(location_idx)]
         stage = {'loc': loc,
                  'crumbroot': '/inventory',
                  'breadcrumbs': [Crumb(name="Inventory", path=""),
-                                 Crumb(name="Status", path="location/"),
-                                 Crumb(name=loc.name, path="location/" + location_idx)],  # noqa
+                                 Crumb(name="Transforms", path="transforms/"),
+                                 Crumb(name=loc.name, path="transforms/" + location_idx)],  # noqa
                  }
-        return render_template('location_detail.html', stage=stage,
-                               pagetitle="Inventory Location " + loc.name)
+        return render_template('transform_detail.html', stage=stage,
+                               pagetitle="Inventory Transform " + loc.name)
