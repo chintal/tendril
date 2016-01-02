@@ -63,6 +63,8 @@ def init_app(app, db):
         return s
     app.jinja_env.filters['latex_render'] = latex_render_filter
 
+    # TODO Consider using these filters to produce python-nvd3 graphs
+    # instead of having all of that mess in JS in the html templates.
     from .helpers import lineplot_filter
     app.jinja_env.filters['lineplot'] = lineplot_filter
 
