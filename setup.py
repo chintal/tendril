@@ -78,7 +78,7 @@ script_entry_points = [
     'tendril-gendox = tendril.scripts.gendox:main',
     'tendril-getdox = tendril.scripts.getdox:main',
     'tendril-writecalib = tendril.scripts.writecalib:main',
-    'tendril-runtest = tendril.scripts:runtest',
+    'tendril-runtest = tendril.scripts.runtest:main',
     'tendril-production = tendril.scripts.production:entry_point',
 ]
 

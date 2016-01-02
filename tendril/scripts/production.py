@@ -224,7 +224,6 @@ def main(orderfolder=None, orderfile_r=None,
 
     snos = []
     addldocs = []
-    manifests = []
     manifestsfolder = os.path.join(orderfolder, 'manifests')
     if not os.path.exists(manifestsfolder):
         os.makedirs(manifestsfolder)
