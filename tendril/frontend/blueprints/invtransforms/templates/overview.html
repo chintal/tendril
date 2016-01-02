@@ -28,18 +28,17 @@
 <h3> Reverse Transforms Overview </h3>
 
 <div class="small-12 columns" data-magellan-destination="locstatus">
-<a name="locstatus"></a>
+<a name="overview"></a>
         <div class="small-12 columns">
-            <table id="transform_overview_table" class="display" data-paging='false'>
+            <table id="transform_overview_table" class="responsive display" data-paging='false'>
                 <thead>
                 <tr>
-                    <th class="min-tablet">Idx</th>
-                    <th class="all">Ident</th>
+                    <th class="desktop">Idx</th>
+                    <th class="all">Canonical Ident</th>
                     {% for loc in stage.locs %}
-                    <th class="min-tablet"> {{ loc._name }}-AQ</th>
+                    <th class="desktop"> {{ loc._name }} </th>
                     {% endfor %}
-                    <th class="min-tablet">Total Reserved</th>
-                    <th class="all">Net Available Qty</th>
+                    <th class="all text-center"> Found </th>
                 </tr>
                 </thead>
                 <tbody>
@@ -48,11 +47,18 @@
                     <tr>
                         <td> {{ loop.index }} </td>
                         <td> {{ ident }} </td>
+                        {% set vars = {'found': False} %}
                         {% for loc in stage.locs %}
-                            <td> {{ loc.get_ident_qty(ident) or '' }} </td>
+                            <td> {{ loc.tf.get_contextual_repr(ident) or '' }} </td>
+                            {% if loc.tf.get_contextual_repr(ident) %}
+                                {% if vars.update({'found': True}) %} {% endif %}
+                            {% endif %}
                         {% endfor %}
-                        <td> {{ stage.inv.get_total_reservations(ident) or '' }} </td>
-                        <td> {{ stage.inv.get_total_availability(ident) or '' }} </td>
+                        <td
+                            {% if vars.found %} class="resultcell-pass"> Yes
+                            {% else %} class="resultcell-fail"> No
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
 
@@ -63,11 +69,11 @@
             $(document).ready( function () {
                 var table = $('#transform_overview_table').DataTable({
                     /* Disable initial sort */
-                    "aaSorting": [],
+                    "order": [[ 1, "asc" ]],
                     {% include 'parts/datatable_defaults.html' %}
                 });
                 table.buttons().container()
-                    .appendTo( '#loc_status_table_wrapper .small-12.medium-6.columns:eq(0)' );
+                    .appendTo( '#transform_overview_table_wrapper .small-12.medium-6.columns:eq(0)' );
             });
         </script>
 </div>

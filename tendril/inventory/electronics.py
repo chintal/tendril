@@ -116,6 +116,10 @@ class InventoryLocation(object):
     def name(self):
         return self._dname
 
+    @property
+    def tf(self):
+        return self._reader.tf
+
     def _load_from_reader(self):
         try:
             for (ident, qty) in self._reader.tf_row_gen:

@@ -29,6 +29,7 @@ from . import invtransforms as blueprint
 
 from tendril.inventory import electronics as invelectronics
 from tendril.utils.fsutils import Crumb
+from tendril.gedaif import gsymlib
 
 
 @blueprint.route('/<location_idx>')
@@ -37,11 +38,7 @@ from tendril.utils.fsutils import Crumb
 def transforms(location_idx=None):
     if location_idx is None:
         locs = invelectronics.inventory_locations
-        idents = []
-        for loc in locs:
-            for line in loc.lines:
-                if line.ident not in idents:
-                    idents.append(line.ident)
+        idents = gsymlib.gsymlib_idents
         stage = {'idents': idents,
                  'locs': locs,
                  'crumbroot': '/inventory',
