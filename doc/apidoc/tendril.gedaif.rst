@@ -8,6 +8,7 @@ Submodules
 
    tendril.gedaif.bomparser
    tendril.gedaif.conffile
+   tendril.gedaif.gerberfiles
    tendril.gedaif.gschem
    tendril.gedaif.gsymlib
    tendril.gedaif.pcb

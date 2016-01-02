@@ -15,6 +15,7 @@ Subpackages
     tendril.frontend.blueprints.production
     tendril.frontend.blueprints.indent
     tendril.frontend.blueprints.inventory
+    tendril.frontend.blueprints.invtransforms
 
 Submodules
 ----------

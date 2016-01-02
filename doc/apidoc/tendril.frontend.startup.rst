@@ -7,6 +7,7 @@ Submodules
 .. toctree::
 
    tendril.frontend.startup.assets
+   tendril.frontend.startup.helpers
    tendril.frontend.startup.init_app
    tendril.frontend.startup.reset_db
    tendril.frontend.startup.settings
