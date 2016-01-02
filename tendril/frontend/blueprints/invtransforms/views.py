@@ -44,17 +44,19 @@ def transforms(location_idx=None):
                  'crumbroot': '/inventory',
                  'inv': invelectronics,
                  'breadcrumbs': [Crumb(name="Inventory", path=""),
-                                 Crumb(name="Transforms", path="transforms/")],
+                                 Crumb(name="Transforms", path="transform/")],
                  }
         return render_template('overview.html', stage=stage,
                                pagetitle="All Inventory Transforms")
     else:
         loc = invelectronics.inventory_locations[int(location_idx)]
         stage = {'loc': loc,
+                 'tf': loc.tf,
+                 'gsymlib_idents': gsymlib.gsymlib_idents,
                  'crumbroot': '/inventory',
                  'breadcrumbs': [Crumb(name="Inventory", path=""),
-                                 Crumb(name="Transforms", path="transforms/"),
-                                 Crumb(name=loc.name, path="transforms/" + location_idx)],  # noqa
+                                 Crumb(name="Transforms", path="transform/"),
+                                 Crumb(name=loc.name, path="transform/" + location_idx)],  # noqa
                  }
         return render_template('transform_detail.html', stage=stage,
                                pagetitle="Inventory Transform " + loc.name)

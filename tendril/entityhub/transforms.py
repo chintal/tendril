@@ -35,7 +35,8 @@ class TransformFile(object):
         self._transform = {}
         self._ideal = {}
         self._status = {}
-        with open(tfpath) as f:
+        self._tfpath = tfpath
+        with open(self._tfpath) as f:
             rdr = csv.reader(f)
             for row in rdr:
                 self._transform[row[0].strip()] = row[1].strip()
@@ -74,3 +75,11 @@ class TransformFile(object):
             return True
         else:
             return False
+
+    @property
+    def idents(self):
+        return set(self._transform.values())
+
+    @property
+    def names(self):
+        return set(self._transform.keys())
