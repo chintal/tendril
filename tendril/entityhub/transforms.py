@@ -19,7 +19,13 @@ EntityHub Transforms Module documentation (:mod:`entityhub.transforms`)
 =======================================================================
 """
 
+import re
 import csv
+from tendril.utils import fsutils
+from tendril.gedaif import gsymlib
+
+
+rex_known_status = re.compile(ur'ok|bad|review|new', re.IGNORECASE)
 
 
 class ContextualReprNotRecognized(Exception):
@@ -45,6 +51,35 @@ class TransformFile(object):
                     self._status[row[0].strip()] = row[3].strip()
                 except IndexError:
                     self._status[row[0].strip()] = ''
+
+    def update_on_disk(self):
+        # TODO this function makes the implementation somewhat specific
+        # to inventory idents. Consider refactoring.
+        outf = fsutils.VersionedOutputFile(self._tfpath)
+        outw = csv.writer(outf)
+        outw.writerow(
+            ('Current', 'gEDA Current', 'Ideal', 'Status', 'In Symlib')
+        )
+        for name in self.names:
+            canonical = self.get_canonical_repr(name)
+            if gsymlib.is_recognized(canonical):
+                in_symlib = 'YES'
+            else:
+                in_symlib = ''
+            outw.writerow((name,
+                           canonical,
+                           self.get_ideal_repr(name),
+                           self.get_status(name),
+                           in_symlib,))
+        outf.close()
+
+    def set_canonical_repr(self, contextual, canonical):
+        self._transform[contextual] = canonical
+
+    def set_status(self, contextual, status):
+        if rex_known_status.match(status):
+            status = status.upper()
+        self._status[contextual] = status
 
     def get_canonical_repr(self, contextual):
         try:

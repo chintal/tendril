@@ -32,7 +32,8 @@
 
 <script>
     function edit_form(row){
-        rval = '<div><form><fieldset><legend>Edit Transform Row</legend>';
+        rval = '<div><form method="POST"><fieldset><legend>Edit Transform Row</legend>';
+        rval += '{{ stage.form.hidden_tag() }}';
         rval += '<div class="large-4 small-12 columns">';
         rval += '<label>Contextual Representation<input type="text" name="contextual" value="';
         rval += row.data()[1] + '" readonly></label>';
@@ -43,7 +44,8 @@
         rval += row.data()[2] + '"></label>';
         rval += '</div>';
         rval += '<div class="large-1 small-5 columns">';
-        rval += '<label>Status<input type="text" name="status" value="REVIEW" readonly></label>';
+        rval += '<label>Status<input type="text" name="status" value="REVIEW"'
+        rval += '{% if not current_user.has_roles('inventory_admin') %}readonly{% endif %} list="statuslist"></label>';
         rval += '</div>';
         rval += '<div class="large-1 small-5 columns">';
         rval += '<input type="submit" class="button small expand radius" value="Submit">';
@@ -152,5 +154,11 @@
 </div>
 
 <datalist id="json-identlist"></datalist>
+<datalist id="statuslist">
+    <option value="NEW">NEW</option>
+	<option value="REVIEW">REVIEW</option>
+	<option value="OK">OK</option>
+	<option value="BAD">BAD</option>
+</datalist>
 
 {% endblock %}

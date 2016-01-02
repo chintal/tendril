@@ -26,13 +26,14 @@ from flask import render_template
 from flask_user import login_required
 
 from . import invtransforms as blueprint
+from .forms import TransformUpdateForm
 
 from tendril.inventory import electronics as invelectronics
 from tendril.utils.fsutils import Crumb
 from tendril.gedaif import gsymlib
 
 
-@blueprint.route('/<location_idx>')
+@blueprint.route('/<location_idx>', methods=('GET', 'POST'))
 @blueprint.route('/')
 @login_required
 def transforms(location_idx=None):
@@ -50,9 +51,21 @@ def transforms(location_idx=None):
                                pagetitle="All Inventory Transforms")
     else:
         loc = invelectronics.inventory_locations[int(location_idx)]
+        form = TransformUpdateForm(names=loc.tf.names)
+        if form.validate_on_submit():
+            if form.contextual.data in loc.tf.names:
+                loc.tf.set_canonical_repr(form.contextual.data, form.canonical.data)
+                loc.tf.set_status(form.contextual.data, form.status.data)
+                loc.tf.update_on_disk()
+            else:
+                # TODO issue an alert here
+                print("Couldn't find the contextual representation in the transform")
+                pass
+
         stage = {'loc': loc,
                  'tf': loc.tf,
                  'gsymlib_idents': gsymlib.gsymlib_idents,
+                 'form': form,
                  'crumbroot': '/inventory',
                  'breadcrumbs': [Crumb(name="Inventory", path=""),
                                  Crumb(name="Transforms", path="transform/"),
