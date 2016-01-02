@@ -173,18 +173,24 @@ rex_modlen = re.compile(modlen_pattern)
 
 
 def no_fp(device):
+    if not device:
+        return False
     if rex_nofp.match(device):
         return True
     return False
 
 
 def fpismodlen(device):
+    if not device:
+        return False
     if rex_modlen.match(device):
         return True
     return False
 
 
 def fpiswire(device):
+    if not device:
+        return False
     if rex_wire.match(device):
         return True
     return False
