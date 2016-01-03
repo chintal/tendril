@@ -60,7 +60,7 @@ def results(order_sno=None):
         docs = dxproduction.get_all_production_orders()
         stage = {'docs': docs,
                  'crumbroot': '/production',
-                 'breadcrumbs': [Crumb(name="Production", path="/"),
+                 'breadcrumbs': [Crumb(name="Production", path=""),
                                  Crumb(name="Orders", path="order/")],
                  }
         return render_template('production_orders.html', stage=stage,
@@ -78,7 +78,7 @@ def results(order_sno=None):
                  'order_indentsno': order_indentsno,
                  'order_yaml': order_yaml,
                  'crumbroot': '/production',
-                 'breadcrumbs': [Crumb(name="Production", path="/"),
+                 'breadcrumbs': [Crumb(name="Production", path=""),
                                  Crumb(name="Orders", path="order/"),
                                  Crumb(name=order_sno, path="order/" + order_sno)],  # noqa
                  }
@@ -92,7 +92,7 @@ def main():
     latest_prod = dxproduction.get_all_production_orders(limit=5)
     stage = {'latest_prod': latest_prod,
              'crumbroot': '/production',
-             'breadcrumbs': [Crumb(name="Production", path="/")],
+             'breadcrumbs': [Crumb(name="Production", path="")],
              }
     return render_template('production_main.html', stage=stage,
                            pagetitle='Production')

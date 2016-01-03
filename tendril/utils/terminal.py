@@ -25,9 +25,9 @@ The Terminal Utils Module (:mod:`tendril.utils.terminal`)
 This module provides utils for rendering basic UI elements on the terminal.
 
 
-:class:`TendrilProgressBar can be used to produce animated progress bars
-on the terminal. This class (and the code related) to it is essentially a
-copy of pip`s progressbar implementation in pip.utils.ui.
+:class:`TendrilProgressBar` can be used to produce animated progress bars
+on the terminal. This class (and the code related to it) is essentially a
+copy of pip's progressbar implementation in pip.utils.ui.
 
 """
 
@@ -204,7 +204,7 @@ class TendrilProgressBar(WindowsMixin, _BaseBar):
     This class can be used from other modules to provide a consistent
     feel to progress bars across tendril. It adds a ``note`` keyword
     argument to the ``next()`` function, and renders the note after
-    the suffixe of the progress bar.
+    the suffix of the progress bar.
 
     .. rubric :: Usage
 

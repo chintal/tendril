@@ -79,19 +79,28 @@
     {% endfor %}
     </ul></li>
     {% endif %}
-
-    <li class="title"> References </li>
-
-    {% if stage.barepcb %}
-    <li class="bullet-item">
-        <b> gEDA Project : </b>
-        <a href="/entityhub/pcbs/{{stage.barepcb}}">
-            {{ stage.barepcb }}
-        </a>
-    </li>
-    {% endif %}
 </ul>
+
+    <div class="small-11 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>References</h6>
+        </div>
+
+        <div class="small-12 columns">
+        <!-- Base PCB -->
+        {% if stage.barepcb %}
+        <a href="/entityhub/pcbs/{{stage.barepcb}}">
+            <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+                <div class="text-center">gEDA Project</div>
+                <div class="text-center"><b>{{ stage.barepcb }}</b></div>
+            </div>
+        </a>
+        {% endif %}
+        </div>
+    </div>
+
 </div>
+
 <div class="small-12 medium-6 columns">
 <h3> Documentation </h3>
 <a name="documentation"></a>
@@ -102,7 +111,7 @@
     </ul>
 </div>
 </div>
-<!-- Base PCB -->
+
 <!-- BOM -->
 <div class="row">
 <div class="small-12 medium-6 columns" data-magellan-destination="refbom">
@@ -123,7 +132,7 @@
                 <tr>
                     <td> {{ row.ident }} </td>
                     <td> {{ row.quantity }} </td>
-                    <td> 
+                    <td>
                         {% for refdes in row.refdeslist %}{{ refdes }}{% if not loop.last %}, {% endif %}{% endfor %}
                     </td>
                 </tr>
@@ -136,13 +145,13 @@
             var table = $('#refbom_table').DataTable({
                 /* Disable initial sort */
                 "aaSorting": [],
-                {% include 'parts/datatable_defaults.html' %}    
+                {% include 'parts/datatable_defaults.html' %}
             });
             table.buttons().container()
                 .appendTo( '#refbom_table_wrapper .small-12.medium-6.columns:eq(0)' );
         });
     </script>
-    
+
 </div>
 
 
