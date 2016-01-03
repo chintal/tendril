@@ -679,6 +679,21 @@ config_options_company = [
         "None",
         "The company import-exchange code"
     ),
+    ConfigOption(
+        'INSTANCE_SOURCES',
+        '"https://github.com/chintal/tendril"',
+        'The location of the sources of the tendril code used by the instance'
+    ),
+    ConfigOption(
+        'INSTANCE_FOLDER_SOURCES',
+        '"https://github.com/chintal/tendril-instance-cookiecutter"',
+        'The location of the sources of the tendril instance folder used by the instance'
+    ),
+    ConfigOption(
+        'INSTANCE_DOCUMENTATION_PATH',
+        '"http://tendril.chintal.in/doc"',
+        "The location of the documentation related to the instance"
+    ),
 ]
 
 load_config(config_options_company)

@@ -136,6 +136,9 @@ def init_app(app, db):
     from tendril.frontend.blueprints.invtransforms import invtransforms
     app.register_blueprint(invtransforms, url_prefix='/inventory/transform')
 
+    # Configure context processors
+    from tendril.frontend.startup import helpers
+
     return app
 
 

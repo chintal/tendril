@@ -117,15 +117,16 @@
         <div class="small-6 columns copyright">
             <img src="/instanceassets/logo.png" style="max-height:36px;" class="left">
             <span>
-            Copyright © 2015 Quazar Technologies Pvt. Ltd. All Rights Reserved. <br>
-            Powered by <a href="http://tendril.chintal.in" style="color:#84B33F; font-size:small;"> Tendril </a>
+            Copyright © {{ copyright_year }} {{ instance_owner }}, All Rights Reserved. <br>
+            Powered by <a href="http://tendril.chintal.in" style="color:#84B33F; font-size:small;">Tendril</a>, {{ tendril_version }}
             </span>
         </div>
         <div class="small-6 columns">
           <ul>
             <li class="first"><a href=" {{ url_for('home_page') }} ">Home</a></li>
             <li><a href=" {{ url_for('doc.root') }} " target="_blank">Documentation</a></li>
-            <li><a href="https://github.com/chintal/tendril" target="_blank">Sources</a></li>
+            <li><a href="{{ instance_sources }}" target="_blank"> Sources : Core</a></li>
+            <li><a href="{{ instance_folder_sources }}" target="_blank">Instance</a></li>
           </ul>
         </div>
         </div>

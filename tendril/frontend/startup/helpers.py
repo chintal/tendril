@@ -22,6 +22,29 @@
 Docstring for helpers
 """
 
+from tendril.frontend.app import app
+
+
+@app.context_processor
+def inject_version():
+    import tendril
+    return {'tendril_version': tendril.__version__}
+
+
+@app.context_processor
+def inject_instance_owner():
+    from tendril.utils.config import COMPANY_NAME
+    from tendril.utils.config import INSTANCE_SOURCES
+    from tendril.utils.config import INSTANCE_FOLDER_SOURCES
+    from tendril.utils.config import INSTANCE_DOCUMENTATION_PATH
+    from datetime import date
+    return {'instance_owner': COMPANY_NAME,
+            'copyright_year': date.today().year,
+            'instance_sources': INSTANCE_SOURCES,
+            'instance_folder_sources': INSTANCE_FOLDER_SOURCES,
+            'instance_documentation_path': INSTANCE_DOCUMENTATION_PATH,
+            }
+
 
 def lineplot_filter(s):
     return s
