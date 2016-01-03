@@ -22,18 +22,12 @@
 Docstring for forms
 """
 
-
 from flask_wtf import Form
 from wtforms.fields import StringField
 from wtforms.validators import DataRequired
 
 
-class TransformUpdateForm(Form):
-    contextual = StringField('contextual', validators=[DataRequired()])
-    canonical = StringField('canonical', validators=[DataRequired()])
-    status = StringField('status', validators=[DataRequired()])
-
-    def __init__(self, names, *args, **kwargs):
-        super(TransformUpdateForm, self).__init__(*args, **kwargs)
-        # TODO figure out how to use this for validation
-        self.names = names
+class CreateSnoSeriesForm(Form):
+    series = StringField('series', validators=[DataRequired()])
+    start_seed = StringField('start_seed', validators=[DataRequired()])
+    description = StringField('description', validators=[DataRequired()])

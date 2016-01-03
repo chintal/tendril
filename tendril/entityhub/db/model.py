@@ -34,6 +34,7 @@ logger = log.get_logger(__name__, log.DEFAULT)
 class SerialNumberSeries(BaseMixin, DeclBase):
     series = Column(String, unique=True, nullable=False)
     last_seed = Column(String, unique=False, nullable=False)
+    description = Column(String, unique=False, nullable=True)
 
 
 class SerialNumber(TimestampMixin, BaseMixin, DeclBase):

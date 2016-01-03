@@ -30,10 +30,6 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
-def get_series(sno):
-    return sno.split('-')[0]
-
-
 @with_db
 def get_serialno_object(sno=None, session=None):
     return controller.get_serialno_object(sno=sno, session=session)
@@ -103,6 +99,27 @@ def delete_serialno(sno, recurse=False, session=None):
 #             delete_serialno(serialno)
 #     logger.info("Deleting Series : " + series)
 #     nsno_table.delete(series=series)
+
+
+def create_serial_series(series, start_seed, description):
+    if isinstance(series, unicode):
+        series = series.encode('ascii', 'replace')
+    if isinstance(start_seed, unicode):
+        start_seed = start_seed.encode('ascii', 'replace')
+    if isinstance(description, unicode):
+        description = description.encode('ascii', 'replace')
+    return controller.create_series_obj(
+        series=series, start_seed=start_seed, description=description)
+
+
+def get_series(sno):
+    return sno.split('-')[0]
+
+
+@with_db
+def get_all_series(session=None):
+    return controller.get_series_obj(session=session)
+
 
 
 @with_db

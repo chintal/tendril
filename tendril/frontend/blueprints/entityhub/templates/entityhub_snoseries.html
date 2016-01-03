@@ -1,0 +1,79 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<div class="row">
+    <form method="POST">
+        <fieldset>
+            <legend> Add Serial Series </legend>
+            <div class="row">
+                {{ stage.form.hidden_tag() }}
+                <div class="small-6 medium-2 columns">
+                    <label>Series
+                        <input type="text" name="series" value="">
+                    </label>
+                </div>
+                <div class="small-6 medium-2 columns">
+                    <label>Start Seed
+                        <input type="text" name="start_seed" value="100A">
+                    </label>
+                </div>
+                <div class="small-12 medium-6 columns">
+                    <label>Description
+                        <input type="text" name="description" value="Description">
+                    </label>
+                </div>
+                <div class="small-12 medium-2 columns">
+                    <input type="submit" class="button alert small expand radius clear-bottom" value="Create">
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+
+<h3> All Serial Number Series </h3>
+
+<div class="small-12 medium-10 small-centered columns">
+    <table id="snoseries_table" class="display" data-paging='false' width="100%">
+        <thead>
+            <tr>
+            <th class="text-center"> Series </th>
+            <th class="text-center"> Last Seed </th>
+            <th> Description </th>
+            <th> </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in stage.series %}
+                <tr>
+                    <td class="text-center"><b>{{ s.series }}</b></td>
+                    <td class="text-center"> {{ s.last_seed }} </td>
+                    <td> {{ s.description }} </td>
+                    <td> <a class="button small expand radius clear-bottom" href="/entityhub/snoseries/{{s.series}}"> More </a> </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#snoseries_table').DataTable({
+                /* Disable initial sort */
+                "aaSorting": [],
+                "columnDefs":[
+                    {"width": "20%", "targets": [0,1,3]},
+                ],
+                {% include 'parts/datatable_defaults.html' %}
+            });
+            table.buttons().container()
+                .appendTo( '#snoseries_table_wrapper .small-12.medium-6.columns:eq(0)' );
+        });
+    </script>
+</div>
+
+{% endblock %}

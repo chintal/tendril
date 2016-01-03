@@ -19,14 +19,17 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from flask import render_template
+from flask import render_template, abort, flash
 from flask_user import login_required
 from nvd3 import lineChart
 
 from . import entityhub as blueprint
+from .forms import CreateSnoSeriesForm
 
 from tendril.entityhub import projects as ehprojects
 from tendril.entityhub import products as ehproducts
+from tendril.entityhub import serialnos as ehserialnos
+from tendril.entityhub.db.controller import SeriesNotFound
 
 from tendril.boms.electronics import import_pcb
 from tendril.dox.gedaproject import get_docs_list
@@ -201,6 +204,47 @@ def products(productname=None):
                  }
         return render_template('entityhub_product_detail.html', stage=stage,
                                pagetitle="Products")
+
+
+@blueprint.route('/snoseries/<series>')
+@blueprint.route('/snoseries/', methods=('GET', 'POST'))
+@login_required
+def snoseries(series=None):
+    if series is None:
+        form = CreateSnoSeriesForm()
+        if form.validate_on_submit():
+            try:
+                ehserialnos.controller.get_series_obj(series=form.series.data)
+                alert = 'Did not create series {0}. ' \
+                        'Already exists.'.format(form.series.data)
+                flash(alert, 'alert')
+            except SeriesNotFound:
+                ehserialnos.create_serial_series(
+                        form.series.data, form.start_seed.data, form.description.data
+                )
+                alert = 'Created serial series {0}.'.format(form.series.data)
+                flash(alert, 'success')
+
+        stage_snoseries = sorted(ehserialnos.get_all_series(), key=lambda x: x.series)
+        stage = {'series': stage_snoseries,
+                 'crumbroot': '/entityhub',
+                 'form': form,
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Serial Series", path="snoseries/")]
+                 }
+        return render_template('entityhub_snoseries.html', stage=stage,
+                               pagetitle="Serial Series")
+    else:
+        abort(404)
+    # else:
+    #     stage = {'series': ehproducts.get_product_by_ident(productname),
+    #              'crumbroot': '/entityhub',
+    #              'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+    #                              Crumb(name="Products", path="products/"),
+    #                              Crumb(name=productname, path="pcbs/" + productname)],  # noqa
+    #              }
+    #     return render_template('entityhub_product_detail.html', stage=stage,
+    #                            pagetitle="Products")
 
 
 @blueprint.route('/')
