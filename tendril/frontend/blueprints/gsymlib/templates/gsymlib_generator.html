@@ -90,7 +90,7 @@
             <li class="title">Provides</li>
             {% if stage.generator.idents %}
                 {% for ident in stage.generator.idents %}
-                <li class="bullet-item"><a href="/gsymlib/detail/{{ ident|quote }}">{{ ident }}</a></li>
+                <li class="bullet-item active-tb shadow mrgn-20-top"><a href="/gsymlib/detail/{{ ident|quote }}">{{ ident }}</a></li>
                 {% endfor %}
             {% else %}
                 <li class="description">None</li>
