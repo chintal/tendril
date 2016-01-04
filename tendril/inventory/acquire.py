@@ -88,7 +88,7 @@ class StockXlsReader(InventoryReaderBase):
 
     @staticmethod
     def _is_balance(item):
-        if 'Balance on' in item:
+        if item.strip().startswith('Balance on'):
             match = re.search(r'\d{2}/\d{2}/\d{4}', item)
             try:
                 date = datetime.datetime.strptime(
