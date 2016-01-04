@@ -12,7 +12,7 @@ from tendril.dox.labelmaker import manager
 
 if __name__ == '__main__':
     snos = [x.sno for x in
-            controller.get_serialnos_by_efield(efield="QSENS-PRESSURE-GA-R2")
+            controller.get_serialnos_by_efield(efield="QSENS-ACCEL1-1.7G")
             ]
     #snos += [x.sno for x in
     #        controller.get_serialnos_by_efield(efield="QASC-T1-RTD-R3")

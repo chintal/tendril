@@ -42,19 +42,26 @@ class TransformFile(object):
         self._ideal = {}
         self._status = {}
         self._tfpath = tfpath
+        self.load_from_disk()
+
+    def load_from_disk(self):
+        self._transform = {}
+        self._ideal = {}
+        self._status = {}
         with open(self._tfpath) as f:
             rdr = csv.reader(f)
             for row in rdr:
-                self._transform[row[0].strip()] = row[1].strip()
-                self._ideal[row[0].strip()] = row[2].strip()
+                contextual = row[0].strip()
+                self._transform[contextual] = row[1].strip()
+                self._ideal[contextual] = row[2].strip()
                 try:
-                    self._status[row[0].strip()] = row[3].strip()
+                    self._status[contextual] = row[3].strip()
                 except IndexError:
-                    self._status[row[0].strip()] = ''
+                    self._status[contextual] = ''
 
     def update_on_disk(self):
         # TODO this function makes the implementation somewhat specific
-        # to inventory idents. Consider refactoring.
+        # to inventory transforms. Consider refactoring.
         outf = fsutils.VersionedOutputFile(self._tfpath)
         outw = csv.writer(outf)
         outw.writerow(

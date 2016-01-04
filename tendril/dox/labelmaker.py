@@ -19,9 +19,6 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 import qrcode
 import atexit
@@ -32,6 +29,9 @@ from tendril.utils.fsutils import TEMPDIR
 from tendril.utils.config import COMPANY_NAME
 from tendril.utils.config import COMPANY_LOGO_PATH
 from tendril.utils.config import INSTANCE_CACHE
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 LABEL_TEMPLATES_ROOT = 'labels'
@@ -247,6 +247,19 @@ class LabelIDT(LabelBase):
         return self._ident
 
 
+class LabelSM1(LabelBase):
+    templatefile = os.path.join(LABEL_TEMPLATES_ROOT, 'SM1_template.tex')
+    lpp = 490
+
+    def __init__(self, code, ident, sno, **kwargs):
+        super(LabelSM1, self).__init__(code, ident, sno,
+                                       include_logo=False, include_qr=False)
+
+    @property
+    def ident(self):
+        return self._ident
+
+
 def get_labelbase(code):
     # TODO change this dispatch to use introspection instead
     if code == 'CW1':
@@ -271,6 +284,8 @@ def get_labelbase(code):
         return LabelPack2
     elif code == 'LCABLE1':
         return LabelCable1
+    elif code == 'LSM1':
+        return LabelSM1
     else:
         return LabelBase
 
