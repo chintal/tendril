@@ -166,6 +166,8 @@ def get_metadata():
 
     return DeclBase.metadata
 
+metadata = get_metadata()
+
 
 def commit_metadata():
     """
@@ -173,4 +175,4 @@ def commit_metadata():
     run after importing **all** the Model classes, and it will create the
     tables in the database.
     """
-    get_metadata().create_all(engine)
+    metadata.create_all(engine)
