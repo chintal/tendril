@@ -153,15 +153,24 @@ class TimestampMixin(object):
     created_at = Column(ArrowType, default=arrow.utcnow())
 
 
+def get_metadata():
+    """
+    This function populates the database metadata with all the models used
+    by tendril.
+    """
+    from tendril.entityhub.db import model  # noqa
+    from tendril.inventory.db import model  # noqa
+    from tendril.dox.db import model        # noqa
+    from tendril.testing.db import model    # noqa
+    from tendril.sourcing.db import model   # noqa
+
+    return DeclBase.metadata
+
+
 def commit_metadata():
     """
     This function commits all metadata to the table. This function should be
     run after importing **all** the Model classes, and it will create the
     tables in the database.
     """
-    from tendril.entityhub.db import model  # noqa
-    from tendril.inventory.db import model  # noqa
-    from tendril.dox.db import model        # noqa
-    from tendril.testing.db import model    # noqa
-
-    DeclBase.metadata.create_all(engine)
+    get_metadata().create_all(engine)

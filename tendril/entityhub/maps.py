@@ -28,23 +28,30 @@ class MapFile(object):
         self._umap = {}
         self._strategy = {}
         self._len = 0
-        with open(mappath) as f:
+        self._mappath = mappath
+
+    def _load_mapfile(self):
+        with open(self._mappath) as f:
             rdr = csv.reader(f)
             for row in rdr:
                 if row[0] == "Canonical":
                     continue
-                self._strategy[row[0]] = row[1]
+                ident = row[0]
+                self._strategy[ident] = row[1]
                 vals = row[2:]
-                self._map[row[0]] = []
-                self._umap[row[0]] = []
+                self._map[ident] = []
+                self._umap[ident] = []
                 for elem in vals:
                     assert isinstance(elem, str)
                     self._len += 1
                     if elem.startswith('@AG@'):
                         elem = elem[4:]
-                        self._map[row[0]].append(elem)
+                        self._map[ident].append(elem)
                     else:
-                        self._umap[row[0]].append(elem)
+                        self._umap[ident].append(elem)
+
+    def _dump_mapfile(self):
+        pass
 
     def get_idents(self):
         for key in sorted(self._map.keys()):
