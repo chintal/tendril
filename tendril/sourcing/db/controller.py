@@ -60,7 +60,7 @@ def _get_ident(ident=None, session=None):
 
 @with_db
 def _get_vpno_obj(vendor=None, ident=None, vpno=None,
-                  type=None, session=None):
+                  mtype=None, session=None):
 
     if isinstance(vpno, VendorPartNumber):
         return vpno
@@ -72,7 +72,7 @@ def _get_vpno_obj(vendor=None, ident=None, vpno=None,
 
     q = session.query(VendorPartNumber)
     q = q.filter(VendorPartNumber.vpmap_id == map_obj.id)
-    q = q.filter(VendorPartMap.type == type)
+    q = q.filter(VendorPartMap.type == mtype)
     q = q.filter(VendorPartMap.vpno == vpno)
     return q.one()
 
@@ -132,16 +132,68 @@ def get_map(vendor=None, ident=None, session=None):
 
 
 @with_db
-def get_map_vpnos(vendor=None, ident=None, type=None, session=None):
+def get_strategy(vendor=None, ident=None,  session=None):
+    vendor = _get_vendor(vendor=vendor, session=session)
+    ident = _get_ident(ident=ident, session=session)
+
+    map_obj = get_map(vendor=vendor, ident=ident, session=session)
+
+    return map_obj.strategy
+
+
+@with_db
+def get_map_vpnos(vendor=None, ident=None, mtype=None, session=None):
     vendor = _get_vendor(vendor=vendor, session=session)
     ident = _get_ident(ident=ident, session=session)
 
     map_obj = get_map(vendor=vendor, ident=ident, session=session)
 
     q = session.query(VendorPartNumber)
-    q = q.filter(VendorPartNumber.vpmap_id == map_obj.id)
-    q = q.filter(VendorPartNumber.type == type)
+    q = q.filter(VendorPartNumber.type == mtype)
+    q = q.join(VendorPartMap).filter(VendorPartMap.id == map_obj.id)
+    return [str(x.vpno) for x in q.all()]
+
+
+@with_db
+def get_amap_vpnos(vendor=None, ident=None, session=None):
+    return get_map_vpnos(vendor=vendor, ident=ident,
+                         mtype='auto', session=session)
+
+
+@with_db
+def get_umap_vpnos(vendor=None, ident=None,  session=None):
+    return get_map_vpnos(vendor=vendor, ident=ident,
+                         mtype='manual', session=session)
+
+
+@with_db
+def get_ident(vendor=None, vpno=None, session=None):
+    vendor = _get_vendor(vendor=vendor, session=session)
+
+    q = session.query(VendorPartMap.ident)
+    q = q.filter(VendorPartMap.vendor_id == vendor.id).join(VendorPartNumber)
+    q = q.filter(VendorPartNumber.vpno == vpno)
+    return str(q.one()[0])
+
+
+@with_db
+def get_vendor_idents(vendor=None, session=None):
+    vendor = _get_vendor(vendor=vendor, session=session)
+
+    q = session.query(VendorPartMap)
+    q = q.filter(VendorPartMap.vendor_id == vendor.id)
+    q = q.filter(VendorPartMap.id == VendorPartNumber.vpmap_id)
     return q.all()
+
+
+@with_db
+def get_vendor_map_length(vendor=None, session=None):
+    vendor = _get_vendor(vendor=vendor, session=session)
+
+    q = session.query(VendorPartNumber.id)
+    q = q.join(VendorPartMap).join(SourcingVendor)
+    q = q.filter(SourcingVendor.id == vendor.id)
+    return int(q.count())
 
 
 # Vendor Map Setters
@@ -156,13 +208,13 @@ def set_strategy(vendor=None, ident=None, strategy=None, session=None):
 
 
 @with_db
-def add_map_vpno(vendor=None, ident=None, vpno=None, type=None, session=None):
+def add_map_vpno(vendor=None, ident=None, vpno=None, mtype=None, session=None):
     vendor = _get_vendor(vendor=vendor, session=session)
     ident = _get_ident(ident=ident, session=session)
 
     map_obj = get_map(vendor=vendor, ident=ident, session=session)
 
-    vpno_obj = VendorPartNumber(vpno=vpno, type=type, vpmap_id=map_obj.id)
+    vpno_obj = VendorPartNumber(vpno=vpno, type=mtype, vpmap_id=map_obj.id)
     session.add(vpno_obj)
     session.flush()
 
@@ -170,86 +222,86 @@ def add_map_vpno(vendor=None, ident=None, vpno=None, type=None, session=None):
 
 
 @with_db
-def remove_map_vpno(vendor=None, ident=None, vpno=None, type=None, session=None):
+def remove_map_vpno(vendor=None, ident=None, vpno=None, mtype=None, session=None):
     vendor = _get_vendor(vendor=vendor, session=session)
     ident = _get_ident(ident=ident, session=session)
     vpno_obj = _get_vpno_obj(vendor=vendor, ident=ident, vpno=vpno,
-                             type=type, session=session)
+                             type=mtype, session=session)
 
     session.delete(vpno_obj)
     session.flush()
 
 
 @with_db
-def clear_map(vendor=None, ident=None, type=None, session=None):
+def clear_map(vendor=None, ident=None, mtype=None, session=None):
     vendor = _get_vendor(vendor=vendor, session=session)
     ident = _get_ident(ident=ident, session=session)
 
     vpnos = get_map_vpnos(vendor=vendor, ident=ident,
-                          type=type, session=session)
+                          type=mtype, session=session)
 
     for vpno in vpnos:
         remove_map_vpno(vendor=vendor, ident=ident, vpno=vpno,
-                        type=type, session=session)
+                        type=mtype, session=session)
 
 
 @with_db
 def set_map_vpnos(vendor=None, ident=None, vpnos=None,
-                  type=None, session=None):
+                  mtype=None, session=None):
     vendor = _get_vendor(vendor=vendor, session=session)
     ident = _get_ident(ident=ident, session=session)
 
-    clear_map(vendor=vendor, ident=ident, type=type, session=session)
+    clear_map(vendor=vendor, ident=ident, mtype=mtype, session=session)
 
     for vpno in vpnos:
         add_map_vpno(vendor=vendor, ident=ident, vpno=vpno,
-                     type=type, session=session)
+                     mtype=mtype, session=session)
 
 
 @with_db
 def set_amap_vpnos(vendor=None, ident=None, vpnos=None, session=None):
     set_map_vpnos(vendor=vendor, ident=ident, vpnos=vpnos,
-                  type='auto', session=session)
+                  mtype='auto', session=session)
 
 
 @with_db
 def clear_amap(vendor=None, ident=None, session=None):
-    clear_map(vendor=vendor, ident=ident, type='auto', session=session)
+    clear_map(vendor=vendor, ident=ident, mtype='auto', session=session)
 
 
 @with_db
 def add_amap_vpno(vendor=None, ident=None, vpno=None, session=None):
     add_map_vpno(vendor=vendor, ident=ident,
-                 vpno=vpno, type='auto', session=session)
+                 vpno=vpno, mtype='auto', session=session)
 
 
 @with_db
 def remove_amap_vpno(vendor=None, ident=None, vpno=None, session=None):
     remove_map_vpno(vendor=vendor, ident=ident,
-                    vpno=vpno, type='auto', session=session)
+                    vpno=vpno, mtype='auto', session=session)
 
 
 @with_db
 def set_umap_vpnos(vendor=None, ident=None, vpnos=None, session=None):
     set_map_vpnos(vendor=vendor, ident=ident, vpnos=vpnos,
-                  type='manual', session=session)
+                  mtype='manual', session=session)
 
 
 @with_db
 def clear_umap(vendor=None, ident=None, session=None):
-    clear_map(vendor=vendor, ident=ident, type='manual', session=session)
+    clear_map(vendor=vendor, ident=ident, mtype='manual', session=session)
 
 
 @with_db
 def add_umap_vpno(vendor=None, ident=None, vpno=None, session=None):
     remove_map_vpno(vendor=vendor, ident=ident,
-                    vpno=vpno, type='manual', session=session)
+                    vpno=vpno, mtype='manual', session=session)
 
 
 @with_db
 def remove_umap_vpno(vendor=None, ident=None, vpno=None, session=None):
     remove_map_vpno(vendor=vendor, ident=ident,
-                    vpno=vpno, type='manual', session=session)
+                    vpno=vpno, mtype='manual', session=session)
 
 
 # Maintenance Functions

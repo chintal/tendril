@@ -51,7 +51,6 @@ def gen_mapfile(vendor, idents):
     for ident in idents:
         pb.next(note=ident)
         vpnos, strategy = vendor.search_vpnos(ident)
-
         if vpnos is not None:
             avpnos = vpnos
         else:

@@ -19,19 +19,38 @@ EntityHub Maps Module documentation (:mod:`entityhub.maps`)
 ===========================================================
 """
 
+import os
 import csv
+
+from tendril.utils.config import VENDOR_MAP_FOLDER
+from tendril.utils.fsutils import VersionedOutputFile
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 class MapFileBase(object):
-    def __init__(self, mappath):
-        pass
+    def __init__(self, mappath, name=None):
+        self._mappath = mappath
+        if name is None:
+            self._name = os.path.splitext(os.path.split(mappath)[1])[0]
+        else:
+            self._name = name
 
     def _dump_mapfile(self):
-        # outp = vendor_obj.mappath
-        # outf = fsutils.VersionedOutputFile(outp)
-        # outw = csv.writer(outf)
-        # outw.writerow(('Canonical', 'Strategy', 'Lparts'))
-        pass
+        outpath = os.path.join(VENDOR_MAP_FOLDER, self._mappath)
+        outf = VersionedOutputFile(outpath)
+        outw = csv.writer(outf)
+        outw.writerow(('Canonical', 'Strategy', 'Lparts'))
+        for ident in self.get_idents():
+            outw.writerow(
+                [ident, (self.get_strategy(ident) or '')] +
+                self.get_upartnos(ident) +
+                ['@AG' + x for x in self.get_apartnos(ident)]
+            )
+        outf.close()
+        logger.info("Dumped {0} Vendor Map to File : {1}"
+                    "".format(self._name, outpath))
 
     def get_idents(self):
         raise NotImplementedError
@@ -56,6 +75,7 @@ class MapFileBase(object):
 
 
 class MapFile(MapFileBase):
+    # Deprecated.
     def __init__(self, mappath):
         super(MapFile, self).__init__(mappath)
         self._map = {}

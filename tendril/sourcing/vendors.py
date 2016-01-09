@@ -23,11 +23,11 @@ import os
 import csv
 import time
 
-from tendril.entityhub.maps import MapFile
 from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
 from tendril.utils import config
-from tendril.utils.config import VENDOR_MAP_FOLDER
+
+from db import controller
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
@@ -35,29 +35,34 @@ logger = log.get_logger(__name__, log.INFO)
 
 class VendorMapFileDB(MapFileBase):
     def __init__(self, vendor):
-        mappath = vendor.mappath
-        super(VendorMapFileDB, self).__init__(mappath)
+        self._vendor = vendor
+        self._vendor_name = vendor._name
+        super(VendorMapFileDB, self).__init__(self._vendor.mappath)
 
     def length(self):
-        raise NotImplementedError
+        return controller.get_vendor_map_length(vendor=self._vendor_name)
 
     def get_user_map(self):
         raise NotImplementedError
 
     def get_idents(self):
-        pass
+        return [x.ident for x in
+                controller.get_vendor_idents(vendor=self._vendor_name)]
 
     def get_canonical(self, partno):
-        pass
+        return controller.get_ident(vendor=self._vendor_name, vpno=partno)
 
     def get_apartnos(self, canonical):
-        pass
+        return controller.get_amap_vpnos(vendor=self._vendor_name,
+                                         ident=canonical)
 
     def get_upartnos(self, canonical):
-        pass
+        return controller.get_umap_vpnos(vendor=self._vendor_name,
+                                         ident=canonical)
 
     def get_strategy(self, canonical):
-        pass
+        return controller.get_strategy(vendor=self._vendor_name,
+                                       ident=canonical)
 
 
 class VendorInvoiceLine(object):
@@ -172,8 +177,6 @@ class VendorBase(object):
                  currency_code=config.BASE_CURRENCY,
                  currency_symbol=config.BASE_CURRENCY_SYMBOL):
         self._name = name
-        self._mappath = None
-        self._map = None
         self._dname = dname
         self._currency = currency.CurrencyDefinition(currency_code,
                                                      currency_symbol)
@@ -182,11 +185,8 @@ class VendorBase(object):
         self._orderbasecosts = []
         self._orderadditionalcosts = []
         self._vpart_class = VendorPartBase
-        if mappath is not None:
-            if os.path.isfile(mappath):
-                self.map = mappath
-            else:
-                self.map = os.path.join(VENDOR_MAP_FOLDER, mappath)
+        self._map = VendorMapFileDB(self)
+        self._mappath = mappath
 
     @property
     def name(self):
@@ -203,17 +203,6 @@ class VendorBase(object):
     @property
     def map(self):
         return self._map
-
-    @map.setter
-    def map(self, mappath):
-        self._mappath = mappath
-        if os.path.isfile(mappath) is False:
-            if 'electronics' in self._pclass:
-                import electronics
-                electronics.gen_vendor_mapfile(self)
-            else:
-                raise AttributeError
-        self._map = MapFile(self._mappath)
 
     @property
     def currency(self):
