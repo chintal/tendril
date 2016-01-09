@@ -185,8 +185,6 @@ def get_metadata():
 
     return DeclBase.metadata
 
-metadata = get_metadata()
-
 
 def commit_metadata():
     """
@@ -195,3 +193,11 @@ def commit_metadata():
     tables in the database.
     """
     metadata.create_all(engine)
+
+
+#: The full Tendril database/sqlalchemy metadata.
+#: Rendered by :mod:`sqlalchemyviz` into the following ER diagram.
+#:
+#: .. sqlaviz::
+#:     :metadataobject: tendril.utils.db.metadata
+metadata = get_metadata()
