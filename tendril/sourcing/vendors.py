@@ -23,12 +23,41 @@ import os
 import csv
 import time
 
-import tendril.entityhub.maps
+from tendril.entityhub.maps import MapFile
+from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
 from tendril.utils import config
+from tendril.utils.config import VENDOR_MAP_FOLDER
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
+
+
+class VendorMapFileDB(MapFileBase):
+    def __init__(self, vendor):
+        mappath = vendor.mappath
+        super(VendorMapFileDB, self).__init__(mappath)
+
+    def length(self):
+        raise NotImplementedError
+
+    def get_user_map(self):
+        raise NotImplementedError
+
+    def get_idents(self):
+        pass
+
+    def get_canonical(self, partno):
+        pass
+
+    def get_apartnos(self, canonical):
+        pass
+
+    def get_upartnos(self, canonical):
+        pass
+
+    def get_strategy(self, canonical):
+        pass
 
 
 class VendorInvoiceLine(object):
@@ -154,7 +183,10 @@ class VendorBase(object):
         self._orderadditionalcosts = []
         self._vpart_class = VendorPartBase
         if mappath is not None:
-            self.map = mappath
+            if os.path.isfile(mappath):
+                self.map = mappath
+            else:
+                self.map = os.path.join(VENDOR_MAP_FOLDER, mappath)
 
     @property
     def name(self):
@@ -181,7 +213,7 @@ class VendorBase(object):
                 electronics.gen_vendor_mapfile(self)
             else:
                 raise AttributeError
-        self._map = tendril.entityhub.maps.MapFile(mappath)
+        self._map = MapFile(self._mappath)
 
     @property
     def currency(self):

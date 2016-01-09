@@ -22,13 +22,48 @@ EntityHub Maps Module documentation (:mod:`entityhub.maps`)
 import csv
 
 
-class MapFile(object):
+class MapFileBase(object):
     def __init__(self, mappath):
+        pass
+
+    def _dump_mapfile(self):
+        # outp = vendor_obj.mappath
+        # outf = fsutils.VersionedOutputFile(outp)
+        # outw = csv.writer(outf)
+        # outw.writerow(('Canonical', 'Strategy', 'Lparts'))
+        pass
+
+    def get_idents(self):
+        raise NotImplementedError
+
+    def get_upartnos(self, canonical):
+        raise NotImplementedError
+
+    def get_apartnos(self, canonical):
+        raise NotImplementedError
+
+    def get_strategy(self, canonical):
+        raise NotImplementedError
+
+    def get_canonical(self, partno):
+        raise NotImplementedError
+
+    def get_user_map(self):
+        raise NotImplementedError
+
+    def length(self):
+        raise NotImplementedError
+
+
+class MapFile(MapFileBase):
+    def __init__(self, mappath):
+        super(MapFile, self).__init__(mappath)
         self._map = {}
         self._umap = {}
         self._strategy = {}
         self._len = 0
         self._mappath = mappath
+        self._load_mapfile()
 
     def _load_mapfile(self):
         with open(self._mappath) as f:
@@ -50,9 +85,6 @@ class MapFile(object):
                     else:
                         self._umap[ident].append(elem)
 
-    def _dump_mapfile(self):
-        pass
-
     def get_idents(self):
         for key in sorted(self._map.keys()):
             if len(self._map[key]) or len(self._umap[key]):
@@ -63,9 +95,6 @@ class MapFile(object):
 
     def get_apartnos(self, canonical):
         return self._map[canonical]
-
-    def get_all_partnos(self, canonical):
-        return self._umap[canonical] + self._map[canonical]
 
     def get_partnos(self, canonical):
         if canonical not in self.get_idents():

@@ -121,7 +121,6 @@ def get_all_series(session=None):
     return controller.get_series_obj(session=session)
 
 
-
 @with_db
 def get_serialno(series=None, efield=None, register=True,
                  start_seed='100A', create_series=False, session=None):

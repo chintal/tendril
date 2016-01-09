@@ -85,6 +85,7 @@ def get_session():
         yield session
         session.commit()
     except:
+        logger.warning("Rolling back session")
         session.rollback()
         raise
     finally:

@@ -28,21 +28,43 @@ import ti
 import csil
 import pricelist
 
+from db import controller
+
 from tendril.entityhub import projects
 from tendril.gedaif import gsymlib
-import tendril.gedaif.conffile
 
+from tendril.utils.db import get_session
 from tendril.utils import fsutils
 from tendril.utils import config
 from tendril.utils.terminal import TendrilProgressBar
-
-import tendril.entityhub.maps
 
 import os
 import csv
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
+
+
+def gen_mapfile(vendor, idents):
+    pb = TendrilProgressBar(max=len(idents))
+    vendor_obj = controller.get_vendor(name=vendor._name)
+    for ident in idents:
+        pb.next(note=ident)
+        vpnos, strategy = vendor.search_vpnos(ident)
+
+        if vpnos is not None:
+            avpnos = vpnos
+        else:
+            if strategy not in ['NODEVICE', 'NOVALUE',
+                                'NOT_IMPL']:
+                pb.writeln("Not Found: {0}::{1}\n".format(ident, strategy))
+            avpnos = []
+        with get_session() as session:
+            controller.set_strategy(vendor=vendor_obj, ident=ident,
+                                    strategy=strategy, session=session)
+            controller.set_amap_vpnos(vendor=vendor_obj, ident=ident,
+                                      vpnos=avpnos, session=session)
+    pb.finish()
 
 
 def gen_vendor_mapfile(vendor_obj):
@@ -52,74 +74,35 @@ def gen_vendor_mapfile(vendor_obj):
     """
     if isinstance(vendor_obj, int):
         vendor_obj = vendor_list[vendor_obj]
+
     if 'electronics' == vendor_obj.pclass:
         logger.info('Generating electronics mapfile for ' + vendor_obj.name)
         symlib = gsymlib.gen_symlib()
         symlib.sort(key=lambda x: x.ident)
-        pb = TendrilProgressBar(max=len(symlib))
 
-        outp = vendor_obj.mappath
-        outf = fsutils.VersionedOutputFile(outp)
-        outw = csv.writer(outf)
-        outw.writerow(('Canonical', 'Strategy', 'Lparts'))
-
+        idents = []
         for status in ['Active', 'Experimental',
                        'Deprecated', 'Virtual', 'Generator']:
             for symbol in symlib:
                 if symbol.status == status and symbol.ident.strip() != "":
-                    pb.next(note=symbol.ident)
-                    vpnos, strategy = vendor_obj.search_vpnos(symbol.ident)
-                    if vpnos is not None:
-                        vpnos = [('@AG@' + vpno) for vpno in vpnos]
-                    else:
-                        # TODO Fix this error (hack around progressbar issue)
-                        if strategy not in ['NODEVICE', 'NOVALUE',
-                                            'NOT_IMPL']:
-                            pb.writeln("Not Found: " +
-                                       symbol.ident + '::' + str(strategy) +
-                                       '\n')
-                        vpnos = []
-                    try:
-                        outw.writerow(
-                            [symbol.ident.strip(), (strategy or '').strip()] + vpnos
-                        )
-                    except AttributeError:
-                        print symbol.ident, strategy
-                        raise
-        pb.finish()
-        outf.close()
-        logger.info("Written Electronics Vendor Map to File : " +
+                    idents.append(symbol.ident)
+
+        gen_mapfile(vendor_obj, idents)
+        logger.info("Done Generating Electronics Vendor Map : " +
                     vendor_obj.name)
+
     elif 'electronics_pcb' == vendor_obj.pclass:
         logger.info('Generating PCB mapfile for ' + vendor_obj.name)
-
         pcblib = projects.pcbs
-        nsymbols = len(pcblib)
-        pb = TendrilProgressBar(max=nsymbols)
-
-        outp = vendor_obj.mappath
-        outf = fsutils.VersionedOutputFile(outp)
-        outw = csv.writer(outf)
-        outw.writerow(('Canonical', 'Strategy', 'Lparts'))
-
+        idents = []
         for pcb, folder in pcblib.iteritems():
-            # conf = gedaif.conffile.ConfigsFile(folder)
-            # dstatus = None
-            # try:
-            #     dstatus = conf.configdata['pcbdetails']['status']
-            # except KeyError:
-            #     logger.warning('PCB missing pcbdetails : ' + pcb)
+            idents.append(pcb)
 
-            vpnos, strategy = [[pcb], 'CUSTOM']
-            outw.writerow(['PCB ' + pcb.strip(), strategy.strip()] + vpnos)
-            pb.next(note=pcb)
-        pb.finish()
-        outf.close()
-        logger.info("Written PCB Vendor Map to File : " + vendor_obj.name)
+        gen_mapfile(vendor_obj, idents)
+        logger.info("Done Generating PCB Vendor Map File : " + vendor_obj.name)
     else:
         logger.warning('Vendor pclass is not recognized. Not generating map.')
         return
-    vendor_obj.map = vendor_obj.mappath
 
 vendor_list = []
 
@@ -130,7 +113,7 @@ def init_vendors():
         logger.debug("Adding Vendor : " + vendor['name'])
         if 'electronics' in vendor['pclass']:
             vendor_obj = None
-            mappath = vendor['mapfile-base'] + '-electronics.csv'
+            mappath = vendor['name'] + '-electronics.csv'
             # TODO Fix This.
             if vendor['name'] == 'digikey':
                 vendor_obj = digikey.VendorDigiKey(vendor['name'],
@@ -174,7 +157,7 @@ def init_vendors():
                              vendor['name'])
         if 'electronics_pcb' in vendor['pclass']:
             vendor_obj = None
-            mappath = vendor['mapfile-base'] + '-electronics-pcb.csv'
+            mappath = vendor['name'] + '-electronics-pcb.csv'
             if vendor['name'] == 'csil':
                 vendor_obj = csil.VendorCSIL(vendor['name'],
                                              vendor['dname'],
@@ -200,7 +183,6 @@ def export_vendor_map_audit(vendor_obj):
     if isinstance(vendor_obj, int):
         vendor_obj = vendor_list[vendor_obj]
     mapobj = vendor_obj.map
-    assert isinstance(mapobj, tendril.entityhub.maps.MapFile)
     outp = os.path.join(config.VENDOR_MAP_AUDIT_FOLDER,
                         vendor_obj.name + '-electronics-audit.csv')
     outf = fsutils.VersionedOutputFile(outp)

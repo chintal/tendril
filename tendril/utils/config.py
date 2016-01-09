@@ -718,9 +718,14 @@ load_config(config_options_inventory)
 
 config_options_vendors = [
     ConfigOption(
+        'VENDOR_MAP_FOLDER',
+        "os.path.join(INSTANCE_ROOT, 'sourcing', 'maps')",
+        "The folder in which vendor maps should be dumped"
+    ),
+    ConfigOption(
         'VENDOR_MAP_AUDIT_FOLDER',
         "os.path.join(AUDIT_PATH, 'vendor-maps')",
-        "The folder in which the vendor maps audits should be stored"
+        "The folder in which the vendor maps audits should be dumped"
     ),
     ConfigOption(
         'PRICELISTVENDORS_FOLDER',

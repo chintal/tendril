@@ -59,7 +59,6 @@ class SourcingVendor(BaseMixin, DeclBase):
     pclass = synonym('pclass_str', descriptor=pclass)
 
     # Relationships
-    maps = relationship("VendorPartMap")
 
     # Housekeeping
     def __repr__(self):
@@ -86,7 +85,7 @@ class VendorPartMap(DeclBase, BaseMixin, TimestampMixin):
 
     # Relationships
     vendor_id = Column(Integer, ForeignKey('SourcingVendor.id'))
-    vpnos = relationship("VendorPartNumber")
+    vendor = relationship("SourcingVendor", backref='maps')
 
     # Constraints
     __table_args__ = (
@@ -105,6 +104,7 @@ class VendorPartNumber(DeclBase, BaseMixin, TimestampMixin):
 
     # Relationships
     vpmap_id = Column(Integer, ForeignKey('VendorPartMap.id'))
+    vpmap = relationship("VendorPartMap", backref='vpnos')
 
     # Constraints
     __table_args__ = (

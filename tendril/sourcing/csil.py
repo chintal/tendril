@@ -288,7 +288,7 @@ class VendorCSIL(vendors.VendorBase):
         self.add_order_additional_cost_component("CST (5\%)", 5.625)
 
     def search_vpnos(self, ident):
-        pass
+        return [ident], 'CUSTOM'
 
     def get_vpart(self, vpartno, ident=None):
         return CSILPart(vpartno, ident, self)
