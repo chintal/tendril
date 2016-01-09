@@ -61,6 +61,18 @@ class MapFileBase(object):
     def get_apartnos(self, canonical):
         raise NotImplementedError
 
+    def get_partnos(self, canonical):
+        uparts = self.get_upartnos(canonical)
+        if len(uparts) > 0:
+            return uparts
+        aparts = self.get_apartnos(canonical)
+        if len(aparts) > 0:
+            return aparts
+        return []
+
+    def get_all_partnos(self, canonical):
+        return self.get_upartnos(canonical) + self.get_apartnos(canonical)
+
     def get_strategy(self, canonical):
         raise NotImplementedError
 
@@ -115,16 +127,6 @@ class MapFile(MapFileBase):
 
     def get_apartnos(self, canonical):
         return self._map[canonical]
-
-    def get_partnos(self, canonical):
-        if canonical not in self.get_idents():
-            return []
-        if len(self._umap[canonical]) > 0:
-            return self._umap[canonical]
-        elif len(self._map[canonical]) > 0:
-            return self._map[canonical]
-        else:
-            return []
 
     def get_strategy(self, canonical):
         if canonical not in self.get_idents():

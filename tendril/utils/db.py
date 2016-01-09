@@ -145,13 +145,26 @@ class BaseMixin(object):
     id = Column(Integer, primary_key=True)
 
 
-class TimestampMixin(object):
+class CreatedTimestampMixin(object):
     """
     This Mixin can be used by any Models which require a timestamp to be
     created. It adds a column named ``created_at``, which defaults to the
     time at which the object is instantiated.
     """
-    created_at = Column(ArrowType, default=arrow.utcnow())
+    created_at = Column(ArrowType, default=arrow.utcnow)
+
+
+class UpdateTimestampMixin(object):
+    """
+    This Mixin can be used by any Models which require an update timestamp
+    to be created. It adds a column named ``created_at``, which defaults to the
+    time at which the object is instantiated.
+    """
+    updated_at = Column(ArrowType, onupdate=arrow.utcnow)
+
+
+class TimestampMixin(CreatedTimestampMixin, UpdateTimestampMixin):
+    pass
 
 
 def get_metadata():

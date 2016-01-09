@@ -185,8 +185,8 @@ class VendorBase(object):
         self._orderbasecosts = []
         self._orderadditionalcosts = []
         self._vpart_class = VendorPartBase
-        self._map = VendorMapFileDB(self)
         self._mappath = mappath
+        self._map = VendorMapFileDB(self)
 
     @property
     def name(self):

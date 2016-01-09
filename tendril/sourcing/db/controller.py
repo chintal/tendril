@@ -72,8 +72,8 @@ def _get_vpno_obj(vendor=None, ident=None, vpno=None,
 
     q = session.query(VendorPartNumber)
     q = q.filter(VendorPartNumber.vpmap_id == map_obj.id)
-    q = q.filter(VendorPartMap.type == mtype)
-    q = q.filter(VendorPartMap.vpno == vpno)
+    q = q.filter(VendorPartNumber.type == mtype)
+    q = q.filter(VendorPartNumber.vpno == vpno)
     return q.one()
 
 
@@ -226,7 +226,7 @@ def remove_map_vpno(vendor=None, ident=None, vpno=None, mtype=None, session=None
     vendor = _get_vendor(vendor=vendor, session=session)
     ident = _get_ident(ident=ident, session=session)
     vpno_obj = _get_vpno_obj(vendor=vendor, ident=ident, vpno=vpno,
-                             type=mtype, session=session)
+                             mtype=mtype, session=session)
 
     session.delete(vpno_obj)
     session.flush()
@@ -238,11 +238,11 @@ def clear_map(vendor=None, ident=None, mtype=None, session=None):
     ident = _get_ident(ident=ident, session=session)
 
     vpnos = get_map_vpnos(vendor=vendor, ident=ident,
-                          type=mtype, session=session)
+                          mtype=mtype, session=session)
 
     for vpno in vpnos:
         remove_map_vpno(vendor=vendor, ident=ident, vpno=vpno,
-                        type=mtype, session=session)
+                        mtype=mtype, session=session)
 
 
 @with_db
