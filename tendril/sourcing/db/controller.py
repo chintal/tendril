@@ -19,6 +19,8 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+import arrow
+
 from sqlalchemy.sql import exists
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
@@ -204,6 +206,7 @@ def set_strategy(vendor=None, ident=None, strategy=None, session=None):
 
     map_obj = get_map(vendor=vendor, ident=ident, session=session)
     map_obj.strategy = strategy
+    map_obj.updated_at = arrow.utcnow()
     return map_obj
 
 
