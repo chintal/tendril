@@ -111,6 +111,8 @@ class CustomValueSeries(ValueSeries):
         )
         self._name = name
         self._values = {}
+        self._desc = None
+        self._aparams = {}
         if self._start is not None:
             if not isinstance(self._start, self._typeclass):
                 self._start = self._typeclass(self._start)

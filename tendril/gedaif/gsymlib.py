@@ -267,7 +267,7 @@ class GSymGeneratorFile(object):
                 if 'custom_series' in gendata.keys():
                     from tendril.conventions.series import CustomValueSeries
                     for name, series in gendata['custom_series'].iteritems():
-                        if series['detail']['type'] != 'resistor':
+                        if series['detail'].pop('type') != 'resistor':
                             raise ValueError('Expected a resistor series')
                         vals = series['values']
                         tsymbol = GedaSymbol(self._sympath)
@@ -276,6 +276,8 @@ class GSymGeneratorFile(object):
                                                     footprint=tsymbol.footprint)
                         for type_val, val in vals.iteritems():
                             iseries.add_value(type_val, val)
+                        iseries._desc = series['detail'].pop('desc')
+                        iseries._aparams = series['detail']
                         self._iseries.append(iseries)
                         values.extend(vals.values())
                 return values
@@ -305,7 +307,7 @@ class GSymGeneratorFile(object):
                 if 'custom_series' in gendata.keys():
                     from tendril.conventions.series import CustomValueSeries
                     for name, series in gendata['custom_series'].iteritems():
-                        if series['detail']['type'] != 'resistor':
+                        if series['detail'].pop('type') != 'resistor':
                             raise ValueError('Expected a resistor series')
                         vals = series['values']
                         tsymbol = GedaSymbol(self._sympath)
@@ -314,6 +316,8 @@ class GSymGeneratorFile(object):
                                                     footprint=tsymbol.footprint)
                         for type_val, val in vals.iteritems():
                             iseries.add_value(type_val, val)
+                        iseries._desc = series['detail'].pop('desc')
+                        iseries._aparams = series['detail']
                         self._iseries.append(iseries)
                         values.extend(vals.values())
                 return values

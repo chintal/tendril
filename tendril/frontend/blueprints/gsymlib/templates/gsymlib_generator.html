@@ -66,6 +66,31 @@
                     </li>
                 {% endfor %}
             {% endif %}
+            {% if stage.genobj.iseries|length %}
+                <li class="title">Custom Series</li>
+                {% for iseries in stage.genobj.iseries %}
+                    <li class="bullet-item">
+                        <b><small> SERIES : </small> {{ iseries._name|upper }}</b>
+                    </li>
+                    <li class="description">
+                        {{ iseries._desc }}
+                    </li>
+                    <li>
+                        <ul class="small-block-grid-4 small-11 columns small-centered">
+                            <li class="bullet-item"><small> Additional Parameters </small></li>
+                            {% for p, s in iseries._aparams|dictsort %}
+                            <li class="bullet-item"><small> {{ p|upper }} : {{ s }} </small></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    {% for type_value, value in iseries._values|dictsort %}
+                    <li class="bullet-item">
+                        <div class="small-6 columns">{{ type_value }}</div>
+                        <div class="small-6 columns">{{ value }}</div>
+                    </li>
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
             {% if stage.genobj.ivalues|length %}
                 <li class="title">Specific Part Numbers</li>
                 {% for value in stage.genobj.ivalues %}
