@@ -66,6 +66,17 @@ class SourcingVendor(BaseMixin, DeclBase):
                "(id = %s, name='%s')>" % (self.id, self.name)
 
 
+class SourcingVendorDetail(DeclBase, BaseMixin):
+    dname = Column(String, unique=False, nullable=False)
+    currency_code = Column(String, unique=False, nullable=False)
+    currency_symbol = Column(String, unique=False, nullable=False)
+
+    # Relationships
+    vendor_id = Column(Integer, ForeignKey('SourcingVendor.id'),
+                       unique=True, nullable=False)
+    vendor = relationship("SourcingVendor", backref='detail')
+
+
 class VendorPartMap(DeclBase, BaseMixin, TimestampMixin):
     ident = Column(String, unique=False, nullable=False)
     strategy = Column(String, unique=False, nullable=True)
@@ -84,7 +95,8 @@ class VendorPartMap(DeclBase, BaseMixin, TimestampMixin):
         return self.vpnos
 
     # Relationships
-    vendor_id = Column(Integer, ForeignKey('SourcingVendor.id'))
+    vendor_id = Column(Integer, ForeignKey('SourcingVendor.id'),
+                       unique=False, nullable=False)
     vendor = relationship("SourcingVendor", backref='maps')
 
     # Constraints
@@ -103,10 +115,48 @@ class VendorPartNumber(DeclBase, BaseMixin, TimestampMixin):
     )
 
     # Relationships
-    vpmap_id = Column(Integer, ForeignKey('VendorPartMap.id'))
+    vpmap_id = Column(Integer, ForeignKey('VendorPartMap.id'),
+                      unique=False, nullable=False)
     vpmap = relationship("VendorPartMap", backref='vpnos')
 
     # Constraints
     __table_args__ = (
         UniqueConstraint('vpmap_id', 'vpno', name="constraint_vmap_vpno"),
     )
+    # TODO Add vpno <-> vendor constraint?
+
+
+class VendorPartDetail(DeclBase, BaseMixin, TimestampMixin):
+    vqtyavail = Column(Integer, unique=False, nullable=True)
+    manufacturer = Column(String, unique=False, nullable=True)
+    mpartno = Column(String, unique=False, nullable=True)
+    vpartdesc = Column(String, unique=False, nullable=True)
+    pkgqty = Column(Integer, unique=False, nullable=True)
+
+    # Relationships
+    vpno_id = Column(Integer,
+                     ForeignKey('VendorPartNumber.id'),
+                     unique=True, nullable=False)
+    vpno = relationship("VendorPartNumber", backref='detail')
+
+
+class VendorElnPartDetail(DeclBase, BaseMixin):
+    package = Column(String, unique=False, nullable=False)
+    datasheet = Column(String, unique=False, nullable=False)
+
+    # Relationships
+    vpno_id = Column(Integer,
+                     ForeignKey('VendorPartNumber.id'),
+                     unique=True, nullable=False)
+    vpno = relationship("VendorPartNumber", backref='detail_eln')
+
+
+class VendorPrice(DeclBase, BaseMixin, TimestampMixin):
+    moq = Column(Integer, unique=False, nullable=False)
+    price = Column(String, unique=False, nullable=False)
+    oqmultiple = Column(Integer, unique=False, nullable=False)
+
+    # Relationships
+    vpno_id = Column(Integer, ForeignKey('VendorPartNumber.id'),
+                     unique=False, nullable=False)
+    vpno = relationship("VendorPartNumber", backref='prices')

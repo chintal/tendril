@@ -51,7 +51,7 @@ names. Each function specifies the paths it operates on.
 .. autosummary::
 
     gen_confbom
-    gen_configdoc
+    gen_confdoc
     gen_schpdf
     gen_masterdoc
     gen_confpdf

@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Dox Database Interface (:mod:`tendril.dox.db`)
-----------------------------------------------
+Dox Database Interface
+----------------------
 
 .. toctree::
 

@@ -70,6 +70,7 @@ doc_requirements = [
     'sphinx',
     'sphinx-rtd-theme',
     'sphinxcontrib-documentedlist',
+    'sphinxcontrib-sqlalchemyviz',
     'sphinxcontrib-googleanalytics==0.1.dev20150826',
     'versioneer'
 ]
@@ -80,7 +81,8 @@ script_entry_points = [
     'tendril-writecalib = tendril.scripts.writecalib:main',
     'tendril-runtest = tendril.scripts.runtest:main',
     'tendril-production = tendril.scripts.production:entry_point',
-    'tendril-genvmap = tendril.scripts.genvmaps:main'
+    'tendril-genvmap = tendril.scripts.genvmaps:main',
+    'tendril-genvmapaudit = tendril.scripts.genvmapaudits:main',
 ]
 
 

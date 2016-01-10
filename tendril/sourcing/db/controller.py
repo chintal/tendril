@@ -55,8 +55,11 @@ def _get_vendor(vendor=None, session=None):
 def _get_ident(ident=None, session=None):
     if not ident:
         raise AttributeError('ident needs to be defined')
+    if isinstance(ident, unicode):
+        ident = str(ident)
     if not isinstance(ident, str):
-        raise TypeError('ident needs to be a string')
+        raise TypeError('ident needs to be a string, got'
+                        ' {0} {1}'.format(type(ident), ident))
     return ident.strip()
 
 
