@@ -239,11 +239,12 @@ def gen_confdoc(projfolder, configname, force=False):
                 '; Last Created : ' + str(outf_mtime))
     bom = boms_electronics.import_pcb(projfolder)
     obom = bom.create_output_bom(configname)
-
+    group_oboms = bom.get_group_boms(configname)
     stage = {'configname': obom.descriptor.configname,
              'pcbname': obom.descriptor.pcbname,
              'bom': bom,
-             'obom': obom}
+             'obom': obom,
+             'group_oboms': group_oboms}
     for config in obom.descriptor.configurations.configurations:
         if config['configname'] == configname:
             stage['desc'] = config['desc']

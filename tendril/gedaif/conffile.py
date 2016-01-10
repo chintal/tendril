@@ -122,6 +122,11 @@ class ConfigsFile(object):
     def grouplist(self):
         return self.configdata["grouplist"]
 
+    def get_group_desc(self, groupname):
+        for group in self.grouplist:
+            if group['name'] == groupname:
+                return group['desc']
+
     @property
     def motiflist(self):
         if "motiflist" in self.configdata.keys():

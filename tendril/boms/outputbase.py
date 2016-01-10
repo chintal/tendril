@@ -32,12 +32,14 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 class OutputElnBomDescriptor(object):
     def __init__(self, pcbname, cardfolder, configname,
-                 configurations, multiplier=1):
+                 configurations, multiplier=1, groupname=None):
         self.pcbname = pcbname
         self.cardfolder = cardfolder
         self.configname = configname
         self.multiplier = multiplier
         self.configurations = configurations
+        # For group boms
+        self.groupname = groupname
 
 
 class OutputBomLine(object):

@@ -220,6 +220,9 @@ class EntityElnBomConf(object):
     def grouplist(self):
         return self._configfile.grouplist
 
+    def get_group_desc(self, groupname):
+        return self._configfile.get_group_desc(groupname)
+
     @property
     def motiflist(self):
         return self._configfile.motiflist
@@ -423,14 +426,20 @@ class EntityElnBom(EntityBomBase):
                 motif.configure(motifconf_act)
                 self._included_motifs.append(motif)
 
-    def create_output_bom(self, configname):
+    def create_output_bom(self, configname, groupname=None):
         if configname not in self.configurations.get_configurations():
             raise ValueError
         outbomdescriptor = OutputElnBomDescriptor(
-            self.pcbname, self.projfolder, configname, self.configurations
+            self.pcbname, self.projfolder, configname, self.configurations,
+            groupname=groupname
         )
         outbom = OutputBom(outbomdescriptor)
-        outgroups = self.configurations.get_configuration(configname)
+        if groupname is None:
+            is_group_bom = False
+            outgroups = self.configurations.get_configuration(configname)
+        else:
+            is_group_bom = True
+            outgroups = [groupname]
 
         genlist = self.configurations.get_configuration_gens(configname)
 
@@ -459,10 +468,14 @@ class EntityElnBom(EntityBomBase):
                         comp.value = genlist[comp.refdes]
                 if sj_refdeslist is not None and comp.refdes in sj_refdeslist:
                     if not comp.fillstatus == 'CONF':
-                        logger.error("sjlist attempts to change "
-                                     "non-configurable SJ : " +
-                                     comp.refdes)
-                        raise AttributeError
+                        logger.error(
+                            "sjlist attempts to change non-configurable {0} "
+                            "with fillstatus {1}".format(comp.refdes,
+                                                         comp.fillstatus)
+                        )
+                        # TODO figure out why this breaks with group boms.
+                        if not is_group_bom:
+                            raise AttributeError
                     if sjlist[comp.refdes]:
                         logger.debug("Setting Fillstatus : " + comp.refdes)
                         comp.fillstatus = ''
@@ -491,6 +504,14 @@ class EntityElnBom(EntityBomBase):
 
         outbom.sort_by_ident()
         return outbom
+
+    def get_group_boms(self, configname):
+        if configname not in self.configurations.get_configurations():
+            raise ValueError
+        rval = []
+        for group in self.configurations.get_configuration(configname):
+            rval.append(self.create_output_bom(configname, groupname=group))
+        return rval
 
 
 def import_pcb(cardfolder):
