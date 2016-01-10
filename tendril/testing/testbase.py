@@ -190,7 +190,7 @@ class TestBase(RunnableTest):
             measurement.do_measurement()
         self.ts = arrow.utcnow()
 
-    def _load_variable(self, name, typeclass):
+    def _load_variable(self, name, typeclass, default=None):
         if isinstance(self.variables[name], typeclass):
             return self.variables[name]
         try:
@@ -216,7 +216,8 @@ class TestBase(RunnableTest):
                 return value
             value = typeclass(value)
         except KeyError:
-            raise
+            assert isinstance(default, typeclass)
+            return default
         return value
 
     def configure(self, **kwargs):
