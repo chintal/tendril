@@ -48,7 +48,9 @@ class MotifDLPF1(MotifBase):
         self.get_elem_by_idx('R2').data['value'] = electronics.construct_resistor(configdict['R1'], '0.125W')  # noqa
         # Set Frequency
         self._configdict = configdict
-        self.Fdiff = float(configdict['Fdiff'][:-2])
+        self.Fdiff = Frequency(configdict['Fdiff'])
+        self.target_Fdiff = Frequency(configdict['Fdiff'])
+        self.target_Fcm = self.target_Fdiff * 21
         self._set_biases()
         self.validate()
 
@@ -99,8 +101,8 @@ class MotifDLPF1(MotifBase):
                                              self._configdict['Cmin'],
                                              self._configdict['Cmax'])
 
-        fcm_est = value * 21
-        required_cap_val = 1 / (2 * pi * float(self.R1) * fcm_est)
+        fcm_est = self.target_Fcm
+        required_cap_val = 1 / (2 * pi * float(self.R1) * float(fcm_est))
 
         cval = None
         lastval = None
@@ -166,13 +168,13 @@ class MotifDLPF1(MotifBase):
         except AssertionError:
             print 'C1 ' + str(self.C1)
             print 'C2 ' + str(self.C2)
-            # raise
+            raise
 
     @property
     def parameters_base(self):
         p_fc = [
-            ('Fdiff', "Differential Cutoff Frequency", ''),
-            ('Fcm', "Common Mode Cutoff Frequency", ''),
+            ('Fdiff', "Differential Cutoff Frequency", self.target_Fdiff),
+            ('Fcm', "Common Mode Cutoff Frequency", self.target_Fcm),
         ]
         parameters = [
             (p_fc, "Filter Parameters"),

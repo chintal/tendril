@@ -197,10 +197,12 @@ class GedaSymbol(object):
 class GSymGeneratorFile(object):
     def __init__(self, sympath):
         self._genpath = os.path.splitext(sympath)[0] + '.gen.yaml'
+        self._sympath = sympath
         self._type = None
         self._ivalues = []
         self._igen = []
         self._iunits = []
+        self._iseries = []
         data = self._get_data()
         self._values = []
         for value in data:
@@ -214,6 +216,10 @@ class GSymGeneratorFile(object):
     @property
     def igenerators(self):
         return self._igen
+
+    @property
+    def iseries(self):
+        return self._iseries
 
     @property
     def ivalues(self):
@@ -258,6 +264,20 @@ class GSymGeneratorFile(object):
                     if gendata['values'][0].strip() != '':
                         values += gendata['values']
                         self._ivalues.extend(gendata['values'])
+                if 'custom_series' in gendata.keys():
+                    from tendril.conventions.series import CustomValueSeries
+                    for name, series in gendata['custom_series'].iteritems():
+                        if series['detail']['type'] != 'resistor':
+                            raise ValueError('Expected a resistor series')
+                        vals = series['values']
+                        tsymbol = GedaSymbol(self._sympath)
+                        iseries = CustomValueSeries(name, 'resistor',
+                                                    device=tsymbol.device,
+                                                    footprint=tsymbol.footprint)
+                        for type_val, val in vals.iteritems():
+                            iseries.add_value(type_val, val)
+                        self._iseries.append(iseries)
+                        values.extend(vals.values())
                 return values
 
             if gendata['type'] == 'capacitor':
@@ -282,6 +302,20 @@ class GSymGeneratorFile(object):
                     if gendata['values'][0].strip() != '':
                         values += gendata['values']
                         self._ivalues.append(gendata['values'])
+                if 'custom_series' in gendata.keys():
+                    from tendril.conventions.series import CustomValueSeries
+                    for name, series in gendata['custom_series'].iteritems():
+                        if series['detail']['type'] != 'resistor':
+                            raise ValueError('Expected a resistor series')
+                        vals = series['values']
+                        tsymbol = GedaSymbol(self._sympath)
+                        iseries = CustomValueSeries(name, 'resistor',
+                                                    device=tsymbol.device,
+                                                    footprint=tsymbol.footprint)
+                        for type_val, val in vals.iteritems():
+                            iseries.add_value(type_val, val)
+                        self._iseries.append(iseries)
+                        values.extend(vals.values())
                 return values
         else:
             logger.ERROR("Config file schema is not supported")
@@ -376,6 +410,7 @@ def _jinja_init():
 
 
 generators = []
+custom_series = {}
 gsymlib = []
 index = {}
 index_upper = {}
@@ -397,6 +432,11 @@ def regenerate_symlib():
                        for x in generators]
     global gsymlib_idents
     gsymlib_idents = sorted(index.keys())
+    global custom_series
+    custom_series = {}
+    for sym in generators:
+        for iseries in sym.generator.iseries:
+            custom_series[iseries._name] = iseries
 
 
 regenerate_symlib()
@@ -427,7 +467,7 @@ def get_symbol(ident, case_insensitive=False, get_all=False):
                 return index_upper[ident.upper()][0]
             else:
                 return index_upper[ident.upper()]
-    raise ValueError(ident)
+    raise NoGedaSymbolException(ident)
 
 
 def get_symbol_folder(ident, case_insensitive=False):
@@ -439,7 +479,10 @@ def get_symbol_folder(ident, case_insensitive=False):
 
 def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
     if isinstance(capacitance, str):
-        capacitance = Capacitance(capacitance)
+        try:
+            capacitance = Capacitance(capacitance)
+        except ValueError:
+            raise NoGedaSymbolException(capacitance)
     if isinstance(capacitance, Capacitance):
         capacitance = capacitance._value
     if footprint[0:3] == "MY-":
@@ -450,12 +493,15 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
             sym_capacitance = tendril.conventions.electronics.parse_capacitance(cap)  # noqa
             if capacitance == sym_capacitance:
                 return symbol
-    raise ValueError
+    raise NoGedaSymbolException
 
 
 def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
     if isinstance(resistance, str):
-        resistance = Resistance(resistance)
+        try:
+            resistance = Resistance(resistance)
+        except ValueError:
+            raise NoGedaSymbolException(resistance)
     if isinstance(resistance, Resistance):
         resistance = resistance._value
     if footprint[0:3] == "MY-":
@@ -465,14 +511,14 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
                           for x in iec60063.gen_vals(iec60063.get_series('E24'), iec60063.res_ostrs)]:  # noqa
             return tendril.conventions.electronics.construct_resistor(tendril.conventions.electronics.normalize_resistance(resistance), '0.25W')  # noqa
         else:
-            raise ValueError(resistance, device)
+            raise NoGedaSymbolException(resistance, device)
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
             res, watt = tendril.conventions.electronics.parse_resistor(symbol.value)  # noqa
             sym_resistance = tendril.conventions.electronics.parse_resistance(res)  # noqa
             if resistance == sym_resistance:
                 return symbol.value
-    raise ValueError(resistance)
+    raise NoGedaSymbolException(resistance)
 
 
 def export_gsymlib_audit():
@@ -488,3 +534,7 @@ def export_gsymlib_audit():
              symbol.fpath, symbol.package]
         )
     outf.close()
+
+
+class NoGedaSymbolException(Exception):
+    pass
