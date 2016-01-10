@@ -85,7 +85,7 @@ class MotifDLPF1(MotifBase):
 
     @property
     def Fcm(self):
-        return 1 / (2 * pi * float(self.R1) * float(self.C2))
+        return Frequency(1 / (2 * pi * float(self.R1) * float(self.C2)))
 
     @Fdiff.setter
     def Fdiff(self, value):
@@ -114,6 +114,11 @@ class MotifDLPF1(MotifBase):
 
         if cval is None:
             raise ValueError
+
+        allowed_cap_vals = iec60063.gen_vals(self._configdict['Cseries'],
+                                             iec60063.cap_ostrs,
+                                             self._configdict['Cmin'],
+                                             self._configdict['Cmax'])
 
         required_cap_val = lastval * 10
         for val in allowed_cap_vals:
@@ -181,7 +186,7 @@ class MotifDLPF1(MotifBase):
              'description', str),
             ('Cseries', 'E6', 'Capacitance Series', str),
             ('Cmin', '1pF', 'Minimum Capacitance', str),
-            ('Cmax', '100nF', 'Maximum Capacitance', str),
+            ('Cmax', '1uF', 'Maximum Capacitance', str),
             ('Fdiff', "15000Hz", 'Differential Cutoff Frequency', str),
             ('R1', "50E", 'Input Resistance Value', str),
             ('pbias', '-1', 'IN+ Bias', str),
