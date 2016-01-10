@@ -23,14 +23,12 @@ This file needs to be refactored quite a bit
 
 from math import pi
 
-import iec60063
-
 from tendril.conventions import electronics
+from tendril.conventions import series
 from tendril.conventions.motifs.motifbase import MotifBase
-from tendril.gedaif import gsymlib
 
+from tendril.utils.types.electromagnetic import Capacitance
 # TODO change implementation to use units instead of numbers
-from tendril.utils.types.electromagnetic import Capacitance  # noqa
 from tendril.utils.types.electromagnetic import Resistance  # noqa
 from tendril.utils.types.time import Frequency
 
@@ -48,9 +46,10 @@ class MotifDLPF1(MotifBase):
         self.get_elem_by_idx('R2').data['value'] = electronics.construct_resistor(configdict['R1'], '0.125W')  # noqa
         # Set Frequency
         self._configdict = configdict
-        self.Fdiff = Frequency(configdict['Fdiff'])
         self.target_Fdiff = Frequency(configdict['Fdiff'])
         self.target_Fcm = self.target_Fdiff * 21
+
+        self.Fdiff = Frequency(configdict['Fdiff'])
         self._set_biases()
         self.validate()
 
@@ -96,37 +95,36 @@ class MotifDLPF1(MotifBase):
         if c1_fp[0:3] == "MY-":
             c1_fp = c1_fp[3:]
 
-        allowed_cap_vals = iec60063.gen_vals(self._configdict['Cseries'],
-                                             iec60063.cap_ostrs,
-                                             self._configdict['Cmin'],
-                                             self._configdict['Cmax'])
+        cseries = series.get_series(self._configdict['Cseries'],
+                                    'capacitor',
+                                    start=self._configdict['Cmin'],
+                                    end=self._configdict['Cmax'],
+                                    device=c1_dev,
+                                    footprint=c1_fp)
 
+        allowed_cap_vals = cseries.gen_vals('capacitor')
         fcm_est = self.target_Fcm
-        required_cap_val = 1 / (2 * pi * float(self.R1) * float(fcm_est))
 
+        required_cap_val = Capacitance(1 / (2 * pi * float(self.R1) * float(fcm_est)))
         cval = None
         lastval = None
-        for val in allowed_cap_vals:
-            lastval = cval
-            cval = electronics.parse_capacitance(val)
+        for cval in allowed_cap_vals:
+            if not lastval:
+                lastval = cval
             if cval >= required_cap_val:
-                self.get_elem_by_idx('C2').data['value'] = gsymlib.find_capacitor(lastval, c1_fp, c1_dev).value  # noqa
-                self.get_elem_by_idx('C3').data['value'] = gsymlib.find_capacitor(lastval, c1_fp, c1_dev).value  # noqa
+                self.get_elem_by_idx('C2').data['value'] = cseries.get_symbol(lastval).value  # noqa
+                self.get_elem_by_idx('C3').data['value'] = cseries.get_symbol(lastval).value  # noqa
                 break
+            lastval = cval
 
         if cval is None:
             raise ValueError
 
-        allowed_cap_vals = iec60063.gen_vals(self._configdict['Cseries'],
-                                             iec60063.cap_ostrs,
-                                             self._configdict['Cmin'],
-                                             self._configdict['Cmax'])
-
+        allowed_cap_vals = cseries.gen_vals('capacitor')
         required_cap_val = lastval * 10
-        for val in allowed_cap_vals:
-            cval = electronics.parse_capacitance(val)
+        for cval in allowed_cap_vals:
             if cval >= required_cap_val:
-                self.get_elem_by_idx('C1').data['value'] = gsymlib.find_capacitor(cval, c1_fp, c1_dev).value  # noqa
+                self.get_elem_by_idx('C1').data['value'] = cseries.get_symbol(cval).value  # noqa
                 break
 
     @property

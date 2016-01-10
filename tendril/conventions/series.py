@@ -90,8 +90,9 @@ class IEC60063ValueSeries(ValueSeries):
             start = self._start
         if end is None:
             end = self._end
-        return iec60063.gen_vals(self._series, self._ostrs,
-                                 start=start, end=end)
+        for value in iec60063.gen_vals(self._series, self._ostrs,
+                                       start=start, end=end):
+            yield self._typeclass(value)
 
 
 class CustomValueSeries(ValueSeries):
@@ -102,6 +103,12 @@ class CustomValueSeries(ValueSeries):
         )
         self._name = name
         self._values = {}
+        if self._start is not None:
+            if not isinstance(self._start, self._typeclass):
+                self._start = self._typeclass(self._start)
+        if self._end is not None:
+            if not isinstance(self._end, self._typeclass):
+                self._end = self._typeclass(self._end)
 
     def add_value(self, type_value, value):
         if not isinstance(type_value, self._typeclass):
@@ -110,7 +117,8 @@ class CustomValueSeries(ValueSeries):
         self._values[type_value] = value
 
     def _value_generator(self, start=None, end=None):
-        for value in sorted([self._typeclass(x) for x in self._values.keys()]):
+        values = sorted([self._typeclass(x) for x in self._values.keys()])
+        for value in values:
             if start is not None and value < start:
                 continue
             if end is not None and value > end:
