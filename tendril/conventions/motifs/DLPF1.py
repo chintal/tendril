@@ -129,30 +129,35 @@ class MotifDLPF1(MotifBase):
 
     @property
     def R1(self):
+        # TODO switch to series.get_type_value if custom series to be supported
         elem = self.get_elem_by_idx('R1')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
         return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
 
     @property
     def R2(self):
+        # TODO switch to series.get_type_value if custom series to be supported
         elem = self.get_elem_by_idx('R2')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
         return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
 
     @property
     def C1(self):
+        # TODO switch to series.get_type_value if custom series to be supported
         elem = self.get_elem_by_idx('C1')
         assert elem.data['device'] in ['CAP CER SMD', 'CAP CER THRU']
         return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])  # noqa
 
     @property
     def C2(self):
+        # TODO switch to series.get_type_value if custom series to be supported
         elem = self.get_elem_by_idx('C2')
         assert elem.data['device'] in ['CAP CER SMD', 'CAP CER THRU']
         return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])  # noqa
 
     @property
     def C3(self):
+        # TODO switch to series.get_type_value if custom series to be supported
         elem = self.get_elem_by_idx('C3')
         assert elem.data['device'] in ['CAP CER SMD', 'CAP CER THRU']
         return electronics.parse_capacitance(electronics.parse_capacitor(elem.data['value'])[0])  # noqa

@@ -20,17 +20,27 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 from ingbase import MotifInampGainBase
+from tendril.utils.types.electromagnetic import Resistance
+from tendril.utils.types.electromagnetic import VoltageGain
 
 
 class MotifING_AD8421(MotifInampGainBase):
     def res_to_gain(self, res):
         if res is None:
-            return 1
-        return 1 + (9900 / res)
+            return VoltageGain(1)
+        if isinstance(res, str):
+            res = Resistance(res)
+        if isinstance(res, Resistance):
+            res = float(res)
+        return VoltageGain(1 + (9900 / res))
 
     def gain_to_res(self, gain):
+        if isinstance(gain, str):
+            gain = VoltageGain(gain)
+        if isinstance(gain, VoltageGain):
+            gain = float(gain)
         if gain is 1:
             return None
         if gain < 1:
             raise ValueError
-        return 9900.0 / (gain - 1)
+        return Resistance(9900.0 / (gain - 1))

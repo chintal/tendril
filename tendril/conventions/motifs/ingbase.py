@@ -19,11 +19,12 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-import iec60063
 
 from tendril.conventions.motifs.motifbase import MotifBase
-from tendril.conventions import electronics
-from tendril.gedaif import gsymlib
+
+from tendril.conventions import series
+from tendril.utils.types.electromagnetic import Resistance
+from tendril.utils.types.electromagnetic import VoltageGain
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -35,6 +36,7 @@ class MotifInampGainBase(MotifBase):
 
     def configure(self, configdict):
         self._configdict = configdict
+        self.target_gain = VoltageGain(configdict['gain'])
         self.gain = configdict['gain']
         self.validate()
 
@@ -50,7 +52,7 @@ class MotifInampGainBase(MotifBase):
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
         if elem.data['fillstatus'] == 'DNP':
             return None
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
+        return self.rseries.get_type_value(elem.data['value'])
 
     @property
     def gain(self):
@@ -63,29 +65,40 @@ class MotifInampGainBase(MotifBase):
         if r1_fp[0:3] == "MY-":
             r1_fp = r1_fp[3:]
 
-        allowed_res_vals = iec60063.gen_vals(self._configdict['Rseries'],
-                                             iec60063.res_ostrs,
-                                             self._configdict['Rmin'],
-                                             self._configdict['Rmax'])
+        self.rseries = series.get_series(self._configdict['Rseries'],
+                                         'resistor',
+                                         start=self._configdict['Rmin'],
+                                         end=self._configdict['Rmax'],
+                                         device=r1_dev,
+                                         footprint=r1_fp)
 
+        allowed_res_vals = self.rseries.gen_vals('resistor')
         required_res_val = self.gain_to_res(value)
+
+        if required_res_val and not isinstance(required_res_val, Resistance):
+            required_res_val = Resistance(required_res_val)
         if required_res_val is None:
             self.get_elem_by_idx('R1').data['fillstatus'] = 'DNP'
             return
-        rval = None
+
         lastval = None
-        for val in allowed_res_vals:
-            lastval = rval
-            rval = electronics.parse_resistance(val)
+        for rval in allowed_res_vals:
+            if not lastval:
+                lastval = rval
             if rval > required_res_val:
-                self.get_elem_by_idx('R1').data['value'] = gsymlib.find_resistor(lastval, r1_fp, r1_dev)  # noqa
+                try:
+                    value = self.rseries.get_symbol(lastval).value
+                except AttributeError:
+                    value = self.rseries.get_symbol(lastval)
+                self.get_elem_by_idx('R1').data['value'] = value  # noqa
                 break
+            lastval = rval
 
     @property
     def parameters_base(self):
         p_gain = [
             ('R1', "Gain Setting Resistance", ''),
-            ('gain', "Amplifier DC Gain", ''),
+            ('gain', "Amplifier DC Gain", self.target_gain),
         ]
         parameters = [
             (p_gain, "Gain Setting"),

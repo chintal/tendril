@@ -73,6 +73,14 @@ class ValueSeries(object):
         ident = electronics.ident_transform(device, value, footprint)
         return gsymlib.get_symbol(ident)
 
+    def get_type_value(self, value):
+        if self._stype == 'capacitor':
+            capacitance, voltage = electronics.parse_capacitor(value)
+            return self._typeclass(capacitance)
+        if self._stype == 'resistor':
+            resistance, wattage = electronics.parse_resistor(value)
+            return self._typeclass(resistance)
+
 
 class IEC60063ValueSeries(ValueSeries):
     def __init__(self, series, stype, start=None, end=None,
@@ -137,6 +145,11 @@ class CustomValueSeries(ValueSeries):
         return super(CustomValueSeries, self).get_symbol(
                 self._values[value], device, footprint
         )
+
+    def get_type_value(self, value):
+        for type_value, lvalue in self._values.iteritems():
+            if lvalue == value:
+                return self._typeclass(type_value)
 
 
 # TODO Improve isolation from gedaif

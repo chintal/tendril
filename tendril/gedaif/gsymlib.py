@@ -497,6 +497,8 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
 
 
 def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
+    # TODO This should return a symbol instead, and usages should be adapted
+    # accordingly to make consistent with find_capacitor
     if isinstance(resistance, str):
         try:
             resistance = Resistance(resistance)
