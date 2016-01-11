@@ -42,10 +42,10 @@
 
 {% if stage.subfolders %}
     <h3> Subfolders of {{ stage.path }} </h3>
-    <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
+    <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer="folder">
         {% for folder in stage.subfolders %}
         <li>
-            <a href=" /gsymlib/{{folder.path}}?{{ stage.query_string }}" class="button square radius expand bg-t5" data-equalizer-watch>
+            <a href=" /gsymlib/{{folder.path}}?{{ stage.query_string }}" class="button square radius expand bg-t5" data-equalizer-watch="folder">
                 {{folder.name}}
             </a>
         </li>
@@ -55,10 +55,10 @@
 
 {% if stage.symbols %}
     <h3> Symbols in {{ stage.path }} </h3>
-    <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4" data-equalizer>
+    <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4" data-equalizer="symbol">
         {% for symbol in stage.symbols %}
         <li>
-            <ul class="pricing-table active-tb shadow mrgn-20-top">
+            <ul class="pricing-table active-tb shadow mrgn-20-top" data-equalizer-watch="symbol">
                 {% if symbol.generator %}
                 <a href = " /gsymlib/detail/{{symbol.genident|quote}} ">
                 <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.genident}}</span></li>

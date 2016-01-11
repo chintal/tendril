@@ -191,6 +191,9 @@ class TestBase(RunnableTest):
         self.ts = arrow.utcnow()
 
     def _load_variable(self, name, typeclass, default=None):
+        if name not in self.variables.keys():
+            assert isinstance(default, typeclass)
+            return default
         if isinstance(self.variables[name], typeclass):
             return self.variables[name]
         try:
@@ -216,8 +219,7 @@ class TestBase(RunnableTest):
                 return value
             value = typeclass(value)
         except KeyError:
-            assert isinstance(default, typeclass)
-            return default
+            raise
         return value
 
     def configure(self, **kwargs):

@@ -130,7 +130,7 @@
             <tbody>
             {% for row in stage.refbom.lines %}
                 <tr>
-                    <td> {{ row.ident }} </td>
+                    <td> <a href="/gsymlib/detail/{{ row.ident }}"> {{ row.ident }} </a> </td>
                     <td> {{ row.quantity }} </td>
                     <td>
                         {% for refdes in row.refdeslist %}{{ refdes }}{% if not loop.last %}, {% endif %}{% endfor %}

@@ -10,8 +10,8 @@
 <h3> gEDA Symbol Details </h3>
 
 <!--Symbol Information-->
-<div class="row">
-    <div class="small-12 medium-6 large-4 columns">
+<div class="row" data-equalizer="r1">
+    <div class="small-12 medium-6 large-4 columns" data-equalizer-watch="r1">
         <ul class="pricing-table shadow">
             <li class="price autoscale">{{stage.symbol.value}}</li>
             <li class="title">{{stage.symbol.ident}}</li>
@@ -65,24 +65,167 @@
             {% endif %}
         </ul>
     </div>
-    <!--<div class="small-12 medium-6 columns panel radius end">
-        {% for imgpath in stage.imgpaths %}
-            <img src="/gsymlib/gsymlib/{{imgpath}}">
-        {% endfor %}
-    </div>-->
+
+    <div class="small-12 medium-6 large-8 columns end" data-equalizer-watch="r1">
+        <ul class="large-block-grid-3 clearing-thumbs" data-clearing>
+            {% for imgpath in stage.imgpaths %}
+            <li>
+                <!-- TODO The hidden images aren't displayed in the lightbox. Fix this. -->
+                <a {% if loop.index > 3 %} class="hide" {% else %} class="th" {% endif %}
+                    href="/gsymlib/gsymlib/{{ imgpath }}">
+                    <img data-caption="{{ imgpath }}" src="/gsymlib/gsymlib/{{ imgpath }}">
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
 </div>
+
+<div class="row">
+<!--Inclusion Information-->
+    {% if stage.inclusion %}
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Inclusion</h6>
+        </div>
+        <div class="small-12 columns">
+            <table id="inclusion_table" class="display" data-paging='false'>
+                <thead>
+                <tr>
+                    <th class="all">Card</th>
+                    <th class="desktop">Description</th>
+                    <th class="all">PCB Status</th>
+                    <th class="all">Quantity</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in stage.inclusion %}
+                    <tr>
+                        <td> <a href="/entityhub/cards/{{row.0}}">{{ row.0 }}</a> </td>
+                        <td> {{ row.1 }} </td>
+                        <td class="text-center"> {{ row.2 }} </td>
+                        <td class="text-center"> {{ row.3 }} </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#inclusion_table').DataTable({
+                    /* Disable initial sort */
+                    "aaSorting": [],
+                    {% include 'parts/datatable_defaults.html' %}
+                });
+                table.buttons().container()
+                    .appendTo( '#inclusion_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            });
+        </script>
+
+    </div>
+    {% endif %}
+</div>
+<!--Inventory Information-->
+<div class="row">
+    <div class="small-12 medium-6 columns">
+        <div class="small-12 columns panel header radius">
+            <div class="sign small-9 medium-6 small-centered columns autoscale">
+                <h6>Inventory Status</h6>
+            </div>
+            <div class="small-12 columns">
+                <table id="inv_status_table" class="display" data-paging='false'>
+                    <thead>
+                    <tr>
+                        <th class="all">Inventory Location</th>
+                        <th class="desktop">Quantity</th>
+                        <th class="desktop">Reserved</th>
+                        <th class="all">Available</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for code, status in stage.inv_loc_status|dictsort %}
+                        <tr>
+                            <td> <a href="/inventory/location/{{ code }}">{{ status.0 }}</a> </td>
+                            <td class="text-center"> {{ status.1 or '-' }} </td>
+                            <td class="text-center"> {{ status.2 or '-' }} </td>
+                            <td class="text-center"> {{ status.3 or '-' }} </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td> <b> TOTAL </b> </td>
+                            <td class="text-center"><b>{{ stage.inv_total_quantity }}</b></td>
+                            <td class="text-center"><b>{{ stage.inv_total_reservations }}</b></td>
+                            <td class="text-center"><b>{{ stage.inv_total_availability }}</b></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <script type="text/javascript">
+                $(document).ready( function () {
+                    var table = $('#inv_status_table').DataTable({
+                        /* Disable initial sort */
+                        "aaSorting": [],
+                        "info": false,
+                        {% include 'parts/datatable_defaults.html' %}
+                    });
+                    table.buttons().container()
+                        .appendTo( '#inv_status_table_wrapper .small-12.medium-6.columns:eq(0)' );
+                });
+            </script>
+        </div>
+    </div>
+    <div class="small-12 medium-6 columns">
+        <div class="small-12 columns panel header radius">
+            <div class="sign small-9 medium-6 small-centered columns autoscale">
+                <h6>Inventory Transforms</h6>
+            </div>
+            <div class="small-12 columns">
+                <table id="inv_transform_table" class="display" data-paging='false'>
+                    <thead>
+                    <tr>
+                        <th class="all">Inventory Location</th>
+                        <th class="all">Contextual Representation</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for code, row in stage.inv_loc_transform|dictsort %}
+                        <tr>
+                            <td> <a href="/inventory/transform/{{ code }}">{{ row.0 }}</a> </td>
+                            <td> {{ row.1 or '' }} </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td> <b> Canonical </b> </td>
+                            <td><b>{{ stage.ident }}</b></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <script type="text/javascript">
+                $(document).ready( function () {
+                    var table = $('#inv_transform_table').DataTable({
+                        /* Disable initial sort */
+                        "aaSorting": [],
+                        "info": false,
+                        "ordering": false,
+                        {% include 'parts/datatable_defaults.html' %}
+                    });
+                    table.buttons().container()
+                        .appendTo( '#inv_transform_table_wrapper .small-12.medium-6.columns:eq(0)' );
+                });
+            </script>
+        </div>
+    </div>
+</div>
+<!--Inventory History-->
 
 <!--Sourcing Information-->
 
 <!--Sourcing History-->
-
-<!--Inventory Information-->
-
-<!--Inventory History-->
-
-<!--Utilization Information-->
-
-<!--Utilization History-->
-
 
 {% endblock %}

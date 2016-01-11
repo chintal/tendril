@@ -36,6 +36,9 @@ from tendril.utils.fsutils import get_path_breadcrumbs
 from tendril.utils.fsutils import Crumb
 from tendril.utils.config import GEDA_SYMLIB_ROOT
 
+from tendril.entityhub import projects
+from tendril.inventory import electronics as invelectronics
+
 
 def is_geda_folder(path):
     if path is not None:
@@ -124,11 +127,55 @@ def get_geda_symbol_context(ident):
         breadcrumbs.insert(-1, Crumb(name=os.path.splitext(symbol[0].fname)[0] + '.gen',  # noqa
                                      path='detail/' + os.path.splitext(symbol[0].fname)[0] + '.gen'))  # noqa
 
-    return {'ident': ident,
+    cobom = projects.get_bom_superset()
+    line = cobom.find_by_ident(ident)
+    cards = None
+    if line:
+        cards = []
+        for idx, column in enumerate(line.columns):
+            if column > 0:
+                cardname = cobom.descriptors[idx].configname
+                carddesc = None
+                for config in cobom.descriptors[idx].configurations.configurations:
+                    if config['configname'] == cardname:
+                        carddesc = config['desc']
+                try:
+                    pcbstatus = cobom.descriptors[idx].configurations.rawconfig['pcbdetails']['status']
+                except KeyError:
+                    pcbstatus = ''
+                cards.append((cardname, carddesc, pcbstatus, column))
+
+    stage = {'ident': ident,
             'symbol': symbol[0],
             'sympaths': [os.path.relpath(sym.fpath, GEDA_SYMLIB_ROOT) for sym in symbol],  # noqa
             'imgpaths': [sym.img_repr_fname for sym in symbol],
+            'inclusion': cards,
             'breadcrumbs': breadcrumbs}
+
+    inv_loc_status = {}
+    inv_loc_transform = {}
+    for loc in invelectronics.inventory_locations:
+        qty = loc.get_ident_qty(ident) or 0
+        reserve = loc.get_reserve_qty(ident) or 0
+        inv_loc_status[loc._code] = (loc._name, qty, reserve, qty-reserve)
+
+        inv_loc_transform[loc._code] = (loc._name,
+                                        loc.tf.get_contextual_repr(ident))
+    inv_total_reservations = invelectronics.get_total_reservations(ident)
+    inv_total_quantity = invelectronics.get_total_availability(ident)
+    inv_total_availability = inv_total_quantity - inv_total_reservations
+
+    inv_stage = {
+        'inv_loc_status': inv_loc_status,
+        'inv_total_reservations': inv_total_reservations,
+        'inv_total_quantity': inv_total_quantity,
+        'inv_total_availability': inv_total_availability,
+        'inv_loc_transform': inv_loc_transform,
+        'inv': invelectronics,
+    }
+
+    stage.update(inv_stage)
+    return stage
 
 
 def get_geda_generator_context(gen):
