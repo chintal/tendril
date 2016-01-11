@@ -33,7 +33,6 @@ install_requirements = [
     'pyyaml',
     'progress',
     'colorama',
-    'pcb-tools',
     'python-nvd3',
 
     # Flask Dependencies (to be pruned?)

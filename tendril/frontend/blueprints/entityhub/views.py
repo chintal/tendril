@@ -37,6 +37,7 @@ from tendril.dox.gedaproject import get_img_list
 from tendril.dox.gedaproject import get_pcbpricing_data
 from tendril.gedaif.conffile import ConfigsFile
 
+from tendril.inventory import electronics as invelectronics
 from tendril.utils.fsutils import Crumb
 from tendril.utils.types.currency import BASE_CURRENCY_SYMBOL
 
@@ -155,6 +156,7 @@ def pcbs(pcbname=None):
         return render_template('entityhub_pcbs.html', stage=stage,
                                pagetitle="Bare PCBs")
     else:
+
         stage = {'name': pcbname,
                  'configdata': ConfigsFile(ehprojects.pcbs[pcbname]),
                  'docs': get_docs_list(ehprojects.pcbs[pcbname]),
@@ -164,6 +166,32 @@ def pcbs(pcbname=None):
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Bare PCBs", path="pcbs/"),
                                  Crumb(name=pcbname, path="pcbs/" + pcbname)]}
+
+        ident = 'PCB ' + pcbname
+        inv_loc_status = {}
+        inv_loc_transform = {}
+        for loc in invelectronics.inventory_locations:
+            qty = loc.get_ident_qty(ident) or 0
+            reserve = loc.get_reserve_qty(ident) or 0
+            inv_loc_status[loc._code] = (loc._name, qty, reserve, qty-reserve)
+
+            inv_loc_transform[loc._code] = (loc._name,
+                                            loc.tf.get_contextual_repr(ident))
+        inv_total_reservations = invelectronics.get_total_reservations(ident)
+        inv_total_quantity = invelectronics.get_total_availability(ident)
+        inv_total_availability = inv_total_quantity - inv_total_reservations
+
+        inv_stage = {
+            'inv_loc_status': inv_loc_status,
+            'inv_total_reservations': inv_total_reservations,
+            'inv_total_quantity': inv_total_quantity,
+            'inv_total_availability': inv_total_availability,
+            'inv_loc_transform': inv_loc_transform,
+            'inv': invelectronics,
+        }
+
+        stage.update(inv_stage)
+
         return render_template('entityhub_pcb_detail.html', stage=stage,
                                pagetitle="PCB Details")
 
