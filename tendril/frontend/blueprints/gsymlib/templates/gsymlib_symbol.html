@@ -5,12 +5,25 @@
 
 {% extends "base_templates/base.html" %}
 
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="symbol"><a href="#symbol">Symbol</a></dd>
+        <dd data-magellan-arrival="inclusion"><a href="#inclusion">Inclusion</a></dd>
+        <dd data-magellan-arrival="inventory"><a href="#inventory">Inventory</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+
 {% block main %}
 
 <h3> gEDA Symbol Details </h3>
 
 <!--Symbol Information-->
-<div class="row" data-equalizer="r1">
+<div class="row" data-equalizer="r1" data-magellan-destination="symbol">
+<a name="symbol"></a>
     <div class="small-12 medium-6 large-4 columns" data-equalizer-watch="r1">
         <ul class="pricing-table shadow">
             <li class="price autoscale">{{stage.symbol.value}}</li>
@@ -82,7 +95,8 @@
 
 </div>
 
-<div class="row">
+<div class="row" data-magellan-destination="inclusion">
+<a name="inclusion"></a>
 <!--Inclusion Information-->
     {% if stage.inclusion %}
     <div class="small-12 columns panel header radius">
@@ -127,7 +141,8 @@
     {% endif %}
 </div>
 <!--Inventory Information-->
-<div class="row">
+<div class="row" data-magellan-destination="inventory">
+<a name="inventory"></a>
     <div class="small-12 medium-6 columns">
         <div class="small-12 columns panel header radius">
             <div class="sign small-9 medium-6 small-centered columns autoscale">
