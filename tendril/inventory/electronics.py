@@ -293,3 +293,10 @@ def export_reservations(folderpath):
                     " Reservations to File : " + dump_path)
 
 init_inventory_locations()
+
+
+def get_inventory_location(idx):
+    for loc in inventory_locations:
+        if loc._code == int(idx):
+            return loc
+    raise ValueError

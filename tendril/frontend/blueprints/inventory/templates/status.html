@@ -15,7 +15,7 @@
     <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
         {% for loc in stage.locs %}
         <li>
-            <a href="/inventory/location/{{ loop.index0 }}"
+            <a href="/inventory/location/{{ loc._code }}"
                class="small-12 columns button info radius active-tb shadow mrgn-20-top">
                 <div class="row text-center"><b>{{ loc._code }}-{{ loc._name }}</b></div>
                 <div class="row text-center">{{ loc.name }}</div>
@@ -36,10 +36,10 @@
                     <th class="desktop">Idx</th>
                     <th class="all">Ident</th>
                     {% for loc in stage.locs %}
-                    <th class="desktop"> {{ loc._name }}-AQ</th>
+                    <th class="desktop text-center"> {{ loc._name }}-AQ</th>
                     {% endfor %}
-                    <th class="desktop">Total Reserved</th>
-                    <th class="all">Net Available Qty</th>
+                    <th class="desktop text-center">Total Reserved</th>
+                    <th class="all text-center">Net Available Qty</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -49,10 +49,10 @@
                         <td> {{ loop.index }} </td>
                         <td> {{ ident }} </td>
                         {% for loc in stage.locs %}
-                            <td> {{ loc.get_ident_qty(ident) or '' }} </td>
+                            <td class="text-center"> {{ loc.get_ident_qty(ident) or '-' }} </td>
                         {% endfor %}
-                        <td> {{ stage.inv.get_total_reservations(ident) or '' }} </td>
-                        <td> {{ stage.inv.get_total_availability(ident) or '' }} </td>
+                        <td class="text-center"> {{ stage.inv.get_total_reservations(ident) or '-' }} </td>
+                        <td class="text-center"> {{ stage.inv.get_total_availability(ident) or '-' }} </td>
                     </tr>
                 {% endfor %}
 

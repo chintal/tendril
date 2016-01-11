@@ -50,7 +50,7 @@ def transforms(location_idx=None):
         return render_template('overview.html', stage=stage,
                                pagetitle="All Inventory Transforms")
     else:
-        loc = invelectronics.inventory_locations[int(location_idx)]
+        loc = invelectronics.get_inventory_location(idx=location_idx)
         form = TransformUpdateForm(names=loc.tf.names)
         if form.validate_on_submit():
             if form.contextual.data in loc.tf.names:

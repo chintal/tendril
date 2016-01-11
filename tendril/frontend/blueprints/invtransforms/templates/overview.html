@@ -15,7 +15,7 @@
     <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
         {% for loc in stage.locs %}
         <li>
-            <a href="/inventory/transform/{{ loop.index0 }}"
+            <a href="/inventory/transform/{{ loc._code }}"
                class="small-12 columns button info radius active-tb shadow mrgn-20-top">
                 <div class="row text-center"><b>{{ loc._code }}-{{ loc._name }}</b></div>
                 <div class="row text-center">{{ loc.name }}</div>

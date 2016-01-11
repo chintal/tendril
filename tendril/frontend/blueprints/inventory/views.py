@@ -52,7 +52,8 @@ def status(location_idx=None):
         return render_template('status.html', stage=stage,
                                pagetitle="All Inventory Locations")
     else:
-        loc = invelectronics.inventory_locations[int(location_idx)]
+        loc = invelectronics.get_inventory_location(idx=location_idx)
+
         stage = {'loc': loc,
                  'crumbroot': '/inventory',
                  'breadcrumbs': [Crumb(name="Inventory", path=""),

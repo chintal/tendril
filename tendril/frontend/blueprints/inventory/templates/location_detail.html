@@ -14,20 +14,24 @@
 <div class="small-12 columns">
     {% if stage.loc._reader._xlf %}
     <ul style="list-style-type: none;">
-        <li class="small-12 medium-6 large-8 columns panel radius text-center"> 
-            <b>File Path</b> <br> 
-            {{ stage.loc._reader.filepath }} 
+        <li class="small-12 medium-6 large-8 columns panel radius text-center">
+            <b>File Path</b> <br>
+            {{ stage.loc._reader.filepath }}
         </li>
-        <li class="small-12 medium-3 large-2 columns panel radius text-center"> 
-            Sheet Name <br> 
-            <b>{{ stage.loc._reader.sheetname }}</b> 
+        <li class="small-12 medium-3 large-2 columns panel radius text-center">
+            Sheet Name <br>
+            <b>{{ stage.loc._reader.sheetname }}</b>
         </li>
-        <li class="small-12 medium-3 large-2 columns panel radius text-center"> 
-            Quantity Date <br> 
+        <li class="small-12 medium-3 large-2 columns panel radius text-center">
+            Quantity Date <br>
             <b>{{ stage.loc._reader.qtydate }} </b>
         </li>
     </ul>
     {% endif %}
+</div>
+
+<div class="small-12 columns">
+    <a href="/inventory/transform/{{ stage.loc._code }}"><div class="small-12 columns button radius secondary"> Go to Transform </div></a>
 </div>
 
 <div class="small-12 columns" data-magellan-destination="locstatus">
@@ -39,9 +43,9 @@
                     <th class="min-tablet">Idx</th>
                     <th class="all">Canonical Representation</th>
                     <th class="min-desktop">Contextual Representation</th>
-                    <th class="all">Available Qty</th>
-                    <th class="min-tablet">Reserved Qty</th>
-                    <th class="all">Net Available Qty</th>
+                    <th class="all text-center">Available Qty</th>
+                    <th class="min-tablet text-center">Reserved Qty</th>
+                    <th class="all text-center">Net Available Qty</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -50,9 +54,9 @@
                         <td> {{ loop.index }} </td>
                         <td> {{ line.ident }} </td>
                         <td> {{ stage.loc._reader.tf.get_contextual_repr(line.ident) }} </td>
-                        <td> {{ line._qty }} </td>
-                        <td> {{ line.reserved_qty }} </td>
-                        <td> {{ line.avail_qty }} </td>
+                        <td class="text-center"> {{ line._qty or '-' }} </td>
+                        <td class="text-center"> {{ line.reserved_qty or '-' }} </td>
+                        <td class="text-center"> {{ line.avail_qty or '-' }} </td>
                     </tr>
                 {% endfor %}
                 </tbody>
