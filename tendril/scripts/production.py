@@ -34,8 +34,8 @@ from tendril.dox.production import gen_production_order
 from tendril.dox.production import gen_pcb_am
 from tendril.dox.production import gen_delta_pcb_am
 from tendril.dox.production import get_production_strategy
-
 from tendril.dox.indent import gen_stock_idt_from_cobom
+
 from tendril.dox import docstore
 from tendril.dox import labelmaker
 
@@ -208,6 +208,100 @@ def generate_indent(bomlist, orderfolder, data, prod_ord_sno,
     return indentsno
 
 
+def get_card_snoseries(cardname):
+    strategy = get_production_strategy(cardname)
+    prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy
+    return series
+
+
+def get_card_sno(card, idx, snomap, prod_ord_sno, register=False):
+    series = get_card_snoseries(card)
+    if card in snomap.keys():
+        if idx in snomap[card].keys():
+            sno = snomap[card][idx]
+        else:
+            sno = serialnos.get_serialno(
+                series=series, efield=card, register=register
+            )
+            snomap[card][idx] = sno
+    else:
+        snomap[card] = {}
+        sno = serialnos.get_serialno(
+            series=series, efield=card, register=register
+        )
+        snomap[card][idx] = sno
+    if register is True:
+        serialnos.link_serialno(child=sno, parent=prod_ord_sno)
+    return sno, snomap
+
+
+def generate_card_docs(cardname, sno, manifestsfolder,
+                       prod_ord_sno, indentsno, register=False):
+    cardfolder = projects.cards[cardname]
+    strategy = get_production_strategy(cardname)
+    prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy
+    c = {'sno': sno, 'ident': cardname,
+         'prodst': prodst, 'lblst': lblst, 'testst': testst,
+         'is_delta': False
+         }
+    if genlabel is True:
+        for label in labels:
+            labelmaker.manager.add_label(
+                label['code'], label['ident'], sno
+            )
+    if genmanifest is True:
+        ampath = gen_pcb_am(cardfolder, cardname,
+                            manifestsfolder, sno,
+                            productionorderno=prod_ord_sno,
+                            indentsno=indentsno)
+        if register is True:
+            docstore.register_document(serialno=sno, docpath=ampath,  # noqa
+                                       doctype='ASSEMBLY MANIFEST')  # noqa
+    else:
+        ampath = None
+    return c, ampath
+
+
+def generate_delta_docs(delta, manifestsfolder, prod_ord_sno,
+                        indentsno, register=False):
+    dmpath = gen_delta_pcb_am(
+                delta['orig-cardname'], delta['target-cardname'],
+                outfolder=manifestsfolder, sno=delta['sno'],
+                indentsno=indentsno, productionorderno=prod_ord_sno
+    )
+    if register is True:
+        docstore.register_document(serialno=delta['sno'], docpath=dmpath,
+                                   doctype='DELTA ASSEMBLY MANIFEST')
+        serialnos.set_serialno_efield(sno=delta['sno'],
+                                      efield=delta['target-cardname'])
+
+    strategy = get_production_strategy(delta['target-cardname'])
+    prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy
+    desc = delta['orig-cardname'] + ' -> ' + delta['target-cardname']
+    c = {'sno': delta['sno'], 'ident': delta['target-cardname'],
+         'prodst': '@AM', 'lblst': lblst, 'testst': testst,
+         'is_delta': True, 'desc': desc
+         }
+
+    if genlabel is True:
+        for label in labels:
+            labelmaker.manager.add_label(
+                label['code'], label['ident'], delta['sno']
+            )
+
+    return c, dmpath
+
+
+def generate_labels(orderfolder, force_labels=True):
+    labelpaths = labelmaker.manager.generate_pdfs(orderfolder,
+                                                  force=force_labels)
+    if len(labelpaths) > 0:
+        merge_pdf(
+            labelpaths,
+            os.path.join(orderfolder, 'device-labels.pdf')
+        )
+
+
 def main(orderfolder=None, orderfile_r=None,
          register=None, verbose=True):
 
@@ -294,106 +388,53 @@ def main(orderfolder=None, orderfile_r=None,
         )
         snomap['indentsno'] = indentsno
 
-    # Generate Production Order
-    if verbose:
-        print("Generating Production Order")
-
     if 'cards' in data.keys():
+        if verbose:
+            print('Generating Card Manifests')
         for card, qty in sorted(data['cards'].iteritems()):
-            cardfolder = projects.cards[card]
-            strategy = get_production_strategy(card)
-            prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy  # noqa
             for idx in range(qty):
-                if card in snomap.keys():
-                    if idx in snomap[card].keys():
-                        sno = snomap[card][idx]
-                    else:
-                        sno = serialnos.get_serialno(
-                            series=series, efield=card, register=REGISTER
-                        )
-                        snomap[card][idx] = sno
-                else:
-                    snomap[card] = {}
-                    sno = serialnos.get_serialno(
-                        series=series, efield=card, register=REGISTER
-                    )
-                    snomap[card][idx] = sno
-                if REGISTER is True:
-                    serialnos.link_serialno(child=sno, parent=PROD_ORD_SNO)
-                c = {'sno': sno, 'ident': card,
-                     'prodst': prodst, 'lblst': lblst, 'testst': testst,
-                     'is_delta': False
-                     }
+                sno, snomap = get_card_sno(card, idx, snomap,
+                                           PROD_ORD_SNO, REGISTER)
+                c, ampath = generate_card_docs(card, sno, manifestsfolder,
+                                               PROD_ORD_SNO, indentsno,
+                                               REGISTER)
                 snos.append(c)
-                if genlabel is True:
-                    for label in labels:
-                        labelmaker.manager.add_label(
-                            label['code'], label['ident'], sno
-                        )
-                if genmanifest is True:
-                    ampath = gen_pcb_am(cardfolder, card,
-                                        manifestsfolder, sno,
-                                        productionorderno=PROD_ORD_SNO,
-                                        indentsno=indentsno)
+                if ampath:
                     manifestfiles.append(ampath)
-                    if REGISTER is True:
-                        docstore.register_document(serialno=sno, docpath=ampath,  # noqa
-                                                   doctype='ASSEMBLY MANIFEST')  # noqa
 
     if 'deltas' in data.keys():
         if verbose:
             print('Generating Delta Manifests')
         for delta in data['deltas']:
-            dmpath = gen_delta_pcb_am(
-                delta['orig-cardname'], delta['target-cardname'],
-                outfolder=manifestsfolder, sno=delta['sno'],
-                indentsno=indentsno, productionorderno=PROD_ORD_SNO
-            )
-            manifestfiles.append(dmpath)
-            if REGISTER is True:
-                docstore.register_document(serialno=delta['sno'], docpath=dmpath,
-                                           doctype='DELTA ASSEMBLY MANIFEST')
-                serialnos.set_serialno_efield(sno=delta['sno'],
-                                              efield=delta['target-cardname'])
-
-            strategy = get_production_strategy(delta['target-cardname'])
-            prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy  # noqa
-            desc = delta['orig-cardname'] + ' -> ' + delta['target-cardname']
-            c = {'sno': delta['sno'], 'ident': delta['target-cardname'],
-                 'prodst': '@AM', 'lblst': lblst, 'testst': testst,
-                 'is_delta': True, 'desc': desc
-                 }
+            c, dmpath = generate_delta_docs(delta, manifestsfolder,
+                                            PROD_ORD_SNO, indentsno,
+                                            register=REGISTER)
+            if dmpath:
+                manifestfiles.append(dmpath)
             snos.append(c)
-            if genlabel is True:
-                for label in labels:
-                    labelmaker.manager.add_label(
-                        label['code'], label['ident'], delta['sno']
-                    )
+
+    # Generate Production Order
+    if verbose:
+        print("Generating Production Order")
 
     production_order = gen_production_order(orderfolder, PROD_ORD_SNO,
                                             data, snos,
                                             sourcing_orders=SOURCING_ORDERS,
                                             root_orders=ROOT_ORDERS)
-    labelpaths = labelmaker.manager.generate_pdfs(orderfolder,
-                                                  force=FORCE_LABELS)
-
-    if len(labelpaths) > 0:
-        merge_pdf(
-            labelpaths,
-            os.path.join(orderfolder, 'device-labels.pdf')
-        )
     if len(addldocs) > 0:
         merge_pdf(
             [production_order] + addldocs,
             production_order,
             remove_sources=False
         )
+
     if len(manifestfiles) > 0:
         merge_pdf(
             manifestfiles,
             os.path.join(orderfolder, 'manifests-printable.pdf')
         )
 
+    generate_labels(orderfolder, FORCE_LABELS)
     if REGISTER is True:
         if os.path.exists(os.path.join(orderfolder, 'device-labels.pdf')):
             docstore.register_document(serialno=PROD_ORD_SNO,
