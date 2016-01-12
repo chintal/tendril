@@ -184,6 +184,17 @@ def gen_pcb_am(projfolder, configname, outfolder, sno=None,
     return outpath
 
 
+def gen_delta_obom(orig_cardname, target_cardname):
+
+    orig_bom = boms_electronics.import_pcb(projects.cards[orig_cardname])
+    orig_obom = orig_bom.create_output_bom(orig_cardname)
+
+    target_bom = boms_electronics.import_pcb(projects.cards[target_cardname])
+    target_obom = target_bom.create_output_bom(target_cardname)
+
+    return DeltaOutputBom(orig_obom, target_obom)
+
+
 def gen_delta_pcb_am(orig_cardname, target_cardname,
                      outfolder=None, sno=None,
                      productionorderno=None, indentsno=None):
@@ -325,7 +336,7 @@ def gen_delta_pcb_am(orig_cardname, target_cardname,
     template = 'production/delta-assem-manifest.tex'
 
     render.render_pdf(stage, template, outpath)
-    return outpath, delta_obom
+    return outpath
 
 
 def gen_production_order(outfolder, prod_sno, sourcedata, snos,
@@ -391,6 +402,12 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
 
     """
 
+    cards = []
+    if 'cards' in sourcedata.keys():
+        cards = [{'qty': sourcedata['cards'][k],
+                  'desc': ConfigsFile(projects.cards[k]).description(k),
+                  'ident': k} for k in sorted(sourcedata['cards'].keys())]
+
     deltas = {}
     if 'deltas' in sourcedata.keys():
         for delta in sourcedata['deltas']:
@@ -399,12 +416,6 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
                 deltas[desc] += 1
             else:
                 deltas[desc] = 1
-
-    cards = []
-    if 'cards' in sourcedata.keys():
-        cards = [{'qty': sourcedata['cards'][k],
-                  'desc': ConfigsFile(projects.cards[k]).description(k),
-                  'ident': k} for k in sorted(sourcedata['cards'].keys())]
 
     lroot_orders = []
     for root_order in root_orders:

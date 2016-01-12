@@ -32,6 +32,7 @@ from tendril.inventory.electronics import reserve_items
 from tendril.dox.production import gen_production_order
 from tendril.dox.production import gen_pcb_am
 from tendril.dox.production import gen_delta_pcb_am
+from tendril.dox.production import gen_delta_obom
 from tendril.dox.production import get_production_strategy
 
 from tendril.dox.indent import gen_stock_idt_from_cobom
@@ -135,33 +136,21 @@ def main(orderfolder=None, orderfile_r=None,
         if verbose:
             print('Generating Delta BOMs and Manifests')
         for delta in data['deltas']:
-            dmpath, delta_obom = gen_delta_pcb_am(
-                delta['orig-cardname'], delta['target-cardname'],
-                outfolder=manifestsfolder, sno=delta['sno']
+            old_ef = serialnos.get_serialno_efield(sno=delta['sno'])
+            if old_ef != delta['orig-cardname']:
+                print('Original cardname for {0} is {1}, not {2} (expected). '
+                      'Recheck and retry.'.format(
+                        delta['sno'], old_ef, delta['orig-cardname']
+                        ))
+                exit()
+            delta_obom = gen_delta_obom(
+                delta['orig-cardname'], delta['target-cardname']
             )
             obom = delta_obom.additions_bom
             print('Inserting Delta Addition Bom : {0}'.format(
                 obom.descriptor.configname
             ))
             bomlist.append(obom)
-            manifestfiles.append(dmpath)
-            if REGISTER is True:
-                docstore.register_document(serialno=delta['sno'], docpath=dmpath,
-                                           doctype='DELTA ASSEMBLY MANIFEST')
-
-            strategy = get_production_strategy(delta['target-cardname'])
-            prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy  # noqa
-            desc = delta['orig-cardname'] + ' -> ' + delta['target-cardname']
-            c = {'sno': delta['sno'], 'ident': delta['target-cardname'],
-                 'prodst': '@AM', 'lblst': lblst, 'testst': testst,
-                 'is_delta': True, 'desc': desc
-                 }
-            snos.append(c)
-            if genlabel is True:
-                for label in labels:
-                    labelmaker.manager.add_label(
-                        label['code'], label['ident'], delta['sno']
-                    )
 
     if len(bomlist) == 0:
         indentsno = None
@@ -313,6 +302,36 @@ def main(orderfolder=None, orderfile_r=None,
                     if REGISTER is True:
                         docstore.register_document(serialno=sno, docpath=ampath,  # noqa
                                                    doctype='ASSEMBLY MANIFEST')  # noqa
+
+    if 'deltas' in data.keys():
+        if verbose:
+            print('Generating Delta Manifests')
+        for delta in data['deltas']:
+            dmpath = gen_delta_pcb_am(
+                delta['orig-cardname'], delta['target-cardname'],
+                outfolder=manifestsfolder, sno=delta['sno'],
+                indentsno=indentsno, productionorderno=PROD_ORD_SNO
+            )
+            manifestfiles.append(dmpath)
+            if REGISTER is True:
+                docstore.register_document(serialno=delta['sno'], docpath=dmpath,
+                                           doctype='DELTA ASSEMBLY MANIFEST')
+                serialnos.set_serialno_efield(sno=delta['sno'],
+                                              efield=delta['target-cardname'])
+
+            strategy = get_production_strategy(delta['target-cardname'])
+            prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy  # noqa
+            desc = delta['orig-cardname'] + ' -> ' + delta['target-cardname']
+            c = {'sno': delta['sno'], 'ident': delta['target-cardname'],
+                 'prodst': '@AM', 'lblst': lblst, 'testst': testst,
+                 'is_delta': True, 'desc': desc
+                 }
+            snos.append(c)
+            if genlabel is True:
+                for label in labels:
+                    labelmaker.manager.add_label(
+                        label['code'], label['ident'], delta['sno']
+                    )
 
     production_order = gen_production_order(orderfolder, PROD_ORD_SNO,
                                             data, snos,

@@ -41,6 +41,13 @@ def get_serialno_efield(sno=None, session=None):
 
 
 @with_db
+def set_serialno_efield(sno=None, efield=None, session=None):
+    sobj = controller.get_serialno_object(sno=sno, session=session)
+    sobj.efield = efield
+    return
+
+
+@with_db
 def serialno_exists(sno=None, session=None):
     try:
         controller.get_serialno_object(sno=sno, session=session)
