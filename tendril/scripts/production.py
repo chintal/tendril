@@ -50,7 +50,7 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
-def gen_delta_obom(orig_cardname, target_cardname):
+def get_delta_obom(orig_cardname, target_cardname):
 
     orig_bom = import_pcb(projects.cards[orig_cardname])
     orig_obom = orig_bom.create_output_bom(orig_cardname)
@@ -61,9 +61,156 @@ def gen_delta_obom(orig_cardname, target_cardname):
     return DeltaOutputBom(orig_obom, target_obom)
 
 
+def get_card_obom(cardname, qty):
+    bom = import_pcb(projects.cards[cardname])
+    obom = bom.create_output_bom(cardname)
+    obom.multiply(qty)
+    return obom
+
+
+def get_bomlist(data, verbose=False):
+    bomlist = []
+    if 'cards' in data.keys():
+        if verbose:
+            print('Generating Card BOMs')
+        for cardname, qty in data['cards'].iteritems():
+            obom = get_card_obom(cardname, qty)
+            print('Inserting Card Bom : {0} x{1}'.format(
+                obom.descriptor.configname, obom.descriptor.multiplier
+            ))
+            bomlist.append(obom)
+    if 'deltas' in data.keys():
+        if verbose:
+            print('Generating Delta BOMs')
+        for delta in data['deltas']:
+            old_ef = serialnos.get_serialno_efield(sno=delta['sno'])
+            if old_ef != delta['orig-cardname']:
+                print('Original cardname for {0} is {1}, not {2} (expected). '
+                      'Recheck and retry.'.format(
+                        delta['sno'], old_ef, delta['orig-cardname']
+                        ))
+                exit()
+            delta_obom = get_delta_obom(
+                delta['orig-cardname'], delta['target-cardname']
+            )
+            obom = delta_obom.additions_bom
+            print('Inserting Delta Addition Bom : {0}'.format(
+                obom.descriptor.configname
+            ))
+            bomlist.append(obom)
+    return bomlist
+
+
+def get_indent_context(data):
+    indent_context = {}
+    if 'cards' in data.keys():
+        indent_context.update(data['cards'])
+    if 'deltas' in data.keys():
+        for delta in data['deltas']:
+            desc = delta['orig-cardname'] + ' -> ' + delta['target-cardname']
+            if desc in indent_context.keys():
+                indent_context[desc] += 1
+            else:
+                indent_context[desc] = 1
+    return indent_context
+
+
+def get_line_shortage(line, descriptors):
+    shortage = 0
+    logger.debug("Processing Line : " + line.ident)
+    for idx, descriptor in enumerate(descriptors):
+        logger.debug("    for earmark : " + descriptor.configname)
+        earmark = descriptor.configname + \
+            ' x' + str(descriptor.multiplier)
+        avail = get_total_availability(line.ident)  # noqa
+        if line.columns[idx] == 0:
+            continue
+        if avail > line.columns[idx]:
+            reserve_items(line.ident, line.columns[idx], earmark)
+        elif avail > 0:
+            reserve_items(line.ident, avail, earmark)
+            pshort = line.columns[idx] - avail
+            shortage += pshort
+            logger.debug('Adding Partial Qty of ' + line.ident +
+                         ' for ' + earmark + ' to shortage ' +
+                         str(pshort))
+        else:
+            shortage += line.columns[idx]
+            logger.debug('Adding Full Qty of ' + line.ident +
+                         ' for ' + earmark + ' to shortage : ' +
+                         str(line.columns[idx]))
+    return shortage
+
+
+def generate_indent(bomlist, orderfolder, data, prod_ord_sno,
+                    indentsno=None, register=False, verbose=False,
+                    halt_on_shortage=False):
+    cobom = CompositeOutputBom(bomlist)
+    cobom.collapse_wires()
+
+    with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
+        if verbose:
+            print('Exporting Composite Output BOM to File : ' + os.linesep +
+                  os.path.join(orderfolder, 'cobom.csv'))
+        cobom.dump(f)
+
+    unsourced = []
+    nlines = len(cobom.lines)
+    pb = TendrilProgressBar(max=nlines)
+
+    for pbidx, line in enumerate(cobom.lines):
+        pb.next(note=line.ident)
+        shortage = get_line_shortage(line, cobom.descriptors)
+        if shortage > 0:
+            unsourced.append((line.ident, shortage))
+
+    if len(unsourced) > 0:
+        print("Shortage of the following components: ")
+        for elem in unsourced:
+            print("{0:<40}{1:>5}".format(elem[0], elem[1]))
+        if halt_on_shortage is True:
+            print ("Halt on shortage is set. Reversing changes "
+                   "and exiting")
+            exit()
+
+    # TODO Transfer Reservations
+    # Generate Indent
+    if verbose:
+        print("Generating Indent")
+
+    indentfolder = orderfolder
+    if indentsno is None:
+        indentsno = serialnos.get_serialno(series='IDT',
+                                           efield='FOR ' + prod_ord_sno,
+                                           register=register)
+
+    indent_context = get_indent_context(data)
+    indentpath, indentsno = gen_stock_idt_from_cobom(
+            indentfolder, indentsno, data['title'], indent_context, cobom
+    )
+    if register is True:
+        docstore.register_document(serialno=indentsno,
+                                   docpath=indentpath,
+                                   doctype='INVENTORY INDENT',
+                                   efield=data['title'])
+        docstore.register_document(serialno=indentsno,
+                                   docpath=os.path.join(orderfolder, 'cobom.csv'),  # noqa
+                                   doctype='PRODUCTION COBOM CSV',
+                                   efield=data['title'])
+        serialnos.link_serialno(child=indentsno, parent=prod_ord_sno)
+    else:
+        print("Not Registering Document : INVENTORY INDENT - " + indentsno)
+        print("Not Registering Document : PRODUCTION COBOM CSV - " +
+              indentsno)
+        print("Not Linking Serial Nos : " + indentsno +
+              ' to parent ' + prod_ord_sno)
+
+    return indentsno
+
+
 def main(orderfolder=None, orderfile_r=None,
          register=None, verbose=True):
-    bomlist = []
+
     if orderfile_r is None:
         orderfile_r = 'order.yaml'
     if orderfolder is None:
@@ -132,145 +279,24 @@ def main(orderfolder=None, orderfile_r=None,
     snos = []
 
     # Generate Tendril Requisitions, confirm production viability.
-    if 'cards' in data.keys():
-        if verbose:
-            print('Generating Card BOMs')
-        for k, v in data['cards'].iteritems():
-            bom = import_pcb(projects.cards[k])
-            obom = bom.create_output_bom(k)
-            obom.multiply(v)
-            print('Inserting Card Bom : {0} x{1}'.format(
-                obom.descriptor.configname, obom.descriptor.multiplier
-            ))
-            bomlist.append(obom)
-    if 'deltas' in data.keys():
-        if verbose:
-            print('Generating Delta BOMs and Manifests')
-        for delta in data['deltas']:
-            old_ef = serialnos.get_serialno_efield(sno=delta['sno'])
-            if old_ef != delta['orig-cardname']:
-                print('Original cardname for {0} is {1}, not {2} (expected). '
-                      'Recheck and retry.'.format(
-                        delta['sno'], old_ef, delta['orig-cardname']
-                        ))
-                exit()
-            delta_obom = gen_delta_obom(
-                delta['orig-cardname'], delta['target-cardname']
-            )
-            obom = delta_obom.additions_bom
-            print('Inserting Delta Addition Bom : {0}'.format(
-                obom.descriptor.configname
-            ))
-            bomlist.append(obom)
+    bomlist = get_bomlist(data, verbose)
 
     if len(bomlist) == 0:
         indentsno = None
     else:
-        cobom = CompositeOutputBom(bomlist)
-        cobom.collapse_wires()
-
-        with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
-            if verbose:
-                print('Exporting Composite Output BOM to File : ' + os.linesep +
-                      os.path.join(orderfolder, 'cobom.csv'))
-            cobom.dump(f)
-
-        unsourced = []
-        nlines = len(cobom.lines)
-        pb = TendrilProgressBar(max=nlines)
-
-        for pbidx, line in enumerate(cobom.lines):
-            pb.next(note=line.ident)
-            shortage = 0
-            logger.debug("Processing Line : " + line.ident)
-            for idx, descriptor in enumerate(cobom.descriptors):
-                logger.debug("    for earmark : " + descriptor.configname)
-                earmark = descriptor.configname + \
-                    ' x' + str(descriptor.multiplier)
-                avail = get_total_availability(line.ident)  # noqa
-                if line.columns[idx] == 0:
-                    continue
-                if avail > line.columns[idx]:
-                    reserve_items(line.ident, line.columns[idx], earmark)
-                elif avail > 0:
-                    reserve_items(line.ident, avail, earmark)
-                    pshort = line.columns[idx] - avail
-                    shortage += pshort
-                    logger.debug('Adding Partial Qty of ' + line.ident +
-                                 ' for ' + earmark + ' to shortage ' +
-                                 str(pshort))
-                else:
-                    shortage += line.columns[idx]
-                    logger.debug('Adding Full Qty of ' + line.ident +
-                                 ' for ' + earmark + ' to shortage : ' +
-                                 str(line.columns[idx]))
-
-            if shortage > 0:
-                unsourced.append((line.ident, shortage))
-
-        if len(unsourced) > 0:
-            print("Shortage of the following components: ")
-            for elem in unsourced:
-                print("{0:<40}{1:>5}".format(elem[0], elem[1]))
-            if HALT_ON_SHORTAGE is True:
-                print ("Halt on shortage is set. Reversing changes "
-                       "and exiting")
-                exit()
-
-        # TODO Transfer Reservations
-        # Generate Indent
-        if verbose:
-            print("Generating Indent")
-
-        indentfolder = orderfolder
         if 'indentsno' in snomap.keys():
             indentsno = snomap['indentsno']
         else:
-            indentsno = serialnos.get_serialno(series='IDT',
-                                               efield='FOR ' + PROD_ORD_SNO,
-                                               register=REGISTER)
-            snomap['indentsno'] = indentsno
-        title = data['title']
-        indent_context = {}
-        if 'cards' in data.keys():
-            indent_context.update(data['cards'])
-        if 'deltas' in data.keys():
-            for delta in data['deltas']:
-                desc = delta['orig-cardname'] + ' -> ' + delta['target-cardname']
-                if desc in indent_context.keys():
-                    indent_context[desc] += 1
-                else:
-                    indent_context[desc] = 1
-        indentpath, indentsno = gen_stock_idt_from_cobom(
-                indentfolder, indentsno, title, indent_context, cobom
+            indentsno = None
+        indentsno = generate_indent(
+                bomlist, orderfolder, data, PROD_ORD_SNO, indentsno,
+                REGISTER, verbose, HALT_ON_SHORTAGE
         )
-        if REGISTER is True:
-            docstore.register_document(serialno=indentsno,
-                                       docpath=indentpath,
-                                       doctype='INVENTORY INDENT',
-                                       efield=title)
-        else:
-            print(
-                "Not Registering Document : INVENTORY INDENT - " + indentsno
-            )
+        snomap['indentsno'] = indentsno
 
     # Generate Production Order
     if verbose:
         print("Generating Production Order")
-    if indentsno is not None:
-        if REGISTER is True:
-            docstore.register_document(serialno=indentsno,
-                                       docpath=os.path.join(orderfolder, 'cobom.csv'),  # noqa
-                                       doctype='PRODUCTION COBOM CSV',
-                                       efield=title)
-            serialnos.link_serialno(child=indentsno, parent=PROD_ORD_SNO)
-        else:
-            print("Not registering used serial number : " +
-                  PROD_ORD_SNO)
-            print("Not Registering Document : PRODUCTION COBOM CSV - " +
-                  indentsno)
-            print("Not Linking Serial Nos : " + indentsno +
-                  ' to parent ' + PROD_ORD_SNO)
 
     if 'cards' in data.keys():
         for card, qty in sorted(data['cards'].iteritems()):
