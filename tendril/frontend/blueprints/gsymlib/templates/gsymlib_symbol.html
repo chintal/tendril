@@ -143,6 +143,7 @@
 <!--Inventory Information-->
 <div class="row" data-magellan-destination="inventory">
 <a name="inventory"></a>
+
     <div class="small-12 medium-6 columns">
         <div class="small-12 columns panel header radius">
             <div class="sign small-9 medium-6 small-centered columns autoscale">
@@ -192,6 +193,7 @@
             </script>
         </div>
     </div>
+
     <div class="small-12 medium-6 columns">
         <div class="small-12 columns panel header radius">
             <div class="sign small-9 medium-6 small-centered columns autoscale">
@@ -234,6 +236,71 @@
                         .appendTo( '#inv_transform_table_wrapper .small-12.medium-6.columns:eq(0)' );
                 });
             </script>
+        </div>
+    </div>
+
+    <div class="small-12 colums">
+        <div class="small-12 columns panel header radius">
+            <div class="sign small-9 medium-6 small-centered columns autoscale">
+                <h6>Inventory Guideline</h6>
+            </div>
+            <div class="small-12 medium-4 columns">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <th class="text-center" colspan="2">Order Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="text-center" width="50%">Minimum</td>
+                        <td class="text-center" width="50%">{{ stage.inv_guideline.oqty_min }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" width="50%">Multiple</td>
+                        <td class="text-center" width="50%">{{ stage.inv_guideline.oqty_multiple }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="small-12 medium-4 columns">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <th class="text-center" colspan="2">Baseline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="text-center" width="50%">Quantity</td>
+                        <td class="text-center" width="50%">{{ stage.inv_guideline.baseline_qty }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="small-12 medium-4 columns">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <th class="text-center" colspan="2">Excess</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="text-center" width="50%">Minimum (Percentage)</td>
+                        <td class="text-center" width="50%">{{ stage.inv_guideline.excess_min_pc }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" width="50%">Minimum (Quantity)</td>
+                        <td class="text-center" width="50%">{{ stage.inv_guideline.excess_min_qty }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" width="50%">Maximum (Quantity)</td>
+                        <td class="text-center" width="50%">{{ stage.inv_guideline.excess_max_qty }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

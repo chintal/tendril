@@ -124,12 +124,7 @@ class QtyGuidelines(object):
         return oqty_min, oqty_multiple, baseline_qty, \
             excess_min_pc, excess_min_qty, excess_max_qty
 
-    def get_compliant_qty(self, ident, qty,
-                          handle_excess=True,
-                          except_on_overrun=True,
-                          handle_baseline=False,
-                          ):
-        oqty = qty
+    def get_guideline(self, ident):
         device, value, footprint = parse_ident(ident)
         if ident in self._idents.keys():
             gldict = self._idents[ident]
@@ -137,14 +132,24 @@ class QtyGuidelines(object):
             gldict = self._devices[device]
         else:
             gldict = self._default
-        if gldict is not None:
-            if 'filter_std_vals_only' in gldict.keys() and \
-                    gldict['filter_std_vals_only'] is True:
-                is_std_val = check_for_std_val(ident)
-                if not is_std_val:
-                    gldict = self._default
+        if gldict is None:
+            return None
+        if 'filter_std_vals_only' in gldict.keys() and \
+                gldict['filter_std_vals_only'] is True:
+            is_std_val = check_for_std_val(ident)
+            if not is_std_val:
+                gldict = self._default
 
-            gl = self._get_full_guideline(gldict)
+        return self._get_full_guideline(gldict)
+
+    def get_compliant_qty(self, ident, qty,
+                          handle_excess=True,
+                          except_on_overrun=True,
+                          handle_baseline=False,
+                          ):
+        oqty = qty
+        gl = self.get_guideline(ident)
+        if gl is not None:
             (oqty_min, oqty_multiple, baseline_qty,
              excess_min_pc, excess_min_qty, excess_max_qty) = gl
             tqty = qty

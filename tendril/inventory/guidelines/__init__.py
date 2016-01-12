@@ -19,13 +19,13 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
-
 import os
 
 from tendril.entityhub.guidelines import QtyGuidelines
 from tendril.utils.config import INSTANCE_ROOT
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 
 electronics_qty_file = os.path.join(INSTANCE_ROOT,

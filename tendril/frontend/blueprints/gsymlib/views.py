@@ -38,6 +38,8 @@ from tendril.utils.config import GEDA_SYMLIB_ROOT
 
 from tendril.entityhub import projects
 from tendril.inventory import electronics as invelectronics
+from tendril.inventory import guidelines as invguidelines
+from tendril.entityhub import guidelines as ehguidelines
 
 
 def is_geda_folder(path):
@@ -157,13 +159,14 @@ def get_geda_symbol_context(ident):
     for loc in invelectronics.inventory_locations:
         qty = loc.get_ident_qty(ident) or 0
         reserve = loc.get_reserve_qty(ident) or 0
-        inv_loc_status[loc._code] = (loc._name, qty, reserve, qty-reserve)
-
-        inv_loc_transform[loc._code] = (loc._name,
+        inv_loc_status[loc._code] = (loc.name, qty, reserve, qty-reserve)
+        inv_loc_transform[loc._code] = (loc.name,
                                         loc.tf.get_contextual_repr(ident))
     inv_total_reservations = invelectronics.get_total_reservations(ident)
     inv_total_quantity = invelectronics.get_total_availability(ident)
     inv_total_availability = inv_total_quantity - inv_total_reservations
+    inv_guideline = invguidelines.electronics_qty.get_guideline(ident)
+    inv_guideline = ehguidelines.QtyGuidelineTableRow(ident, inv_guideline)
 
     inv_stage = {
         'inv_loc_status': inv_loc_status,
@@ -171,6 +174,7 @@ def get_geda_symbol_context(ident):
         'inv_total_quantity': inv_total_quantity,
         'inv_total_availability': inv_total_availability,
         'inv_loc_transform': inv_loc_transform,
+        'inv_guideline': inv_guideline,
         'inv': invelectronics,
     }
 
@@ -214,7 +218,7 @@ def main(path=None, ident=None, gen=None):
         if ident in tendril.gedaif.gsymlib.gsymlib_idents:
             stage.update(get_geda_symbol_context(ident))
             return render_template('gsymlib_symbol.html', stage=stage,
-                                   pagetitle='gEDA Symbol Detail')
+                                   pagetitle='gEDA Symbol Detail ' + ident)
     if gen is not None:
         gen += '.gen'
         gen = unquote(gen)
