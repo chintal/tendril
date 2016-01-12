@@ -21,6 +21,7 @@ See the COPYING, README, and INSTALL files for more information
 
 import csv
 from entitybase import EntityBase
+from entitybase import GenericEntityBase
 
 from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import parse_ident
@@ -52,15 +53,17 @@ class OutputBomLine(object):
 
     def add(self, comp):
         assert isinstance(comp, EntityBase)
-        if comp.fillstatus == "DNP":
-            return
-        if comp.fillstatus == "CONF":
-            logger.warning("Configurable Component "
-                           "not Configured by Conf File : " + comp.refdes)
+        if hasattr(comp, 'fillstatus'):
+            if comp.fillstatus == "DNP":
+                return
+            if comp.fillstatus == "CONF":
+                logger.warning("Configurable Component "
+                               "not Configured by Conf File : " + comp.refdes)
         if comp.ident == self.ident:
             self.refdeslist.append(comp.refdes)
         else:
             logger.error("Ident Mismatch")
+            raise Exception
 
     @property
     def quantity(self):
@@ -111,6 +114,11 @@ class OutputBom(object):
                 return line
         return None
 
+    def get_item_for_refdes(self, refdes):
+        for line in self.lines:
+            if refdes in line.refdeslist:
+                return GenericEntityBase(line.ident, refdes)
+
     def insert_component(self, item):
         assert isinstance(item, EntityBase)
         line = self.find_by_ident(item.ident)
@@ -124,6 +132,70 @@ class OutputBom(object):
             self.descriptor.multiplier = self.descriptor.multiplier * factor
         else:
             self.descriptor.multiplier = factor
+
+    def _item_gen(self):
+        for line in self.lines:
+            for refdes in line.refdeslist:
+                item = GenericEntityBase(line.ident, refdes)
+                yield item
+
+    @property
+    def items(self):
+        return self._item_gen()
+
+
+class DeltaOutputBom(object):
+    def __init__(self, start_bom, end_bom, reverse=False):
+        self._start_bom = start_bom
+        self._end_bom = end_bom
+        self._is_reverse = reverse
+        self._obom_add = None
+        self._obom_sub = None
+        self._descriptor = None
+        self._gen_boms()
+
+    @property
+    def descriptor(self):
+        return self._descriptor
+
+    @staticmethod
+    def _get_delta(original, target):
+        delta = []
+        for titem in target.items:
+            oitem = original.get_item_for_refdes(titem.refdes)
+            if oitem is None or oitem.ident != titem.ident:
+                delta.append(titem)
+        return delta
+
+    def _gen_boms(self):
+        if self._is_reverse:
+            start_bom = self._end_bom
+            end_bom = self._start_bom
+        else:
+            start_bom = self._start_bom
+            end_bom = self._end_bom
+        descriptor = OutputElnBomDescriptor(
+                start_bom.descriptor.pcbname,
+                end_bom.descriptor.cardfolder,
+                '{0} -> {1}'.format(start_bom.descriptor.configname,
+                                    end_bom.descriptor.configname),
+                end_bom.descriptor.configurations)
+        self._descriptor = descriptor
+        self._obom_add = OutputBom(self._descriptor)
+        self._obom_sub = OutputBom(self._descriptor)
+
+        for item in self._get_delta(start_bom, end_bom):
+            self._obom_add.insert_component(item)
+        for item in self._get_delta(end_bom, start_bom):
+            self._obom_sub.insert_component(item)
+
+    @property
+    def additions_bom(self):
+        return self._obom_add
+
+    @property
+    def subtractions_bom(self):
+        return self._obom_sub
 
 
 class CompositeOutputBomLine(object):

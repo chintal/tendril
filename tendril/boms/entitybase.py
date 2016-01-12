@@ -57,6 +57,25 @@ class EntityBase(object):
         self._refdes = value
 
 
+class GenericEntityBase(EntityBase):
+    def __init__(self, ident=None, refdes=None):
+        super(GenericEntityBase, self).__init__()
+        self._ident = ident
+        self._refdes = refdes
+
+    @property
+    def ident(self):
+        return self._ident
+
+    def define(self, ident, refdes):
+        self._ident = ident
+        self._refdes = refdes
+
+    def __repr__(self):
+        return '<GenericEntityBase {0} : {1}>' \
+               ''.format(self._refdes, self._ident)
+
+
 class EntityGroupBase(EntityBase):
     def __init__(self, groupname, contextname=''):
         super(EntityGroupBase, self).__init__()

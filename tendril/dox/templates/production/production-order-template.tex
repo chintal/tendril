@@ -72,6 +72,9 @@
 \renewcommand{\arraystretch}{2}
 \begin{tabularx}{1.0\textwidth}{|c|>{\raggedright\arraybackslash}p{0.65\textwidth}|>{\centering\arraybackslash}p{0.07\textwidth}|X|}
 \hline
+  %{ for desc, qty in stage.deltas.iteritems() %}
+  {%{{ loop.index %}}.} & \parbox{0.60\textwidth}{ \vspace{.3\baselineskip} {\bfseries\ttfamily %{{ desc %}}} \\ {\small Delta BOM card modification} \vspace{.2\baselineskip}} & {\tt %{{ qty %}}} & \\\hline
+  %{ endfor %} 
   %{ for card in stage.cards %}
   {%{{ loop.index %}}.} & \parbox{0.60\textwidth}{ \vspace{.3\baselineskip} {\bfseries\ttfamily %{{ card.ident %}}} \\ {\small %{{ card.desc %}}} \vspace{.2\baselineskip}} & {\tt %{{ card.qty %}}} & \\\hline
   %{ endfor %} 
@@ -82,7 +85,7 @@
   \hline
   \rowcolor[gray]{0.9}\centering\textbf{\ttfamily IDX} & \centering\textbf{\ttfamily Card} & \centering\textbf{\ttfamily Serial No} &\centering\textbf{\ttfamily Production} & \centering\textbf{\ttfamily Testing} & \centering\textbf{\ttfamily Labelling} & \tabularnewline\hline
   %{ for sno in stage.snos %}
-  \small{\ttfamily %{{loop.index%}}.} & \small{\tt %{{sno.ident|escape_latex%}}} & {\ttfamily\bfseries %{{sno.sno%}}} & {\tiny\ttfamily\bfseries %{{sno.prodst%}}} & {\tiny\ttfamily\bfseries %{{sno.testst%}}} & {\tiny\ttfamily\bfseries %{{sno.lblst%}}} & \tabularnewline\hline 
+  \small{\ttfamily %{{loop.index%}}.} & \small{\tt %{if not sno.is_delta %} %{{ sno.ident|escape_latex %}} %{ else %} %{{ sno.desc|escape_latex %}} %{ endif %}} & {\ttfamily\bfseries %{{sno.sno%}}} & {\tiny\ttfamily\bfseries %{{sno.prodst%}}} & {\tiny\ttfamily\bfseries %{{sno.testst%}}} & {\tiny\ttfamily\bfseries %{{sno.lblst%}}} & \tabularnewline\hline 
   %{ endfor %} 
   
 \end{tabularx}

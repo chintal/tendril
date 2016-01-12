@@ -39,6 +39,8 @@ import yaml
 from fs.utils import copyfile
 
 from tendril.boms import electronics as boms_electronics
+from tendril.boms.outputbase import DeltaOutputBom
+
 from tendril.entityhub import projects
 from tendril.entityhub import serialnos
 from tendril.gedaif.conffile import ConfigsFile
@@ -48,6 +50,9 @@ from tendril.utils.pdf import merge_pdf
 
 import render
 import docstore
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEBUG)
 
 
 def gen_pcb_am(projfolder, configname, outfolder, sno=None,
@@ -179,6 +184,150 @@ def gen_pcb_am(projfolder, configname, outfolder, sno=None,
     return outpath
 
 
+def gen_delta_pcb_am(orig_cardname, target_cardname,
+                     outfolder=None, sno=None,
+                     productionorderno=None, indentsno=None):
+    """
+    Generates a Delta PCB Assembly Manifest for converting one card to
+    another. This is typically only useful when the two cards are very
+    closely related and use the same PCB..
+
+    In the present implementation, the cardname could represent either a PCB
+    or a Cable.
+
+    .. note::
+        This function does not register the document in the
+        :mod:`tendril.dox.docstore`. You should use the output file path
+        (returned by this function) to register the document when desired.
+
+    .. seealso::
+        - :mod:`tendril.entityhub.projects`, for information about 'cards'
+
+    .. todo:: Update this function to also handle registering once the main
+              scripts are better integrated into the core.
+
+    :param orig_cardname: The name of the original card. This should be
+                              present in :data:`entityhub.projects.cards`
+    :type orig_cardname: str
+    :param orig_cardname: The name of the target card. This should be
+                              present in :data:`entityhub.projects.cards`
+    :type orig_cardname: str
+    :param outfolder: The folder within which the output file should be
+                      created.
+    :type outfolder: str
+    :param sno: The serial number of the card for which you want the Delta
+                Assembly Manifest.
+    :type sno: str
+    :param productionorderno: The serial number of the Production Order for
+                              the modification.
+    :type productionorderno: str
+    :param indentsno: The serial number of the Stock Indent which accounts for
+                      the components used in this card.
+    :type indentsno: str
+    :return: The path of the generated file.
+
+    .. rubric:: Template Used
+
+    ``tendril\dox\\templates\production\delta-assem-manifest.tex``
+    (:download:`Included version
+    <../../tendril/dox/templates/production/delta-assem-manifest.tex>`)
+
+    .. rubric:: Stage Keys Provided
+    .. list-table::
+
+        * - ``sno``
+          - The serial number of the card.
+        * - ``orig_configname``
+          - The configuration name of the original card.
+        * - ``target_configname``
+          - The configuration name of the target card.
+        * - ``pcbname``
+          - The name of the original PCB.
+        * - ``title``
+          - Whether the device is a PCB or a Cable.
+        * - ``desc``
+          - The description of the modification.
+        * - ``addition_lines``
+          - List of :class:`tendril.boms.outputbase.OutputBomLine` instances.
+        * - ``subtraction_lines``
+          - List of :class:`tendril.boms.outputbase.OutputBomLine` instances.
+        * - ``stockindent``
+          - The serial number of the Stock Indent which accounts for
+            the components used in this card.
+        * - ``productionorderno``
+          - The serial number of the Production Order for the card.
+        * - ``original_repopath``
+          - The root of the VCS repository which contains the original gEDA project.
+        * - ``target_repopath``
+          - The root of the VCS repository which contains the target gEDA project.
+        * - ``evenpages``
+          - Whether to render PDF with even number of pages by adding an extra
+            page if needed (useful for bulk printing).
+
+    """
+    if outfolder is None:
+        from tendril.utils.config import INSTANCE_ROOT
+        outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'production')
+
+    if sno is None:
+        # TODO Generate real S.No. here
+        sno = 1
+
+    outpath = os.path.join(
+            outfolder,
+            'dm-' + orig_cardname + '->' + target_cardname +
+            '-' + str(sno) + '.pdf'
+    )
+
+    orig_bom = boms_electronics.import_pcb(projects.cards[orig_cardname])
+    orig_obom = orig_bom.create_output_bom(orig_cardname)
+
+    target_bom = boms_electronics.import_pcb(projects.cards[target_cardname])
+    target_obom = target_bom.create_output_bom(target_cardname)
+
+    delta_obom = DeltaOutputBom(orig_obom, target_obom)
+
+    if orig_bom.configurations.rawconfig['pcbname'] is not None:
+        orig_entityname = orig_bom.configurations.rawconfig['pcbname']
+        try:
+            target_entityname = target_bom.configurations.rawconfig['pcbname']
+        except KeyError:
+            logger.error("Target for the delta should be a PCB!")
+            raise
+        title = 'PCB '
+        evenpages = True
+    elif orig_bom.configurations.rawconfig['cblname'] is not None:
+        orig_entityname = orig_bom.configurations.rawconfig['cblname']
+        try:
+            target_entityname = target_bom.configurations.rawconfig['cblname']
+        except KeyError:
+            logger.error("Target for the delta should be a Cable!")
+            raise
+        title = 'Cable '
+        evenpages = False
+    else:
+        raise ValueError
+
+    stage = {'orig_configname': orig_obom.descriptor.configname,
+             'target_configname': target_obom.descriptor.configname,
+             'pcbname': orig_entityname,
+             'title': title,
+             'sno': sno,
+             'addition_lines': delta_obom.additions_bom.lines,
+             'subtraction_lines': delta_obom.subtractions_bom.lines,
+             'evenpages': evenpages,
+             'stockindent': indentsno,
+             'orig_repopath': projects.card_reporoot[orig_cardname],
+             'target_repopath': projects.card_reporoot[target_cardname],
+             'productionorderno': productionorderno,
+             'desc': delta_obom.descriptor.configname}
+
+    template = 'production/delta-assem-manifest.tex'
+
+    render.render_pdf(stage, template, outpath)
+    return outpath, delta_obom
+
+
 def gen_production_order(outfolder, prod_sno, sourcedata, snos,
                          sourcing_orders=None, root_orders=None):
     """
@@ -216,9 +365,9 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
 
     .. rubric:: Template Used
 
-    ``tendril\dox\\templates\production-order-template.tex``
+    ``tendril\dox\\templates\production\production-order-template.tex``
     (:download:`Included version
-    <../../tendril/dox/templates/production-order-template.tex>`)
+    <../../tendril/dox/templates/production/production-order-template.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
@@ -241,9 +390,21 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
             intended to fulfill.
 
     """
-    cards = [{'qty': sourcedata['cards'][k],
-              'desc': ConfigsFile(projects.cards[k]).description(k),
-              'ident': k} for k in sorted(sourcedata['cards'].keys())]
+
+    deltas = {}
+    if 'deltas' in sourcedata.keys():
+        for delta in sourcedata['deltas']:
+            desc = delta['orig-cardname'] + ' -> ' + delta['target-cardname']
+            if desc in deltas.keys():
+                deltas[desc] += 1
+            else:
+                deltas[desc] = 1
+
+    cards = []
+    if 'cards' in sourcedata.keys():
+        cards = [{'qty': sourcedata['cards'][k],
+                  'desc': ConfigsFile(projects.cards[k]).description(k),
+                  'ident': k} for k in sorted(sourcedata['cards'].keys())]
 
     lroot_orders = []
     for root_order in root_orders:
@@ -259,6 +420,7 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
     stage = {
         'title': sourcedata['title'],
         'cards': cards,
+        'deltas': deltas,
         'sourcing_orders': sourcing_orders,
         'sno': prod_sno,
         'snos': snos,
@@ -266,9 +428,61 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
     }
 
     outpath = os.path.join(outfolder, str(prod_sno) + '.pdf')
-    template = 'production-order-template.tex'
+    template = 'production/production-order-template.tex'
     render.render_pdf(stage, template, outpath)
     return outpath
+
+
+def get_production_strategy(cardname):
+    try:
+        cardfolder = projects.cards[cardname]
+    except KeyError:
+        logger.error("Could not find Card in entityhub.cards")
+        raise KeyError
+    cardconf = ConfigsFile(cardfolder)
+
+    prodst = None
+    lblst = None
+    testst = None
+    genmanifest = False
+
+    if cardconf.configdata['documentation']['am'] is True:
+        # Assembly manifest should be used
+        prodst = "@AM"
+        genmanifest = True
+    elif cardconf.configdata['documentation']['am'] is False:
+        # No Assembly manifest needed
+        prodst = "@THIS"
+    if cardconf.configdata['productionstrategy']['testing'] == 'normal':
+        # Normal test procedure, Test when made
+        testst = "@NOW"
+    if cardconf.configdata['productionstrategy']['testing'] == 'lazy':
+        # Lazy test procedure, Test when used
+        testst = "@USE"
+    if cardconf.configdata['productionstrategy']['labelling'] == 'normal':
+        # Normal test procedure, Label when made
+        lblst = "@NOW"
+    if cardconf.configdata['productionstrategy']['testing'] == 'lazy':
+        # Lazy test procedure, Label when used
+        lblst = "@USE"
+    series = cardconf.configdata['snoseries']
+    genlabel = False
+    labels = []
+    if isinstance(cardconf.configdata['documentation']['label'], dict):
+        for k in sorted(cardconf.configdata['documentation']['label'].keys()):
+            labels.append(
+                {'code': k,
+                 'ident': cardname + '.' + cardconf.configdata['label'][k]}
+            )
+        genlabel = True
+    elif isinstance(cardconf.configdata['documentation']['label'], str):
+        labels.append(
+            {'code': cardconf.configdata['documentation']['label'],
+             'ident': cardname}
+        )
+        genlabel = True
+
+    return prodst, lblst, testst, genmanifest, genlabel, series, labels
 
 
 def get_all_production_orders(limit=None):
