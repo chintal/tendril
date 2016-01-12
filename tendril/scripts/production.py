@@ -25,6 +25,7 @@ import argparse
 
 from tendril.boms.electronics import import_pcb
 from tendril.boms.outputbase import CompositeOutputBom
+from tendril.boms.outputbase import DeltaOutputBom
 
 from tendril.inventory.electronics import get_total_availability
 from tendril.inventory.electronics import reserve_items
@@ -32,7 +33,6 @@ from tendril.inventory.electronics import reserve_items
 from tendril.dox.production import gen_production_order
 from tendril.dox.production import gen_pcb_am
 from tendril.dox.production import gen_delta_pcb_am
-from tendril.dox.production import gen_delta_obom
 from tendril.dox.production import get_production_strategy
 
 from tendril.dox.indent import gen_stock_idt_from_cobom
@@ -48,6 +48,17 @@ from tendril.utils.config import INSTANCE_ROOT
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
+
+
+def gen_delta_obom(orig_cardname, target_cardname):
+
+    orig_bom = import_pcb(projects.cards[orig_cardname])
+    orig_obom = orig_bom.create_output_bom(orig_cardname)
+
+    target_bom = import_pcb(projects.cards[target_cardname])
+    target_obom = target_bom.create_output_bom(target_cardname)
+
+    return DeltaOutputBom(orig_obom, target_obom)
 
 
 def main(orderfolder=None, orderfile_r=None,

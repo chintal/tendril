@@ -184,17 +184,6 @@ def gen_pcb_am(projfolder, configname, outfolder, sno=None,
     return outpath
 
 
-def gen_delta_obom(orig_cardname, target_cardname):
-
-    orig_bom = boms_electronics.import_pcb(projects.cards[orig_cardname])
-    orig_obom = orig_bom.create_output_bom(orig_cardname)
-
-    target_bom = boms_electronics.import_pcb(projects.cards[target_cardname])
-    target_obom = target_bom.create_output_bom(target_cardname)
-
-    return DeltaOutputBom(orig_obom, target_obom)
-
-
 def gen_delta_pcb_am(orig_cardname, target_cardname,
                      outfolder=None, sno=None,
                      productionorderno=None, indentsno=None):

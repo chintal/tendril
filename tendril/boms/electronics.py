@@ -543,5 +543,6 @@ def import_pcb(cardfolder):
         pcbbom = EntityElnBom(configfile)
     return pcbbom
 
+
 if __name__ == "__main__":
     pass
