@@ -22,13 +22,21 @@
 Docstring for views
 """
 
+import arrow
+from arrow.parser import ParserError
+
 from flask import render_template
 from flask import request
+from flask import redirect
+from flask import url_for
+from flask import flash
 from flask import abort
+
 from flask_user import login_required
 from flask_user import current_user
 
 from . import indent as blueprint
+from tendril.frontend.users.controller import get_users_list
 
 from tendril.dox import indent as dxindent
 from tendril.dox import production as dxproduction
@@ -38,20 +46,49 @@ from tendril.utils.fsutils import Crumb
 @login_required
 @blueprint.route('/create', methods=['POST'])
 def create_indent():
+    parent_indent_sno = request.form.get('parent_indent_sno')
+    allowed = True
     # Validate Indent Metadata
-        # Requested by is a valid user
-        # Date is valid or None
-        # Title is valid
-        # Sno is valid or None
-        # Parent indent sno is valid or None
-        # Prod ord sno is valid or None
-        # Root ord sno is valid or None
-        # Indent for is valid
+    # Requested by is a valid user
+    if not request.form.get('user') == current_user.full_name:
+        if current_user.has_roles('inventory_admin'):
+            full_names = [x.full_name for x in get_users_list()]
+            if request.form.get('user') in full_names:
+                pass
+        allowed = False
+        flash('Could not authenticate the requesting user. '
+              'Please retry.', 'alert')
+
+    # Date is valid or None
+    rdate = request.form.get('rdate')
+    if rdate:
+        try:
+            rdate = arrow.get(rdate, 'DD/MM/YYYY')
+        except ParserError:
+            flash('Could not parse the provided date. '
+                  'Please retry.', 'alert')
+            allowed = False
+    else:
+        rdate = arrow.utcnow()
+
+    # Title is valid
+    # Sno is valid or None
+    # Parent indent sno is valid or None
+    # Prod ord sno is valid or None
+    # Root ord sno is valid or None
+    # Indent for is valid
+
+    if not allowed:
+        if parent_indent_sno:
+            return redirect(
+                    url_for('.new_indent', indent_sno=parent_indent_sno))
+        else:
+            return redirect(url_for('.new_indent'))
 
     # Construct COBOM
 
     # Check for Authorization
-        # Nothing right now.
+    # Nothing right now.
 
     # Create Indent
 

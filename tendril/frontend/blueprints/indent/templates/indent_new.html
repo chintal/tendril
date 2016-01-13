@@ -24,15 +24,15 @@
                         <label><span>Requested By</span>
                             <span class="right text-right"><small>Required</small></span>
                             <input name="user" id="user" type="text" value="{{ current_user.full_name }}"
-                                   required list="json-userlist"
-                                {% if not current_user.has_roles('inventory_admin') %}disabled{% endif %}>
+                                   required list="json-userlist" autocomplete="off"
+                                {% if not current_user.has_roles('inventory_admin') %}readonly='readonly'{% endif %}>
                         </label>
                     </div>
                     <div class="small-3 columns">
                         <label><span>Date</span>
                             <span class="right text-right"><small>Required</small></span>
                             <input name="rdate" id="rdate" type="text" required
-                                {% if not current_user.has_roles('inventory_admin') %}disabled{% endif %}>
+                                {% if not current_user.has_roles('inventory_admin') %}readonly='readonly'{% endif %}>
                         </label>
                     </div>
                 </div>
@@ -52,14 +52,14 @@
                         <label class="small-12 columns text-center">Auto Generate</label>
                         <div class="small-12 columns switch radius small">
                             <input id="sno_generate" name="sno_generate" type="checkbox" checked
-                                {% if not current_user.has_roles('inventory_admin') %}disabled{% endif %}>
+                                {% if not current_user.has_roles('inventory_admin') %}readonly='readonly'{% endif %}>
                             <label for="sno_generate"></label>
                         </div>
                     </div>
                     <div class="small-8 columns">
                         <label><span>Serial Number</span>
                             <span class="right text-right"><small>Required</small></span>
-                            <input name="indent_sno" id="indent_sno" type="text" disabled
+                            <input name="indent_sno" id="indent_sno" type="text" readonly='readonly'
                             {% if stage.is_supplementary %}
                                    value="{{ stage.parent_indent_sno }}.{{ stage.sidx }}"
                             {% endif %}>
@@ -83,14 +83,14 @@
                             <input name="parent_indent_sno" id="parent_indent_sno" type="text" placeholder="Serial number of a parent indent"
                             {% if stage.is_supplementary %}
                                    value="{{ stage.parent_indent_sno }}"
-                            {% endif %} disabled>
+                            {% endif %} readonly='readonly'>
                         </label>
                     </div>
                     <div class="small-12 large-6 columns">
                         <label>Production Order
-                            <input name="prod_order_sno" id="prod_order_sno" type="text"
+                            <input name="prod_order_sno" id="prod_order_sno" type="text" autocomplete="off"
                             {% if stage.is_supplementary %}
-                                   value="{{ stage.prod_order_sno }}" disabled
+                                   value="{{ stage.prod_order_sno }}" readonly='readonly'
                             {% endif %} placeholder="Specific production order" list="json-prodordlist">
                         </label>
                     </div>
@@ -98,7 +98,7 @@
                         <label>Root Order
                             <input name="root_order_sno" id="root_order_sno" type="text" placeholder="Top level SO or project code"
                             {% if stage.is_supplementary %}
-                                   value="{{ stage.root_order_sno }}" disabled
+                                   value="{{ stage.root_order_sno }}" readonly='readonly'
                             {% endif %}>
                         </label>
                     </div>
@@ -120,7 +120,8 @@
                 <div class="row component-row">
                     <div class="small-8 columns">
                         <label>
-                            <input name="ident[]" type="text" placeholder="Component" list="json-identlist">
+                            <input name="ident[]" type="text" placeholder="Component"
+                                   list="json-identlist" autocomplete="off">
                         </label>
                     </div>
                     <div class="small-3 columns">
@@ -294,20 +295,20 @@
         <!-- COBOM Input Ends -->
 
         <!-- Serial No Form Elements -->
-        var sno_field = $("#sno");
         $("#sno_generate").change(function(event) {
             var checkbox = event.target;
             if (checkbox.checked) {
-                sno.disabled = true;
-                sno.value = {% if stage.is_supplementary %}
-                                   "{{ stage.parent_indent_sno }}.{{ stage.sidx }}"
-                            {% else %}
-                                    ""
-                            {% endif %};
+                $("#indent_sno")[0].value = {% if stage.is_supplementary %}
+                                        "{{ stage.parent_indent_sno }}.{{ stage.sidx }}"
+                                  {% else %}
+                                        ""
+                                  {% endif %};
+                $("#indent_sno")[0].readOnly = true;
             } else {
-                sno.disabled = false;
+                $("#indent_sno")[0].readOnly = false;
             }
         });
+
         <!-- Date picker elements -->
         $('#rdate').fdatepicker({
             format: 'dd/mm/yyyy',
