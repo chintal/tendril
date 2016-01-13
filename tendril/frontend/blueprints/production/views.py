@@ -26,11 +26,18 @@ from flask import render_template
 from flask_user import login_required
 from flask import abort
 from flask import Response
+from flask import jsonify
 
 from . import production as blueprint
 
 from tendril.dox import production as dxproduction
 from tendril.utils.fsutils import Crumb
+
+
+@blueprint.route('/orders.json')
+@login_required
+def orders():
+    return jsonify(dxproduction.get_all_prodution_order_snos())
 
 
 @blueprint.route('/manifests/<order_sno>')
@@ -57,7 +64,7 @@ def results(order_sno=None):
     # Presently only supports getting the latest result. A way to allow
     # any result to be retrieved would be nice.
     if order_sno is None:
-        docs = dxproduction.get_all_production_orders()
+        docs = dxproduction.get_all_production_orders_docs()
         stage = {'docs': docs,
                  'crumbroot': '/production',
                  'breadcrumbs': [Crumb(name="Production", path=""),
@@ -89,7 +96,7 @@ def results(order_sno=None):
 @blueprint.route('/')
 @login_required
 def main():
-    latest_prod = dxproduction.get_all_production_orders(limit=5)
+    latest_prod = dxproduction.get_all_production_orders_docs(limit=5)
     stage = {'latest_prod': latest_prod,
              'crumbroot': '/production',
              'breadcrumbs': [Crumb(name="Production", path="")],

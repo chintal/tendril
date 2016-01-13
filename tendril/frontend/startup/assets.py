@@ -31,6 +31,7 @@ bundles = {
     'base_css': Bundle(
         'css/normalize.css',
         'css/foundation.css',
+        'css/foundation-datepicker.css',
         'css/colors.css',
         output='gen/base.css',
         filters='cssmin'),
@@ -51,7 +52,9 @@ bundles = {
         'js/foundation/foundation.alert.js',
         'js/foundation/foundation.clearing.js',
         'js/foundation/foundation.tooltip.js',
+        'js/foundation/foundation.abide.js',
         'js/vendor/stickyFooter.js',
+        'js/vendor/foundation-datepicker.js',
         output='gen/foundation.js',
         filters='jsmin'),
 
@@ -99,7 +102,7 @@ bundles = {
         'css/nv.d3.css',
         output='gen/nv.d3.css',
         filters='cssmin'
-    )
+    ),
 }
 
 

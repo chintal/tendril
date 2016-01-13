@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from .models import User
+
 from flask import redirect, render_template
+from flask import jsonify
 from flask import request, url_for
 from flask_user import current_user, login_required
 from flask_user.forms import ChangePasswordForm
@@ -23,6 +26,13 @@ from flask_user.forms import ChangeUsernameForm
 
 from tendril.frontend.app import app, db
 from tendril.frontend.users.forms import UserProfileForm
+
+
+@app.route('/user/all.json')
+@login_required
+def users():
+    all_users = {'users': [x.full_name for x in User.query.all()]}
+    return jsonify(all_users)
 
 
 @app.route('/user/profile', methods=['GET', 'POST'])

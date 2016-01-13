@@ -485,7 +485,17 @@ def get_production_strategy(cardname):
     return prodst, lblst, testst, genmanifest, genlabel, series, labels
 
 
-def get_all_production_orders(limit=None):
+def get_all_prodution_order_snos(limit=None):
+    snos = docstore.controller.get_snos_by_document_doctype(
+        doctype='PRODUCTION ORDER', limit=limit
+    )
+    rval = {'snos': []}
+    for sno in snos:
+        rval['snos'].append({'sno': sno.sno, 'title': sno.efield})
+    return rval
+
+
+def get_all_production_orders_docs(limit=None):
     return docstore.get_docs_list_for_sno_doctype(
         serialno=None, doctype='PRODUCTION ORDER', limit=limit
     )
@@ -512,6 +522,19 @@ def get_production_order_data(serialno=None):
         snomap_data = yaml.load(f)
 
     return order_yaml_data, snomap_data
+
+
+def get_root_order(serialno=None):
+    order_yaml_data, snomap_data = get_production_order_data(serialno=serialno)
+    if len(order_yaml_data['root_orders']):
+        return order_yaml_data['root_orders'][0]
+    else:
+        return None
+
+
+def get_order_title(serialno=None):
+    order_yaml_data, snomap_data = get_production_order_data(serialno=serialno)
+    return order_yaml_data['title']
 
 
 def get_production_order_manifest_set(serialno):

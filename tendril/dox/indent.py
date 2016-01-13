@@ -118,16 +118,30 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
     return outpath, indentsno
 
 
-def get_all_indents(limit=None):
+def get_all_indents_docs(limit=None):
     return docstore.get_docs_list_for_sno_doctype(
         serialno=None, doctype='INVENTORY INDENT', limit=limit
     )
+
+
+def get_all_indent_snos(limit=None):
+    snos = docstore.controller.get_snos_by_document_doctype(
+        doctype='INVENTORY INDENT', limit=limit
+    )
+    rval = {'snos': []}
+    for sno in snos:
+        rval['snos'].append({'sno': sno.sno, 'efield': sno.efield})
+    return rval
 
 
 def get_indent_docs(serialno=None):
     rval = []
     rval.extend(docstore.get_docs_list_for_serialno(serialno=serialno))
     return rval
+
+
+def get_supplementary_indents(serialno=None):
+    return [serialno + '.1']
 
 
 @with_db

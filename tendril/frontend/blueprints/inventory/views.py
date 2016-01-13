@@ -23,12 +23,24 @@ Docstring for views
 """
 
 from flask import render_template
+from flask import request
+from flask import jsonify
 from flask_user import login_required
 
 from . import inventory as blueprint
 
 from tendril.inventory import electronics as invelectronics
 from tendril.utils.fsutils import Crumb
+
+
+@blueprint.route('/status.json', methods=['GET', 'POST'])
+@login_required
+def json_ident_status():
+    print request.data
+    json = request.json
+    print json
+    avail_qty = invelectronics.get_total_availability(json['ident'])
+    return jsonify(qty=avail_qty)
 
 
 @blueprint.route('/<location_idx>')
