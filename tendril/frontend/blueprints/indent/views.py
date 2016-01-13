@@ -56,7 +56,7 @@ def create_indent():
     # Create Indent
 
     # Redirect to Created Indent
-    abort(404)
+    raise NotImplementedError
 
 
 @login_required
@@ -90,8 +90,6 @@ def new_indent(indent_sno=None):
 @blueprint.route('/')
 @login_required
 def indent(indent_sno=None):
-    # Presently only supports getting the latest result. A way to allow
-    # any result to be retrieved would be nice.
     if indent_sno is None:
         docs = dxindent.get_all_indents_docs()
         stage = {'docs': docs,
