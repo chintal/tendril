@@ -82,14 +82,22 @@
     </div>
     <div class="small-12 columns">
     <a href="/production/order/{{ stage.prod_sno }}">
-        <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+        <div class="small-12 columns button radius active-tb shadow mrgn-20-top">
             <div class="text-center">Production Order</div>
             <div class="text-center"><b>{{ stage.prod_sno }}</b></div>
         </div>
     </a>
     <!--Supplementary Indents-->
+    {% for doc in stage.sindent_docs %}
+        <a href="/inventory/indent/{{ doc.filename }}"
+           class="small-12 columns button radius info active-tb shadow mrgn-20-top">
+            <div class="row text-center"><b>{{ doc.filename }}</b></div>
+            <div class="row text-center">{{ doc.efield }}</div>
+            <div class="row text-center">{{ doc.ts }}</div>
+        </a>
+    {% endfor %}
     <a href="/inventory/indent/new/{{ stage.indent_sno }}">
-        <div class="button radius small-12 columns alert active-tb shadow mrgn-20-top">
+        <div class="small-12 columns button radius alert active-tb shadow mrgn-20-top">
             <div class="text-center">New Supplementary Indent</div>
         </div>
     </a>

@@ -102,21 +102,34 @@ def create_indent():
 def new_indent(indent_sno=None):
     if indent_sno is None:
         stage = {'is_suplementary': False,
-                 'indent_sno': None}
+                 'indent_sno': None,
+                 'crumbroot': '/inventory',
+                 'breadcrumbs': [Crumb(name="Inventory", path=""),
+                                 Crumb(name="Indent", path="indent/"),
+                                 Crumb(name="New", path="indent/new"),
+                                 ]}
         return render_template('indent_new.html', stage=stage,
                                pagetitle="New Stock Indent")
     else:
         prod_ord_sno = dxindent.get_indent_production_order(serialno=indent_sno)
         root_ord_sno = dxproduction.get_root_order(serialno=prod_ord_sno)
+        parent_indent_sno = dxindent.get_root_indent_sno(serialno=indent_sno)
         order_title = dxproduction.get_order_title(serialno=prod_ord_sno)
-        sidx = max([int(x.split('.')[1]) for x in
-                    dxindent.get_supplementary_indents(serialno=indent_sno)]) + 1
+        sidx = dxindent.get_new_supplementary_indent_sno(serialno=indent_sno)
         stage = {'is_supplementary': True,
-                 'parent_indent_sno': indent_sno,
+                 'parent_indent_sno': parent_indent_sno,
                  'prod_order_sno': prod_ord_sno,
                  'root_order_sno': root_ord_sno,
                  'order_title': order_title,
                  'sidx': sidx,
+                 'crumbroot': '/inventory',
+                 'breadcrumbs': [Crumb(name="Inventory", path=""),
+                                 Crumb(name="Indent", path="indent/"),
+                                 Crumb(name=indent_sno,
+                                       path="indent/" + indent_sno),
+                                 Crumb(name="New",
+                                       path="indent/" + indent_sno + "/new"),
+                                 ]
                  }
         pagetitle = "New Supplementary Indent for " + indent_sno
         return render_template('indent_new.html', stage=stage,
@@ -138,9 +151,12 @@ def indent(indent_sno=None):
                                pagetitle="All Indents")
     else:
         docs = dxindent.get_indent_docs(indent_sno)
+        sindents = dxindent.get_supplementary_indents(indent_sno)
+        sindent_docs = dxindent.get_all_indents_docs(snos=sindents)
         prod_sno = dxindent.get_indent_production_order(serialno=indent_sno)
         cobom = dxindent.get_indent_cobom(serialno=indent_sno)
         stage = {'docs': docs,
+                 'sindent_docs': sindent_docs,
                  'indent_sno': indent_sno,
                  'prod_sno': prod_sno,
                  'cobom': cobom,

@@ -118,10 +118,18 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
     return outpath, indentsno
 
 
-def get_all_indents_docs(limit=None):
-    return docstore.get_docs_list_for_sno_doctype(
-        serialno=None, doctype='INVENTORY INDENT', limit=limit
-    )
+def get_all_indents_docs(limit=None, snos=None):
+    if snos is None:
+        return docstore.get_docs_list_for_sno_doctype(
+            serialno=None, doctype='INVENTORY INDENT', limit=limit
+        )
+    else:
+        rval = []
+        for sno in snos:
+            rval.extend(docstore.get_docs_list_for_sno_doctype(
+                serialno=sno, doctype='INVENTORY INDENT', limit=None
+            ))
+        return rval
 
 
 def get_all_indent_snos(limit=None):
@@ -140,8 +148,26 @@ def get_indent_docs(serialno=None):
     return rval
 
 
-def get_supplementary_indents(serialno=None):
-    return [serialno + '.1']
+def get_root_indent_sno(serialno):
+    if '.' in serialno:
+        serialno = serialno.split['.'][0]
+    return serialno
+
+
+def get_supplementary_indents(serialno):
+    serialno = get_root_indent_sno(serialno)
+    snos = docstore.controller.get_snos_by_document_doctype(series=serialno + '.', doctype='INVENTORY INDENT')
+    return [x.sno for x in snos]
+
+
+def get_new_supplementary_indent_sno(serialno):
+    serialno = get_root_indent_sno(serialno)
+    sindents = get_supplementary_indents(serialno=serialno)
+    if len(sindents):
+        sidx = str(max([int(x.split('.')[1]) for x in sindents]) + 1)
+    else:
+        sidx = '1'
+    return '.'.join([serialno, sidx])
 
 
 @with_db

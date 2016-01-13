@@ -42,7 +42,7 @@
                             <span class="right text-right"><small>Required</small></span>
                             <input name="indent_title" id="indent_title" type="text" required maxlength="40"
                             {% if stage.is_supplementary %}
-                                   value="{{ stage.order_title }} Supplementary {{ stage.sidx }}"
+                                   value="{{ stage.order_title }} (Supplementary)"
                             {% endif %}>
                         </label>
                     </div>
@@ -61,7 +61,7 @@
                             <span class="right text-right"><small>Required</small></span>
                             <input name="indent_sno" id="indent_sno" type="text" readonly='readonly'
                             {% if stage.is_supplementary %}
-                                   value="{{ stage.parent_indent_sno }}.{{ stage.sidx }}"
+                                   value="{{ stage.sidx }}"
                             {% endif %}>
                         </label>
                     </div>
@@ -299,7 +299,7 @@
             var checkbox = event.target;
             if (checkbox.checked) {
                 $("#indent_sno")[0].value = {% if stage.is_supplementary %}
-                                        "{{ stage.parent_indent_sno }}.{{ stage.sidx }}"
+                                        "{{ stage.sidx }}"
                                   {% else %}
                                         ""
                                   {% endif %};

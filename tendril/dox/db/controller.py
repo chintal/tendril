@@ -75,7 +75,7 @@ def get_snos_by_document_doctype(doctype=None, series=None,
                                  limit=None, session=None):
     if doctype is None:
         raise AttributeError("doctype cannot be None")
-    if series is not None and not isinstance(series, str):
+    if series is not None and not isinstance(series, (str, unicode)):
         raise AttributeError('series must be a string or None')
 
     q = session.query(SerialNumber)
