@@ -47,6 +47,7 @@ from tendril.dox import production as dxproduction
 from tendril.conventions.electronics import fpiswire_ident
 from tendril.utils.types import lengths
 from tendril.gedaif.gsymlib import gsymlib_idents
+# from tendril.inventory.electronics import get_recognized_repr
 
 
 class ComponentQtyForm(Form):
@@ -59,8 +60,11 @@ class ComponentQtyForm(Form):
                       validators=[InputRequired(message="Specify")])
 
     def validate_ident(form, field):
-        if field.data.strip() not in gsymlib_idents:
-            raise ValidationError("Ident not recognized")
+        if field.data.strip() in gsymlib_idents:
+            return
+        # if field.data.strip() in get_recognized_repr():
+        #     return
+        raise ValidationError("Ident not recognized")
 
     def validate_qty(form, field):
         # TODO integrate this with inventory core?

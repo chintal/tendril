@@ -300,3 +300,16 @@ def get_inventory_location(idx):
         if loc._code == int(idx):
             return loc
     raise ValueError
+
+
+def get_recognized_repr(regen=False):
+    global recognized_representations
+    if regen or recognized_representations is None:
+        rval = []
+        for loc in inventory_locations:
+            rval.extend(list(loc.tf.names))
+        recognized_representations = rval
+    return recognized_representations
+
+recognized_representations = None
+get_recognized_repr()
