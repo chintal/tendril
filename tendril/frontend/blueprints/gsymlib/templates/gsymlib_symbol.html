@@ -84,7 +84,7 @@
             {% for imgpath in stage.imgpaths %}
             <li>
                 <!-- TODO The hidden images aren't displayed in the lightbox. Fix this. -->
-                <a {% if loop.index > 3 %} class="hide" {% else %} class="th" {% endif %}
+                <a {% if loop.index > 3 %} class="th hide" {% else %} class="th" {% endif %}
                     href="/gsymlib/gsymlib/{{ imgpath }}">
                     <img data-caption="{{ imgpath }}" src="/gsymlib/gsymlib/{{ imgpath }}">
                 </a>

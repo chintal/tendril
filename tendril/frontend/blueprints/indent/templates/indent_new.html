@@ -226,9 +226,12 @@
         });
 
         $("#component-rows").on("click", ".component-row #delete-row\\[\\]", function(){
-            $( this ).closest('.component-row').remove();
-            $(document).foundation('abide', 'reflow');
-            $(document).foundation('reflow');
+            nrows = $( this ).closest('#component-rows').find('.component-row').length;
+            if (nrows > 1){
+                $( this ).closest('.component-row').remove();
+                $(document).foundation('abide', 'reflow');
+                $(document).foundation('reflow');
+            }
         });
         $("#component-rows").on("focusout", ".component-row input[name$='ident']", function(){
             var ctx = this;
