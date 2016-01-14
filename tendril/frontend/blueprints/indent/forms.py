@@ -33,6 +33,7 @@ from wtforms.fields import FormField
 from wtforms.validators import InputRequired
 from wtforms.validators import Length
 from wtforms.validators import AnyOf
+from wtforms.validators import Optional
 from wtforms.validators import ValidationError
 
 from wtforms_components import read_only
@@ -96,16 +97,18 @@ class CreateIndentForm(Form):
                                validators=[InputRequired(), Length(max=50)])
     prod_order_sno = StringField(
         label='Production Order',
-        validators=[AnyOf(dxproduction.get_all_prodution_order_snos_strings(),
+        validators=[Optional(),
+                    AnyOf(dxproduction.get_all_prodution_order_snos_strings(),
                           message="Not a valid Production Order.")]
     )
     root_order_sno = StringField(
         label='Root Order',
-        validators=[]
+        validators=[Optional()]
     )
     parent_indent_sno = StringField(
         label='Parent Indent',
-        validators=[AnyOf(dxindent.get_all_indent_sno_strings(),
+        validators=[Optional(),
+                    AnyOf(dxindent.get_all_indent_sno_strings(),
                           message="Not a valid Indent")]
     )
     indent_sno = StringField(
@@ -133,8 +136,11 @@ class CreateIndentForm(Form):
             self.admin_roles = admin_roles
         else:
             self.admin_roles = ['inventory_admin']
-        self.parent_indent_sno_str = dxindent.get_root_indent_sno(
-                serialno=parent_indent_sno)
+        if parent_indent_sno is not None:
+            self.parent_indent_sno_str = dxindent.get_root_indent_sno(
+                    serialno=parent_indent_sno)
+        else:
+            self.parent_indent_sno_str = None
         super(CreateIndentForm, self).__init__(*args, **kwargs)
         self._setup_secure_fields()
         self._setup_for_supplementary()
