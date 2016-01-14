@@ -485,6 +485,7 @@ def get_production_strategy(cardname):
     return prodst, lblst, testst, genmanifest, genlabel, series, labels
 
 
+# TODO Rationalize all of these functions
 def get_all_prodution_order_snos(limit=None):
     snos = docstore.controller.get_snos_by_document_doctype(
         doctype='PRODUCTION ORDER', limit=limit
@@ -493,6 +494,13 @@ def get_all_prodution_order_snos(limit=None):
     for sno in snos:
         rval['snos'].append({'sno': sno.sno, 'title': sno.efield})
     return rval
+
+
+def get_all_prodution_order_snos_strings(limit=None):
+    snos = docstore.controller.get_snos_by_document_doctype(
+        doctype='PRODUCTION ORDER', limit=limit
+    )
+    return [x.sno for x in snos]
 
 
 def get_all_production_orders_docs(limit=None):

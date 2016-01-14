@@ -44,6 +44,7 @@ install_requirements = [
     "Flask-Principal",
     'Flask-Migrate',
     'Flask-Assets',
+    'wtforms-components',
 
     # Perhaps require reconsideration
     'matplotlib',  # Pulls in numpy!

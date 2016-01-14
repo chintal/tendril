@@ -4,7 +4,7 @@
 #}
 
 {% extends "base_templates/base.html" %}
-
+{% import "parts/forms.html" as forms %}
 {% block main %}
 
 <p></p>
@@ -12,7 +12,8 @@
 <h4>{{ pagetitle }}</h4>
 
 <div class="row">
-    <form action="/inventory/indent/create" method="POST" data-abide>
+    <form action="#" method="POST" data-abide>
+    {{ form.hidden_tag() }}
     <div class="row" data-equalizer="fmain">
         <div class="small-12 large-5 columns" data-equalizer-watch="fmain">
             <fieldset>
@@ -21,92 +22,40 @@
                 </legend>
                 <div class="row">
                     <div class="small-9 columns">
-                        <label><span>Requested By</span>
-                            <span class="right text-right"><small>Required</small></span>
-                            <input name="user" id="user" type="text" value="{{ current_user.full_name }}"
-                                   required list="json-userlist" autocomplete="off"
-                                {% if not current_user.has_roles('inventory_admin') %}readonly='readonly'{% endif %}>
-                        </label>
+                        {{ forms.render_field(form.user, list="json-userlist", autocomplete="off") }}
                     </div>
                     <div class="small-3 columns">
-                        <label><span>Date</span>
-                            <span class="right text-right"><small>Required</small></span>
-                            <input name="rdate" id="rdate" type="text" required
-                                {% if not current_user.has_roles('inventory_admin') %}readonly='readonly'{% endif %}>
-                        </label>
+                        {{ forms.render_field(form.rdate) }}
                     </div>
                 </div>
                 <div class="row">
                     <div class="small-12 columns">
-                        <label><span>Title</span>
-                            <span class="right text-right"><small>Required</small></span>
-                            <input name="indent_title" id="indent_title" type="text" required maxlength="40"
-                            {% if stage.is_supplementary %}
-                                   value="{{ stage.order_title }} (Supplementary)"
-                            {% endif %}>
-                        </label>
+                        {{ forms.render_field(form.indent_title, length="50") }}
                     </div>
                 </div>
                 <div class="row">
                     <div class="small-4 columns text-center">
-                        <label class="small-12 columns text-center">Auto Generate</label>
-                        <div class="small-12 columns switch radius small">
-                            <input id="sno_generate" name="sno_generate" type="checkbox" checked
-                                {% if not current_user.has_roles('inventory_admin') %}readonly='readonly'{% endif %}>
-                            <label for="sno_generate"></label>
-                        </div>
+                        {{ forms.render_switch(form.sno_generate, checked=True) }}
                     </div>
                     <div class="small-8 columns">
-                        <label><span>Serial Number</span>
-                            <span class="right text-right"><small>Required</small></span>
-                            <input name="indent_sno" id="indent_sno" type="text" readonly='readonly'
-                            {% if stage.is_supplementary %}
-                                   value="{{ stage.sidx }}"
-                            {% endif %}>
-                        </label>
+                        {{ forms.render_field(form.indent_sno, autocomplete="off") }}
                     </div>
                 </div>
                 <div class="row">
                     <div class="small-12 large-6 columns">
-                        <label><span>Type</span>
-                            <span class="right text-right"><small>Required</small></span>
-                            <select name="indent_type" id="indent_type">
-                              <option value="production">Production</option>
-                              <option value="testing">Testing</option>
-                              <option value="support">Support</option>
-                              <option value="rd">Research & Development</option>
-                            </select>
-                        </label>
+                        {{ forms.render_field(form.indent_type) }}
                     </div>
                     <div class="small-12 large-6 columns">
-                        <label>Parent Indent
-                            <input name="parent_indent_sno" id="parent_indent_sno" type="text" placeholder="Serial number of a parent indent"
-                            {% if stage.is_supplementary %}
-                                   value="{{ stage.parent_indent_sno }}"
-                            {% endif %} readonly='readonly'>
-                        </label>
+                        {{ forms.render_field(form.parent_indent_sno) }}
                     </div>
                     <div class="small-12 large-6 columns">
-                        <label>Production Order
-                            <input name="prod_order_sno" id="prod_order_sno" type="text" autocomplete="off"
-                            {% if stage.is_supplementary %}
-                                   value="{{ stage.prod_order_sno }}" readonly='readonly'
-                            {% endif %} placeholder="Specific production order" list="json-prodordlist">
-                        </label>
+                        {{ forms.render_field(form.prod_order_sno, autocomplete="off", list="json-prodordlist", placeholder="Specific Production Order") }}
                     </div>
                     <div class="small-12 large-6 columns">
-                        <label>Root Order
-                            <input name="root_order_sno" id="root_order_sno" type="text" placeholder="Top level SO or project code"
-                            {% if stage.is_supplementary %}
-                                   value="{{ stage.root_order_sno }}" readonly='readonly'
-                            {% endif %}>
-                        </label>
+                        {{ forms.render_field(form.root_order_sno, autocomplete="off", list="json-rootordlist", placeholder="Top-level order or project code") }}
                     </div>
                     <div class="small-12 columns">
-                        <label><span>Indent For</span>
-                            <span class="right text-right"><small>Required</small></span>
-                            <input name="indent_desc" id="indent_desc" type="text" required>
-                        </label>
+                        {{ forms.render_field(form.indent_desc) }}
                     </div>
                 </div>
             </fieldset>
@@ -117,17 +66,15 @@
                     Components
                 </legend>
                 <!-- COBOM Input Starts -->
+                {% for component in form.components %}
                 <div class="row component-row">
                     <div class="small-8 columns">
-                        <label>
-                            <input name="ident[]" type="text" placeholder="Component"
-                                   list="json-identlist" autocomplete="off">
-                        </label>
+                        {{ forms.render_clean_field(component.ident, list="json-identlist", autocomplete="off") }}
                     </div>
                     <div class="small-3 columns">
                         <div class="row collapse postfix-radius">
                             <div class="small-6 columns">
-                                <input name="qty[]" type="text" placeholder="Quantity">
+                                {{ forms.render_clean_field(component.qty, autocomplete="off") }}
                             </div>
                             <div class="small-6 columns">
                                 <span class="postfix avail-qty"></span>
@@ -142,6 +89,7 @@
                         </a>
                     </div>
                 </div>
+                {% endfor %}
                 <a>
                     <div class="button success small expand radius" id="add-row">
                         Add Row
@@ -263,11 +211,17 @@
 
         <!-- COBOM Input Starts -->
 
-        var $button = $('#add-row'),
-            $row = $('.component-row').clone();
-
-        $button.click(function() {
-            $row.clone().insertBefore( $button );
+        $('#add-row').click(function() {
+            lastrow = $( this ).closest('#component-rows').find('.component-row').last();
+            row = lastrow.clone();
+            elem_id = row.find(":input")[0].id;
+            elem_num = parseInt(elem_id.replace(/.*-(\d{1,4})-.*/m, '$1')) + 1;
+            row.find(":input").each(function() {
+                console.log(this);
+                var id = $(this).attr('id').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
+                $(this).attr('name', id).attr('id', id).val('').removeAttr("checked");
+            });
+            lastrow.after(row);
             $(document).foundation('abide', 'reflow');
             $(document).foundation('reflow');
         });
@@ -277,7 +231,7 @@
             $(document).foundation('abide', 'reflow');
             $(document).foundation('reflow');
         });
-        $("#component-rows").on("focusout", ".component-row input[name='ident\\[\\]']", function(){
+        $("#component-rows").on("focusout", ".component-row input[name$='ident']", function(){
             var ctx = this;
             $.ajax({
                  type: "POST",
@@ -295,14 +249,11 @@
         <!-- COBOM Input Ends -->
 
         <!-- Serial No Form Elements -->
+        var indent_sno = $("#indent_sno")[0].value
         $("#sno_generate").change(function(event) {
             var checkbox = event.target;
             if (checkbox.checked) {
-                $("#indent_sno")[0].value = {% if stage.is_supplementary %}
-                                        "{{ stage.sidx }}"
-                                  {% else %}
-                                        ""
-                                  {% endif %};
+                $("#indent_sno")[0].value = indent_sno;
                 $("#indent_sno")[0].readOnly = true;
             } else {
                 $("#indent_sno")[0].readOnly = false;

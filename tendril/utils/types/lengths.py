@@ -36,7 +36,7 @@ class Length(object):
         self._lstr = None
         self._olength = None
         self._ounit = None
-        if lstr is not None:
+        if lstr is not None and defunit is not None:
             try:
                 float(lstr)
                 lstr += defunit
