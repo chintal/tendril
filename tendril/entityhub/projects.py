@@ -131,3 +131,15 @@ def get_bom_superset(regen=False):
     superset_cobom = CompositeOutputBom(boms, name='ALL')
     superset_cobom.collapse_wires()
     return superset_cobom
+
+
+def get_module_config(modulename):
+    if modulename not in cards.keys():
+        raise KeyError("Couldn't find {0} in the library!".format(modulename))
+    gcf = conffile.ConfigsFile(cards[modulename])
+    return gcf
+
+
+def get_module_snoseries(modulename):
+    cf = get_module_config(modulename)
+    return cf.configdata['snoseries']
