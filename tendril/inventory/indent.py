@@ -116,7 +116,10 @@ class InventoryIndent(object):
 
     @property
     def title(self):
-        return self._title
+        if self._title is not None:
+            return self._title
+        else:
+            return self.prod_order.title
 
     @property
     def desc(self):
@@ -151,7 +154,13 @@ class InventoryIndent(object):
 
     @property
     def prod_order(self):
-        pass
+        if self._prod_order_sno is not None:
+            from tendril.production.order import ProductionOrder
+            return ProductionOrder(self._prod_order_sno)
+
+    @property
+    def prod_order_sno(self):
+        return self._prod_order_sno
 
     @property
     def supplementary_indents(self):
@@ -168,3 +177,6 @@ class InventoryIndent(object):
     @property
     def docs(self):
         pass
+
+    def __repr__(self):
+        return '<InventoryIndent {0} {1}>'.format(self._sno, self._title)

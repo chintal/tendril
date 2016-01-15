@@ -143,3 +143,18 @@ def get_module_config(modulename):
 def get_module_snoseries(modulename):
     cf = get_module_config(modulename)
     return cf.configdata['snoseries']
+
+
+def check_module_is_card(modulename):
+    cf = get_module_config(modulename).configdata
+    if 'pcbname' in cf.keys() and cf['pcbname'] is not None:
+        return True
+    return False
+
+
+def check_module_is_cable(modulename):
+    cf = get_module_config(modulename).configdata
+    if 'cblname' in cf.keys() and cf['cblname'] is not None:
+        return True
+    return False
+

@@ -20,14 +20,14 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import csv
-from entitybase import EntityBase
-from entitybase import GenericEntityBase
 
+from tendril.entityhub.entitybase import EntityBase
+from tendril.entityhub.entitybase import GenericEntityBase
 from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import parse_ident
+from tendril.utils import log
 from tendril.utils.types.lengths import Length
 
-from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 

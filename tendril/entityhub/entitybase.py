@@ -47,6 +47,10 @@ class EntityBase(object):
     def ident(self):
         raise NotImplementedError
 
+    @ident.setter
+    def ident(self, value):
+        raise NotImplementedError
+
     @property
     def refdes(self):
         """ Refdes string. """

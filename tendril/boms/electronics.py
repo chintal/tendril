@@ -42,21 +42,21 @@ Module Members:
 
 """
 
-import os
 import copy
+import os
 
+import tendril.conventions.electronics
 import tendril.gedaif.bomparser
 import tendril.gedaif.conffile
-import tendril.conventions.electronics
 
-from outputbase import OutputElnBomDescriptor
+from tendril.entityhub.entitybase import EntityBase
+from tendril.entityhub.entitybase import EntityBomBase
+from tendril.entityhub.entitybase import EntityGroupBase
+
 from outputbase import OutputBom
-
-from entitybase import EntityBase
-from entitybase import EntityGroupBase
-from entitybase import EntityBomBase
-
+from outputbase import OutputElnBomDescriptor
 from tendril.utils import log
+
 logger = log.get_logger(__name__, log.INFO)
 
 

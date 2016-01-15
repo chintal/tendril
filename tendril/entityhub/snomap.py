@@ -27,13 +27,14 @@ from .projects import get_module_snoseries
 from .products import productlib
 
 from .serialnos import get_serialno
+from .serialnos import link_serialno
 
 
 class SerialNumberMap(object):
-    def __init__(self, snomap_dict, efield=None):
+    def __init__(self, snomap_dict, parent_sno=None):
         self._snomap_dict = snomap_dict
         self._generators = {}
-        self._efield = efield
+        self._parent_sno = parent_sno
         self._register = None
 
         self.disable_creation()
@@ -44,15 +45,24 @@ class SerialNumberMap(object):
     def disable_creation(self):
         self._register = False
 
-    def dump_to_file(self, outfolder):
+    def dump_to_file(self, outfolder, fs=None):
         pass
 
-    def load_from_file(self, inpath):
+    def load_from_file(self, inpath, fs=None):
         pass
+
+    def map_keys(self):
+        return self._snomap_dict.keys()
 
     def mapped_snos(self, key):
         if key in self._snomap_dict.keys():
-            return self._snomap_dict[key]
+            if isinstance(self._snomap_dict[key], list):
+                return self._snomap_dict[key]
+            else:
+                return [self._snomap_dict[key]]
+        else:
+            raise KeyError("This snomap does not seem to include"
+                           "any serial numbers for {0}".format(key))
 
     def get_sno(self, key):
         if key not in self._generators:
@@ -65,20 +75,31 @@ class SerialNumberMap(object):
 
     def _sno_generator(self, key):
         if key in self._snomap_dict.keys():
-            for sno in self._snomap_dict[key]:
-                yield sno
+            if isinstance(self._snomap_dict[key], list):
+                for sno in self._snomap_dict[key]:
+                    yield sno
+            else:
+                yield self._snomap_dict[key]
         # generate new from here
         if key == 'indentsno':
             while True:
-                yield get_serialno(series='IDT',
-                                   efield='FOR {0}'.format(self._efield),
+                sno = get_serialno(series='IDT',
+                                   efield='FOR {0}'.format(self._parent_sno),
                                    register=self._register)
+                if self._register:
+                    link_serialno(sno, self._parent_sno)
+                yield sno
+
         elif key in cards:
             # Get card information and generate sno accordingly.
             while True:
-                yield get_serialno(series=get_module_snoseries(key),
+                sno = get_serialno(series=get_module_snoseries(key),
                                    efield=key,
                                    register=self._register)
+                if self._register:
+                    link_serialno(sno, self._parent_sno)
+                yield sno
+
         elif key in [x.name for x in productlib]:
             # Get product information and generate sno accordingly.
             # Currently, all products derive their sno from the core. As such,
