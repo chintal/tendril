@@ -29,6 +29,7 @@ from flask import Response
 from flask import jsonify
 
 from . import production as blueprint
+from .forms import CreateProductionOrderForm
 
 from tendril.dox import production as dxproduction
 from tendril.utils.fsutils import Crumb
@@ -38,6 +39,31 @@ from tendril.utils.fsutils import Crumb
 @login_required
 def orders():
     return jsonify(dxproduction.get_all_prodution_order_snos())
+
+
+@blueprint.route('/order/new', methods=['POST', 'GET'])
+@login_required
+def new_production_order():
+    form = CreateProductionOrderForm()
+    if form.validate_on_submit():
+        # Construct Production Order
+
+        # Check for Authorization
+        # Nothing right now.
+
+        # Create Order
+
+        # Redirect to Created Indent
+        pass
+    stage = {'crumbroot': '/production'}
+    stage_crumbs = {'breadcrumbs': [Crumb(name="Production", path=""),
+                                    Crumb(name="Orders", path="order/"),
+                                    Crumb(name="New", path="order/new")],
+                    }
+    stage.update(stage_crumbs)
+    pagetitle = "Create New Production Order"
+    return render_template('production_order_new.html', stage=stage, form=form,
+                           pagetitle=pagetitle)
 
 
 @blueprint.route('/manifests/<order_sno>')
