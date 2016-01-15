@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .models import User
+from tendril.auth.db.model import User
 
 from flask import redirect, render_template
 from flask import jsonify
@@ -24,7 +24,7 @@ from flask_user import current_user, login_required
 from flask_user.forms import ChangePasswordForm
 from flask_user.forms import ChangeUsernameForm
 
-from tendril.frontend.app import app, db
+from tendril.frontend.app import app
 from tendril.frontend.users.forms import UserProfileForm
 
 
@@ -49,6 +49,7 @@ def user_profile_page():
         form.populate_obj(current_user)
 
         # Save user_profile
+        from tendril.frontend.startup import db
         db.session.commit()
 
         # Redirect to home page

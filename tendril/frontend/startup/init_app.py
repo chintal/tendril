@@ -23,8 +23,10 @@ from urllib2 import quote, unquote
 from flask_mail import Mail
 from flask_user import UserManager, SQLAlchemyAdapter
 
+import db
 
-def init_app(app, db):
+
+def init_app(app):
     """
     Initialize Flask applicaton
     """
@@ -78,18 +80,16 @@ def init_app(app, db):
     init_error_logger_with_email_handler(app)
 
     # Setup Flask-User to handle user account related forms
-    from tendril.frontend.users.models import UserAuth, User
+    from tendril.auth.db.model import UserAuth, User
     from tendril.frontend.users.forms import MyRegisterForm
     from tendril.frontend.users.views import user_profile_page
+
     db_adapter = SQLAlchemyAdapter(db, User,
                                    UserAuthClass=UserAuth)
     user_manager = UserManager(db_adapter, app,  # noqa
                                register_form=MyRegisterForm,
                                user_profile_view_function=user_profile_page,
                                )
-
-    # Load all models.py files to register db.Models with SQLAlchemy
-    from tendril.frontend.users import models  # noqa
 
     # Load all views.py files to register @app.routes() with Flask
     from tendril.frontend.pages import views  # noqa
@@ -138,6 +138,10 @@ def init_app(app, db):
 
     # Configure context processors
     from tendril.frontend.startup import helpers
+
+    @app.teardown_appcontext
+    def shutdown_session(exception=None):
+        db.session.remove()
 
     return app
 

@@ -1,6 +1,9 @@
-# Copyright (C) 2015 Chintalagiri Shashank
+#!/usr/bin/env python
+# encoding: utf-8
+
+# Copyright (C) 2016 Chintalagiri Shashank
 #
-# This file is part of Tendril.
+# This file is part of tendril.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -14,18 +17,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+Docstring for __init__.py
 """
-
-from tendril.frontend.app import app
-from tendril.frontend.startup.init_app import init_app
-
-
-init_app(app)
-
-
-if __name__ == '__main__':
-    app.use_x_sendfile = False
-    app.run(debug=True, host='0.0.0.0')

@@ -43,4 +43,4 @@ app = Flask(__name__)
 # sorting out the consequences to session management, as well as ensuring
 # that the Base is compatible with what Flask plugins expect), or
 # rewriting the Flask plugins to work with the vanilla Base.
-db = SQLAlchemy(app)
+# db = SQLAlchemy(app)

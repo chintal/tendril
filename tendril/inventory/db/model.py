@@ -23,6 +23,7 @@ from sqlalchemy import Column, String
 
 from tendril.utils.db import DeclBase
 from tendril.utils.db import BaseMixin
+from tendril.utils.db import TimestampMixin
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -34,3 +35,11 @@ class InventoryLocationCode(BaseMixin, DeclBase):
     def __repr__(self):
         return "<InventoryLocationCode" \
                "(id = %s, name='%s')>" % (self.id, self.name)
+
+
+# class InventoryIndent(BaseMixin, DeclBase, TimestampMixin):
+#     pass
+#
+#
+# class InventoryIndentLine(BaseMixin, DeclBase):
+#     pass

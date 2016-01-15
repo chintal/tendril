@@ -177,11 +177,13 @@ def get_metadata():
     This function populates the database metadata with all the models used
     by tendril.
     """
+    from tendril.auth.db import model       # noqa
     from tendril.entityhub.db import model  # noqa
     from tendril.inventory.db import model  # noqa
     from tendril.dox.db import model        # noqa
     from tendril.testing.db import model    # noqa
     from tendril.sourcing.db import model   # noqa
+    from tendril.production.db import model # noqa
 
     return DeclBase.metadata
 
