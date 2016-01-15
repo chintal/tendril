@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# Copyright (C) 2015 Chintalagiri Shashank
+# Copyright (C) 2016 Chintalagiri Shashank
 #
 # This file is part of tendril.
 #
@@ -19,9 +19,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for indent
+Docstring for __init__.py
 """
-
-
-class InventoryIndent(object):
-    pass

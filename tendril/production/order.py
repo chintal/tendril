@@ -21,3 +21,7 @@
 """
 Docstring for order
 """
+
+
+class ProductionOrder(object):
+    pass
