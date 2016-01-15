@@ -29,7 +29,7 @@ from wtforms.fields import StringField
 from wtforms.validators import ValidationError
 
 from flask_user import current_user
-from tendril.frontend.users.controller import get_users_list
+from tendril.auth.db.controller import get_users_list
 
 
 def user_auth_check(form, field):

@@ -21,3 +21,12 @@
 """
 Docstring for controller
 """
+
+from tendril.utils.db import with_db
+
+from .model import User
+
+
+@with_db
+def get_users_list(session=None):
+    return session.query(User.full_name).all()

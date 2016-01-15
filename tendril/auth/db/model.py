@@ -42,6 +42,14 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
+# Define the UserRoles association model
+class UserRoles(DeclBase, BaseMixin):
+    user_id = Column(Integer(),
+                     ForeignKey('User.id', ondelete='CASCADE'))
+    role_id = Column(Integer(),
+                     ForeignKey('Role.id', ondelete='CASCADE'))
+
+
 # Define the User data model. Make sure to add the flask_user.UserMixin !!
 class User(DeclBase, BaseMixin, UserMixin):
 
@@ -56,7 +64,7 @@ class User(DeclBase, BaseMixin, UserMixin):
 
     # Relationships
     user_auth = relationship('UserAuth', uselist=False)
-    roles = relationship('Role', secondary='UserRoles',
+    roles = relationship('Role', secondary=UserRoles.__table__,
                          backref=backref('users', lazy='dynamic'))
 
 
@@ -81,10 +89,3 @@ class Role(DeclBase, BaseMixin):
     name = Column(String(50), unique=True)
     description = Column(String(255))
 
-
-# Define the UserRoles association model
-class UserRoles(DeclBase, BaseMixin):
-    user_id = Column(Integer(),
-                     ForeignKey('User.id', ondelete='CASCADE'))
-    role_id = Column(Integer(),
-                     ForeignKey('Role.id', ondelete='CASCADE'))
