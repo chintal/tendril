@@ -7,6 +7,7 @@ Submodules
 .. toctree::
 
    tendril.frontend.blueprints.indent.views
+   tendril.frontend.blueprints.indent.forms
 
 Module contents
 ---------------

@@ -6,6 +6,7 @@ Submodules
 
 .. toctree::
 
+   tendril.sourcing.db
    tendril.sourcing.csil
    tendril.sourcing.customs
    tendril.sourcing.digikey

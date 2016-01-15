@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     tendril.inventory.db
+    tendril.inventory.indent
     tendril.inventory.guidelines
 
 Submodules

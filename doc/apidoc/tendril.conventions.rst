@@ -14,6 +14,7 @@ Submodules
 .. toctree::
 
    tendril.conventions.electronics
+   tendril.conventions.series
 
 Module contents
 ---------------

@@ -8,6 +8,7 @@ Subpackages
 
     tendril.frontend.blueprints
     tendril.frontend.pages
+    tendril.frontend.parts
     tendril.frontend.startup
     tendril.frontend.users
 
