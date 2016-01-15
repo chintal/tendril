@@ -8,6 +8,7 @@ API & Modules Documentation
 
 .. toctree::
 
+    tendril.auth
     tendril.boms
     tendril.conventions
     tendril.dox
@@ -15,6 +16,7 @@ API & Modules Documentation
     tendril.frontend
     tendril.gedaif
     tendril.inventory
+    tendril.production
     tendril.scripts
     tendril.sourcing
     tendril.testing
