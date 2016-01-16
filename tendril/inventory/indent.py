@@ -103,8 +103,7 @@ class InventoryIndent(object):
         self._prod_order_sno = prod_sno
 
     def _get_title_legacy(self):
-        from tendril.dox import production
-        self._title = production.get_order_title(serialno=self._prod_order_sno)
+        self._title = self.prod_order.title
 
     def _load_legacy(self):
         self._get_indent_cobom()
@@ -165,6 +164,10 @@ class InventoryIndent(object):
     @property
     def root_orders(self):
         pass
+
+    @property
+    def root_order_snos(self):
+        return self.prod_order.root_order_snos
 
     @property
     def prod_order(self):

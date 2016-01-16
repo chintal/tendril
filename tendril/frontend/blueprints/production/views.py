@@ -86,7 +86,7 @@ def manifests(order_sno=None):
 @blueprint.route('/order/<order_sno>')
 @blueprint.route('/order/')
 @login_required
-def results(order_sno=None):
+def production_orders(order_sno=None):
     # Presently only supports getting the latest result. A way to allow
     # any result to be retrieved would be nice.
     if order_sno is None:
@@ -99,17 +99,13 @@ def results(order_sno=None):
         return render_template('production_orders.html', stage=stage,
                                pagetitle="All Production Orders")
     else:
-        docs = dxproduction.get_production_order_docs(order_sno)
-        order_yaml, order_snomap = \
-            dxproduction.get_production_order_data(order_sno)
-
-        order_indentsno = order_snomap.pop('indentsno')
+        production_order = order.ProductionOrder(order_sno)
+        docs = production_order.docs
 
         stage = {'docs': docs,
+                 'order': production_order,
+                 'title': production_order.title,
                  'order_sno': order_sno,
-                 'order_snomap': order_snomap,
-                 'order_indentsno': order_indentsno,
-                 'order_yaml': order_yaml,
                  'crumbroot': '/production',
                  'breadcrumbs': [Crumb(name="Production", path=""),
                                  Crumb(name="Orders", path="order/"),

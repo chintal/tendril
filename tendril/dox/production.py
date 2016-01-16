@@ -435,6 +435,53 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
     return outpath
 
 
+def get_production_order_manifest_set(serialno):
+    workspace = temp_fs.makeopendir(get_tempname())
+    children = serialnos.get_child_serialnos(sno=serialno)
+    manifests = []
+    for child in children:
+        files = []
+
+        am = docstore.get_docs_list_for_sno_doctype(child, 'ASSEMBLY MANIFEST')
+        if len(am) == 1:
+            uam = am[0]
+            copyfile(uam.fs, uam.path, workspace, uam.filename, overwrite=True)
+            files = [workspace.getsyspath(uam.filename)]
+        elif len(am) > 1:
+            raise ValueError(
+                    "Found {0} manifests for {2}".format(len(am), child)
+            )
+
+        dms = docstore.get_docs_list_for_sno_doctype(
+                child, 'DELTA ASSEMBLY MANIFEST'
+        )
+        if len(dms):
+            for dm in dms:
+                copyfile(dm.fs, dm.path, workspace, dm.filename,
+                         overwrite=True)
+                files.append(workspace.getsyspath(dm.filename))
+
+        if len(files) > 1:
+            wdmfile = merge_pdf(
+                files,
+                os.path.join(workspace.getsyspath('/'),
+                             os.path.splitext(am.filename)[0] + '-wdm.pdf'),
+                remove_sources=True
+            )
+            manifests.append(wdmfile)
+        elif len(files) == 1:
+            manifests.append(files[0])
+
+    if len(manifests):
+        output = merge_pdf(
+            manifests,
+            os.path.join(workspace.getsyspath('/'), serialno + '.pdf'),
+            remove_sources=True
+        )
+        return output
+    return None
+
+
 def get_production_strategy(cardname):
     # Alternate is ready.
     try:
@@ -488,7 +535,6 @@ def get_production_strategy(cardname):
     return prodst, lblst, testst, genmanifest, genlabel, series, labels
 
 
-# TODO Rationalize all of these functions
 def get_all_prodution_order_snos(limit=None):
     snos = docstore.controller.get_snos_by_document_doctype(
         doctype='PRODUCTION ORDER', limit=limit
@@ -510,88 +556,3 @@ def get_all_production_orders_docs(limit=None):
     return docstore.get_docs_list_for_sno_doctype(
         serialno=None, doctype='PRODUCTION ORDER', limit=limit
     )
-
-
-def get_production_order_docs(serialno=None):
-    rval = []
-    rval.extend(docstore.get_docs_list_for_serialno(serialno=serialno))
-    return rval
-
-
-def get_production_order_data(serialno=None):
-    # Alternate in place
-    order_path = docstore.get_docs_list_for_sno_doctype(
-        serialno=serialno, doctype='PRODUCTION ORDER YAML'
-    )[0].path
-    with docstore.docstore_fs.open(order_path, 'r') as f:
-        order_yaml_data = yaml.load(f)
-
-    snomap_path = docstore.get_docs_list_for_sno_doctype(
-        serialno=serialno, doctype='SNO MAP'
-    )[0].path
-    with docstore.docstore_fs.open(snomap_path, 'r') as f:
-        snomap_data = yaml.load(f)
-
-    return order_yaml_data, snomap_data
-
-
-def get_root_order(serialno=None):
-    # Alternate in place
-    order_yaml_data, snomap_data = get_production_order_data(serialno=serialno)
-    if len(order_yaml_data['root_orders']):
-        return order_yaml_data['root_orders'][0]
-    else:
-        return None
-
-
-def get_order_title(serialno=None):
-    # Alternate in place
-    order_yaml_data, snomap_data = get_production_order_data(serialno=serialno)
-    return order_yaml_data['title']
-
-
-def get_production_order_manifest_set(serialno):
-    workspace = temp_fs.makeopendir(get_tempname())
-    children = serialnos.get_child_serialnos(sno=serialno)
-    manifests = []
-    for child in children:
-        files = []
-
-        am = docstore.get_docs_list_for_sno_doctype(child, 'ASSEMBLY MANIFEST')
-        if len(am) == 1:
-            uam = am[0]
-            copyfile(uam.fs, uam.path, workspace, uam.filename, overwrite=True)
-            files = [workspace.getsyspath(uam.filename)]
-        elif len(am) > 1:
-            raise ValueError(
-                    "Found {0} manifests for {2}".format(len(am), child)
-            )
-
-        dms = docstore.get_docs_list_for_sno_doctype(
-                child, 'DELTA ASSEMBLY MANIFEST'
-        )
-        if len(dms):
-            for dm in dms:
-                copyfile(dm.fs, dm.path, workspace, dm.filename,
-                         overwrite=True)
-                files.append(workspace.getsyspath(dm.filename))
-
-        if len(files) > 1:
-            wdmfile = merge_pdf(
-                files,
-                os.path.join(workspace.getsyspath('/'),
-                             os.path.splitext(am.filename)[0] + '-wdm.pdf'),
-                remove_sources=True
-            )
-            manifests.append(wdmfile)
-        elif len(files) == 1:
-            manifests.append(files[0])
-
-    if len(manifests):
-        output = merge_pdf(
-            manifests,
-            os.path.join(workspace.getsyspath('/'), serialno + '.pdf'),
-            remove_sources=True
-        )
-        return output
-    return None

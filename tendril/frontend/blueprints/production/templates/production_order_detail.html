@@ -20,18 +20,18 @@
 
 <p></p>
 
-<h4>Production Order {{ stage.order_sno }}</h4>
-<h3>{{ stage.order_yaml.title }}</h3>
+<h4>Production Order {{ stage.order.serialno }}</h4>
+<h3>{{ stage.order.title }}</h3>
 
 <div class="small-12 medium-6 columns" data-magellan-destination="order">
 <a name="order"></a>
-
-    <div class="small-12 columns">
-        <div class="small-12 columns text-center">
-            <h5>Modules for Production</h5>
+    {% if stage.order.card_orders.keys()|length %}
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Modules for Production</h6>
         </div>
         <div class="small-12 columns">
-            <table id="order_table" class="display" data-paging='false'>
+            <table id="order_cards_table" class="display" data-paging='false'>
                 <thead>
                 <tr>
                     <th class="all">Card</th>
@@ -39,7 +39,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for card, qty in stage.order_yaml.cards.iteritems() %}
+                {% for card, qty in stage.order.card_orders.iteritems() %}
                     <tr>
                         <td> {{ card }} </td>
                         <td> {{ qty }} </td>
@@ -50,15 +50,53 @@
         </div>
         <script type="text/javascript">
             $(document).ready( function () {
-                var table = $('#order_table').DataTable({
+                var table = $('#order_cards_table').DataTable({
                     /* Disable initial sort */
                     "aaSorting": [],
                     {% include 'parts/datatable_defaults.html' %}
                 });
                 table.buttons().container()
-                    .appendTo( '#order_table_wrapper .small-12.medium-6.columns:eq(0)' );
+                    .appendTo( '#order_cards_table_wrapper .small-12.medium-6.columns:eq(0)' );
             });
         </script>
+    {% endif %}
+    {% if stage.order.delta_orders|length %}
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Modules for Delta Modifications</h6>
+        </div>
+        <div class="small-12 columns">
+            <table id="order_deltas_table" class="display" data-paging='false'>
+                <thead>
+                <tr>
+                    <th class="all">Serial No</th>
+                    <th class="all">Original</th>
+                    <th class="all">Target</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for delta in stage.order.delta_orders.iteritems() %}
+                    <tr>
+                        <td> {{ delta.sno }} </td>
+                        <td> {{ delta['orig-cardname'] }} </td>
+                        <td> {{ delta['target-cardname'] }} </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#order_deltas_table').DataTable({
+                    /* Disable initial sort */
+                    "aaSorting": [],
+                    {% include 'parts/datatable_defaults.html' %}
+                });
+                table.buttons().container()
+                    .appendTo( '#order_deltas_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            });
+        </script>
+    {% endif %}
     </div>
 
 
@@ -67,12 +105,14 @@
             <h6>Related Documentation</h6>
         </div>
         <div class="small-12 columns">
-        <a href="/inventory/indent/{{ stage.order_indentsno }}">
+        {% for indentsno in stage.order.indent_snos %}
+        <a href="/inventory/indent/{{ indentsno }}">
             <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
                 <div class="text-center">Inventory Indent</div>
-                <div class="text-center"><b>{{ stage.order_indentsno }}</b></div>
+                <div class="text-center"><b>{{ indentsno }}</b></div>
             </div>
         </a>
+        {% endfor %}
         <a href="/production/manifests/{{ stage.order_sno }}">
             <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
                 <div class="text-center">Collated Assembly Manifests</div>
@@ -102,10 +142,14 @@
 <a name="snomap"></a>
     <div class="small-12 columns">
         <ul id="snomap_table" class="pricing-table">
-            {% for k, v in stage.order_snomap.iteritems() %}
-            <li class="title"> {{ k }} </li>
-                {% for idx, sno in v.iteritems() %}
-                <li class="bullet-item active-tb"> {{ sno }} </li>
+            {% for action in stage.order.card_actions %}
+            <li class="title"> {{ action.ident }} </li>
+                {% for refdes in action.refdes %}
+                <li class="ptembedlink bullet-item active-tb">
+                    <a class="ptembedlink" href="/entityhub/cards/instance/{{ refdes }}">
+                        <div> {{ refdes }} </div>
+                    </a>
+                </li>
                 {% endfor %}
             {% endfor %}
             <li></li>

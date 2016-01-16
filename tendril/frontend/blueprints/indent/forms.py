@@ -43,6 +43,7 @@ from flask_user import current_user
 from tendril.frontend.parts.forms import DateInputField
 from tendril.frontend.parts.forms import user_auth_check
 
+from tendril.inventory.indent import InventoryIndent
 from tendril.dox import indent as dxindent
 from tendril.dox import production as dxproduction
 from tendril.conventions.electronics import fpiswire_ident
@@ -158,15 +159,12 @@ class CreateIndentForm(Form):
             self.is_supplementary = False
         else:
             self.is_supplementary = True
-
-            prod_ord_sno_str = dxindent.get_indent_production_order(
-                    serialno=self.parent_indent_sno_str)
-            root_ord_sno_str = dxproduction.get_root_order(
-                    serialno=prod_ord_sno_str)
+            parent_indent = InventoryIndent(self.parent_indent_sno_str)
+            prod_ord_sno_str = parent_indent.prod_order_sno
+            root_ord_sno_str = parent_indent.root_order_snos
             serialno_str = dxindent.get_new_supplementary_indent_sno(
                     serialno=self.parent_indent_sno_str)
-            parent_indent_title = dxproduction.get_order_title(
-                    serialno=prod_ord_sno_str)
+            parent_indent_title = parent_indent.title
 
             self.indent_title.data = "Supplement to " + self.parent_indent_sno_str
 

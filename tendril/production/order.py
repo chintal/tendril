@@ -414,7 +414,7 @@ class ProductionOrder(object):
 
     @property
     def docs(self):
-        return
+        return docstore.get_docs_list_for_serialno(serialno=self.serialno)
 
     @property
     def status(self):
