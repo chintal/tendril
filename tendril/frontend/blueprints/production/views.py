@@ -31,6 +31,7 @@ from flask import jsonify
 from . import production as blueprint
 from .forms import CreateProductionOrderForm
 
+from tendril.production import order
 from tendril.dox import production as dxproduction
 from tendril.utils.fsutils import Crumb
 
@@ -71,16 +72,15 @@ def new_production_order():
 def manifests(order_sno=None):
     if not order_sno:
         abort(404)
-    rfile = dxproduction.get_production_order_manifest_set(order_sno)
+    prod_order = order.ProductionOrder(order_sno)
+    rfile = prod_order.collated_manifests_pdf
     if not rfile:
         return "Didn't get a manifest set!"
-    # TODO This is horrible.
     try:
         content = open(rfile).read()
         return Response(content, mimetype="application/pdf")
     except IOError as exc:
         return str(exc)
-    # TODO Figure out how to delete the file later on.
 
 
 @blueprint.route('/order/<order_sno>')

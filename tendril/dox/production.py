@@ -43,6 +43,7 @@ from tendril.boms.outputbase import DeltaOutputBom
 
 from tendril.entityhub import projects
 from tendril.entityhub import serialnos
+from tendril.entityhub.modules import get_module_instance
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.fsutils import get_tempname
@@ -142,16 +143,16 @@ def gen_pcb_am(configname, outfolder, sno=None,
     outpath = os.path.join(outfolder,
                            'am-' + configname + '-' + str(sno) + '.pdf')
 
-    bom = boms_electronics.import_pcb(projfolder)
-    obom = bom.create_output_bom(configname)
+    instance = get_module_instance(sno, configname)
+    obom = instance.obom
 
-    if bom.configurations.rawconfig['pcbname'] is not None:
-        entityname = bom.configurations.rawconfig['pcbname']
+    if projects.check_module_is_card(configname):
+        entityname = instance.pcbname
         title = 'PCB '
         evenpages = True
         add_schematic = False
-    elif bom.configurations.rawconfig['cblname'] is not None:
-        entityname = bom.configurations.rawconfig['cblname']
+    elif projects.check_module_is_cable(configname):
+        entityname = instance.cblname
         title = 'Cable '
         evenpages = False
         add_schematic = True
@@ -165,7 +166,7 @@ def gen_pcb_am(configname, outfolder, sno=None,
              'lines': obom.lines,
              'evenpages': evenpages,
              'stockindent': indentsno,
-             'repopath': projects.card_reporoot[obom.descriptor.configname],
+             'repopath': projects.card_reporoot[configname],
              'productionorderno': productionorderno}
 
     for config in obom.descriptor.configurations.configurations:
@@ -177,8 +178,9 @@ def gen_pcb_am(configname, outfolder, sno=None,
     render.render_pdf(stage, template, outpath)
 
     if add_schematic is True:
+
         merge_pdf([outpath,
-                   os.path.join(projfolder, 'doc',
+                   os.path.join(instance.projfolder, 'doc',
                                 entityname + '-schematic.pdf')],
                   outpath)
     return outpath
@@ -517,7 +519,7 @@ def get_production_order_docs(serialno=None):
 
 
 def get_production_order_data(serialno=None):
-
+    # Alternate in place
     order_path = docstore.get_docs_list_for_sno_doctype(
         serialno=serialno, doctype='PRODUCTION ORDER YAML'
     )[0].path
@@ -534,6 +536,7 @@ def get_production_order_data(serialno=None):
 
 
 def get_root_order(serialno=None):
+    # Alternate in place
     order_yaml_data, snomap_data = get_production_order_data(serialno=serialno)
     if len(order_yaml_data['root_orders']):
         return order_yaml_data['root_orders'][0]
@@ -542,6 +545,7 @@ def get_root_order(serialno=None):
 
 
 def get_order_title(serialno=None):
+    # Alternate in place
     order_yaml_data, snomap_data = get_production_order_data(serialno=serialno)
     return order_yaml_data['title']
 
@@ -551,17 +555,43 @@ def get_production_order_manifest_set(serialno):
     children = serialnos.get_child_serialnos(sno=serialno)
     manifests = []
     for child in children:
+        files = []
+
         am = docstore.get_docs_list_for_sno_doctype(child, 'ASSEMBLY MANIFEST')
         if len(am) == 1:
-            am = am[0]
-            copyfile(am.fs, am.path, workspace, am.filename, overwrite=True)
-            manifests.append(workspace.getsyspath(am.filename))
+            uam = am[0]
+            copyfile(uam.fs, uam.path, workspace, uam.filename, overwrite=True)
+            files = [workspace.getsyspath(uam.filename)]
+        elif len(am) > 1:
+            raise ValueError(
+                    "Found {0} manifests for {2}".format(len(am), child)
+            )
+
+        dms = docstore.get_docs_list_for_sno_doctype(
+                child, 'DELTA ASSEMBLY MANIFEST'
+        )
+        if len(dms):
+            for dm in dms:
+                copyfile(dm.fs, dm.path, workspace, dm.filename,
+                         overwrite=True)
+                files.append(workspace.getsyspath(dm.filename))
+
+        if len(files) > 1:
+            wdmfile = merge_pdf(
+                files,
+                os.path.join(workspace.getsyspath('/'),
+                             os.path.splitext(am.filename)[0] + '-wdm.pdf'),
+                remove_sources=True
+            )
+            manifests.append(wdmfile)
+        elif len(files) == 1:
+            manifests.append(files[0])
+
     if len(manifests):
-        output = merge_pdf(manifests,
-                           os.path.join(
-                               workspace.getsyspath('/'),
-                               serialno + '.pdf'
-                           ),
-                           remove_sources=True)
+        output = merge_pdf(
+            manifests,
+            os.path.join(workspace.getsyspath('/'), serialno + '.pdf'),
+            remove_sources=True
+        )
         return output
     return None

@@ -42,6 +42,7 @@ from tendril.entityhub.modules import ModuleInstanceTypeMismatchError
 
 from tendril.dox.production import gen_delta_pcb_am
 from tendril.dox.production import gen_pcb_am
+from tendril.dox.production import get_production_order_manifest_set
 
 
 class ProductionOrderNotFound(EntityNotFound):
@@ -134,8 +135,11 @@ class DeltaProductionAction(ProductionActionBase):
         self._generate_docs(outfolder, indent_sno, prod_ord_sno, session)
         if register is True:
             serialnos.set_serialno_efield(
-                    sno=self._sno, efield=self._target_modulename,
-                    register=register, session=session
+                sno=self._sno, efield=self._target_modulename,
+                register=register, session=session
+            )
+            serialnos.link_serialno(
+                child=self._sno, parent=prod_ord_sno, session=session
             )
             self._original = get_module_prototype(self._orig_modulename)
             self._target = get_module_instance(self._sno,
@@ -206,8 +210,11 @@ class CardProductionAction(ProductionActionBase):
         if self._prototype.strategy['genmanifest'] is True:
             for card in self.modules:
                 self._generate_am(
-                        outfolder, card.refdes, prod_ord_sno, indent_sno,
-                        register=register, session=session
+                    outfolder, card.refdes, prod_ord_sno, indent_sno,
+                    register=register, session=session
+                )
+                serialnos.link_serialno(
+                    child=card.refdes, parent=prod_ord_sno, session=session
                 )
 
     @property
@@ -365,6 +372,10 @@ class ProductionOrder(object):
     @property
     def bomlist(self):
         return self.card_boms + self.delta_boms
+
+    @property
+    def collated_manifests_pdf(self):
+        return get_production_order_manifest_set(self.serialno)
 
     @property
     def title(self):

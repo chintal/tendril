@@ -147,9 +147,17 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
                     label['code'], label['ident'], sno
                 )
 
+    @property
+    def projfolder(self):
+        return projects.cards[self.ident]
+
 
 class CardPrototype(EDAModulePrototypeBase):
     validator = staticmethod(projects.check_module_is_card)
+
+    @property
+    def pcbname(self):
+        return self.bom.configurations.rawconfig['pcbname']
 
     def __repr__(self):
         return '<CardPrototype {0}>'.format(self.ident)
@@ -160,6 +168,10 @@ class CablePrototype(EDAModulePrototypeBase):
 
     def __repr__(self):
         return '<CablePrototype {0}>'.format(self.ident)
+
+    @property
+    def cblname(self):
+        return self.bom.configurations.rawconfig['cblname']
 
 
 def get_module_prototype(modulename):
@@ -246,6 +258,10 @@ class EDAModuleInstanceBase(ModuleInstanceBase):
     def make_labels(self):
         self.prototype.make_labels(self._refdes)
 
+    @property
+    def projfolder(self):
+        return self._prototype.projfolder
+
 
 class CardInstance(EDAModuleInstanceBase):
     validator = staticmethod(projects.check_module_is_card)
@@ -259,6 +275,10 @@ class CardInstance(EDAModuleInstanceBase):
                 self.ident, self.refdes, customized
         )
 
+    @property
+    def pcbname(self):
+        return self._prototype.pcbname
+
 
 class CableInstance(EDAModuleInstanceBase):
     validator = staticmethod(projects.check_module_is_cable)
@@ -271,6 +291,10 @@ class CableInstance(EDAModuleInstanceBase):
         return '<CableInstance {0} {1}{2}>'.format(
                 self.ident, self.refdes, customized
         )
+
+    @property
+    def cblname(self):
+        return self._prototype.cblname
 
 
 def get_module_instance(sno, ident=None):
