@@ -25,11 +25,17 @@ Docstring for indent
 import os
 
 from tendril.entityhub import serialnos
+from tendril.entityhub.entitybase import EntityNotFound
+from tendril.entityhub.db.controller import SerialNoNotFound
 from tendril.dox import docstore
 from tendril.dox import labelmaker
 from tendril.boms.outputbase import load_cobom_from_file
 
 from tendril.utils.db import get_session
+
+
+class IndentNotFound(EntityNotFound):
+    pass
 
 
 class InventoryIndent(object):
@@ -38,7 +44,7 @@ class InventoryIndent(object):
         try:
             self.load_from_db()
             self._defined = True
-        except:
+        except IndentNotFound:
             self._cobom = None
             self._title = None
             self._desc = None
@@ -71,10 +77,10 @@ class InventoryIndent(object):
     def _get_indent_cobom(self):
         try:
             cobom_path = docstore.get_docs_list_for_sno_doctype(
-                serialno=self._sno, doctype='PRODUCTION COBOM CSV'
-            )[0].path
-        except IndexError:
-            return None
+                serialno=self._sno, doctype='PRODUCTION COBOM CSV', one=True
+            ).path
+        except SerialNoNotFound:
+            raise IndentNotFound
         with docstore.docstore_fs.open(cobom_path, 'r') as f:
             cobom = load_cobom_from_file(
                 f, os.path.splitext(os.path.split(cobom_path)[1])[0]
@@ -92,9 +98,9 @@ class InventoryIndent(object):
                 if parent.parent.sno.startswith('PROD'):
                     prod_sno = parent.parent.sno
                     break
-            if not prod_sno:
-                self._prod_order_sno = None
-            self._prod_order_sno = prod_sno
+        if not prod_sno:
+            self._prod_order_sno = None
+        self._prod_order_sno = prod_sno
 
     def _get_title_legacy(self):
         from tendril.dox import production
@@ -112,7 +118,15 @@ class InventoryIndent(object):
 
     @property
     def context(self):
-        return ', '.join([x.configname for x in self._cobom.descriptors])
+        descriptors = self._cobom.descriptors
+        context_parts = []
+        for descriptor in descriptors:
+            if descriptor.multiplier > 1:
+                context_parts.append(' x'.join([descriptor.configname,
+                                                descriptor.multiplier]))
+            else:
+                context_parts.append(descriptor.configname)
+        return ', '.join(context_parts)
 
     @property
     def title(self):

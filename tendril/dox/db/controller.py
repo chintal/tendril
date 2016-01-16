@@ -54,7 +54,7 @@ def get_doctype_documents(doctype=None, limit=None, session=None):
 
 @with_db
 def get_serialno_doctype_documents(serialno=None, doctype=None,
-                                   limit=None, session=None):
+                                   limit=None, one=False, session=None):
     q = session.query(DocStoreDocument)
     if serialno is not None:
         if not isinstance(serialno, SerialNumber):
@@ -67,6 +67,8 @@ def get_serialno_doctype_documents(serialno=None, doctype=None,
     q = q.order_by(desc(DocStoreDocument.created_at))
     if limit:
         q = q.limit(limit)
+    if one is True:
+        return q.one()
     return q.all()
 
 

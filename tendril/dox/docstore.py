@@ -131,10 +131,17 @@ def get_docs_list_for_doctype(doctype, limit=None):
     return rval
 
 
-def get_docs_list_for_sno_doctype(serialno, doctype, limit=None):
+def get_docs_list_for_sno_doctype(serialno, doctype, limit=None, one=False):
     documents = controller.get_serialno_doctype_documents(serialno=serialno,
                                                           doctype=doctype,
-                                                          limit=limit)
+                                                          limit=limit,
+                                                          one=one)
+
+    if one is True:
+        return ExposedDocument(documents.doctype, documents.docpath,
+                               docstore_fs, documents.created_at,
+                               documents.efield)
+
     rval = []
     for document in documents:
         rval.append(ExposedDocument(document.doctype,

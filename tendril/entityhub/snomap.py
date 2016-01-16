@@ -56,8 +56,8 @@ class SerialNumberMap(object):
 
     def mapped_snos(self, key):
         if key in self._snomap_dict.keys():
-            if isinstance(self._snomap_dict[key], list):
-                return self._snomap_dict[key]
+            if isinstance(self._snomap_dict[key], dict):
+                return [x for idx, x in self._snomap_dict[key].iteritems()]
             else:
                 return [self._snomap_dict[key]]
         else:
@@ -74,11 +74,18 @@ class SerialNumberMap(object):
                                 "We seem to have run out!".format(key))
 
     def _sno_generator(self, key):
+        count = 0
         if key in self._snomap_dict.keys():
-            if isinstance(self._snomap_dict[key], list):
+            if isinstance(self._snomap_dict[key], dict):
+                for idx, sno in self._snomap_dict[key]:
+                    count += 1
+                    yield sno
+            elif isinstance(self._snomap_dict[key], list):
                 for sno in self._snomap_dict[key]:
+                    count += 1
                     yield sno
             else:
+                count += 1
                 yield self._snomap_dict[key]
         # generate new from here
         if key == 'indentsno':
@@ -88,6 +95,16 @@ class SerialNumberMap(object):
                                    register=self._register)
                 if self._register:
                     link_serialno(sno, self._parent_sno)
+                count += 1
+                if isinstance(self._snomap_dict[key], dict):
+                    self._snomap_dict[key][count] = sno
+                elif isinstance(self._snomap_dict[key], list):
+                    self._snomap_dict[key].append(sno)
+                else:
+                    self._snomap_dict[key] = {
+                        1: self._snomap_dict[key],
+                        2: sno,
+                    }
                 yield sno
 
         elif key in cards:
@@ -98,6 +115,16 @@ class SerialNumberMap(object):
                                    register=self._register)
                 if self._register:
                     link_serialno(sno, self._parent_sno)
+                count += 1
+                if isinstance(self._snomap_dict[key], dict):
+                    self._snomap_dict[key][count] = sno
+                elif isinstance(self._snomap_dict[key], list):
+                    self._snomap_dict[key].append(sno)
+                else:
+                    self._snomap_dict[key] = {
+                        1: self._snomap_dict[key],
+                        2: sno,
+                    }
                 yield sno
 
         elif key in [x.name for x in productlib]:

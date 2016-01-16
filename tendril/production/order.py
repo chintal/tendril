@@ -28,7 +28,14 @@ import yaml
 from tendril.dox import docstore
 from tendril.dox import labelmaker
 
+from tendril.entityhub.db.controller import SerialNoNotFound
+from tendril.entityhub.entitybase import EntityNotFound
+from tendril.entityhub.modules import get_module_instance
 from tendril.entityhub.snomap import SerialNumberMap
+
+
+class ProductionOrderNotFound(EntityNotFound):
+    pass
 
 
 class ProductionOrder(object):
@@ -37,7 +44,7 @@ class ProductionOrder(object):
         try:
             self.load_from_db()
             self._defined = True
-        except:
+        except ProductionOrderNotFound:
             self._title = None
             self._desc = None
             self._indents = []
@@ -47,6 +54,7 @@ class ProductionOrder(object):
             self._defined = False
             self._cards = None
             self._deltas = None
+            self._yaml_data = None
 
     def create(self):
         # Load in the various parameters and such, creating the necessary
@@ -87,40 +95,44 @@ class ProductionOrder(object):
     def _load_snomap_legacy(self):
         # New form should construct directly from DB
         snomap_path = docstore.get_docs_list_for_sno_doctype(
-            serialno=self._sno, doctype='SNO MAP'
-        )[0].path
+            serialno=self._sno, doctype='SNO MAP', one=True
+        ).path
         with docstore.docstore_fs.open(snomap_path, 'r') as f:
             snomap_data = yaml.load(f)
         self._snomap = SerialNumberMap(snomap_data, self._sno)
 
     def _load_order_yaml(self):
-        order_path = docstore.get_docs_list_for_sno_doctype(
-            serialno=self._sno, doctype='PRODUCTION ORDER YAML'
-        )[0].path
+        try:
+            order_path = docstore.get_docs_list_for_sno_doctype(
+                serialno=self._sno, doctype='PRODUCTION ORDER YAML', one=True
+            ).path
+        except SerialNoNotFound:
+            raise ProductionOrderNotFound
         with docstore.docstore_fs.open(order_path, 'r') as f:
-            order_yaml_data = yaml.load(f)
+            self._yaml_data = yaml.load(f)
 
-            # Following keys are ignored / deprecated:
-            #  - register
-            #  - halt_on_shortage
-            #  - include_refbom_for_no_am
-            #  - force_labels
-            #
-            # All of these are more about run control than defining
-            # the production order, and thus are left to the run control
-            # code to work out. The order.yaml files are now only
-            # going to define things that are not temporally transient.
+    def _load_order_yaml_data(self):
+        # Following keys are ignored / deprecated:
+        #  - register
+        #  - halt_on_shortage
+        #  - include_refbom_for_no_am
+        #  - force_labels
+        #
+        # All of these are more about run control than defining
+        # the production order, and thus are left to the run control
+        # code to work out. The order.yaml files are now only
+        # going to define things that are not temporally transient.
 
-            self._title = order_yaml_data.pop('title')
-            self._desc = order_yaml_data.pop('title', None)
-            self._cards = order_yaml_data.pop('cards', {})
-            self._deltas = order_yaml_data.pop('deltas', [])
-            self._sourcing_order_snos = order_yaml_data.pop('sourcing_orders',
-                                                            [])
-            self._root_orders_snos = order_yaml_data.pop('root_orders', [])
+        self._title = self._yaml_data.pop('title')
+        self._desc = self._yaml_data.pop('title', None)
+        self._cards = self._yaml_data.pop('cards', {})
+        self._deltas = self._yaml_data.pop('deltas', [])
+        self._sourcing_order_snos = self._yaml_data.pop('sourcing_orders', [])
+        self._root_orders_snos = self._yaml_data.pop('root_orders', [])
 
     def _load_legacy(self):
         self._load_order_yaml()
+        self._load_order_yaml_data()
         self._load_snomap_legacy()
 
     def load_from_db(self):
@@ -133,16 +145,33 @@ class ProductionOrder(object):
         return self._cards
 
     @property
+    def card_boms(self):
+        return
+
+    @property
     def cards(self):
-        pass
+        rval = []
+        for card, qty in self.card_orders.iteritems():
+            # TODO this is dicey.
+            for sno in self._snomap.mapped_snos(card):
+                rval.append(get_module_instance(sno))
+        return rval
 
     @property
     def delta_orders(self):
         return self._deltas
 
     @property
+    def delta_boms(self):
+        return
+
+    @property
     def deltas(self):
         pass
+
+    @property
+    def bomlist(self):
+        return
 
     @property
     def title(self):

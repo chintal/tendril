@@ -20,6 +20,10 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 
+class EntityNotFound(Exception):
+    pass
+
+
 class EntityBase(object):
     """ Placeholder class for potentially track-able objects.
 

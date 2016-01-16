@@ -27,6 +27,8 @@ from tendril.dox.labelmaker import manager
 from tendril.utils.fsutils import import_
 from tendril.utils.config import INSTANCE_ROOT
 
+from .entitybase import EntityBase
+
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
@@ -158,3 +160,7 @@ def generate_labels(product, sno):
             manager.add_label(
                 l['type'], product.name, labelinfo[0], **labelinfo[1]
             )
+
+
+class ProductInstance(EntityBase):
+    pass

@@ -82,11 +82,11 @@ class EDAModuleInstanceBase(ModuleInstanceBase):
     @property
     def bom(self):
         from tendril.boms.electronics import import_pcb
-        bomobj = import_pcb(projects.cards[self.ident])
         if self._customization is not None:
             raise NotImplementedError(
                     "gEDA Bom customization not yet implemented"
             )
+        bomobj = import_pcb(projects.cards[self.ident])
         return bomobj.create_output_bom(configname=self.ident)
 
 
@@ -122,3 +122,53 @@ def get_module_instance(sno):
         return CardInstance(sno=sno)
     if projects.check_module_is_cable(modulename):
         return CableInstance(sno=sno)
+
+
+class ModulePrototypeBase(object):
+    validator = None
+
+    def __init__(self, modulename):
+        self._modulename = None
+        self.ident = modulename
+
+    @property
+    def ident(self):
+        return self._modulename
+
+    @ident.setter
+    def ident(self, value):
+        if value not in projects.cards.keys():
+            raise ValueError("Module {0} not recognized".format(value))
+        if not self.validator(value):
+            raise TypeError("Module {0} is not a not a valid module for {1}"
+                            "".format(value, self.__class__))
+        self._modulename = value
+
+
+class EDAModulePrototypeBase(ModulePrototypeBase):
+    @property
+    def bom(self):
+        from tendril.boms.electronics import import_pcb
+        bomobj = import_pcb(projects.cards[self.ident])
+        return bomobj.create_output_bom(configname=self.ident)
+
+
+class CardPrototype(EDAModulePrototypeBase):
+    validator = staticmethod(projects.check_module_is_card)
+
+    def __repr__(self):
+        return '<CardPrototype {0}>'.format(self.ident)
+
+
+class CablePrototype(EDAModulePrototypeBase):
+    validator = staticmethod(projects.check_module_is_cable)
+
+    def __repr__(self):
+        return '<CablePrototype {0}>'.format(self.ident)
+
+
+def get_module_prototype(modulename):
+    if projects.check_module_is_card(modulename):
+        return CardPrototype(modulename)
+    if projects.check_module_is_cable(modulename):
+        return CablePrototype(modulename)
