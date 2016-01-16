@@ -19,8 +19,10 @@
 
 <p></p>
 
-<h4>Indent {{ stage.indent_sno }}</h4>
-<h6>for Production Order {{ stage.prod_sno }}</h6>
+<h4>Indent {{ stage.indent.serial }}</h4>
+{% if stage.indent.prod_order_sno %}
+<h6>for Production Order {{ stage.indent.prod_order_sno }}</h6>
+{% endif %}
 
 <div class="small-12 columns" data-magellan-destination="order">
 <a name="indent"></a>
@@ -29,20 +31,20 @@
         <div class="small-12 columns text-center">
             <h5>Indent Composite Bom</h5>
         </div>
-        {% if stage.cobom %}
+        {% if stage.indent.cobom %}
         <div class="small-12 columns">
             <table id="cobom_table" class="display" data-paging='false'>
                 <thead>
                 <tr>
                     <th class="all">Ident</th>
-                    {% for earmark in stage.cobom.descriptors %}
+                    {% for earmark in stage.indent.cobom.descriptors %}
                     <th class="min-tablet"> {{ earmark.configname }}x{{ earmark.multiplier }}</th>
                     {% endfor %}
                     <th class="all">Quantity</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for line in stage.cobom.lines %}
+                {% for line in stage.indent.cobom.lines %}
                     <tr>
                         <td> {{ line.ident }} </td>
                         {% for column in line.columns %}
@@ -81,22 +83,22 @@
         <h5>Related Documentation</h5>
     </div>
     <div class="small-12 columns">
-    <a href="/production/order/{{ stage.prod_sno }}">
+    <a href="/production/order/{{ stage.indent.prod_order_sno }}">
         <div class="small-12 columns button radius active-tb shadow mrgn-20-top">
             <div class="text-center">Production Order</div>
-            <div class="text-center"><b>{{ stage.prod_sno }}</b></div>
+            <div class="text-center"><b>{{ stage.indent.prod_order_sno }}</b></div>
         </div>
     </a>
     <!--Supplementary Indents-->
-    {% for doc in stage.sindent_docs %}
-        <a href="/inventory/indent/{{ doc.filename }}"
+    {% for indent in stage.indent.supplementary_indents %}
+        <a href="/inventory/indent/{{ indent.serialno }}"
            class="small-12 columns button radius info active-tb shadow mrgn-20-top">
-            <div class="row text-center"><b>{{ doc.filename }}</b></div>
-            <div class="row text-center">{{ doc.efield }}</div>
-            <div class="row text-center">{{ doc.ts }}</div>
+            <div class="row text-center"><b>{{ indent.serialno }}</b></div>
+            <div class="row text-center">{{ indent.title }}</div>
+            <div class="row text-center">[Timestamp]</div>
         </a>
     {% endfor %}
-    <a href="/inventory/indent/new/{{ stage.indent_sno }}">
+    <a href="/inventory/indent/new/{{ stage.indent.serialno }}">
         <div class="small-12 columns button radius alert active-tb shadow mrgn-20-top">
             <div class="text-center">New Supplementary Indent</div>
         </div>
@@ -110,7 +112,7 @@
     </div>
     <a name="documentation"></a>
         <ul class="doclinklist">
-            {% for doc in stage.docs %}
+            {% for doc in stage.indent.docs %}
                 {% include 'parts/doc_link_list_element.html' %}
             {% endfor %}
         </ul>

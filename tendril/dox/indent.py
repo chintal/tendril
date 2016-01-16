@@ -118,7 +118,6 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
     return outpath, indentsno
 
 
-# TODO Rationalize all of these functions
 def get_all_indents_docs(limit=None, snos=None):
     if snos is None:
         return docstore.get_docs_list_for_sno_doctype(
@@ -148,59 +147,3 @@ def get_all_indent_sno_strings(limit=None):
         doctype='INVENTORY INDENT', limit=limit
     )
     return [x.sno for x in snos]
-
-
-def get_indent_docs(serialno=None):
-    rval = []
-    rval.extend(docstore.get_docs_list_for_serialno(serialno=serialno))
-    return rval
-
-
-def get_root_indent_sno(serialno):
-    if '.' in serialno:
-        serialno = serialno.split['.'][0]
-    return serialno
-
-
-def get_supplementary_indents(serialno):
-    serialno = get_root_indent_sno(serialno)
-    snos = docstore.controller.get_snos_by_document_doctype(series=serialno + '.', doctype='INVENTORY INDENT')
-    return [x.sno for x in snos]
-
-
-def get_new_supplementary_indent_sno(serialno):
-    serialno = get_root_indent_sno(serialno)
-    sindents = get_supplementary_indents(serialno=serialno)
-    if len(sindents):
-        sidx = str(max([int(x.split('.')[1]) for x in sindents]) + 1)
-    else:
-        sidx = '1'
-    return '.'.join([serialno, sidx])
-
-
-@with_db
-def get_indent_production_order(serialno=None, session=None):
-    parents = serialnos.get_parent_serialnos(sno=serialno, session=session)
-    prod_sno = None
-    for parent in parents:
-        # TODO fix this
-        if parent.parent.sno.startswith('PROD'):
-            prod_sno = parent.parent.sno
-            break
-    if not prod_sno:
-        return None
-    return prod_sno
-
-
-def get_indent_cobom(serialno=None):
-    try:
-        cobom_path = docstore.get_docs_list_for_sno_doctype(
-            serialno=serialno, doctype='PRODUCTION COBOM CSV'
-        )[0].path
-    except IndexError:
-        return None
-    with docstore.docstore_fs.open(cobom_path, 'r') as f:
-        cobom = load_cobom_from_file(
-            f, os.path.splitext(os.path.split(cobom_path)[1])[0]
-        )
-    return cobom

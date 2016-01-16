@@ -138,8 +138,8 @@ class CreateIndentForm(Form):
         else:
             self.admin_roles = ['inventory_admin']
         if parent_indent_sno is not None:
-            self.parent_indent_sno_str = dxindent.get_root_indent_sno(
-                    serialno=parent_indent_sno)
+            parent_indent = InventoryIndent(parent_indent_sno)
+            self.parent_indent_sno_str = parent_indent.root_indent_sno
         else:
             self.parent_indent_sno_str = None
         super(CreateIndentForm, self).__init__(*args, **kwargs)
@@ -161,9 +161,18 @@ class CreateIndentForm(Form):
             self.is_supplementary = True
             parent_indent = InventoryIndent(self.parent_indent_sno_str)
             prod_ord_sno_str = parent_indent.prod_order_sno
-            root_ord_sno_str = parent_indent.root_order_snos
-            serialno_str = dxindent.get_new_supplementary_indent_sno(
-                    serialno=self.parent_indent_sno_str)
+            if len(parent_indent.root_order_snos):
+                root_ord_sno_str = parent_indent.root_order_snos[0]
+            else:
+                root_ord_sno_str = None
+
+            sindents = parent_indent.supplementary_indent_snos
+            if len(sindents):
+                sidx = str(max([int(x.split('.')[1]) for x in sindents]) + 1)
+            else:
+                sidx = '1'
+            serialno_str = '.'.join([self.parent_indent_sno_str, sidx])
+
             parent_indent_title = parent_indent.title
 
             self.indent_title.data = "Supplement to " + self.parent_indent_sno_str

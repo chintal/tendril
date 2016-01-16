@@ -310,7 +310,7 @@ class ProductionOrder(object):
         self._cards = self._yaml_data.pop('cards', {})
         self._deltas = self._yaml_data.pop('deltas', [])
         self._sourcing_order_snos = self._yaml_data.pop('sourcing_orders', [])
-        self._root_orders_snos = self._yaml_data.pop('root_orders', [])
+        self._root_order_snos = self._yaml_data.pop('root_orders', [])
 
     def _load_legacy(self):
         self._load_order_yaml()

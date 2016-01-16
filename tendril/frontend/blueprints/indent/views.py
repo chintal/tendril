@@ -29,6 +29,7 @@ from . import indent as blueprint
 from .forms import CreateIndentForm
 
 from tendril.dox import indent as dxindent
+from tendril.inventory.indent import InventoryIndent
 from tendril.utils.fsutils import Crumb
 
 
@@ -84,16 +85,8 @@ def indent(indent_sno=None):
         return render_template('indent.html', stage=stage,
                                pagetitle="All Indents")
     else:
-        docs = dxindent.get_indent_docs(indent_sno)
-        sindents = dxindent.get_supplementary_indents(indent_sno)
-        sindent_docs = dxindent.get_all_indents_docs(snos=sindents)
-        prod_sno = dxindent.get_indent_production_order(serialno=indent_sno)
-        cobom = dxindent.get_indent_cobom(serialno=indent_sno)
-        stage = {'docs': docs,
-                 'sindent_docs': sindent_docs,
-                 'indent_sno': indent_sno,
-                 'prod_sno': prod_sno,
-                 'cobom': cobom,
+        indent_obj = InventoryIndent(indent_sno)
+        stage = {'indent': indent_obj,
                  'crumbroot': '/inventory',
                  'breadcrumbs': [Crumb(name="Inventory", path=""),
                                  Crumb(name="Indent", path="indent/"),

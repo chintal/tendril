@@ -142,6 +142,10 @@ class InventoryIndent(object):
             return 'for {0} : {1}'.format(self._prod_order_sno, self.context)
 
     @property
+    def cobom(self):
+        return self._cobom
+
+    @property
     def lines(self):
         for idx, line in enumerate(self._cobom.lines):
             yield {'ident': line.ident, 'qty': line.quantity}
@@ -179,21 +183,33 @@ class InventoryIndent(object):
     def prod_order_sno(self):
         return self._prod_order_sno
 
-    @property
-    def supplementary_indents(self):
-        pass
+    @staticmethod
+    def get_root_indent_sno(serialno):
+        if '.' in serialno:
+            serialno = serialno.split['.'][0]
+        return serialno
 
     @property
-    def parent_indent(self):
-        pass
+    def root_indent_sno(self):
+        return self.get_root_indent_sno(self.serialno)
 
     @property
     def root_indent(self):
-        return
+        return InventoryIndent(self.root_indent_sno)
+
+    @property
+    def supplementary_indent_snos(self):
+        return docstore.controller.get_snos_by_document_doctype(
+                series=self.serialno + '.', doctype='INVENTORY INDENT'
+        )
+
+    @property
+    def supplementary_indents(self):
+        return [InventoryIndent(x) for x in self.supplementary_indent_snos]
 
     @property
     def docs(self):
-        pass
+        return docstore.get_docs_list_for_serialno(serialno=self.serialno)
 
     def make_labels(self):
         self._generate_labels()
