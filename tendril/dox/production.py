@@ -55,7 +55,7 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEBUG)
 
 
-def gen_pcb_am(projfolder, configname, outfolder, sno=None,
+def gen_pcb_am(configname, outfolder, sno=None,
                productionorderno=None, indentsno=None):
     """
     Generates a PCB Assembly Manifest for a 'card', a card being defined as a
@@ -434,6 +434,7 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
 
 
 def get_production_strategy(cardname):
+    # Alternate is ready.
     try:
         cardfolder = projects.cards[cardname]
     except KeyError:

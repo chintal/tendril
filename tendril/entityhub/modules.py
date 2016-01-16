@@ -22,9 +22,151 @@
 Docstring for modules
 """
 
+from copy import deepcopy
+
+from tendril.dox import labelmaker
+
 from .entitybase import EntityBase
 from . import serialnos
 from . import projects
+
+from .db.controller import SerialNoNotFound
+
+
+class ModuleNotRecognizedError(Exception):
+    pass
+
+
+class ModuleTypeError(Exception):
+    pass
+
+
+class ModuleInstanceTypeMismatchError(Exception):
+    pass
+
+
+class ModulePrototypeBase(object):
+    validator = None
+
+    def __init__(self, modulename):
+        self._modulename = None
+        self._bom = None
+        self._obom = None
+        self._strategy = None
+        self.ident = modulename
+
+    @property
+    def ident(self):
+        return self._modulename
+
+    @ident.setter
+    def ident(self, value):
+        if value not in projects.cards.keys():
+            raise ModuleNotRecognizedError(
+                    "Module {0} not recognized".format(value))
+        if not self.validator(value):
+            raise ModuleTypeError("Module {0} is not a not a valid module for "
+                                  "{1}".format(value, self.__class__))
+        self._modulename = value
+        self._strategy = self._get_production_strategy()
+
+    @property
+    def strategy(self):
+        if self._strategy is None:
+            self._strategy = self._get_production_strategy()
+        return self._strategy
+
+    def _get_production_strategy(self):
+        raise NotImplementedError
+
+    def make_labels(self, sno):
+        raise NotImplementedError
+
+
+class EDAModulePrototypeBase(ModulePrototypeBase):
+    @property
+    def bom(self):
+        if not self._bom:
+            from tendril.boms.electronics import import_pcb
+            self._bom = import_pcb(projects.cards[self.ident])
+            self._bom.configure_motifs(self.ident)
+        return self._bom
+
+    @property
+    def obom(self):
+        if not self._obom:
+            self._obom = self.bom.create_output_bom(configname=self.ident)
+        return self._obom
+
+    def _get_production_strategy(self):
+        rval = {}
+        configdata = self.bom.configurations.rawconfig
+        if configdata['documentation']['am'] is True:
+            # Assembly manifest should be used
+            rval['prodst'] = "@AM"
+            rval['genmanifest'] = True
+        elif configdata['documentation']['am'] is False:
+            # No Assembly manifest needed
+            rval['prodst'] = "@THIS"
+        if configdata['productionstrategy']['testing'] == 'normal':
+            # Normal test procedure, Test when made
+            rval['testst'] = "@NOW"
+        if configdata['productionstrategy']['testing'] == 'lazy':
+            # Lazy test procedure, Test when used
+            rval['testst'] = "@USE"
+        if configdata['productionstrategy']['labelling'] == 'normal':
+            # Normal test procedure, Label when made
+            rval['lblst'] = "@NOW"
+        if configdata['productionstrategy']['testing'] == 'lazy':
+            # Lazy test procedure, Label when used
+            rval['lblst'] = "@USE"
+        rval['genlabel'] = False
+        rval['labels'] = []
+        if isinstance(configdata['documentation']['label'], dict):
+            for k in sorted(configdata['documentation']['label'].keys()):
+                rval['labels'].append(
+                    {'code': k,
+                     'ident': self.ident + '.' + configdata['label'][k]}
+                )
+            rval['genlabel'] = True
+        elif isinstance(configdata['documentation']['label'], str):
+            rval['labels'].append(
+                {'code': configdata['documentation']['label'],
+                 'ident': self.ident}
+            )
+            rval['genlabel'] = True
+        return rval
+
+    def make_labels(self, sno):
+        # This does not check whether the sno is valid and correct and
+        # so on. This should therefore not be called directly, but instead
+        # the instance's makelabel function should be used.
+        if self.strategy['genlabel'] is True:
+            for label in self.strategy['labels']:
+                labelmaker.manager.add_label(
+                    label['code'], label['ident'], sno
+                )
+
+
+class CardPrototype(EDAModulePrototypeBase):
+    validator = staticmethod(projects.check_module_is_card)
+
+    def __repr__(self):
+        return '<CardPrototype {0}>'.format(self.ident)
+
+
+class CablePrototype(EDAModulePrototypeBase):
+    validator = staticmethod(projects.check_module_is_cable)
+
+    def __repr__(self):
+        return '<CablePrototype {0}>'.format(self.ident)
+
+
+def get_module_prototype(modulename):
+    if projects.check_module_is_card(modulename):
+        return CardPrototype(modulename)
+    if projects.check_module_is_cable(modulename):
+        return CablePrototype(modulename)
 
 
 class ModuleInstanceBase(EntityBase):
@@ -32,6 +174,8 @@ class ModuleInstanceBase(EntityBase):
 
     def __init__(self, sno=None, ident=None, create=False):
         super(ModuleInstanceBase, self).__init__()
+        self._prototype = None
+        self._obom = None
         self._customization = None
         self._ident = None
         if sno is not None:
@@ -44,10 +188,11 @@ class ModuleInstanceBase(EntityBase):
     @ident.setter
     def ident(self, value):
         if value not in projects.cards.keys():
-            raise ValueError("Module {0} not recognized".format(value))
+            raise ModuleNotRecognizedError("Module {0} not recognized"
+                                           "".format(value))
         if not self.validator(value):
-            raise TypeError("Module {0} is not a not a valid module for {1}"
-                            "".format(value, self.__class__))
+            raise ModuleTypeError("Module {0} is not a not a valid module for"
+                                  " {1}".format(value, self.__class__))
         self._ident = value
 
     def define(self, sno, ident=None, create_new=False, register=True):
@@ -58,15 +203,17 @@ class ModuleInstanceBase(EntityBase):
                                  " used to create a new instance".format(sno))
             db_ident = serialnos.get_serialno_efield(sno=self._refdes)
             if ident and db_ident != ident:
-                raise ValueError("Module {0} seems to be a {1}, not {2}"
-                                 "".format(sno, db_ident, ident))
+                raise ModuleInstanceTypeMismatchError(
+                        "Module {0} seems to be a {1}, not {2}"
+                        "".format(sno, db_ident, ident)
+                )
             self.ident = db_ident
             self._defined = True
         else:
             if not create_new:
-                raise ValueError("Serial Number {0} does not exist, and "
-                                 "creation of a new instance is not "
-                                 "requested".format(sno))
+                raise SerialNoNotFound("Serial Number {0} does not exist, and"
+                                       "creation of a new instance is not "
+                                       "requested".format(sno))
             else:
                 self.ident = ident
                 self._defined = True
@@ -77,17 +224,27 @@ class ModuleInstanceBase(EntityBase):
                         " have the serial numbers registered, you can come "
                         "here to fill in the rest.")
 
+    @property
+    def prototype(self):
+        if self._prototype is None:
+            self._prototype = get_module_prototype(self._ident)
+        return self._prototype
+
 
 class EDAModuleInstanceBase(ModuleInstanceBase):
     @property
-    def bom(self):
-        from tendril.boms.electronics import import_pcb
-        if self._customization is not None:
-            raise NotImplementedError(
-                    "gEDA Bom customization not yet implemented"
-            )
-        bomobj = import_pcb(projects.cards[self.ident])
-        return bomobj.create_output_bom(configname=self.ident)
+    def obom(self):
+        if self._obom is None:
+            bomobj = deepcopy(self.prototype.bom)
+            if self._customization is not None:
+                raise NotImplementedError(
+                        "gEDA Bom customization not yet implemented"
+                )
+            self._obom = bomobj.create_output_bom(configname=self.ident)
+        return self._obom
+
+    def make_labels(self):
+        self.prototype.make_labels(self._refdes)
 
 
 class CardInstance(EDAModuleInstanceBase):
@@ -116,59 +273,9 @@ class CableInstance(EDAModuleInstanceBase):
         )
 
 
-def get_module_instance(sno):
+def get_module_instance(sno, ident=None):
     modulename = serialnos.get_serialno_efield(sno=sno)
     if projects.check_module_is_card(modulename):
-        return CardInstance(sno=sno)
+        return CardInstance(sno=sno, ident=ident)
     if projects.check_module_is_cable(modulename):
-        return CableInstance(sno=sno)
-
-
-class ModulePrototypeBase(object):
-    validator = None
-
-    def __init__(self, modulename):
-        self._modulename = None
-        self.ident = modulename
-
-    @property
-    def ident(self):
-        return self._modulename
-
-    @ident.setter
-    def ident(self, value):
-        if value not in projects.cards.keys():
-            raise ValueError("Module {0} not recognized".format(value))
-        if not self.validator(value):
-            raise TypeError("Module {0} is not a not a valid module for {1}"
-                            "".format(value, self.__class__))
-        self._modulename = value
-
-
-class EDAModulePrototypeBase(ModulePrototypeBase):
-    @property
-    def bom(self):
-        from tendril.boms.electronics import import_pcb
-        bomobj = import_pcb(projects.cards[self.ident])
-        return bomobj.create_output_bom(configname=self.ident)
-
-
-class CardPrototype(EDAModulePrototypeBase):
-    validator = staticmethod(projects.check_module_is_card)
-
-    def __repr__(self):
-        return '<CardPrototype {0}>'.format(self.ident)
-
-
-class CablePrototype(EDAModulePrototypeBase):
-    validator = staticmethod(projects.check_module_is_cable)
-
-    def __repr__(self):
-        return '<CablePrototype {0}>'.format(self.ident)
-
-
-def get_module_prototype(modulename):
-    if projects.check_module_is_card(modulename):
-        return CardPrototype(modulename)
-    if projects.check_module_is_cable(modulename):
-        return CablePrototype(modulename)
+        return CableInstance(sno=sno, ident=ident)

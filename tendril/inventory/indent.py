@@ -192,5 +192,8 @@ class InventoryIndent(object):
     def docs(self):
         pass
 
+    def make_labels(self):
+        self._generate_labels()
+
     def __repr__(self):
         return '<InventoryIndent {0} {1}>'.format(self._sno, self._title)

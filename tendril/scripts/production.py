@@ -51,7 +51,7 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 
 def get_delta_obom(orig_cardname, target_cardname):
-
+    # Alternate in place.
     orig_bom = import_pcb(projects.cards[orig_cardname])
     orig_obom = orig_bom.create_output_bom(orig_cardname)
 
@@ -62,6 +62,7 @@ def get_delta_obom(orig_cardname, target_cardname):
 
 
 def get_card_obom(cardname, qty):
+    # Alternate in place.
     bom = import_pcb(projects.cards[cardname])
     obom = bom.create_output_bom(cardname)
     obom.multiply(qty)
@@ -69,6 +70,7 @@ def get_card_obom(cardname, qty):
 
 
 def get_bomlist(data, verbose=False):
+    # Alternate in place.
     bomlist = []
     if 'cards' in data.keys():
         if verbose:
@@ -102,6 +104,7 @@ def get_bomlist(data, verbose=False):
 
 
 def get_indent_context(data):
+    # Alternate in place.
     indent_context = {}
     if 'cards' in data.keys():
         indent_context.update(data['cards'])
@@ -209,12 +212,14 @@ def generate_indent(bomlist, orderfolder, data, prod_ord_sno,
 
 
 def get_card_snoseries(cardname):
+    # Alternate in place.
     strategy = get_production_strategy(cardname)
     prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy
     return series
 
 
 def get_card_sno(card, idx, snomap, prod_ord_sno, register=False):
+    # Alternate in place.
     series = get_card_snoseries(card)
     if card in snomap.keys():
         if idx in snomap[card].keys():
@@ -237,6 +242,7 @@ def get_card_sno(card, idx, snomap, prod_ord_sno, register=False):
 
 def generate_card_docs(cardname, sno, manifestsfolder,
                        prod_ord_sno, indentsno, register=False):
+    # Alternate in place.
     cardfolder = projects.cards[cardname]
     strategy = get_production_strategy(cardname)
     prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy
@@ -250,7 +256,7 @@ def generate_card_docs(cardname, sno, manifestsfolder,
                 label['code'], label['ident'], sno
             )
     if genmanifest is True:
-        ampath = gen_pcb_am(cardfolder, cardname,
+        ampath = gen_pcb_am(cardname,
                             manifestsfolder, sno,
                             productionorderno=prod_ord_sno,
                             indentsno=indentsno)
@@ -264,6 +270,7 @@ def generate_card_docs(cardname, sno, manifestsfolder,
 
 def generate_delta_docs(delta, manifestsfolder, prod_ord_sno,
                         indentsno, register=False):
+    # Alternate in place.
     dmpath = gen_delta_pcb_am(
                 delta['orig-cardname'], delta['target-cardname'],
                 outfolder=manifestsfolder, sno=delta['sno'],
@@ -293,6 +300,7 @@ def generate_delta_docs(delta, manifestsfolder, prod_ord_sno,
 
 
 def generate_labels(orderfolder, force_labels=True):
+    # Alternate in place.
     labelpaths = labelmaker.manager.generate_pdfs(orderfolder,
                                                   force=force_labels)
     if len(labelpaths) > 0:

@@ -26,21 +26,210 @@ import os
 import yaml
 
 from tendril.dox import docstore
-from tendril.dox import labelmaker
+from tendril.entityhub import serialnos
+
+from tendril.entityhub.modules import get_module_instance
+from tendril.entityhub.modules import get_module_prototype
+from tendril.entityhub.modules import ModuleInstanceBase
+from tendril.entityhub.modules import ModulePrototypeBase
+
+from tendril.boms.outputbase import DeltaOutputBom
+from tendril.entityhub.snomap import SerialNumberMap
 
 from tendril.entityhub.db.controller import SerialNoNotFound
 from tendril.entityhub.entitybase import EntityNotFound
-from tendril.entityhub.modules import get_module_instance
-from tendril.entityhub.snomap import SerialNumberMap
+from tendril.entityhub.modules import ModuleInstanceTypeMismatchError
+
+from tendril.dox.production import gen_delta_pcb_am
+from tendril.dox.production import gen_pcb_am
 
 
 class ProductionOrderNotFound(EntityNotFound):
     pass
 
 
+class DeltaValidationError(Exception):
+    pass
+
+
+class ProductionActionBase(object):
+    def __init__(self, *args, **kwargs):
+        self._is_done = None
+        self.setup(*args, **kwargs)
+
+    def setup(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def commit(self, outfolder=None,
+               indent_sno=None, prod_ord_sno=None,
+               register=False, session=None):
+        raise NotImplementedError
+
+    @property
+    def obom(self):
+        raise NotImplementedError
+
+    @property
+    def ident(self):
+        raise NotImplementedError
+
+    @property
+    def refdes(self):
+        raise NotImplementedError
+
+    @property
+    def modules(self):
+        return [get_module_instance(x, self.ident) for x in self.refdes]
+
+
+class DeltaProductionAction(ProductionActionBase):
+    def __init__(self, delta_order):
+        self._sno = None
+        self._original = None
+        self._target = None
+        self._orig_modulename = None
+        self._target_modulename = None
+        super(DeltaProductionAction, self).__init__(delta_order)
+
+    def setup(self, delta_order):
+        self._sno = delta_order['sno']
+        self._orig_modulename = delta_order['orig-cardname']
+        self._target_modulename = delta_order['target-cardname']
+        try:
+            try:
+                self._original = get_module_instance(
+                        self._sno, self._orig_modulename)
+                self._target = get_module_prototype(self._target_modulename)
+                self._is_done = False
+            except ModuleInstanceTypeMismatchError:
+                self._target = get_module_instance(self._sno,
+                                                   self._target_modulename)
+                self._original = get_module_prototype(self._orig_modulename)
+                self._is_done = True
+        except:
+            # TODO a second delta on the same serial number will
+            # make the first one fail. The entire delta architecture
+            # may need to be thought through. Additionally, this
+            # structure only handles deltas between cardnames, and
+            # will go to hell in a handbasket if there are any
+            # temporal changes to cards.
+            raise DeltaValidationError
+
+    def _generate_docs(self, manifestsfolder, indent_sno=None, prod_ord_sno=None,
+                       register=False, session=None):
+        dmpath = gen_delta_pcb_am(
+                self._orig_modulename, self._orig_modulename,
+                outfolder=manifestsfolder, sno=self._sno,
+                indentsno=indent_sno, productionorderno=prod_ord_sno
+        )
+        if register is True:
+            docstore.register_document(serialno=self._sno, docpath=dmpath,
+                                       doctype='DELTA ASSEMBLY MANIFEST',
+                                       session=session)
+
+    def commit(self, outfolder=None, indent_sno=None, prod_ord_sno=None,
+               register=False, session=None):
+        if self._is_done is True:
+            return
+        self._generate_docs(outfolder, indent_sno, prod_ord_sno, session)
+        if register is True:
+            serialnos.set_serialno_efield(
+                    sno=self._sno, efield=self._target_modulename,
+                    register=register, session=session
+            )
+            self._original = get_module_prototype(self._orig_modulename)
+            self._target = get_module_instance(self._sno,
+                                               self._target_modulename)
+            self._is_done = True
+
+    @property
+    def delta_bom(self):
+        original_obom = self._original.obom
+        target_obom = self._target.obom
+        delta_obom = DeltaOutputBom(original_obom, target_obom)
+        return delta_obom
+
+    @property
+    def obom(self):
+        return self.delta_bom
+
+    @property
+    def ident(self):
+        return '{0}->{1}'.format(self._original.ident, self._target.ident)
+
+    @property
+    def refdes(self):
+        return [self._sno]
+
+    def __repr__(self):
+        if self._is_done is True:
+            done = 'DONE'
+        elif self._is_done is False:
+            done = 'NOT DONE'
+        else:
+            done = 'NOT DEFINED'
+        return '<DeltaProductionAction {0} {1} {2}>'.format(
+            self.ident, self.refdes, done
+        )
+
+
+class CardProductionAction(ProductionActionBase):
+    def __init__(self, *args, **kwargs):
+        self._ident = None
+        self._qty = None
+        self._prototype = None
+        self._snomap = None
+        self._snos = None
+        super(CardProductionAction, self).__init__(*args, **kwargs)
+
+    def setup(self, card, qty, snofunc):
+        self._ident = card
+        self._prototype = get_module_prototype(card)
+        self._qty = qty
+        self._snos = []
+        for idx in range(self._qty):
+            self._snos.append(snofunc(self.ident))
+
+    def _generate_am(self, manifestsfolder, sno, prod_ord_sno, indent_sno,
+                     register=False, session=None):
+        ampath = gen_pcb_am(self._ident, manifestsfolder, sno,
+                            productionorderno=prod_ord_sno,
+                            indentsno=indent_sno)
+        if register is True:
+            docstore.register_document(serialno=sno, docpath=ampath,
+                                       doctype='ASSEMBLY MANIFEST',
+                                       session=session)
+
+    def commit(self, outfolder=None, indent_sno=None, prod_ord_sno=None,
+               register=False, session=None):
+        # Serial numbers will already have been written in.
+        if self._prototype.strategy['genmanifest'] is True:
+            for card in self.modules:
+                self._generate_am(
+                        outfolder, card.refdes, prod_ord_sno, indent_sno,
+                        register=register, session=session
+                )
+
+    @property
+    def obom(self):
+        obom = self._prototype.bom.create_output_bom(self.ident)
+        obom.multiply(self._qty)
+        return obom
+
+    @property
+    def ident(self):
+        return self._ident
+
+    @property
+    def refdes(self):
+        return self._snos
+
+
 class ProductionOrder(object):
     def __init__(self, sno=None):
         self._sno = sno
+        self._card_actions = []
+        self._delta_actions = []
         try:
             self.load_from_db()
             self._defined = True
@@ -51,45 +240,31 @@ class ProductionOrder(object):
             self._root_order_snos = []
             self._sourcing_order_snos = []
             self._snomap = None
-            self._defined = False
             self._cards = None
             self._deltas = None
             self._yaml_data = None
+            self._defined = False
 
-    def create(self):
+    def create(self, order_yaml_path):
         # Load in the various parameters and such, creating the necessary
         # containers only.
-        pass
+        with open(order_yaml_path, 'r') as f:
+            self._yaml_data = yaml.load(f)
+        self._load_order_yaml_data()
+        # Create Snomap
+        self._snomap = SerialNumberMap({}, self._sno)
 
     def process(self):
-        # Actually process the order and generate downstream documentation.
+        # Cards are created implicitly
+        # Create order
+
+        # Create indent
         pass
 
     def _process_order(self):
         pass
 
     def _generate_doc(self, outfolder=None):
-        pass
-
-    def _generate_snomap(self, outfolder=None):
-        pass
-
-    def _generate_manifests(self, outfolder=None):
-        pass
-
-    def _generate_labels(self, outfolder=None):
-        pass
-
-    def _generate_docs(self, outfolder, register=True):
-        pass
-
-    def commit_to_db(self):
-        pass
-
-    def _get_indent_snos_legacy(self):
-        pass
-
-    def _get_root_order_snos_legacy(self):
         pass
 
     def _load_snomap_legacy(self):
@@ -145,33 +320,51 @@ class ProductionOrder(object):
         return self._cards
 
     @property
+    def card_actions(self):
+        # This first len(..) bit is a litte dicey.
+        if not len(self._card_actions):
+            for card, qty in self.card_orders.iteritems():
+                self._card_actions.append(
+                    CardProductionAction(card, qty, self._snomap.get_sno)
+                )
+        return self._card_actions
+
+    @property
     def card_boms(self):
-        return
+        return [x.obom for x in self.card_actions]
 
     @property
     def cards(self):
-        rval = []
-        for card, qty in self.card_orders.iteritems():
-            # TODO this is dicey.
-            for sno in self._snomap.mapped_snos(card):
-                rval.append(get_module_instance(sno))
-        return rval
+        return [x.modules for x in self.card_actions]
 
     @property
     def delta_orders(self):
         return self._deltas
 
     @property
+    def delta_actions(self):
+        # This first len(..) bit is a litte dicey.
+        if not len(self._delta_actions):
+            for delta in self._deltas:
+                self._delta_actions.append(
+                        DeltaProductionAction(delta)
+                )
+        return self._delta_actions
+
+    @property
     def delta_boms(self):
-        return
+        return [x.obom for x in self.delta_actions]
 
     @property
     def deltas(self):
-        pass
+        # This will return the original card if the delta hasn't yet been
+        # processed. Consider the inconsistency of this behavior and see what
+        # to do about it.
+        return [x.modules for x in self.delta_actions]
 
     @property
     def bomlist(self):
-        return
+        return self.card_boms + self.delta_boms
 
     @property
     def title(self):
@@ -197,16 +390,16 @@ class ProductionOrder(object):
         return self._root_order_snos
 
     @property
-    def indents(self):
-        from tendril.inventory.indent import InventoryIndent
-        return [InventoryIndent(x) for x in self.indent_snos]
-
-    @property
     def indent_snos(self):
         if 'indentsno' in self._snomap.map_keys():
             return self._snomap.mapped_snos('indentsno')
         else:
             return []
+
+    @property
+    def indents(self):
+        from tendril.inventory.indent import InventoryIndent
+        return [InventoryIndent(x) for x in self.indent_snos]
 
     @property
     def docs(self):
@@ -215,6 +408,18 @@ class ProductionOrder(object):
     @property
     def status(self):
         return
+
+    def make_labels(self, include_all_indents=False):
+        if include_all_indents is True:
+            for indent in self.indents:
+                indent.make_labels()
+        else:
+            if len(self.indent_snos):
+                self.indents[-1].make_labels()
+        for card in self.cards:
+            card.make_labels()
+        for delta in self.deltas:
+            delta.make_labels()
 
     def __repr__(self):
         return '<Production Order {0} {1}>'.format(self.serialno, self.title)

@@ -31,7 +31,9 @@ from .serialnos import link_serialno
 
 
 class SerialNumberMap(object):
-    def __init__(self, snomap_dict, parent_sno=None):
+    def __init__(self, snomap_dict=None, parent_sno=None):
+        if snomap_dict is None:
+            snomap_dict = {}
         self._snomap_dict = snomap_dict
         self._generators = {}
         self._parent_sno = parent_sno
@@ -75,18 +77,19 @@ class SerialNumberMap(object):
 
     def _sno_generator(self, key):
         count = 0
-        if key in self._snomap_dict.keys():
-            if isinstance(self._snomap_dict[key], dict):
-                for idx, sno in self._snomap_dict[key]:
-                    count += 1
-                    yield sno
-            elif isinstance(self._snomap_dict[key], list):
-                for sno in self._snomap_dict[key]:
-                    count += 1
-                    yield sno
-            else:
+        if key not in self._snomap_dict.keys():
+            self._snomap_dict[key] = {}
+        if isinstance(self._snomap_dict[key], dict):
+            for idx, sno in self._snomap_dict[key].iteritems():
                 count += 1
-                yield self._snomap_dict[key]
+                yield sno
+        elif isinstance(self._snomap_dict[key], list):
+            for sno in self._snomap_dict[key]:
+                count += 1
+                yield sno
+        else:
+            count += 1
+            yield self._snomap_dict[key]
         # generate new from here
         if key == 'indentsno':
             while True:
