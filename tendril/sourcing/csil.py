@@ -486,12 +486,14 @@ def generate_pcb_pricing(projfolder, noregen=True, forceregen=False):
                              'pcb', 'sourcing.yaml')
 
     if noregen is True:
-        if forceregen is False:
-            pcb_mtime = fsutils.get_file_mtime(os.path.join(gpf.configsfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))  # noqa
-            outf_mtime = fsutils.get_file_mtime(pricingfp)
-            if outf_mtime is not None and outf_mtime > pcb_mtime:
-                logger.info('Skipping up-to-date ' + pricingfp)
-                return pricingfp
+        if os.path.exists(pricingfp):
+            return pricingfp
+    if forceregen is False:
+        pcb_mtime = fsutils.get_file_mtime(os.path.join(gpf.configsfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'))  # noqa
+        outf_mtime = fsutils.get_file_mtime(pricingfp)
+        if outf_mtime is not None and outf_mtime > pcb_mtime:
+            logger.info('Skipping up-to-date ' + pricingfp)
+            return pricingfp
     logger.info('Generating PCB Pricing for ' + pricingfp)
 
     pcbparams['qty'] = range(searchparams['qty'])

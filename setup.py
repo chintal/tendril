@@ -83,6 +83,7 @@ script_entry_points = [
     'tendril-production = tendril.scripts.production:entry_point',
     'tendril-genvmap = tendril.scripts.genvmaps:main',
     'tendril-genvmapaudit = tendril.scripts.genvmapaudits:main',
+    'tendril-genpcbpricing = tendril.scripts.genpcbpricing:main',
 ]
 
 
