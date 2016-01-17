@@ -27,8 +27,11 @@ import os
 from tendril.entityhub import serialnos
 from tendril.entityhub.entitybase import EntityNotFound
 from tendril.entityhub.db.controller import SerialNoNotFound
+
 from tendril.dox import docstore
 from tendril.dox import labelmaker
+
+from tendril.dox.indent import gen_stock_idt_from_cobom
 from tendril.boms.outputbase import load_cobom_from_file
 
 from tendril.utils.db import get_session
@@ -49,16 +52,63 @@ class InventoryIndent(object):
             self._title = None
             self._desc = None
             self._prod_order_sno = None
+            self._requested_by = None
             self._defined = False
 
-    def create(self):
+    def create(self, cobom, title, desc=None, prod_order_sno=None,
+               requested_by=None):
+        if self._defined is True:
+            raise Exception("This inventory indent instance seems to be already "
+                            "done. You can't 'create' it again.")
+        self._cobom = cobom
+        self._cobom.collapse_wires()
+        self._title = title
+        self._desc = desc
+        self._prod_order_sno = prod_order_sno
+        self._requested_by = requested_by
+
+    def process(self, session=None, **kwargs):
+        if self._defined is True:
+            raise Exception("This inventory indent instance seems to be already "
+                            "done. You can't 'create' it again.")
+        if session is None:
+            with get_session() as session:
+                return self._process(session=session, **kwargs)
+        else:
+            return self._process(session=session, **kwargs)
+
+    def _process(self, outfolder=None, register=False, session=None):
+        self._process_shortage()
+        self._dump_cobom(outfolder, register=register, session=session)
+        self._generate_doc(outfolder, register=register, session=session)
+
+    def _process_shortage(self):
         pass
 
-    def _generate_doc(self, outfolder):
+    def _get_line_shortage(self):
         pass
 
-    def _generate_cobom(self, outfolder):
-        pass
+    def _generate_doc(self, outfolder, register=False, session=None):
+        indentpath, indentsno = gen_stock_idt_from_cobom(
+            outfolder, self.serialno, self.title, self.context, self._cobom
+            )
+        if register is True:
+            docstore.register_document(
+                serialno=self.serialno, docpath=indentpath,
+                doctype='INVENTORY INDENT', efield=self.title,
+                session=session
+            )
+
+    def _dump_cobom(self, outfolder, register=False, session=None):
+        with open(os.path.join(outfolder, 'cobom.csv'), 'w') as f:
+            self._cobom.dump(f)
+        if register is True:
+            docstore.register_document(
+                    serialno=self.serialno,
+                    docpath=os.path.join(outfolder, 'cobom.csv'),
+                    doctype='PRODUCTION COBOM CSV', efield=self.title,
+                    session=session
+            )
 
     def _generate_labels(self, outfolder=None):
         for idx, line in enumerate(self._cobom.lines):
@@ -67,12 +117,6 @@ class InventoryIndent(object):
                 qty=line.quantity)
         if outfolder and os.path.exists(outfolder):
             labelmaker.manager.generate_pdfs(outfolder, force=True)
-
-    def _generate_docs(self, outfolder, register=True):
-        pass
-
-    def commit_to_db(self):
-        pass
 
     def _get_indent_cobom(self):
         try:
@@ -131,7 +175,7 @@ class InventoryIndent(object):
     def title(self):
         if self._title is not None:
             return self._title
-        else:
+        elif self.prod_order_sno is not None:
             return self.prod_order.title
 
     @property
@@ -149,13 +193,6 @@ class InventoryIndent(object):
     def lines(self):
         for idx, line in enumerate(self._cobom.lines):
             yield {'ident': line.ident, 'qty': line.quantity}
-
-    @property
-    def shortage(self):
-        pass
-
-    def report_shortage(self):
-        pass
 
     @property
     def status(self):

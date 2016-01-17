@@ -24,25 +24,31 @@ Docstring for order
 
 import os
 import yaml
+import arrow
+from copy import deepcopy
 
 from tendril.dox import docstore
 from tendril.entityhub import serialnos
 
 from tendril.entityhub.modules import get_module_instance
 from tendril.entityhub.modules import get_module_prototype
-from tendril.entityhub.modules import ModuleInstanceBase
-from tendril.entityhub.modules import ModulePrototypeBase
 
 from tendril.boms.outputbase import DeltaOutputBom
+from tendril.boms.outputbase import CompositeOutputBom
 from tendril.entityhub.snomap import SerialNumberMap
 
 from tendril.entityhub.db.controller import SerialNoNotFound
 from tendril.entityhub.entitybase import EntityNotFound
 from tendril.entityhub.modules import ModuleInstanceTypeMismatchError
 
+from tendril.dox.production import gen_production_order
 from tendril.dox.production import gen_delta_pcb_am
 from tendril.dox.production import gen_pcb_am
 from tendril.dox.production import get_production_order_manifest_set
+
+from tendril.inventory.indent import InventoryIndent
+
+from tendril.utils.db import get_session
 
 
 class ProductionOrderNotFound(EntityNotFound):
@@ -50,6 +56,10 @@ class ProductionOrderNotFound(EntityNotFound):
 
 
 class DeltaValidationError(Exception):
+    pass
+
+
+class NothingToProduceError(Exception):
     pass
 
 
@@ -81,6 +91,10 @@ class ProductionActionBase(object):
     @property
     def modules(self):
         return [get_module_instance(x, self.ident) for x in self.refdes]
+
+    @property
+    def order_lines(self):
+        raise NotImplementedError
 
 
 class DeltaProductionAction(ProductionActionBase):
@@ -131,7 +145,7 @@ class DeltaProductionAction(ProductionActionBase):
     def commit(self, outfolder=None, indent_sno=None, prod_ord_sno=None,
                register=False, session=None):
         if self._is_done is True:
-            return
+            raise NothingToProduceError
         self._generate_docs(outfolder, indent_sno, prod_ord_sno, session)
         if register is True:
             serialnos.set_serialno_efield(
@@ -159,11 +173,26 @@ class DeltaProductionAction(ProductionActionBase):
 
     @property
     def ident(self):
-        return '{0}->{1}'.format(self._original.ident, self._target.ident)
+        return '{0} -> {1}'.format(self._original.ident, self._target.ident)
 
     @property
     def refdes(self):
         return [self._sno]
+
+    @property
+    def modules(self):
+        return [get_module_instance(x, self._target_modulename)
+                for x in self.refdes]
+
+    @property
+    def order_lines(self):
+        target_prototype = get_module_prototype(self._target_modulename)
+        ctx = target_prototype.strategy
+        ctx['ident'] = self._target_modulename
+        ctx['is_delta'] = True
+        ctx['desc'] = self.ident
+        ctx['sno'] = self._sno
+        return [ctx]
 
     def __repr__(self):
         if self._is_done is True:
@@ -192,6 +221,8 @@ class CardProductionAction(ProductionActionBase):
         self._qty = qty
         self._snos = []
         for idx in range(self._qty):
+            # Registration is dependent on the snofunc, and consequently
+            # the state of the corresponding snomap.
             self._snos.append(snofunc(self.ident))
 
     def _generate_am(self, manifestsfolder, sno, prod_ord_sno, indent_sno,
@@ -213,9 +244,11 @@ class CardProductionAction(ProductionActionBase):
                     outfolder, card.refdes, prod_ord_sno, indent_sno,
                     register=register, session=session
                 )
-                serialnos.link_serialno(
-                    child=card.refdes, parent=prod_ord_sno, session=session
-                )
+                if register is True:
+                    serialnos.link_serialno(
+                        child=card.refdes, parent=prod_ord_sno,
+                        session=session
+                    )
 
     @property
     def obom(self):
@@ -230,6 +263,18 @@ class CardProductionAction(ProductionActionBase):
     @property
     def refdes(self):
         return self._snos
+
+    @property
+    def order_lines(self):
+        rval = []
+        base_ctx = self._prototype.strategy
+        base_ctx['ident'] = self.ident
+        base_ctx['is_delta'] = False
+        for card in self.modules:
+            ctx = deepcopy(base_ctx)
+            ctx['sno'] = card.refdes
+            rval.append(ctx)
+        return rval
 
 
 class ProductionOrder(object):
@@ -246,33 +291,160 @@ class ProductionOrder(object):
             self._indents = []
             self._root_order_snos = []
             self._sourcing_order_snos = []
+            self._snomap_path = None
             self._snomap = None
             self._cards = None
             self._deltas = None
+            self._order_yaml_path = None
             self._yaml_data = None
+            self._ordered_by = None
             self._defined = False
 
-    def create(self, order_yaml_path):
+    def create(self, title=None, desc=None, cards=None, deltas=None,
+               sourcing_order_snos=None, root_order_snos=None,
+               ordered_by=None, order_yaml_path=None, snomap_path=None):
         # Load in the various parameters and such, creating the necessary
         # containers only.
-        with open(order_yaml_path, 'r') as f:
-            self._yaml_data = yaml.load(f)
-        self._load_order_yaml_data()
+        if self._defined is True:
+            raise Exception("This production order instance seems to be already "
+                            "done. You can't 'create' it again.")
+        if order_yaml_path is not None:
+            self._order_yaml_path = order_yaml_path
+            with open(self._order_yaml_path, 'r') as f:
+                self._yaml_data = yaml.load(f)
+            self._load_order_yaml_data()
+        else:
+            if title is not None:
+                self._title = title
+            if desc is not None:
+                self._desc = desc
+            if cards is not None:
+                self._cards = self._yaml_data.pop('cards', {})
+            if deltas is not None:
+                self._deltas = self._yaml_data.pop('deltas', [])
+            if sourcing_order_snos is not None:
+                self._sourcing_order_snos = self._yaml_data.pop('sourcing_orders', [])
+            if root_order_snos is not None:
+                self._root_order_snos = self._yaml_data.pop('root_orders', [])
+            if ordered_by is not None:
+                self._ordered_by = ordered_by
+        if snomap_path is not None:
+            self._snomap_path = snomap_path
+
+        if len(self._cards) + len(self._deltas) == 0:
+            raise NothingToProduceError
+
+    def process(self, session=None, **kwargs):
+        if self._defined is True:
+            raise Exception("This production order instance seems to be already "
+                            "done. You can't 'create' it again.")
+
+        if session is None:
+            with get_session() as session:
+                return self._process(session=session, **kwargs)
+        else:
+            return self._process(session=session, **kwargs)
+
+    def _process(self, outfolder=None, manifestsfolder=None,
+                 register=False, session=None):
+
+        if outfolder is None:
+            if self._order_yaml_path is not None:
+                outfolder = os.path.split(self._order_yaml_path)[0]
+            else:
+                raise AttributeError('Output folder needs to be defined')
+        if manifestsfolder is None:
+            manifestsfolder = os.path.join(outfolder, 'manifests')
+            if not os.path.exists(manifestsfolder):
+                os.makedirs(manifestsfolder)
+
+        if self._sno is None:
+            self._sno = serialnos.get_serialno(
+                    series='PROD', efield=self._title,
+                    register=register, session=session
+            )
+        self._yaml_data['prod_order_sno'] = self._sno
+
         # Create Snomap
-        self._snomap = SerialNumberMap({}, self._sno)
+        if self._snomap_path is not None:
+            with open(self._snomap_path, 'r') as f:
+                self._snomap = SerialNumberMap(yaml.load(f), self._sno)
+        else:
+            self._snomap = SerialNumberMap({}, self._sno)
 
-    def process(self):
-        # Cards are created implicitly
-        # Create order
+        if register is True:
+            self._snomap.enable_creation()
 
+        indent_sno = self._snomap.get_sno('indentsno')
+        if register is True:
+            serialnos.link_serialno(indent_sno, self.serialno,
+                                    session=session)
+
+        # Create cards and deltas and so forth
+        actions = self.card_actions + self.delta_actions
+
+        for action in actions:
+            action.commit(
+                outfolder=manifestsfolder,
+                indent_sno=indent_sno, prod_ord_sno=self._sno,
+                register=register, session=session
+            )
+
+        self._snomap.disable_creation()
+        self._snomap.dump_to_file(outfolder)
+        if register is True:
+            docstore.register_document(
+                    serialno=self.serialno,
+                    docpath=os.path.join(outfolder, 'snomap.yaml'),
+                    doctype='SNO MAP', efield=self.title,
+                    session=session
+            )
+
+        cobom = CompositeOutputBom(self.bomlist)
+
+        # Assume Indent is non-empty.
         # Create indent
-        pass
+        indent = InventoryIndent(indent_sno)
+        indent.create(cobom, title="FOR {0}".format(self.serialno),
+                      desc=None, prod_order_sno=self.serialno,
+                      requested_by=self._ordered_by)
 
-    def _process_order(self):
-        pass
+        indent.process(outfolder=outfolder, register=register,
+                       session=session)
 
-    def _generate_doc(self, outfolder=None):
-        pass
+        # Make production order doc
+        self._generate_doc(outfolder=outfolder, register=register,
+                           session=session)
+
+        self.make_labels()
+        self._yaml_data['last_generated_at'] = arrow.utcnow().isoformat()
+        self._dump_order_yaml(outfolder=outfolder, register=register,
+                              session=session)
+        self._defined = True
+
+    def _generate_doc(self, outfolder=None, register=False, session=None):
+        outpath = gen_production_order(
+                outfolder, self.serialno, self._yaml_data, self.lines,
+                sourcing_orders=self._sourcing_order_snos,
+                root_orders=self.root_order_snos
+        )
+        if register is True:
+            docstore.register_document(
+                serialno=self.serialno, docpath=outpath,
+                doctype='PRODUCTION ORDER', efield=self.title,
+                session=session
+            )
+
+    def _dump_order_yaml(self, outfolder=None, register=False, session=None):
+        with open(os.path.join(outfolder, 'order.yaml'), 'w') as f:
+            f.write(yaml.dump(self._yaml_data, default_flow_style=False))
+        if register is True:
+            docstore.register_document(
+                    serialno=self.serialno,
+                    docpath=os.path.join(outfolder, 'order.yaml'),
+                    doctype='PRODUCTION ORDER YAML',
+                    efield=self.title, session=session
+            )
 
     def _load_snomap_legacy(self):
         # New form should construct directly from DB
@@ -345,6 +517,10 @@ class ProductionOrder(object):
         return [x.modules for x in self.card_actions]
 
     @property
+    def card_lines(self):
+        return [x.order_lines for x in self.card_actions]
+
+    @property
     def delta_orders(self):
         return self._deltas
 
@@ -370,8 +546,16 @@ class ProductionOrder(object):
         return [x.modules for x in self.delta_actions]
 
     @property
+    def delta_lines(self):
+        return [x.order_lines for x in self.delta_actions]
+
+    @property
     def bomlist(self):
         return self.card_boms + self.delta_boms
+
+    @property
+    def lines(self):
+        return self.card_lines + self.delta_lines
 
     @property
     def collated_manifests_pdf(self):

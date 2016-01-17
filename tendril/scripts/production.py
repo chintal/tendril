@@ -20,102 +20,18 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import os
-import yaml
 import argparse
-
-from tendril.boms.electronics import import_pcb
-from tendril.boms.outputbase import CompositeOutputBom
-from tendril.boms.outputbase import DeltaOutputBom
 
 from tendril.inventory.electronics import get_total_availability
 from tendril.inventory.electronics import reserve_items
 
-from tendril.dox.production import gen_production_order
-from tendril.dox.production import gen_pcb_am
-from tendril.dox.production import gen_delta_pcb_am
-from tendril.dox.production import get_production_strategy
-from tendril.dox.indent import gen_stock_idt_from_cobom
-
-from tendril.dox import docstore
-from tendril.dox import labelmaker
-
-from tendril.entityhub import projects
-from tendril.entityhub import serialnos
-
-from tendril.utils.pdf import merge_pdf
 from tendril.utils.terminal import TendrilProgressBar
 from tendril.utils.config import INSTANCE_ROOT
 
+from tendril.production.order import ProductionOrder
+
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
-
-
-def get_delta_obom(orig_cardname, target_cardname):
-    # Alternate in place.
-    orig_bom = import_pcb(projects.cards[orig_cardname])
-    orig_obom = orig_bom.create_output_bom(orig_cardname)
-
-    target_bom = import_pcb(projects.cards[target_cardname])
-    target_obom = target_bom.create_output_bom(target_cardname)
-
-    return DeltaOutputBom(orig_obom, target_obom)
-
-
-def get_card_obom(cardname, qty):
-    # Alternate in place.
-    bom = import_pcb(projects.cards[cardname])
-    obom = bom.create_output_bom(cardname)
-    obom.multiply(qty)
-    return obom
-
-
-def get_bomlist(data, verbose=False):
-    # Alternate in place.
-    bomlist = []
-    if 'cards' in data.keys():
-        if verbose:
-            print('Generating Card BOMs')
-        for cardname, qty in data['cards'].iteritems():
-            obom = get_card_obom(cardname, qty)
-            print('Inserting Card Bom : {0} x{1}'.format(
-                obom.descriptor.configname, obom.descriptor.multiplier
-            ))
-            bomlist.append(obom)
-    if 'deltas' in data.keys():
-        if verbose:
-            print('Generating Delta BOMs')
-        for delta in data['deltas']:
-            old_ef = serialnos.get_serialno_efield(sno=delta['sno'])
-            if old_ef != delta['orig-cardname']:
-                print('Original cardname for {0} is {1}, not {2} (expected). '
-                      'Recheck and retry.'.format(
-                        delta['sno'], old_ef, delta['orig-cardname']
-                        ))
-                exit()
-            delta_obom = get_delta_obom(
-                delta['orig-cardname'], delta['target-cardname']
-            )
-            obom = delta_obom.additions_bom
-            print('Inserting Delta Addition Bom : {0}'.format(
-                obom.descriptor.configname
-            ))
-            bomlist.append(obom)
-    return bomlist
-
-
-def get_indent_context(data):
-    # Alternate in place.
-    indent_context = {}
-    if 'cards' in data.keys():
-        indent_context.update(data['cards'])
-    if 'deltas' in data.keys():
-        for delta in data['deltas']:
-            desc = delta['orig-cardname'] + ' -> ' + delta['target-cardname']
-            if desc in indent_context.keys():
-                indent_context[desc] += 1
-            else:
-                indent_context[desc] = 1
-    return indent_context
 
 
 def get_line_shortage(line, descriptors):
@@ -148,15 +64,6 @@ def get_line_shortage(line, descriptors):
 def generate_indent(bomlist, orderfolder, data, prod_ord_sno,
                     indentsno=None, register=False, verbose=False,
                     halt_on_shortage=False):
-    cobom = CompositeOutputBom(bomlist)
-    cobom.collapse_wires()
-
-    with open(os.path.join(orderfolder, 'cobom.csv'), 'w') as f:
-        if verbose:
-            print('Exporting Composite Output BOM to File : ' + os.linesep +
-                  os.path.join(orderfolder, 'cobom.csv'))
-        cobom.dump(f)
-
     unsourced = []
     nlines = len(cobom.lines)
     pb = TendrilProgressBar(max=nlines)
@@ -177,137 +84,6 @@ def generate_indent(bomlist, orderfolder, data, prod_ord_sno,
             exit()
 
     # TODO Transfer Reservations
-    # Generate Indent
-    if verbose:
-        print("Generating Indent")
-
-    indentfolder = orderfolder
-    if indentsno is None:
-        indentsno = serialnos.get_serialno(series='IDT',
-                                           efield='FOR ' + prod_ord_sno,
-                                           register=register)
-
-    indent_context = get_indent_context(data)
-    indentpath, indentsno = gen_stock_idt_from_cobom(
-            indentfolder, indentsno, data['title'], indent_context, cobom
-    )
-    if register is True:
-        docstore.register_document(serialno=indentsno,
-                                   docpath=indentpath,
-                                   doctype='INVENTORY INDENT',
-                                   efield=data['title'])
-        docstore.register_document(serialno=indentsno,
-                                   docpath=os.path.join(orderfolder, 'cobom.csv'),  # noqa
-                                   doctype='PRODUCTION COBOM CSV',
-                                   efield=data['title'])
-        serialnos.link_serialno(child=indentsno, parent=prod_ord_sno)
-    else:
-        print("Not Registering Document : INVENTORY INDENT - " + indentsno)
-        print("Not Registering Document : PRODUCTION COBOM CSV - " +
-              indentsno)
-        print("Not Linking Serial Nos : " + indentsno +
-              ' to parent ' + prod_ord_sno)
-
-    return indentsno
-
-
-def get_card_snoseries(cardname):
-    # Alternate in place.
-    strategy = get_production_strategy(cardname)
-    prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy
-    return series
-
-
-def get_card_sno(card, idx, snomap, prod_ord_sno, register=False):
-    # Alternate in place.
-    series = get_card_snoseries(card)
-    if card in snomap.keys():
-        if idx in snomap[card].keys():
-            sno = snomap[card][idx]
-        else:
-            sno = serialnos.get_serialno(
-                series=series, efield=card, register=register
-            )
-            snomap[card][idx] = sno
-    else:
-        snomap[card] = {}
-        sno = serialnos.get_serialno(
-            series=series, efield=card, register=register
-        )
-        snomap[card][idx] = sno
-    if register is True:
-        serialnos.link_serialno(child=sno, parent=prod_ord_sno)
-    return sno, snomap
-
-
-def generate_card_docs(cardname, sno, manifestsfolder,
-                       prod_ord_sno, indentsno, register=False):
-    # Alternate in place.
-    cardfolder = projects.cards[cardname]
-    strategy = get_production_strategy(cardname)
-    prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy
-    c = {'sno': sno, 'ident': cardname,
-         'prodst': prodst, 'lblst': lblst, 'testst': testst,
-         'is_delta': False
-         }
-    if genlabel is True:
-        for label in labels:
-            labelmaker.manager.add_label(
-                label['code'], label['ident'], sno
-            )
-    if genmanifest is True:
-        ampath = gen_pcb_am(cardname,
-                            manifestsfolder, sno,
-                            productionorderno=prod_ord_sno,
-                            indentsno=indentsno)
-        if register is True:
-            docstore.register_document(serialno=sno, docpath=ampath,  # noqa
-                                       doctype='ASSEMBLY MANIFEST')  # noqa
-    else:
-        ampath = None
-    return c, ampath
-
-
-def generate_delta_docs(delta, manifestsfolder, prod_ord_sno,
-                        indentsno, register=False):
-    # Alternate in place.
-    dmpath = gen_delta_pcb_am(
-                delta['orig-cardname'], delta['target-cardname'],
-                outfolder=manifestsfolder, sno=delta['sno'],
-                indentsno=indentsno, productionorderno=prod_ord_sno
-    )
-    if register is True:
-        docstore.register_document(serialno=delta['sno'], docpath=dmpath,
-                                   doctype='DELTA ASSEMBLY MANIFEST')
-        serialnos.set_serialno_efield(sno=delta['sno'],
-                                      efield=delta['target-cardname'])
-
-    strategy = get_production_strategy(delta['target-cardname'])
-    prodst, lblst, testst, genmanifest, genlabel, series, labels = strategy
-    desc = delta['orig-cardname'] + ' -> ' + delta['target-cardname']
-    c = {'sno': delta['sno'], 'ident': delta['target-cardname'],
-         'prodst': '@AM', 'lblst': lblst, 'testst': testst,
-         'is_delta': True, 'desc': desc
-         }
-
-    if genlabel is True:
-        for label in labels:
-            labelmaker.manager.add_label(
-                label['code'], label['ident'], delta['sno']
-            )
-
-    return c, dmpath
-
-
-def generate_labels(orderfolder, force_labels=True):
-    # Alternate in place.
-    labelpaths = labelmaker.manager.generate_pdfs(orderfolder,
-                                                  force=force_labels)
-    if len(labelpaths) > 0:
-        merge_pdf(
-            labelpaths,
-            os.path.join(orderfolder, 'device-labels.pdf')
-        )
 
 
 def main(orderfolder=None, orderfile_r=None,
@@ -320,161 +96,27 @@ def main(orderfolder=None, orderfile_r=None,
 
     orderfile = os.path.join(orderfolder, orderfile_r)
 
-    with open(orderfile, 'r') as f:
-        data = yaml.load(f)
-
     if os.path.exists(os.path.join(orderfolder, 'wsno')):
         with open(os.path.join(orderfolder, 'wsno'), 'r') as f:
             PROD_ORD_SNO = f.readline().strip()
     else:
         PROD_ORD_SNO = None
 
-    snomap = {}
+    snomap_path = None
     if os.path.exists(os.path.join(orderfolder, 'snomap.yaml')):
-        with open(os.path.join(orderfolder, 'snomap.yaml'), 'r') as f:
-            snomap = yaml.load(f)
+        snomap_path = os.path.join(orderfolder, 'snomap.yaml')
+
+    production_order = ProductionOrder(sno=PROD_ORD_SNO)
+    production_order.create(order_yaml_path=orderfile,
+                            snomap_path=snomap_path)
 
     if register is None:
-        if 'register' in data.keys():
-            if data['register'] is True:
-                REGISTER = True
-            else:
-                REGISTER = False
-        else:
-            REGISTER = False
+        REGISTER = False
     else:
         REGISTER = register
 
-    if data['halt_on_shortage'] is True:
-        HALT_ON_SHORTAGE = True
-    else:
-        HALT_ON_SHORTAGE = False
-
-    if data['force_labels'] is True:
-        FORCE_LABELS = True
-    else:
-        FORCE_LABELS = False
-
-    if 'sourcing_orders' in data.keys():
-        SOURCING_ORDERS = data['sourcing_orders']
-    else:
-        SOURCING_ORDERS = None
-
-    if 'root_orders' in data.keys():
-        ROOT_ORDERS = data['root_orders']
-        if len(ROOT_ORDERS) > 1:
-            logger.warning("Having more than one Root Order is not fully "
-                           "defined. This may break other functionality")
-    else:
-        ROOT_ORDERS = None
-
-    if PROD_ORD_SNO is None:
-        PROD_ORD_SNO = serialnos.get_serialno(series='PROD',
-                                              efield=data['title'],
-                                              register=REGISTER)
-
-    manifestsfolder = os.path.join(orderfolder, 'manifests')
-    if not os.path.exists(manifestsfolder):
-        os.makedirs(manifestsfolder)
-    manifestfiles = []
-    addldocs = []
-    snos = []
-
-    # Generate Tendril Requisitions, confirm production viability.
-    bomlist = get_bomlist(data, verbose)
-
-    if len(bomlist) == 0:
-        indentsno = None
-    else:
-        if 'indentsno' in snomap.keys():
-            indentsno = snomap['indentsno']
-        else:
-            indentsno = None
-        indentsno = generate_indent(
-                bomlist, orderfolder, data, PROD_ORD_SNO, indentsno,
-                REGISTER, verbose, HALT_ON_SHORTAGE
-        )
-        snomap['indentsno'] = indentsno
-
-    if 'cards' in data.keys():
-        if verbose:
-            print('Generating Card Manifests')
-        for card, qty in sorted(data['cards'].iteritems()):
-            for idx in range(qty):
-                sno, snomap = get_card_sno(card, idx, snomap,
-                                           PROD_ORD_SNO, REGISTER)
-                c, ampath = generate_card_docs(card, sno, manifestsfolder,
-                                               PROD_ORD_SNO, indentsno,
-                                               REGISTER)
-                snos.append(c)
-                if ampath:
-                    manifestfiles.append(ampath)
-
-    if 'deltas' in data.keys():
-        if verbose:
-            print('Generating Delta Manifests')
-        for delta in data['deltas']:
-            c, dmpath = generate_delta_docs(delta, manifestsfolder,
-                                            PROD_ORD_SNO, indentsno,
-                                            register=REGISTER)
-            if dmpath:
-                manifestfiles.append(dmpath)
-            snos.append(c)
-
-    # Generate Production Order
-    if verbose:
-        print("Generating Production Order")
-
-    production_order = gen_production_order(orderfolder, PROD_ORD_SNO,
-                                            data, snos,
-                                            sourcing_orders=SOURCING_ORDERS,
-                                            root_orders=ROOT_ORDERS)
-    if len(addldocs) > 0:
-        merge_pdf(
-            [production_order] + addldocs,
-            production_order,
-            remove_sources=False
-        )
-
-    if len(manifestfiles) > 0:
-        merge_pdf(
-            manifestfiles,
-            os.path.join(orderfolder, 'manifests-printable.pdf')
-        )
-
-    generate_labels(orderfolder, FORCE_LABELS)
-    if REGISTER is True:
-        if os.path.exists(os.path.join(orderfolder, 'device-labels.pdf')):
-            docstore.register_document(serialno=PROD_ORD_SNO,
-                                       docpath=os.path.join(orderfolder, 'device-labels.pdf'),  # noqa
-                                       doctype='DEVICE LABELS',
-                                       efield=data['title'])
-        docstore.register_document(serialno=PROD_ORD_SNO,
-                                   docpath=production_order,
-                                   doctype='PRODUCTION ORDER',
-                                   efield=data['title'])
-        docstore.register_document(serialno=PROD_ORD_SNO,
-                                   docpath=orderfile,
-                                   doctype='PRODUCTION ORDER YAML',  # noqa
-                                   efield=data['title'])
-    else:
-        print(
-            "Not registering document : DEVICE LABELS " + PROD_ORD_SNO
-        )
-        print(
-            "Not registering document : PRODUCTION ORDER " + PROD_ORD_SNO
-        )
-        print(
-            "Not registering document : PRODUCTION ORDER YAML " + PROD_ORD_SNO
-        )
-
-    with open(os.path.join(orderfolder, 'snomap.yaml'), 'w') as f:
-        f.write(yaml.dump(snomap, default_flow_style=False))
-    if REGISTER is True:
-        docstore.register_document(serialno=PROD_ORD_SNO,
-                                   docpath=os.path.join(orderfolder, 'snomap.yaml'),  # noqa
-                                   doctype='SNO MAP',
-                                   efield=data['title'])
+    production_order.process(outfolder=orderfile, manifestsfolder=None,
+                             register=REGISTER, session=None)
 
 
 def entry_point():

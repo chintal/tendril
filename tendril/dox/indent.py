@@ -65,9 +65,10 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
     :param sno: The serial number of the Indent
     :type sno: str
     :param title: The title of the Indent
-    :param carddict: A dictionary containing the list of card types included
-                     for the indent (keys) and the quantity for each (values).
-    :type carddict: dict
+    :param carddict: Either a pre-constructed string, or a dictionary
+                     containing the list of card types included for
+                     the indent (keys) and the quantity for each (values).
+    :type carddict: dict or str
     :param cobom: The composite output BOM, including the BOMs for the cards
                   that the indent is being constructed for.
     :type cobom: :class:`tendril.boms.outputbase.CompositeOutputBom`
@@ -96,16 +97,17 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
     """
     outpath = os.path.join(outfolder, str(sno) + '.pdf')
     cards = ""
-    for card, qty in sorted(carddict.iteritems()):
-        cards += card + ' x' + str(qty) + ', '
+    if isinstance(carddict, dict):
+        for card, qty in sorted(carddict.iteritems()):
+            cards += card + ' x' + str(qty) + ', '
+    elif isinstance(carddict, str):
+        cards = carddict
 
     indentsno = sno
 
     lines = []
     for idx, line in enumerate(cobom.lines):
         lines.append({'ident': line.ident, 'qty': line.quantity})
-        labelmaker.manager.add_label(
-            'IDT', line.ident, indentsno + '.' + str(idx), qty=line.quantity)
 
     stage = {'title': title,
              'sno': indentsno,
