@@ -29,6 +29,7 @@ Inheritance Diagram
     tendril.conventions.motifs
     tendril.conventions.motifs.DLPF1
     tendril.conventions.motifs.ING_AD8421
+    tendril.conventions.motifs.LM3150
     tendril.conventions.motifs.LPF1
     tendril.conventions.motifs.LREGS1
     tendril.conventions.motifs.ingbase

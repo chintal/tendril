@@ -24,6 +24,5 @@ Inheritance Diagram
 .. inheritance-diagram::
     tendril.boms
     tendril.boms.electronics
-    tendril.boms.entitybase
     tendril.boms.outputbase
     tendril.boms.products

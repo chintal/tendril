@@ -43,9 +43,9 @@ def main(orderfolder=None, orderfile_r=None,
 
     if os.path.exists(os.path.join(orderfolder, 'wsno')):
         with open(os.path.join(orderfolder, 'wsno'), 'r') as f:
-            PROD_ORD_SNO = f.readline().strip()
+            prod_ord_sno = f.readline().strip()
     else:
-        PROD_ORD_SNO = None
+        prod_ord_sno = None
 
     snomap_path = None
     if os.path.exists(os.path.join(orderfolder, 'snomap.yaml')):
@@ -53,18 +53,16 @@ def main(orderfolder=None, orderfile_r=None,
 
     labelmanager = get_manager()
 
-    production_order = ProductionOrder(sno=PROD_ORD_SNO)
+    production_order = ProductionOrder(sno=prod_ord_sno)
     production_order.create(order_yaml_path=orderfile,
                             snomap_path=snomap_path,
                             force=force)
 
     if register is None:
-        REGISTER = False
-    else:
-        REGISTER = register
+        register = False
 
     production_order.process(outfolder=orderfolder, manifestsfolder=None,
-                             label_manager=labelmanager, register=REGISTER,
+                             label_manager=labelmanager, register=register,
                              force=force, session=None)
 
     labelmanager.generate_pdfs(orderfolder, force=True)

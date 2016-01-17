@@ -7,7 +7,6 @@ Subpackages
 .. toctree::
 
     tendril.inventory.db
-    tendril.inventory.indent
     tendril.inventory.guidelines
 
 Submodules
@@ -17,6 +16,7 @@ Submodules
 
    tendril.inventory.acquire
    tendril.inventory.electronics
+   tendril.inventory.indent
    tendril.inventory.modules
 
 Module contents
@@ -38,3 +38,5 @@ Inheritance Diagram
    tendril.inventory.db
    tendril.inventory.db.controller
    tendril.inventory.db.model
+   tendril.inventory.indent
+   tendril.inventory.guidelines

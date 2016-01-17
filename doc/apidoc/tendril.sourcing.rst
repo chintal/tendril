@@ -30,9 +30,12 @@ Inheritance Diagram
 
 .. inheritance-diagram::
    tendril.sourcing
+   tendril.sourcing.db
    tendril.sourcing.csil
    tendril.sourcing.customs
    tendril.sourcing.digikey
+   tendril.sourcing.mouser
+   tendril.sourcing.ti
    tendril.sourcing.electronics
    tendril.sourcing.orders
    tendril.sourcing.pricelist

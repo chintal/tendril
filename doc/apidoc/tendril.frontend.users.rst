@@ -7,7 +7,6 @@ Submodules
 .. toctree::
 
    tendril.frontend.users.forms
-   tendril.frontend.users.models
    tendril.frontend.users.views
 
 Module contents
