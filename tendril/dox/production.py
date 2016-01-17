@@ -58,7 +58,7 @@ logger = log.get_logger(__name__, log.DEBUG)
 
 
 def gen_pcb_am(configname, outfolder, sno=None, productionorderno=None,
-               indentsno=None, scaffold=False, session=None):
+               indentsno=None, scaffold=False, verbose=True, session=None):
     """
     Generates a PCB Assembly Manifest for a 'card', a card being defined as a
     gEDA project, with a specified ``configname``.
@@ -177,10 +177,9 @@ def gen_pcb_am(configname, outfolder, sno=None, productionorderno=None,
 
     template = 'production/pcb-assem-manifest.tex'
 
-    render.render_pdf(stage, template, outpath)
+    render.render_pdf(stage, template, outpath, verbose=verbose)
 
     if add_schematic is True:
-
         merge_pdf([outpath,
                    os.path.join(instance.projfolder, 'doc',
                                 entityname + '-schematic.pdf')],
@@ -190,7 +189,7 @@ def gen_pcb_am(configname, outfolder, sno=None, productionorderno=None,
 
 def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
                      productionorderno=None, indentsno=None, scaffold=False,
-                     session=None):
+                     verbose=True, session=None):
     """
     Generates a Delta PCB Assembly Manifest for converting one card to
     another. This is typically only useful when the two cards are very
@@ -329,12 +328,13 @@ def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
 
     template = 'production/delta-assem-manifest.tex'
 
-    render.render_pdf(stage, template, outpath)
+    render.render_pdf(stage, template, outpath, verbose=verbose)
     return outpath
 
 
 def gen_production_order(outfolder, prod_sno, sourcedata, snos,
-                         sourcing_orders=None, root_orders=None):
+                         sourcing_orders=None, root_orders=None,
+                         verbose=True):
     """
     Generates a Production Order for a production order defined in a
     ``.yaml`` file.
@@ -434,7 +434,7 @@ def gen_production_order(outfolder, prod_sno, sourcedata, snos,
 
     outpath = os.path.join(outfolder, str(prod_sno) + '.pdf')
     template = 'production/production-order-template.tex'
-    render.render_pdf(stage, template, outpath)
+    render.render_pdf(stage, template, outpath, verbose=verbose)
     return outpath
 
 

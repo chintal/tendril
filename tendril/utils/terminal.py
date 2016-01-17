@@ -247,3 +247,51 @@ class TendrilProgressBar(WindowsMixin, _BaseBar):
                     line = line[:self.term_width]
             print(line, end='', file=self.file)
             self.file.flush()
+
+
+class DummyProgressBar(WindowsMixin, _BaseBar):
+    """
+    This class can be used from other modules to provide a dummy
+    progress bar like object, with interfaces consistent with
+    :class:`TendrilProgressBar`.
+    """
+    file = sys.stdout
+    message = "%(percent)3d%%"
+
+    def __init__(self, *args, **kwargs):
+        super(DummyProgressBar, self).__init__(*args, **kwargs)
+        self._note = None
+        self._term_width = get_terminal_width()
+
+    @property
+    def term_width(self):
+        return self._term_width
+
+    def next(self, n=1, note=None):
+        if n > 0:
+            now = time()
+            dt = (now - self._ts) / n
+            self._dt.append(dt)
+            self._ts = now
+
+        self.index += n
+        self._note = str(note)
+        self.update()
+
+    def update(self):
+        message = self.message % self
+        line = message
+        self.writeln(line)
+
+    def writeln(self, line):
+        if self.file.isatty():
+            if self._note is not None:
+                line = ' '.join([line, self._note])
+                if len(line) > self.term_width:
+                    line = line[:self.term_width]
+            print(line, file=self.file)
+            self.file.flush()
+
+    def finish(self):
+        if self.hide_cursor:
+            print('\x1b[?25h', end='', file=self.file)

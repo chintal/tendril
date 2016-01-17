@@ -215,7 +215,7 @@ def insert_document(sno, docpath, series):
 
 @with_db
 def register_document(serialno=None, docpath=None, doctype=None,
-                      efield=None, series=None, session=None):
+                      efield=None, series=None, verbose=True, session=None):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
     if docpath is None:
@@ -223,8 +223,9 @@ def register_document(serialno=None, docpath=None, doctype=None,
     if doctype is None:
         raise AttributeError('doctype cannot be None')
 
-    logger.info("Registering document for sno " + str(serialno) + " : " +
-                str(docpath))
+    if verbose:
+        print("Registering document for sno " + str(serialno) + " : " +
+              str(docpath))
     # WARNING : This writes the file before actually checking that all is ok.
     #           This may not be a very safe approach.
     storepath = insert_document(serialno, docpath, series)

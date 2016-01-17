@@ -43,10 +43,10 @@ class IndentNotFound(EntityNotFound):
 
 
 class InventoryIndent(object):
-    def __init__(self, sno=None, session=None):
+    def __init__(self, sno=None, verbose=True, session=None):
         self._sno = sno
         try:
-            self.load_from_db(session=session)
+            self.load_from_db(verbose=verbose, session=session)
             self._defined = True
         except IndentNotFound:
             self._cobom = None
@@ -79,10 +79,13 @@ class InventoryIndent(object):
         else:
             return self._process(session=session, **kwargs)
 
-    def _process(self, outfolder=None, register=False, session=None):
+    def _process(self, outfolder=None, register=False,
+                 verbose=True, session=None):
         self._process_shortage()
-        self._dump_cobom(outfolder, register=register, session=session)
-        self._generate_doc(outfolder, register=register, session=session)
+        self._dump_cobom(outfolder, register=register,
+                         verbose=verbose, session=session)
+        self._generate_doc(outfolder, register=register,
+                           verbose=verbose, session=session)
 
     def _process_shortage(self):
         pass
@@ -90,18 +93,21 @@ class InventoryIndent(object):
     def _get_line_shortage(self):
         pass
 
-    def _generate_doc(self, outfolder, register=False, session=None):
+    def _generate_doc(self, outfolder, register=False, verbose=True,
+                      session=None):
         indentpath, indentsno = gen_stock_idt_from_cobom(
-            outfolder, self.serialno, self.title, self.context, self._cobom
+            outfolder, self.serialno, self.title, self.context, self._cobom,
+            verbose=verbose
             )
         if register is True:
             docstore.register_document(
                 serialno=self.serialno, docpath=indentpath,
                 doctype='INVENTORY INDENT', efield=self.title,
-                session=session
+                verbose=verbose, session=session
             )
 
-    def _dump_cobom(self, outfolder, register=False, session=None):
+    def _dump_cobom(self, outfolder, register=False,
+                    verbose=True, session=None):
         with open(os.path.join(outfolder, 'cobom.csv'), 'w') as f:
             self._cobom.dump(f)
         if register is True:
@@ -109,7 +115,7 @@ class InventoryIndent(object):
                     serialno=self.serialno,
                     docpath=os.path.join(outfolder, 'cobom.csv'),
                     doctype='PRODUCTION COBOM CSV', efield=self.title,
-                    session=session
+                    verbose=verbose, session=session
             )
 
     def _generate_labels(self, label_manager=None):
@@ -122,7 +128,7 @@ class InventoryIndent(object):
                 qty=line.quantity
             )
 
-    def _get_indent_cobom(self, session=None):
+    def _get_indent_cobom(self, verbose=True, session=None):
         try:
             cobom_path = docstore.get_docs_list_for_sno_doctype(
                 serialno=self._sno, doctype='PRODUCTION COBOM CSV', one=True,
@@ -134,7 +140,8 @@ class InventoryIndent(object):
             raise IndentNotFound
         with docstore.docstore_fs.open(cobom_path, 'r') as f:
             cobom = load_cobom_from_file(
-                f, os.path.splitext(os.path.split(cobom_path)[1])[0]
+                f, os.path.splitext(os.path.split(cobom_path)[1])[0],
+                verbose=verbose
             )
         self._cobom = cobom
 
@@ -156,15 +163,15 @@ class InventoryIndent(object):
     def _get_title_legacy(self):
         self._title = self.prod_order.title
 
-    def _load_legacy(self, session=None):
-        self._get_indent_cobom(session=session)
+    def _load_legacy(self, verbose=True, session=None):
+        self._get_indent_cobom(verbose=verbose, session=session)
         self._get_prod_ord_sno_legacy()
         self._get_title_legacy()
 
-    def load_from_db(self, session=None):
+    def load_from_db(self, verbose=True, session=None):
         if self._sno is None:
             raise ValueError
-        self._load_legacy(session=session)
+        self._load_legacy(verbose=verbose, session=session)
 
     @property
     def context(self):

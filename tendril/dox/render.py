@@ -169,7 +169,8 @@ def jinja2_pdfinit():
 renderer_pdf = jinja2_pdfinit()
 
 
-def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
+def render_pdf(stage, template, outpath, remove_sources=True,
+               verbose=True, **kwargs):
     """
     Render the latex output and convert it into pdf using ``pdflatex``.
 
@@ -246,7 +247,8 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
                     os.path.split(outpath)[0]).split(' ')
     pdflatex_cmd.append(texpath)
 
-    print("Generating " + os.path.split(outpath)[1])
+    if verbose:
+        print("Generating " + os.path.split(outpath)[1])
 
     for i in range(3):
         # p = subprocess.Popen(pdflatex_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

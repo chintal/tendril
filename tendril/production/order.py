@@ -49,6 +49,8 @@ from tendril.dox.production import get_production_order_manifest_set
 from tendril.inventory.indent import InventoryIndent
 
 from tendril.utils.db import get_session
+from tendril.utils.terminal import TendrilProgressBar
+from tendril.utils.terminal import DummyProgressBar
 
 
 class ProductionOrderNotFound(EntityNotFound):
@@ -87,9 +89,9 @@ class ProductionActionBase(object):
     def setup(self, *args, **kwargs):
         raise NotImplementedError
 
-    def commit(self, outfolder=None,
-               indent_sno=None, prod_ord_sno=None,
-               register=False, session=None):
+    def commit(self, outfolder=None, indent_sno=None, prod_ord_sno=None,
+               register=False, pb_class=None, stacked_pb=False, leaf_pb=True,
+               session=None):
         raise NotImplementedError
 
     @property
@@ -170,7 +172,8 @@ class DeltaProductionAction(ProductionActionBase):
                                        session=session)
 
     def commit(self, outfolder=None, indent_sno=None, prod_ord_sno=None,
-               register=False, session=None):
+               register=False, pb_class=None, stacked_pb=False, leaf_pb=True,
+               session=None):
         if self._is_done is True:
             raise NothingToProduceError
         self._generate_docs(outfolder, indent_sno, prod_ord_sno,
@@ -255,30 +258,48 @@ class CardProductionAction(ProductionActionBase):
             self._snos.append(snofunc(self.ident))
 
     def _generate_am(self, manifestsfolder, sno, prod_ord_sno, indent_sno,
-                     register=False, session=None):
+                     verbose=True, register=False, session=None):
         ampath = gen_pcb_am(self._ident, manifestsfolder, sno,
                             productionorderno=prod_ord_sno,
                             indentsno=indent_sno, scaffold=self.scaffold,
-                            session=session)
+                            verbose=verbose, session=session)
         if register is True:
             docstore.register_document(serialno=sno, docpath=ampath,
                                        doctype='ASSEMBLY MANIFEST',
-                                       session=session)
+                                       verbose=verbose, session=session)
 
     def commit(self, outfolder=None, indent_sno=None, prod_ord_sno=None,
-               register=False, session=None):
+               register=False, pb_class=None, stacked_pb=False, leaf_pb=True,
+               session=None):
         # Serial numbers will already have been written in.
         if self._prototype.strategy['genmanifest'] is True:
+
+            if pb_class is None:
+                pb_class = TendrilProgressBar
+            if leaf_pb is True:
+                pb = pb_class(max=len(self.refdes))
+                verbose = False
+            else:
+                pb = None
+                verbose = True
+
+            msg = "Generating Manifests and Linking for {0}".format(self.ident)
+            print(msg)
+
             for card in self.modules:
                 self._generate_am(
                     outfolder, card.refdes, prod_ord_sno, indent_sno,
-                    register=register, session=session
+                    verbose=verbose, register=register, session=session
                 )
                 if register is True:
                     serialnos.link_serialno(
                         child=card.refdes, parent=prod_ord_sno,
-                        session=session
+                        verbose=verbose, session=session
                     )
+                if leaf_pb is True:
+                    pb.next(note=card.refdes)
+            if leaf_pb is True:
+                pb.finish()
 
     @property
     def obom(self):
@@ -383,8 +404,20 @@ class ProductionOrder(object):
 
     def _process(self, outfolder=None, manifestsfolder=None,
                  label_manager=None, register=False, force=False,
+                 pb_class=None, stacked_pb=False, leaf_pb=True,
                  session=None):
         self._force = force
+
+        if pb_class is None:
+            pb_class = TendrilProgressBar
+
+        if stacked_pb is True:
+            pb = pb_class(max=8)
+        else:
+            pb = DummyProgressBar(max=8)
+
+        pb.next(note="Constructing Resources for Production Order Generation")
+
         if outfolder is None:
             if self._order_yaml_path is not None:
                 outfolder = os.path.split(self._order_yaml_path)[0]
@@ -416,41 +449,50 @@ class ProductionOrder(object):
         indent_sno = self._snomap.get_sno('indentsno')
         if register is True:
             serialnos.link_serialno(child=indent_sno, parent=self.serialno,
-                                    session=session)
+                                    verbose=False, session=session)
 
         # Create cards and deltas and so forth
+        pb.next(note="Constructing Production Order Actions")
         actions = self.card_actions + self.delta_actions
 
+        pb.next(note="Executing Production Order Actions")
         for action in actions:
             if register is False:
                 action.scaffold = True
             action.set_session(session=session)
             action.commit(
-                outfolder=manifestsfolder,
-                indent_sno=indent_sno, prod_ord_sno=self._sno,
-                register=register, session=session
+                outfolder=manifestsfolder, indent_sno=indent_sno,
+                prod_ord_sno=self._sno, register=register, session=session,
+                pb_class=pb_class, stacked_pb=stacked_pb, leaf_pb=leaf_pb,
             )
 
         self._snomap.disable_creation()
 
+        pb.next(note="Constructing Composite Output BOM")
         cobom = CompositeOutputBom(self.bomlist)
 
         # Assume Indent is non-empty.
         # Create indent
-        indent = InventoryIndent(indent_sno, session=session)
+        pb.next(note="Creating Indent")
+        indent = InventoryIndent(indent_sno, verbose=False, session=session)
         indent.create(cobom, title="FOR {0}".format(self.serialno),
                       desc=None, prod_order_sno=self.serialno,
                       requested_by=self._ordered_by, force=force)
 
         indent.process(outfolder=outfolder, register=register,
-                       session=session)
+                       verbose=False, session=session)
         self._indents.append(indent)
 
+        pb.next(note="Generating Production Order Document")
         # Make production order doc
         self._generate_doc(outfolder=outfolder, register=register,
                            session=session)
 
-        self.make_labels(label_manager=label_manager)
+        pb.next(note="Generating Labels")
+        self.make_labels(label_manager=label_manager, pb_class=pb_class,
+                         stacked_pb=stacked_pb, leaf_pb=leaf_pb)
+
+        pb.next(note="Finalizing Production Order")
         self._last_generated_at = arrow.utcnow().isoformat()
         if self._first_generated_at is None:
             self._first_generated_at = arrow.utcnow().isoformat()
@@ -467,22 +509,22 @@ class ProductionOrder(object):
                     serialno=self.serialno,
                     docpath=os.path.join(outfolder, 'snomap.yaml'),
                     doctype='SNO MAP', efield=self.title,
-                    session=session
+                    verbose=False, session=session
             )
-
+        pb.finish()
         self._defined = True
 
     def _generate_doc(self, outfolder=None, register=False, session=None):
         outpath = gen_production_order(
                 outfolder, self.serialno, self._yaml_data, self.lines,
                 sourcing_orders=self._sourcing_order_snos,
-                root_orders=self.root_order_snos
+                verbose=False, root_orders=self.root_order_snos
         )
         if register is True:
             docstore.register_document(
                 serialno=self.serialno, docpath=outpath,
                 doctype='PRODUCTION ORDER', efield=self.title,
-                session=session
+                verbose=False, session=session
             )
 
     def _build_yaml_data(self):
@@ -506,7 +548,8 @@ class ProductionOrder(object):
                     serialno=self.serialno,
                     docpath=os.path.join(outfolder, 'order.yaml'),
                     doctype='PRODUCTION ORDER YAML',
-                    efield=self.title, session=session
+                    verbose=False, efield=self.title,
+                    session=session
             )
 
     def _load_snomap_legacy(self):
@@ -688,17 +731,48 @@ class ProductionOrder(object):
     def status(self):
         return
 
-    def make_labels(self, label_manager=None, include_all_indents=False):
+    def make_labels(self, label_manager=None, include_all_indents=False,
+                    pb_class=None, stacked_pb=False, leaf_pb=True):
+        cards = self.cards
+        deltas = self.deltas
+
+        if pb_class is None:
+            pb_class = TendrilProgressBar
+        if leaf_pb is True:
+            pbmax = len(cards) + len(deltas)
+            if include_all_indents is True:
+                pbmax += len(self.indent_snos)
+            else:
+                pbmax += 1
+            pb = pb_class(max=pbmax)
+        else:
+            pb = None
+
         if include_all_indents is True:
             for indent in self.indents:
+                if leaf_pb is True:
+                    pb.next(
+                        note='Labels for Indent {0}'.format(indent.serialno)
+                    )
                 indent.make_labels(label_manager=label_manager)
         else:
             if len(self.indent_snos):
-                self.indents[-1].make_labels(label_manager=label_manager)
-        for card in self.cards:
+                indent = self.indents[-1]
+                if leaf_pb is True:
+                    pb.next(
+                        note='Labels for Indent {0}'.format(indent.serialno)
+                    )
+                indent.make_labels(label_manager=label_manager)
+        for card in cards:
+            if leaf_pb is True:
+                pb.next(note='Label for Card {0}'.format(card.refdes))
             card.make_labels(label_manager=label_manager)
-        for delta in self.deltas:
+        for delta in deltas:
+            if leaf_pb is True:
+                pb.next(note='Label for Delta {0}'.format(delta.refdes))
             delta.make_labels(label_manager=label_manager)
+        if leaf_pb is True:
+            pb.finish()
 
     def __repr__(self):
         return '<Production Order {0} {1}>'.format(self.serialno, self.title)

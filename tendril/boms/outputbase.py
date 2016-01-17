@@ -317,7 +317,7 @@ class CompositeOutputBom(object):
                     self.lines.remove(line)
 
 
-def load_cobom_from_file(f, name, tf=None):
+def load_cobom_from_file(f, name, tf=None, verbose=True):
     bomlist = []
     header = []
     reader = csv.reader(f)
@@ -327,10 +327,12 @@ def load_cobom_from_file(f, name, tf=None):
             header = line
             break
 
-    logger.info('Inserting External Boms')
+    if verbose:
+        logger.info('Inserting External Boms')
     oboms = []
     for head in header[1:-1]:
-        logger.info('Creating Bom : ' + head)
+        if verbose:
+            logger.info('Creating Bom : ' + head)
         obom_descriptor = OutputElnBomDescriptor(head,
                                                  None,
                                                  head, None)
@@ -373,8 +375,9 @@ def load_cobom_from_file(f, name, tf=None):
                             oboms[idx].insert_component(item)
 
     for obom in oboms:
-        logger.info('Inserting External Bom : ' +
-                    obom.descriptor.configname)
+        if verbose:
+            logger.info('Inserting External Bom : ' +
+                        obom.descriptor.configname)
         bomlist.append(obom)
     cobom = CompositeOutputBom(
         bomlist,

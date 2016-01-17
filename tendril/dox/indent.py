@@ -45,7 +45,7 @@ from tendril.utils.db import with_db
 from tendril.boms.outputbase import load_cobom_from_file
 
 
-def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
+def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom, verbose=True):
     """
     Generates a stock indent from a
     :class:`tendril.boms.outputbase.CompositeOutputBom` instance. This
@@ -115,7 +115,7 @@ def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom):
              'cards': cards}
 
     template = 'indent_stock_template.tex'
-    render.render_pdf(stage, template, outpath)
+    render.render_pdf(stage, template, outpath, verbose=verbose)
 
     return outpath, indentsno
 

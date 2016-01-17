@@ -65,12 +65,13 @@ def register_serialno(sno=None, efield=None, session=None):
 
 @with_db
 def link_serialno(child=None, parent=None, association_type=None,
-                  session=None):
+                  verbose=True, session=None):
     if child is None:
         raise AttributeError("child cannot be None")
     if parent is None:
         raise AttributeError("parent cannot be None")
-    logger.info("Linking " + child + " to parent " + parent)
+    if verbose:
+        print("Linking " + child + " to parent " + parent)
     return controller.link_serialno(child=child, parent=parent,
                                     association_type=association_type,
                                     session=session)
