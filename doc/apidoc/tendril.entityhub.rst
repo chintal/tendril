@@ -7,12 +7,15 @@ Submodules
 .. toctree::
 
    tendril.entityhub.db
+   tendril.entityhub.entitybase
    tendril.entityhub.guidelines
    tendril.entityhub.macs
    tendril.entityhub.maps
+   tendril.entityhub.modules
    tendril.entityhub.products
    tendril.entityhub.projects
    tendril.entityhub.serialnos
+   tendril.entityhub.snomap
    tendril.entityhub.transforms
 
 Module contents

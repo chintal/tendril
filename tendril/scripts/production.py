@@ -22,69 +22,13 @@ See the COPYING, README, and INSTALL files for more information
 import os
 import argparse
 
-from tendril.inventory.electronics import get_total_availability
-from tendril.inventory.electronics import reserve_items
-
 from tendril.dox.labelmaker import get_manager
-from tendril.utils.terminal import TendrilProgressBar
 from tendril.utils.config import INSTANCE_ROOT
 
 from tendril.production.order import ProductionOrder
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
-
-
-def get_line_shortage(line, descriptors):
-    shortage = 0
-    logger.debug("Processing Line : " + line.ident)
-    for idx, descriptor in enumerate(descriptors):
-        logger.debug("    for earmark : " + descriptor.configname)
-        earmark = descriptor.configname + \
-            ' x' + str(descriptor.multiplier)
-        avail = get_total_availability(line.ident)  # noqa
-        if line.columns[idx] == 0:
-            continue
-        if avail > line.columns[idx]:
-            reserve_items(line.ident, line.columns[idx], earmark)
-        elif avail > 0:
-            reserve_items(line.ident, avail, earmark)
-            pshort = line.columns[idx] - avail
-            shortage += pshort
-            logger.debug('Adding Partial Qty of ' + line.ident +
-                         ' for ' + earmark + ' to shortage ' +
-                         str(pshort))
-        else:
-            shortage += line.columns[idx]
-            logger.debug('Adding Full Qty of ' + line.ident +
-                         ' for ' + earmark + ' to shortage : ' +
-                         str(line.columns[idx]))
-    return shortage
-
-
-def generate_indent(bomlist, orderfolder, data, prod_ord_sno,
-                    indentsno=None, register=False, verbose=False,
-                    halt_on_shortage=False):
-    unsourced = []
-    nlines = len(cobom.lines)
-    pb = TendrilProgressBar(max=nlines)
-
-    for pbidx, line in enumerate(cobom.lines):
-        pb.next(note=line.ident)
-        shortage = get_line_shortage(line, cobom.descriptors)
-        if shortage > 0:
-            unsourced.append((line.ident, shortage))
-
-    if len(unsourced) > 0:
-        print("Shortage of the following components: ")
-        for elem in unsourced:
-            print("{0:<40}{1:>5}".format(elem[0], elem[1]))
-        if halt_on_shortage is True:
-            print ("Halt on shortage is set. Reversing changes "
-                   "and exiting")
-            exit()
-
-    # TODO Transfer Reservations
 
 
 def main(orderfolder=None, orderfile_r=None,
