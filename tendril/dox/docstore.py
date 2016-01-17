@@ -131,11 +131,14 @@ def get_docs_list_for_doctype(doctype, limit=None):
     return rval
 
 
-def get_docs_list_for_sno_doctype(serialno, doctype, limit=None, one=False):
+@with_db
+def get_docs_list_for_sno_doctype(serialno, doctype, limit=None,
+                                  one=False, session=None):
     documents = controller.get_serialno_doctype_documents(serialno=serialno,
                                                           doctype=doctype,
                                                           limit=limit,
-                                                          one=one)
+                                                          one=one,
+                                                          session=session)
 
     if one is True:
         return ExposedDocument(documents.doctype, documents.docpath,

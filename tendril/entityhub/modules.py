@@ -79,7 +79,7 @@ class ModulePrototypeBase(object):
     def _get_production_strategy(self):
         raise NotImplementedError
 
-    def make_labels(self, sno):
+    def make_labels(self, sno, label_manager=None):
         raise NotImplementedError
 
 
@@ -137,13 +137,16 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
             rval['genlabel'] = True
         return rval
 
-    def make_labels(self, sno):
+    def make_labels(self, sno, label_manager=None):
         # This does not check whether the sno is valid and correct and
         # so on. This should therefore not be called directly, but instead
         # the instance's makelabel function should be used.
+        if label_manager is None:
+            from tendril.dox.labelmaker import manager
+            label_manager = manager
         if self.strategy['genlabel'] is True:
             for label in self.strategy['labels']:
-                labelmaker.manager.add_label(
+                label_manager.add_label(
                     label['code'], label['ident'], sno
                 )
 
@@ -260,8 +263,8 @@ class EDAModuleInstanceBase(ModuleInstanceBase):
             self._obom = bomobj.create_output_bom(configname=self.ident)
         return self._obom
 
-    def make_labels(self):
-        self.prototype.make_labels(self._refdes)
+    def make_labels(self, label_manager=None):
+        self.prototype.make_labels(self._refdes, label_manager=label_manager)
 
     @property
     def projfolder(self):

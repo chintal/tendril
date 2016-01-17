@@ -25,6 +25,7 @@ import argparse
 from tendril.inventory.electronics import get_total_availability
 from tendril.inventory.electronics import reserve_items
 
+from tendril.dox.labelmaker import get_manager
 from tendril.utils.terminal import TendrilProgressBar
 from tendril.utils.config import INSTANCE_ROOT
 
@@ -106,6 +107,8 @@ def main(orderfolder=None, orderfile_r=None,
     if os.path.exists(os.path.join(orderfolder, 'snomap.yaml')):
         snomap_path = os.path.join(orderfolder, 'snomap.yaml')
 
+    labelmanager = get_manager()
+
     production_order = ProductionOrder(sno=PROD_ORD_SNO)
     production_order.create(order_yaml_path=orderfile,
                             snomap_path=snomap_path)
@@ -116,7 +119,10 @@ def main(orderfolder=None, orderfile_r=None,
         REGISTER = register
 
     production_order.process(outfolder=orderfolder, manifestsfolder=None,
-                             register=REGISTER, session=None)
+                             label_manager=labelmanager, register=REGISTER,
+                             session=None)
+    
+    labelmanager.generate_pdfs(orderfolder, force=True)
 
 
 def entry_point():

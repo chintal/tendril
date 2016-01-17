@@ -358,13 +358,14 @@ class ProductionOrder(object):
             return self._process(session=session, **kwargs)
 
     def _process(self, outfolder=None, manifestsfolder=None,
-                 register=False, session=None):
+                 label_manager=None, register=False, session=None):
 
         if outfolder is None:
             if self._order_yaml_path is not None:
                 outfolder = os.path.split(self._order_yaml_path)[0]
             else:
                 raise AttributeError('Output folder needs to be defined')
+
         if manifestsfolder is None:
             manifestsfolder = os.path.join(outfolder, 'manifests')
             if not os.path.exists(manifestsfolder):
@@ -420,7 +421,7 @@ class ProductionOrder(object):
 
         # Assume Indent is non-empty.
         # Create indent
-        indent = InventoryIndent(indent_sno)
+        indent = InventoryIndent(indent_sno, session=session)
         indent.create(cobom, title="FOR {0}".format(self.serialno),
                       desc=None, prod_order_sno=self.serialno,
                       requested_by=self._ordered_by)
@@ -433,7 +434,7 @@ class ProductionOrder(object):
         self._generate_doc(outfolder=outfolder, register=register,
                            session=session)
 
-        self.make_labels()
+        self.make_labels(label_manager=label_manager)
         self._last_generated_at = arrow.utcnow().isoformat()
         if self._first_generated_at is None:
             self._first_generated_at = arrow.utcnow().isoformat()
@@ -658,17 +659,17 @@ class ProductionOrder(object):
     def status(self):
         return
 
-    def make_labels(self, include_all_indents=False):
+    def make_labels(self, label_manager=None, include_all_indents=False):
         if include_all_indents is True:
             for indent in self.indents:
-                indent.make_labels()
+                indent.make_labels(label_manager=label_manager)
         else:
             if len(self.indent_snos):
-                self.indents[-1].make_labels()
+                self.indents[-1].make_labels(label_manager=label_manager)
         for card in self.cards:
-            card.make_labels()
+            card.make_labels(label_manager=label_manager)
         for delta in self.deltas:
-            delta.make_labels()
+            delta.make_labels(label_manager=label_manager)
 
     def __repr__(self):
         return '<Production Order {0} {1}>'.format(self.serialno, self.title)

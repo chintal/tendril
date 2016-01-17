@@ -42,7 +42,7 @@ import inspect
 from tendril.utils.config import DB_URI
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.DEBUG)
+logger = log.get_logger(__name__, log.DEFAULT)
 log.logging.getLogger('sqlalchemy.engine').setLevel(log.WARNING)
 
 
@@ -66,34 +66,46 @@ Session = sessionmaker(expire_on_commit=False)
 Session.configure(bind=engine)
 
 
-def _get_caller(skip=1):
+def _format_frame(frame):
+        name = []
+        module = inspect.getmodule(frame)
+        if module:
+            name.append(module.__name__)
+        # detect classname
+        if 'self' in frame.f_locals:
+            name.append(frame.f_locals['self'].__class__.__name__)
+        codename = frame.f_code.co_name
+        if codename != '<module>':
+            name.append(codename)
+        return '.'.join(name)
+
+
+def _get_caller(skip=1, get_stack=False):
     # Based on http://stackoverflow.com/a/9812105
     stack = inspect.stack()
     done = False
     parentframe = None
+    ancestors = []
     while not done:
         start = 1 + skip
         if len(stack) < start + 1:
             return ''
         parentframe = stack[start][0]
-        codename = parentframe.f_code.co_name
-        if codename in ['__enter__', 'inner', '__exit__']:
+        ancestors = stack[start+1:]
+        for ancestor in ancestors:
+            code_name = ancestor[0].f_code.co_name
+            if code_name in ['__enter__', 'inner', '__exit__']:
+                ancestors.remove(ancestor)
+        code_name = parentframe.f_code.co_name
+        if code_name in ['__enter__', 'inner', '__exit__']:
             skip += 1
         else:
             done = True
 
-    name = []
-    module = inspect.getmodule(parentframe)
-    if module:
-        name.append(module.__name__)
-    # detect classname
-    if 'self' in parentframe.f_locals:
-        name.append(parentframe.f_locals['self'].__class__.__name__)
-    codename = parentframe.f_code.co_name
-    if codename != '<module>':
-        name.append(codename)
-    del parentframe
-    return ".".join(name)
+    if get_stack is False:
+        return _format_frame(parentframe)
+    else:
+        return _format_frame(parentframe), ancestors
 
 
 @contextmanager
@@ -117,9 +129,14 @@ def get_session():
         yield session
         session.commit()
     except:
+        caller, ancestors = _get_caller(1, get_stack=True)
         logger.warning(
-            "Rolling back session: {0}".format(str(_get_caller(1)))
+            "Rolling back session: {0}".format(str(caller))
         )
+        logger.debug('ANCESTORS:')
+        for frame in ancestors:
+            logger.debug(_format_frame(frame[0]))
+
         session.rollback()
         raise
     finally:

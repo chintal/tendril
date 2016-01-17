@@ -42,10 +42,10 @@ class IndentNotFound(EntityNotFound):
 
 
 class InventoryIndent(object):
-    def __init__(self, sno=None):
+    def __init__(self, sno=None, session=None):
         self._sno = sno
         try:
-            self.load_from_db()
+            self.load_from_db(session=session)
             self._defined = True
         except IndentNotFound:
             self._cobom = None
@@ -110,18 +110,21 @@ class InventoryIndent(object):
                     session=session
             )
 
-    def _generate_labels(self, outfolder=None):
+    def _generate_labels(self, label_manager=None):
+        if label_manager is None:
+            from tendril.dox.labelmaker import manager
+            label_manager = manager
         for idx, line in enumerate(self._cobom.lines):
-            labelmaker.manager.add_label(
+            label_manager.add_label(
                 'IDT', line.ident, '.'.join([self._sno, str(idx)]),
-                qty=line.quantity)
-        if outfolder and os.path.exists(outfolder):
-            labelmaker.manager.generate_pdfs(outfolder, force=True)
+                qty=line.quantity
+            )
 
-    def _get_indent_cobom(self):
+    def _get_indent_cobom(self, session=None):
         try:
             cobom_path = docstore.get_docs_list_for_sno_doctype(
-                serialno=self._sno, doctype='PRODUCTION COBOM CSV', one=True
+                serialno=self._sno, doctype='PRODUCTION COBOM CSV', one=True,
+                session=session
             ).path
         except SerialNoNotFound:
             raise IndentNotFound
@@ -149,15 +152,15 @@ class InventoryIndent(object):
     def _get_title_legacy(self):
         self._title = self.prod_order.title
 
-    def _load_legacy(self):
-        self._get_indent_cobom()
+    def _load_legacy(self, session=None):
+        self._get_indent_cobom(session=session)
         self._get_prod_ord_sno_legacy()
         self._get_title_legacy()
 
-    def load_from_db(self):
+    def load_from_db(self, session=None):
         if self._sno is None:
             raise ValueError
-        self._load_legacy()
+        self._load_legacy(session=session)
 
     @property
     def context(self):
@@ -248,8 +251,8 @@ class InventoryIndent(object):
     def docs(self):
         return docstore.get_docs_list_for_serialno(serialno=self.serialno)
 
-    def make_labels(self):
-        self._generate_labels()
+    def make_labels(self, label_manager=None):
+        self._generate_labels(label_manager=label_manager)
 
     def __repr__(self):
         return '<InventoryIndent {0} {1}>'.format(self._sno, self._title)

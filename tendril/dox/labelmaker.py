@@ -385,14 +385,17 @@ class LabelMaker(object):
             sheet.clear_sno_label(sno)
 
 
-def get_manager():
-    try:
-        with open(os.path.join(INSTANCE_CACHE, 'labelmaker.p'), 'rb') as f:
-            return cPickle.load(f)
-    except IOError:
+def get_manager(persistent=False):
+    if persistent is True:
+        try:
+            with open(os.path.join(INSTANCE_CACHE, 'labelmaker.p'), 'rb') as f:
+                return cPickle.load(f)
+        except IOError:
+            return LabelMaker()
+    else:
         return LabelMaker()
 
-manager = get_manager()
+manager = get_manager(persistent=True)
 
 
 def dump_manager():
