@@ -22,6 +22,9 @@
 Docstring for snomap
 """
 
+import os
+import yaml
+
 from .projects import cards
 from .projects import get_module_snoseries
 from .products import productlib
@@ -54,10 +57,12 @@ class SerialNumberMap(object):
         self._register = False
         self._session = None
 
-    def dump_to_file(self, outfolder, fs=None):
-        pass
+    def dump_to_file(self, outfolder):
+        with open(os.path.join(outfolder, 'snomap.yaml'), 'w') as f:
+            self._snomap_dict['parentsno'] = self._parent_sno
+            f.write(yaml.dump(self._snomap_dict, default_flow_style=False))
 
-    def load_from_file(self, inpath, fs=None):
+    def load_from_file(self, inpath):
         pass
 
     def map_keys(self):
@@ -100,6 +105,7 @@ class SerialNumberMap(object):
         # generate new from here
         if key == 'indentsno':
             while True:
+
                 sno = get_serialno(series='IDT',
                                    efield='FOR {0}'.format(self._parent_sno),
                                    register=self._register,

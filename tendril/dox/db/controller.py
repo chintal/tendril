@@ -34,6 +34,10 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
+class DocumentNotFound(Exception):
+    pass
+
+
 @with_db
 def get_sno_documents(serialno=None, session=None):
     if not isinstance(serialno, SerialNumber):
@@ -68,7 +72,10 @@ def get_serialno_doctype_documents(serialno=None, doctype=None,
     if limit:
         q = q.limit(limit)
     if one is True:
-        return q.one()
+        try:
+            return q.one()
+        except NoResultFound:
+            raise DocumentNotFound
     return q.all()
 
 

@@ -132,7 +132,7 @@ def get_docs_list_for_doctype(doctype, limit=None):
 
 
 @with_db
-def get_docs_list_for_sno_doctype(serialno, doctype, limit=None,
+def get_docs_list_for_sno_doctype(serialno=None, doctype=None, limit=None,
                                   one=False, session=None):
     documents = controller.get_serialno_doctype_documents(serialno=serialno,
                                                           doctype=doctype,

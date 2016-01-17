@@ -27,6 +27,7 @@ import os
 from tendril.entityhub import serialnos
 from tendril.entityhub.entitybase import EntityNotFound
 from tendril.entityhub.db.controller import SerialNoNotFound
+from tendril.dox.db.controller import DocumentNotFound
 
 from tendril.dox import docstore
 from tendril.dox import labelmaker
@@ -127,6 +128,8 @@ class InventoryIndent(object):
                 session=session
             ).path
         except SerialNoNotFound:
+            raise IndentNotFound
+        except DocumentNotFound:
             raise IndentNotFound
         with docstore.docstore_fs.open(cobom_path, 'r') as f:
             cobom = load_cobom_from_file(

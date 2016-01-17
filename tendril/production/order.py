@@ -421,16 +421,6 @@ class ProductionOrder(object):
             )
 
         self._snomap.disable_creation()
-        self._snomap.dump_to_file(outfolder)
-        self._snomap.unset_session()
-
-        if register is True:
-            docstore.register_document(
-                    serialno=self.serialno,
-                    docpath=os.path.join(outfolder, 'snomap.yaml'),
-                    doctype='SNO MAP', efield=self.title,
-                    session=session
-            )
 
         cobom = CompositeOutputBom(self.bomlist)
 
@@ -458,6 +448,17 @@ class ProductionOrder(object):
             action.unset_session()
         self._dump_order_yaml(outfolder=outfolder, register=register,
                               session=session)
+        self._snomap.dump_to_file(outfolder)
+        self._snomap.unset_session()
+
+        if register is True:
+            docstore.register_document(
+                    serialno=self.serialno,
+                    docpath=os.path.join(outfolder, 'snomap.yaml'),
+                    doctype='SNO MAP', efield=self.title,
+                    session=session
+            )
+
         self._defined = True
 
     def _generate_doc(self, outfolder=None, register=False, session=None):

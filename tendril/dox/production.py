@@ -443,7 +443,8 @@ def get_production_order_manifest_set(serialno):
     for child in children:
         files = []
 
-        am = docstore.get_docs_list_for_sno_doctype(child, 'ASSEMBLY MANIFEST')
+        am = docstore.get_docs_list_for_sno_doctype(serialno=child,
+                                                    doctype='ASSEMBLY MANIFEST')
         if len(am) == 1:
             uam = am[0]
             copyfile(uam.fs, uam.path, workspace, uam.filename, overwrite=True)
@@ -454,7 +455,7 @@ def get_production_order_manifest_set(serialno):
             )
 
         dms = docstore.get_docs_list_for_sno_doctype(
-                child, 'DELTA ASSEMBLY MANIFEST'
+                serialno=child, doctype='DELTA ASSEMBLY MANIFEST'
         )
         if len(dms):
             for dm in dms:
