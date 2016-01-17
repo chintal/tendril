@@ -57,8 +57,8 @@ class InventoryIndent(object):
             self._defined = False
 
     def create(self, cobom, title, desc=None, prod_order_sno=None,
-               requested_by=None):
-        if self._defined is True:
+               requested_by=None, force=False):
+        if self._defined is True and force is False:
             raise Exception("This inventory indent instance seems to be already "
                             "done. You can't 'create' it again.")
         self._cobom = cobom
@@ -67,9 +67,10 @@ class InventoryIndent(object):
         self._desc = desc
         self._prod_order_sno = prod_order_sno
         self._requested_by = requested_by
+        self._force = force
 
     def process(self, session=None, **kwargs):
-        if self._defined is True:
+        if self._defined is True and self._force is False:
             raise Exception("This inventory indent instance seems to be already "
                             "done. You can't 'create' it again.")
         if session is None:

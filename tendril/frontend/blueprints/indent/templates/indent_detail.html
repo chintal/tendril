@@ -38,9 +38,9 @@
                 <tr>
                     <th class="all">Ident</th>
                     {% for earmark in stage.indent.cobom.descriptors %}
-                    <th class="min-tablet"> {{ earmark.configname }}x{{ earmark.multiplier }}</th>
+                    <th class="text-center min-tablet"> {{ earmark.configname }} </th>
                     {% endfor %}
-                    <th class="all">Quantity</th>
+                    <th class="text-center all">Quantity</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -48,9 +48,9 @@
                     <tr>
                         <td> {{ line.ident }} </td>
                         {% for column in line.columns %}
-                        <th class="min-tablet"> {{ column }} </th>
+                        <td class="min-tablet text-center"> {{ column or '-' }} </td>
                         {% endfor %}
-                        <td> {{ line.quantity }} </td>
+                        <th class="text-center"> {{ line.quantity }} </th>
                     </tr>
                 {% endfor %}
                 </tbody>

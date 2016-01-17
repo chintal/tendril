@@ -117,30 +117,34 @@ class ProductionActionBase(object):
 
 
 class DeltaProductionAction(ProductionActionBase):
-    def __init__(self, delta_order):
+    def __init__(self, delta_order, force=False):
         self._sno = None
         self._original = None
         self._target = None
         self._orig_modulename = None
         self._target_modulename = None
-        super(DeltaProductionAction, self).__init__(delta_order)
+        super(DeltaProductionAction, self).__init__(delta_order, force)
 
-    def setup(self, delta_order):
+    def setup(self, delta_order, force):
         self._sno = delta_order['sno']
         self._orig_modulename = delta_order['orig-cardname']
         self._target_modulename = delta_order['target-cardname']
+        if self._orig_modulename == self._target_modulename:
+            raise DeltaValidationError
         try:
             try:
                 self._original = get_module_instance(
                         self._sno, self._orig_modulename,
-                        session=self._session
+                        session=self._session,
+                        scaffold=force
                 )
                 self._target = get_module_prototype(self._target_modulename)
                 self._is_done = False
             except ModuleInstanceTypeMismatchError:
                 self._target = get_module_instance(
                         self._sno, self._target_modulename,
-                        session=self._session
+                        session=self._session,
+                        scaffold=force
                 )
                 self._original = get_module_prototype(self._orig_modulename)
                 self._is_done = True
@@ -156,7 +160,7 @@ class DeltaProductionAction(ProductionActionBase):
     def _generate_docs(self, manifestsfolder, indent_sno=None, prod_ord_sno=None,
                        register=False, session=None):
         dmpath = gen_delta_pcb_am(
-                self._orig_modulename, self._orig_modulename,
+                self._orig_modulename, self._target_modulename,
                 outfolder=manifestsfolder, sno=self._sno,
                 indentsno=indent_sno, productionorderno=prod_ord_sno
         )
@@ -169,18 +173,20 @@ class DeltaProductionAction(ProductionActionBase):
                register=False, session=None):
         if self._is_done is True:
             raise NothingToProduceError
-        self._generate_docs(outfolder, indent_sno, prod_ord_sno, session)
+        self._generate_docs(outfolder, indent_sno, prod_ord_sno,
+                            register, session)
         if register is True:
             serialnos.set_serialno_efield(
                 sno=self._sno, efield=self._target_modulename,
-                register=register, session=session
+                session=session
             )
             serialnos.link_serialno(
                 child=self._sno, parent=prod_ord_sno, session=session
             )
             self._original = get_module_prototype(self._orig_modulename)
             self._target = get_module_instance(self._sno,
-                                               self._target_modulename)
+                                               self._target_modulename,
+                                               session=session)
             self._is_done = True
 
     @property
@@ -188,7 +194,7 @@ class DeltaProductionAction(ProductionActionBase):
         original_obom = self._original.obom
         target_obom = self._target.obom
         delta_obom = DeltaOutputBom(original_obom, target_obom)
-        return delta_obom
+        return delta_obom.additions_bom
 
     @property
     def obom(self):
@@ -204,7 +210,8 @@ class DeltaProductionAction(ProductionActionBase):
 
     @property
     def modules(self):
-        return [get_module_instance(x, self._target_modulename, self._session)
+        return [get_module_instance(x, self._target_modulename,
+                                    session=self._session)
                 for x in self.refdes]
 
     @property
@@ -329,10 +336,12 @@ class ProductionOrder(object):
 
     def create(self, title=None, desc=None, cards=None, deltas=None,
                sourcing_order_snos=None, root_order_snos=None,
-               ordered_by=None, order_yaml_path=None, snomap_path=None):
+               ordered_by=None, order_yaml_path=None, snomap_path=None,
+               force=False):
         # Load in the various parameters and such, creating the necessary
         # containers only.
-        if self._defined is True:
+        self._force = force
+        if self._defined is True and self._force is False:
             raise Exception("This production order instance seems to be already "
                             "done. You can't 'create' it again.")
         if order_yaml_path is not None:
@@ -345,13 +354,13 @@ class ProductionOrder(object):
         if desc is not None:
             self._desc = desc
         if cards is not None:
-            self._cards = self._yaml_data.pop('cards', {})
+            self._cards = cards
         if deltas is not None:
-            self._deltas = self._yaml_data.pop('deltas', [])
+            self._deltas = deltas
         if sourcing_order_snos is not None:
-            self._sourcing_order_snos = self._yaml_data.pop('sourcing_orders', [])
+            self._sourcing_order_snos = sourcing_order_snos
         if root_order_snos is not None:
-            self._root_order_snos = self._yaml_data.pop('root_orders', [])
+            self._root_order_snos = root_order_snos
         if ordered_by is not None:
             self._ordered_by = ordered_by
         if snomap_path is not None:
@@ -361,7 +370,8 @@ class ProductionOrder(object):
             raise NothingToProduceError
 
     def process(self, session=None, **kwargs):
-        if self._defined is True:
+        force = self._force
+        if self._defined is True and force is False:
             raise Exception("This production order instance seems to be already "
                             "done. You can't 'create' it again.")
 
@@ -372,8 +382,9 @@ class ProductionOrder(object):
             return self._process(session=session, **kwargs)
 
     def _process(self, outfolder=None, manifestsfolder=None,
-                 label_manager=None, register=False, session=None):
-
+                 label_manager=None, register=False, force=False,
+                 session=None):
+        self._force = force
         if outfolder is None:
             if self._order_yaml_path is not None:
                 outfolder = os.path.split(self._order_yaml_path)[0]
@@ -429,7 +440,7 @@ class ProductionOrder(object):
         indent = InventoryIndent(indent_sno, session=session)
         indent.create(cobom, title="FOR {0}".format(self.serialno),
                       desc=None, prod_order_sno=self.serialno,
-                      requested_by=self._ordered_by)
+                      requested_by=self._ordered_by, force=force)
 
         indent.process(outfolder=outfolder, register=register,
                        session=session)
@@ -530,7 +541,7 @@ class ProductionOrder(object):
         # going to define things that are not temporally transient.
 
         self._title = self._yaml_data.get('title')
-        self._desc = self._yaml_data.get('title', None)
+        self._desc = self._yaml_data.get('desc', self._title)
         self._cards = self._yaml_data.get('cards', {})
         self._deltas = self._yaml_data.get('deltas', [])
         self._sourcing_order_snos = self._yaml_data.get('sourcing_orders', [])
@@ -538,6 +549,7 @@ class ProductionOrder(object):
         self._last_generated_at = self._yaml_data.get('last_generated_at', None)
         self._first_generated_at = self._yaml_data.get('first_generated_at', None)
         self._ordered_by = self._yaml_data.get('ordered_by', None)
+        self._sno = self._yaml_data.get('prod_order_sno', None)
 
     def _load_legacy(self):
         if self._sno is None:
@@ -593,7 +605,7 @@ class ProductionOrder(object):
         if not len(self._delta_actions):
             for delta in self._deltas:
                 self._delta_actions.append(
-                        DeltaProductionAction(delta)
+                        DeltaProductionAction(delta, force=self._force)
                 )
         return self._delta_actions
 

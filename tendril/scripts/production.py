@@ -88,7 +88,7 @@ def generate_indent(bomlist, orderfolder, data, prod_ord_sno,
 
 
 def main(orderfolder=None, orderfile_r=None,
-         register=None, verbose=True):
+         register=None, verbose=True, force=False):
 
     if orderfile_r is None:
         orderfile_r = 'order.yaml'
@@ -111,7 +111,8 @@ def main(orderfolder=None, orderfile_r=None,
 
     production_order = ProductionOrder(sno=PROD_ORD_SNO)
     production_order.create(order_yaml_path=orderfile,
-                            snomap_path=snomap_path)
+                            snomap_path=snomap_path,
+                            force=force)
 
     if register is None:
         REGISTER = False
@@ -120,8 +121,8 @@ def main(orderfolder=None, orderfile_r=None,
 
     production_order.process(outfolder=orderfolder, manifestsfolder=None,
                              label_manager=labelmanager, register=REGISTER,
-                             session=None)
-    
+                             force=force, session=None)
+
     labelmanager.generate_pdfs(orderfolder, force=True)
 
 
@@ -147,6 +148,11 @@ def entry_point():
              "The setting here will override anything in the order file."
     )
     parser.add_argument(
+        '--force', '-f', action='store_true', default=None,
+        help="Force execution. Current applies to Deltas, bypassing "
+             "DeltaValidationErrors."
+    )
+    parser.add_argument(
         '--verbose', '-v', action='store_true', default=None,
         help="Increase output verbosity."
     )
@@ -155,7 +161,8 @@ def entry_point():
     main(orderfolder=args.order_folder,
          orderfile_r=args.order_file,
          register=args.execute,
-         verbose=args.verbose)
+         verbose=args.verbose,
+         force=args.force)
 
 if __name__ == '__main__':
     main()

@@ -44,6 +44,7 @@ from tendril.boms.outputbase import DeltaOutputBom
 from tendril.entityhub import projects
 from tendril.entityhub import serialnos
 from tendril.entityhub.modules import get_module_instance
+from tendril.entityhub.modules import get_module_prototype
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.fsutils import get_tempname
@@ -167,14 +168,14 @@ def gen_pcb_am(configname, outfolder, sno=None, productionorderno=None,
              'lines': obom.lines,
              'evenpages': evenpages,
              'stockindent': indentsno,
-             'repopath': projects.card_reporoot[configname],
+             'repopath': projects.get_project_repo_repr(configname),
              'productionorderno': productionorderno}
 
     for config in obom.descriptor.configurations.configurations:
         if config['configname'] == configname:
             stage['desc'] = config['desc']
 
-    template = 'pcb-assem-manifest.tex'
+    template = 'production/pcb-assem-manifest.tex'
 
     render.render_pdf(stage, template, outpath)
 
@@ -268,6 +269,7 @@ def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
             page if needed (useful for bulk printing).
 
     """
+
     if outfolder is None:
         from tendril.utils.config import INSTANCE_ROOT
         outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'production')
@@ -282,28 +284,28 @@ def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
             '-' + str(sno) + '.pdf'
     )
 
-    orig_bom = boms_electronics.import_pcb(projects.cards[orig_cardname])
-    orig_obom = orig_bom.create_output_bom(orig_cardname)
-
-    target_bom = boms_electronics.import_pcb(projects.cards[target_cardname])
-    target_obom = target_bom.create_output_bom(target_cardname)
+    orig_instance = get_module_instance(sno, orig_cardname,
+                                        session=session, scaffold=True)
+    orig_obom = orig_instance.obom
+    target_instance = get_module_prototype(target_cardname)
+    target_obom = target_instance.obom
 
     delta_obom = DeltaOutputBom(orig_obom, target_obom)
 
-    if orig_bom.configurations.rawconfig['pcbname'] is not None:
-        orig_entityname = orig_bom.configurations.rawconfig['pcbname']
+    if projects.check_module_is_card(orig_cardname):
+        orig_entityname = orig_instance.pcbname
         try:
-            target_entityname = target_bom.configurations.rawconfig['pcbname']
-        except KeyError:
+            target_entityname = target_instance.pcbname
+        except AttributeError:
             logger.error("Target for the delta should be a PCB!")
             raise
         title = 'PCB '
         evenpages = True
-    elif orig_bom.configurations.rawconfig['cblname'] is not None:
-        orig_entityname = orig_bom.configurations.rawconfig['cblname']
+    elif projects.check_module_is_cable(orig_cardname):
+        orig_entityname = orig_instance.cblname
         try:
-            target_entityname = target_bom.configurations.rawconfig['cblname']
-        except KeyError:
+            target_entityname = target_instance.cblname
+        except AttributeError:
             logger.error("Target for the delta should be a Cable!")
             raise
         title = 'Cable '
@@ -311,8 +313,8 @@ def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
     else:
         raise ValueError
 
-    stage = {'orig_configname': orig_obom.descriptor.configname,
-             'target_configname': target_obom.descriptor.configname,
+    stage = {'orig_configname': orig_cardname,
+             'target_configname': target_cardname,
              'pcbname': orig_entityname,
              'title': title,
              'sno': sno,
@@ -320,8 +322,8 @@ def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
              'subtraction_lines': delta_obom.subtractions_bom.lines,
              'evenpages': evenpages,
              'stockindent': indentsno,
-             'orig_repopath': projects.card_reporoot[orig_cardname],
-             'target_repopath': projects.card_reporoot[target_cardname],
+             'orig_repopath': projects.get_project_repo_repr(orig_cardname),
+             'target_repopath': projects.get_project_repo_repr(target_cardname),  # noqa
              'productionorderno': productionorderno,
              'desc': delta_obom.descriptor.configname}
 
@@ -467,7 +469,7 @@ def get_production_order_manifest_set(serialno):
             wdmfile = merge_pdf(
                 files,
                 os.path.join(workspace.getsyspath('/'),
-                             os.path.splitext(am.filename)[0] + '-wdm.pdf'),
+                             os.path.splitext(am[0].filename)[0] + '-wdm.pdf'),
                 remove_sources=True
             )
             manifests.append(wdmfile)

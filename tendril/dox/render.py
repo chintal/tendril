@@ -48,7 +48,7 @@ from __future__ import print_function
 import os
 import subprocess
 import jinja2
-
+import arrow
 import numpy
 
 from tendril.utils.config import DOX_TEMPLATE_FOLDER
@@ -215,6 +215,8 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
         * - ``company_iec``
           - The company IEC, as specified in
             :data:`tendril.utils.config.COMPANY_IEC`
+        * - ``render_ts``
+          - The current timestamp
 
     """
     if not os.path.exists(template) \
@@ -230,6 +232,7 @@ def render_pdf(stage, template, outpath, remove_sources=True, **kwargs):
     stage['company_email'] = COMPANY_EMAIL
     stage['company_address_line'] = COMPANY_ADDRESS_LINE
     stage['company_iec'] = COMPANY_IEC
+    stage['render_ts'] = arrow.utcnow().isoformat()
 
     texpath = os.path.splitext(outpath)[0] + ".tex"
     with open(texpath, "wb") as f:

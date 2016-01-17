@@ -75,7 +75,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for delta in stage.order.delta_orders.iteritems() %}
+                {% for delta in stage.order.delta_orders %}
                     <tr>
                         <td> {{ delta.sno }} </td>
                         <td> {{ delta['orig-cardname'] }} </td>

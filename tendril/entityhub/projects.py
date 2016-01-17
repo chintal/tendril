@@ -23,6 +23,7 @@ import re
 import csv
 
 from tendril.utils.config import PROJECTS_ROOT
+from tendril.utils.vcs import get_path_revision
 from tendril.gedaif import conffile
 from tendril.boms.electronics import import_pcb
 from tendril.boms.outputbase import CompositeOutputBom
@@ -158,3 +159,8 @@ def check_module_is_cable(modulename):
         return True
     return False
 
+
+def get_project_repo_repr(modulename):
+    repo = card_reporoot[modulename]
+    rev = get_path_revision(os.path.join(PROJECTS_ROOT, repo))
+    return "{0}::r{1}".format(repo, rev)

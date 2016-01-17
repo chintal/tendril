@@ -52,4 +52,4 @@ def get_path_repository(p):
 
     """
     c = svn.local.LocalClient(p)
-    return c.info()['repository/root']
+    return c.info()['repository_root']
