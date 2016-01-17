@@ -38,14 +38,21 @@ class SerialNumberMap(object):
         self._generators = {}
         self._parent_sno = parent_sno
         self._register = None
-
+        self._session = None
         self.disable_creation()
 
     def enable_creation(self):
         self._register = True
 
+    def set_session(self, session=None):
+        self._session = session
+
+    def unset_session(self):
+        self._session = None
+
     def disable_creation(self):
         self._register = False
+        self._session = None
 
     def dump_to_file(self, outfolder, fs=None):
         pass
@@ -95,9 +102,11 @@ class SerialNumberMap(object):
             while True:
                 sno = get_serialno(series='IDT',
                                    efield='FOR {0}'.format(self._parent_sno),
-                                   register=self._register)
+                                   register=self._register,
+                                   session=self._session)
                 if self._register:
-                    link_serialno(sno, self._parent_sno)
+                    link_serialno(sno, self._parent_sno,
+                                  session=self._session)
                 count += 1
                 if isinstance(self._snomap_dict[key], dict):
                     self._snomap_dict[key][count] = sno
@@ -115,9 +124,11 @@ class SerialNumberMap(object):
             while True:
                 sno = get_serialno(series=get_module_snoseries(key),
                                    efield=key,
-                                   register=self._register)
+                                   register=self._register,
+                                   session=self._session)
                 if self._register:
-                    link_serialno(sno, self._parent_sno)
+                    link_serialno(sno, self._parent_sno,
+                                  session=self._session)
                 count += 1
                 if isinstance(self._snomap_dict[key], dict):
                     self._snomap_dict[key][count] = sno

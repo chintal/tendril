@@ -113,7 +113,7 @@ class InventoryIndent(object):
     def _generate_labels(self, outfolder=None):
         for idx, line in enumerate(self._cobom.lines):
             labelmaker.manager.add_label(
-                'IDT', line.ident, '.'.join([self._sno + 1, str(idx)]),
+                'IDT', line.ident, '.'.join([self._sno, str(idx)]),
                 qty=line.quantity)
         if outfolder and os.path.exists(outfolder):
             labelmaker.manager.generate_pdfs(outfolder, force=True)
@@ -166,7 +166,7 @@ class InventoryIndent(object):
         for descriptor in descriptors:
             if descriptor.multiplier > 1:
                 context_parts.append(' x'.join([descriptor.configname,
-                                                descriptor.multiplier]))
+                                                str(descriptor.multiplier)]))
             else:
                 context_parts.append(descriptor.configname)
         return ', '.join(context_parts)

@@ -184,14 +184,14 @@ def get_module_prototype(modulename):
 class ModuleInstanceBase(EntityBase):
     validator = None
 
-    def __init__(self, sno=None, ident=None, create=False):
+    def __init__(self, sno=None, ident=None, create=False, scaffold=False):
         super(ModuleInstanceBase, self).__init__()
         self._prototype = None
         self._obom = None
         self._customization = None
         self._ident = None
         if sno is not None:
-            self.define(sno, ident, create)
+            self.define(sno, ident, create, scaffold=scaffold)
 
     @property
     def ident(self):
@@ -207,8 +207,13 @@ class ModuleInstanceBase(EntityBase):
                                   " {1}".format(value, self.__class__))
         self._ident = value
 
-    def define(self, sno, ident=None, create_new=False, register=True):
+    def define(self, sno, ident=None, create_new=False,
+               register=True, scaffold=False):
         self._refdes = sno
+        if scaffold is True:
+            self.ident = ident
+            self._defined = True
+            return
         if serialnos.serialno_exists(sno=sno):
             if create_new:
                 raise ValueError("Serial Number {0} already exists, cannot be"
@@ -297,9 +302,12 @@ class CableInstance(EDAModuleInstanceBase):
         return self._prototype.cblname
 
 
-def get_module_instance(sno, ident=None):
-    modulename = serialnos.get_serialno_efield(sno=sno)
+def get_module_instance(sno, ident=None, scaffold=False):
+    if not scaffold:
+        modulename = serialnos.get_serialno_efield(sno=sno)
+    else:
+        modulename = ident
     if projects.check_module_is_card(modulename):
-        return CardInstance(sno=sno, ident=ident)
+        return CardInstance(sno=sno, ident=ident, scaffold=scaffold)
     if projects.check_module_is_cable(modulename):
-        return CableInstance(sno=sno, ident=ident)
+        return CableInstance(sno=sno, ident=ident, scaffold=scaffold)

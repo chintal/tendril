@@ -115,7 +115,7 @@ def main(orderfolder=None, orderfile_r=None,
     else:
         REGISTER = register
 
-    production_order.process(outfolder=orderfile, manifestsfolder=None,
+    production_order.process(outfolder=orderfolder, manifestsfolder=None,
                              register=REGISTER, session=None)
 
 

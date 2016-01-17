@@ -66,7 +66,16 @@ class NothingToProduceError(Exception):
 class ProductionActionBase(object):
     def __init__(self, *args, **kwargs):
         self._is_done = None
+        self._scaffold = False
         self.setup(*args, **kwargs)
+
+    @property
+    def scaffold(self):
+        return self._scaffold
+
+    @scaffold.setter
+    def scaffold(self, value):
+        self._scaffold = value
 
     def setup(self, *args, **kwargs):
         raise NotImplementedError
@@ -90,7 +99,8 @@ class ProductionActionBase(object):
 
     @property
     def modules(self):
-        return [get_module_instance(x, self.ident) for x in self.refdes]
+        return [get_module_instance(x, self.ident, scaffold=self._scaffold)
+                for x in self.refdes]
 
     @property
     def order_lines(self):
@@ -211,7 +221,6 @@ class CardProductionAction(ProductionActionBase):
         self._ident = None
         self._qty = None
         self._prototype = None
-        self._snomap = None
         self._snos = None
         super(CardProductionAction, self).__init__(*args, **kwargs)
 
@@ -229,7 +238,7 @@ class CardProductionAction(ProductionActionBase):
                      register=False, session=None):
         ampath = gen_pcb_am(self._ident, manifestsfolder, sno,
                             productionorderno=prod_ord_sno,
-                            indentsno=indent_sno)
+                            indentsno=indent_sno, scaffold=self.scaffold)
         if register is True:
             docstore.register_document(serialno=sno, docpath=ampath,
                                        doctype='ASSEMBLY MANIFEST',
@@ -282,22 +291,26 @@ class ProductionOrder(object):
         self._sno = sno
         self._card_actions = []
         self._delta_actions = []
+
+        self._last_generated_at = None
+        self._first_generated_at = None
+        self._title = None
+        self._desc = None
+        self._indents = []
+        self._root_order_snos = []
+        self._sourcing_order_snos = []
+        self._snomap_path = None
+        self._snomap = None
+        self._cards = None
+        self._deltas = None
+        self._order_yaml_path = None
+        self._yaml_data = None
+        self._ordered_by = None
+
         try:
             self.load_from_db()
             self._defined = True
         except ProductionOrderNotFound:
-            self._title = None
-            self._desc = None
-            self._indents = []
-            self._root_order_snos = []
-            self._sourcing_order_snos = []
-            self._snomap_path = None
-            self._snomap = None
-            self._cards = None
-            self._deltas = None
-            self._order_yaml_path = None
-            self._yaml_data = None
-            self._ordered_by = None
             self._defined = False
 
     def create(self, title=None, desc=None, cards=None, deltas=None,
@@ -313,21 +326,20 @@ class ProductionOrder(object):
             with open(self._order_yaml_path, 'r') as f:
                 self._yaml_data = yaml.load(f)
             self._load_order_yaml_data()
-        else:
-            if title is not None:
-                self._title = title
-            if desc is not None:
-                self._desc = desc
-            if cards is not None:
-                self._cards = self._yaml_data.pop('cards', {})
-            if deltas is not None:
-                self._deltas = self._yaml_data.pop('deltas', [])
-            if sourcing_order_snos is not None:
-                self._sourcing_order_snos = self._yaml_data.pop('sourcing_orders', [])
-            if root_order_snos is not None:
-                self._root_order_snos = self._yaml_data.pop('root_orders', [])
-            if ordered_by is not None:
-                self._ordered_by = ordered_by
+        if title is not None:
+            self._title = title
+        if desc is not None:
+            self._desc = desc
+        if cards is not None:
+            self._cards = self._yaml_data.pop('cards', {})
+        if deltas is not None:
+            self._deltas = self._yaml_data.pop('deltas', [])
+        if sourcing_order_snos is not None:
+            self._sourcing_order_snos = self._yaml_data.pop('sourcing_orders', [])
+        if root_order_snos is not None:
+            self._root_order_snos = self._yaml_data.pop('root_orders', [])
+        if ordered_by is not None:
+            self._ordered_by = ordered_by
         if snomap_path is not None:
             self._snomap_path = snomap_path
 
@@ -363,7 +375,6 @@ class ProductionOrder(object):
                     series='PROD', efield=self._title,
                     register=register, session=session
             )
-        self._yaml_data['prod_order_sno'] = self._sno
 
         # Create Snomap
         if self._snomap_path is not None:
@@ -372,6 +383,7 @@ class ProductionOrder(object):
         else:
             self._snomap = SerialNumberMap({}, self._sno)
 
+        self._snomap.set_session(session=session)
         if register is True:
             self._snomap.enable_creation()
 
@@ -384,6 +396,8 @@ class ProductionOrder(object):
         actions = self.card_actions + self.delta_actions
 
         for action in actions:
+            if register is False:
+                action.scaffold = True
             action.commit(
                 outfolder=manifestsfolder,
                 indent_sno=indent_sno, prod_ord_sno=self._sno,
@@ -392,6 +406,8 @@ class ProductionOrder(object):
 
         self._snomap.disable_creation()
         self._snomap.dump_to_file(outfolder)
+        self._snomap.unset_session()
+
         if register is True:
             docstore.register_document(
                     serialno=self.serialno,
@@ -411,13 +427,18 @@ class ProductionOrder(object):
 
         indent.process(outfolder=outfolder, register=register,
                        session=session)
+        self._indents.append(indent)
 
         # Make production order doc
         self._generate_doc(outfolder=outfolder, register=register,
                            session=session)
 
         self.make_labels()
-        self._yaml_data['last_generated_at'] = arrow.utcnow().isoformat()
+        self._last_generated_at = arrow.utcnow().isoformat()
+        if self._first_generated_at is None:
+            self._first_generated_at = arrow.utcnow().isoformat()
+        for action in actions:
+            action.scaffold = False
         self._dump_order_yaml(outfolder=outfolder, register=register,
                               session=session)
         self._defined = True
@@ -435,7 +456,20 @@ class ProductionOrder(object):
                 session=session
             )
 
+    def _build_yaml_data(self):
+        self._yaml_data['title'] = self._title
+        self._yaml_data['desc'] = self._desc
+        self._yaml_data['cards'] = self._cards
+        self._yaml_data['deltas'] = self._deltas
+        self._yaml_data['sourcing_order_snos'] = self._sourcing_order_snos
+        self._yaml_data['root_order_snos'] = self._root_order_snos
+        self._yaml_data['first_generated_at'] = self._first_generated_at
+        self._yaml_data['last_generated_at'] = self._last_generated_at
+        self._yaml_data['ordered_by'] = self._ordered_by
+        self._yaml_data['prod_order_sno'] = self._sno
+
     def _dump_order_yaml(self, outfolder=None, register=False, session=None):
+        self._build_yaml_data()
         with open(os.path.join(outfolder, 'order.yaml'), 'w') as f:
             f.write(yaml.dump(self._yaml_data, default_flow_style=False))
         if register is True:
@@ -477,14 +511,19 @@ class ProductionOrder(object):
         # code to work out. The order.yaml files are now only
         # going to define things that are not temporally transient.
 
-        self._title = self._yaml_data.pop('title')
-        self._desc = self._yaml_data.pop('title', None)
-        self._cards = self._yaml_data.pop('cards', {})
-        self._deltas = self._yaml_data.pop('deltas', [])
-        self._sourcing_order_snos = self._yaml_data.pop('sourcing_orders', [])
-        self._root_order_snos = self._yaml_data.pop('root_orders', [])
+        self._title = self._yaml_data.get('title')
+        self._desc = self._yaml_data.get('title', None)
+        self._cards = self._yaml_data.get('cards', {})
+        self._deltas = self._yaml_data.get('deltas', [])
+        self._sourcing_order_snos = self._yaml_data.get('sourcing_orders', [])
+        self._root_order_snos = self._yaml_data.get('root_orders', [])
+        self._last_generated_at = self._yaml_data.get('last_generated_at', None)
+        self._first_generated_at = self._yaml_data.get('first_generated_at', None)
+        self._ordered_by = self._yaml_data.get('ordered_by', None)
 
     def _load_legacy(self):
+        if self._sno is None:
+            raise ProductionOrderNotFound
         self._load_order_yaml()
         self._load_order_yaml_data()
         self._load_snomap_legacy()
@@ -514,11 +553,17 @@ class ProductionOrder(object):
 
     @property
     def cards(self):
-        return [x.modules for x in self.card_actions]
+        rval = []
+        for action in self.card_actions:
+            rval.extend(action.modules)
+        return rval
 
     @property
     def card_lines(self):
-        return [x.order_lines for x in self.card_actions]
+        rval = []
+        for action in self.card_actions:
+            rval.extend(action.order_lines)
+        return rval
 
     @property
     def delta_orders(self):
@@ -543,11 +588,17 @@ class ProductionOrder(object):
         # This will return the original card if the delta hasn't yet been
         # processed. Consider the inconsistency of this behavior and see what
         # to do about it.
-        return [x.modules for x in self.delta_actions]
+        rval = []
+        for action in self.delta_actions:
+            rval.extend(action.modules)
+        return rval
 
     @property
     def delta_lines(self):
-        return [x.order_lines for x in self.delta_actions]
+        rval = []
+        for action in self.delta_actions:
+            rval.extend(action.order_lines)
+        return rval
 
     @property
     def bomlist(self):
@@ -593,8 +644,11 @@ class ProductionOrder(object):
 
     @property
     def indents(self):
-        from tendril.inventory.indent import InventoryIndent
-        return [InventoryIndent(x) for x in self.indent_snos]
+        if self._indents is None:
+            from tendril.inventory.indent import InventoryIndent
+            return [InventoryIndent(x) for x in self.indent_snos]
+        else:
+            return self._indents
 
     @property
     def docs(self):

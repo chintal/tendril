@@ -37,11 +37,12 @@ from sqlalchemy_utils import ArrowType
 from contextlib import contextmanager
 import functools
 import arrow
+import inspect
 
 from tendril.utils.config import DB_URI
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
+logger = log.get_logger(__name__, log.DEBUG)
 log.logging.getLogger('sqlalchemy.engine').setLevel(log.WARNING)
 
 
@@ -65,6 +66,36 @@ Session = sessionmaker(expire_on_commit=False)
 Session.configure(bind=engine)
 
 
+def _get_caller(skip=1):
+    # Based on http://stackoverflow.com/a/9812105
+    stack = inspect.stack()
+    done = False
+    parentframe = None
+    while not done:
+        start = 1 + skip
+        if len(stack) < start + 1:
+            return ''
+        parentframe = stack[start][0]
+        codename = parentframe.f_code.co_name
+        if codename in ['__enter__', 'inner', '__exit__']:
+            skip += 1
+        else:
+            done = True
+
+    name = []
+    module = inspect.getmodule(parentframe)
+    if module:
+        name.append(module.__name__)
+    # detect classname
+    if 'self' in parentframe.f_locals:
+        name.append(parentframe.f_locals['self'].__class__.__name__)
+    codename = parentframe.f_code.co_name
+    if codename != '<module>':
+        name.append(codename)
+    del parentframe
+    return ".".join(name)
+
+
 @contextmanager
 def get_session():
     """
@@ -80,12 +111,15 @@ def get_session():
     .. seealso:: :func:`with_db`
 
     """
+    logger.debug('Making session: {0}'.format(_get_caller(1)))
     session = Session()
     try:
         yield session
         session.commit()
     except:
-        logger.warning("Rolling back session")
+        logger.warning(
+            "Rolling back session: {0}".format(str(_get_caller(1)))
+        )
         session.rollback()
         raise
     finally:
