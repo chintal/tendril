@@ -187,14 +187,16 @@ def get_module_prototype(modulename):
 class ModuleInstanceBase(EntityBase):
     validator = None
 
-    def __init__(self, sno=None, ident=None, create=False, scaffold=False):
+    def __init__(self, sno=None, ident=None, create=False,
+                 scaffold=False, session=None):
         super(ModuleInstanceBase, self).__init__()
         self._prototype = None
         self._obom = None
         self._customization = None
         self._ident = None
         if sno is not None:
-            self.define(sno, ident, create, scaffold=scaffold)
+            self.define(sno, ident, create,
+                        scaffold=scaffold, session=session)
 
     @property
     def ident(self):
@@ -211,17 +213,18 @@ class ModuleInstanceBase(EntityBase):
         self._ident = value
 
     def define(self, sno, ident=None, create_new=False,
-               register=True, scaffold=False):
+               register=True, scaffold=False, session=None):
         self._refdes = sno
         if scaffold is True:
             self.ident = ident
             self._defined = True
             return
-        if serialnos.serialno_exists(sno=sno):
+        if serialnos.serialno_exists(sno=sno, session=session):
             if create_new:
                 raise ValueError("Serial Number {0} already exists, cannot be"
                                  " used to create a new instance".format(sno))
-            db_ident = serialnos.get_serialno_efield(sno=self._refdes)
+            db_ident = serialnos.get_serialno_efield(sno=self._refdes,
+                                                     session=session)
             if ident and db_ident != ident:
                 raise ModuleInstanceTypeMismatchError(
                         "Module {0} seems to be a {1}, not {2}"
@@ -305,12 +308,15 @@ class CableInstance(EDAModuleInstanceBase):
         return self._prototype.cblname
 
 
-def get_module_instance(sno, ident=None, scaffold=False):
+def get_module_instance(sno, ident=None, scaffold=False, session=None):
     if not scaffold:
-        modulename = serialnos.get_serialno_efield(sno=sno)
+        modulename = serialnos.get_serialno_efield(sno=sno,
+                                                   session=session)
     else:
         modulename = ident
     if projects.check_module_is_card(modulename):
-        return CardInstance(sno=sno, ident=ident, scaffold=scaffold)
+        return CardInstance(sno=sno, ident=ident,
+                            scaffold=scaffold, session=session)
     if projects.check_module_is_cable(modulename):
-        return CableInstance(sno=sno, ident=ident, scaffold=scaffold)
+        return CableInstance(sno=sno, ident=ident,
+                             scaffold=scaffold, session=session)

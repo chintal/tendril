@@ -145,8 +145,8 @@ def get_serialno(series=None, efield=None, register=True,
         generator = idstring.IDstring(seed=last_seed)
         new_sno = generator + 1
         if register is True:
-            logger.info("Updating seed for series " + series +
-                        " : " + str(new_sno.get_seed()))
+            logger.debug("Updating seed for series " + series +
+                         " : " + str(new_sno.get_seed()))
             series_obj.last_seed = new_sno.get_seed()
             register_serialno(
                 sno=series + '-' + new_sno,

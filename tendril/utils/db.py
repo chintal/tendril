@@ -42,7 +42,7 @@ import inspect
 from tendril.utils.config import DB_URI
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
+logger = log.get_logger(__name__, log.DEBUG)
 log.logging.getLogger('sqlalchemy.engine').setLevel(log.WARNING)
 
 

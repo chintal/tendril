@@ -105,7 +105,7 @@ class SerialNumberMap(object):
                                    register=self._register,
                                    session=self._session)
                 if self._register:
-                    link_serialno(sno, self._parent_sno,
+                    link_serialno(child=sno, parent=self._parent_sno,
                                   session=self._session)
                 count += 1
                 if isinstance(self._snomap_dict[key], dict):
@@ -127,7 +127,7 @@ class SerialNumberMap(object):
                                    register=self._register,
                                    session=self._session)
                 if self._register:
-                    link_serialno(sno, self._parent_sno,
+                    link_serialno(child=sno, parent=self._parent_sno,
                                   session=self._session)
                 count += 1
                 if isinstance(self._snomap_dict[key], dict):

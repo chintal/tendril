@@ -56,8 +56,8 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEBUG)
 
 
-def gen_pcb_am(configname, outfolder, sno=None,
-               productionorderno=None, indentsno=None, scaffold=False):
+def gen_pcb_am(configname, outfolder, sno=None, productionorderno=None,
+               indentsno=None, scaffold=False, session=None):
     """
     Generates a PCB Assembly Manifest for a 'card', a card being defined as a
     gEDA project, with a specified ``configname``.
@@ -143,7 +143,8 @@ def gen_pcb_am(configname, outfolder, sno=None,
     outpath = os.path.join(outfolder,
                            'am-' + configname + '-' + str(sno) + '.pdf')
 
-    instance = get_module_instance(sno, configname, scaffold=scaffold)
+    instance = get_module_instance(sno, configname,
+                                   scaffold=scaffold, session=session)
     obom = instance.obom
 
     if projects.check_module_is_card(configname):
@@ -187,7 +188,8 @@ def gen_pcb_am(configname, outfolder, sno=None,
 
 
 def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
-                     productionorderno=None, indentsno=None, scaffold=False):
+                     productionorderno=None, indentsno=None, scaffold=False,
+                     session=None):
     """
     Generates a Delta PCB Assembly Manifest for converting one card to
     another. This is typically only useful when the two cards are very

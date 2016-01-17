@@ -67,7 +67,14 @@ class ProductionActionBase(object):
     def __init__(self, *args, **kwargs):
         self._is_done = None
         self._scaffold = False
+        self._session = kwargs.get('session')
         self.setup(*args, **kwargs)
+
+    def set_session(self, session):
+        self._session = session
+
+    def unset_session(self):
+        self._session = None
 
     @property
     def scaffold(self):
@@ -99,7 +106,9 @@ class ProductionActionBase(object):
 
     @property
     def modules(self):
-        return [get_module_instance(x, self.ident, scaffold=self._scaffold)
+        return [get_module_instance(x, self.ident,
+                                    scaffold=self._scaffold,
+                                    session=self._session)
                 for x in self.refdes]
 
     @property
@@ -123,12 +132,16 @@ class DeltaProductionAction(ProductionActionBase):
         try:
             try:
                 self._original = get_module_instance(
-                        self._sno, self._orig_modulename)
+                        self._sno, self._orig_modulename,
+                        session=self._session
+                )
                 self._target = get_module_prototype(self._target_modulename)
                 self._is_done = False
             except ModuleInstanceTypeMismatchError:
-                self._target = get_module_instance(self._sno,
-                                                   self._target_modulename)
+                self._target = get_module_instance(
+                        self._sno, self._target_modulename,
+                        session=self._session
+                )
                 self._original = get_module_prototype(self._orig_modulename)
                 self._is_done = True
         except:
@@ -191,7 +204,7 @@ class DeltaProductionAction(ProductionActionBase):
 
     @property
     def modules(self):
-        return [get_module_instance(x, self._target_modulename)
+        return [get_module_instance(x, self._target_modulename, self._session)
                 for x in self.refdes]
 
     @property
@@ -238,7 +251,8 @@ class CardProductionAction(ProductionActionBase):
                      register=False, session=None):
         ampath = gen_pcb_am(self._ident, manifestsfolder, sno,
                             productionorderno=prod_ord_sno,
-                            indentsno=indent_sno, scaffold=self.scaffold)
+                            indentsno=indent_sno, scaffold=self.scaffold,
+                            session=session)
         if register is True:
             docstore.register_document(serialno=sno, docpath=ampath,
                                        doctype='ASSEMBLY MANIFEST',
@@ -390,7 +404,7 @@ class ProductionOrder(object):
 
         indent_sno = self._snomap.get_sno('indentsno')
         if register is True:
-            serialnos.link_serialno(indent_sno, self.serialno,
+            serialnos.link_serialno(child=indent_sno, parent=self.serialno,
                                     session=session)
 
         # Create cards and deltas and so forth
@@ -399,6 +413,7 @@ class ProductionOrder(object):
         for action in actions:
             if register is False:
                 action.scaffold = True
+            action.set_session(session=session)
             action.commit(
                 outfolder=manifestsfolder,
                 indent_sno=indent_sno, prod_ord_sno=self._sno,
@@ -440,6 +455,7 @@ class ProductionOrder(object):
             self._first_generated_at = arrow.utcnow().isoformat()
         for action in actions:
             action.scaffold = False
+            action.unset_session()
         self._dump_order_yaml(outfolder=outfolder, register=register,
                               session=session)
         self._defined = True
