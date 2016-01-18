@@ -17,6 +17,7 @@ TOOL: Low
 SCED: Low
 
 folders:
+  - tendril/auth
   - tendril/boms
   - tendril/conventions
   - tendril/dox
@@ -24,6 +25,7 @@ folders:
   - tendril/frontend
   - tendril/gedaif
   - tendril/inventory
+  - tendril/production
   - tendril/scripts
   - tendril/sourcing
   - tendril/testing

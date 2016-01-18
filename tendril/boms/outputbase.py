@@ -317,6 +317,31 @@ class CompositeOutputBom(object):
                     self.lines.remove(line)
 
 
+def create_obom_from_listing(component_list, head):
+    obom_descriptor = OutputElnBomDescriptor(head, None,
+                                             head, None)
+    obom = OutputBom(obom_descriptor)
+    for line in component_list:
+        device, value, footprint = parse_ident(line['ident'])
+        from tendril.boms.electronics import EntityElnComp
+        item = EntityElnComp()
+        item.define('Undef', device, value, footprint)
+        if device and fpiswire(device):
+            length = Length(line['qty'])
+            if length > 0:
+                wireitem = EntityElnComp()
+                wireitem.define(
+                    'Undef', device, value, str(length)
+                )
+                obom.insert_component(wireitem)
+        else:
+            num = int(line['qty'])
+            if num > 0:
+                for i in range(num):
+                    obom.insert_component(item)
+    return obom
+
+
 def load_cobom_from_file(f, name, tf=None, verbose=True):
     bomlist = []
     header = []

@@ -12,7 +12,7 @@
 <h4>{{ pagetitle }}</h4>
 
 <div class="row">
-    <form action="#" method="POST">
+    <form method="POST">
     {{ form.hidden_tag() }}
     <div class="row" data-equalizer="fmain">
         <div class="small-12 large-5 columns" data-equalizer-watch="fmain">
@@ -34,11 +34,12 @@
                     </div>
                 </div>
                 <div class="row">
+                    {{ form.indent_sno.hidden_tag() }}
                     <div class="small-4 columns text-center">
-                        {{ forms.render_switch(form.sno_generate, checked=True) }}
+                        {{ forms.render_switch(form.indent_sno.sno_generate, checked=True) }}
                     </div>
                     <div class="small-8 columns">
-                        {{ forms.render_field(form.indent_sno, autocomplete="off") }}
+                        {{ forms.render_field(form.indent_sno.sno, autocomplete="off", readonly=True) }}
                     </div>
                 </div>
                 <div class="row">
@@ -68,6 +69,7 @@
                 <!-- COBOM Input Starts -->
                 {% for component in form.components %}
                 <div class="row component-row">
+                    {{ component.hidden_tag() }}
                     <div class="small-8 columns">
                         {{ forms.render_clean_field(component.ident, list="json-identlist", autocomplete="off") }}
                     </div>
@@ -251,14 +253,14 @@
         <!-- COBOM Input Ends -->
 
         <!-- Serial No Form Elements -->
-        var indent_sno = $("#indent_sno")[0].value
-        $("#sno_generate").change(function(event) {
+        var indent_sno = $("#indent_sno-sno")[0].value
+        $("#indent_sno-sno_generate").change(function(event) {
             var checkbox = event.target;
             if (checkbox.checked) {
-                $("#indent_sno")[0].value = indent_sno;
-                $("#indent_sno")[0].readOnly = true;
+                $("#indent_sno-sno")[0].value = indent_sno;
+                $("#indent_sno-sno")[0].readOnly = true;
             } else {
-                $("#indent_sno")[0].readOnly = false;
+                $("#indent_sno-sno")[0].readOnly = false;
             }
         });
 

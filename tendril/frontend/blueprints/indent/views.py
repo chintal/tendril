@@ -22,15 +22,28 @@
 Docstring for views
 """
 
+import os
+import arrow
+import shutil
+
 from flask import render_template
+from flask import redirect
+from flask import url_for
 from flask_user import login_required
 
 from . import indent as blueprint
 from .forms import CreateIndentForm
 
+from tendril.boms.outputbase import create_obom_from_listing
+from tendril.boms.outputbase import CompositeOutputBom
+from tendril.entityhub.serialnos import get_serialno
+from tendril.entityhub.serialnos import register_serialno
 from tendril.dox import indent as dxindent
 from tendril.inventory.indent import InventoryIndent
 from tendril.utils.fsutils import Crumb
+from tendril.utils.db import get_session
+from tendril.utils.fsutils import TEMPDIR
+from tendril.utils.fsutils import get_tempname
 
 
 @login_required
@@ -39,15 +52,51 @@ from tendril.utils.fsutils import Crumb
 def new_indent(indent_sno=None):
     form = CreateIndentForm(parent_indent_sno=indent_sno)
     if form.validate_on_submit():
-        # Construct COBOM
+        with get_session() as session:
+            sno = form.indent_sno.sno.data
+            if not sno:
+                if indent_sno is not None:
+                    sno = form.get_supplementary_sno_default()
+                    register_serialno(sno=sno, efield="WEB FRONTEND INDENT",
+                                      session=session)
+                else:
+                    sno = get_serialno(series='IDT', efield='WEB FRONTEND INDENT',
+                                       register=True, session=session)
+            else:
+                # additional sno validation?
+                pass
+            nindent = InventoryIndent(sno=sno, session=session)
+            # Construct COBOM
+            obom = create_obom_from_listing(form.components.data, 'MANUAL (WEB)')
+            cobom = CompositeOutputBom([obom], name='MANUAL (WEB) {0}'.format(sno))
+            icparams = {
+                'cobom': cobom,
+                'title': form.indent_title.data,
+                'desc': form.indent_desc.data,
+                'requested_by': form.user.data,
+                'rdate': form.rdate.data or arrow.utcnow(),
+                'indent_type': form.indent_type.data,
+            }
+            nindent.create(**icparams)
 
-        # Check for Authorization
-        # Nothing right now.
+            root_order_sno = form.root_order_sno.data
+            prod_order_sno = form.prod_order_sno.data
+            nindent.define_auth_chain(prod_order_sno=prod_order_sno,
+                                      root_order_sno=root_order_sno)
+            nindent.register_auth_chain(session=session)
 
-        # Create Indent
+            fe_workspace_path = os.path.join(TEMPDIR, 'frontend')
+            if not os.path.exists(fe_workspace_path):
+                os.makedirs(fe_workspace_path)
+            workspace_path = os.path.join(fe_workspace_path, get_tempname())
+            os.makedirs(workspace_path)
 
-        # Redirect to Created Indent
-        pass
+            nindent.process(outfolder=workspace_path,
+                            register=True, session=session)
+
+            shutil.rmtree(workspace_path)
+        return redirect(url_for('.indent', indent_sno=str(sno)))
+
     stage = {'crumbroot': '/inventory'}
     if indent_sno is None:
         stage_crumbs = {'breadcrumbs': [Crumb(name="Inventory", path=""),

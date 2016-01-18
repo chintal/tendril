@@ -476,9 +476,9 @@ class ProductionOrder(object):
         pb.next(note="Creating Indent")
         indent = InventoryIndent(indent_sno, verbose=False, session=session)
         indent.create(cobom, title="FOR {0}".format(self.serialno),
-                      desc=None, prod_order_sno=self.serialno,
+                      desc=None, indent_type='production',
                       requested_by=self._ordered_by, force=force)
-
+        indent.define_auth_chain(prod_order_sno=self.serialno)
         indent.process(outfolder=outfolder, register=register,
                        verbose=False, session=session)
         self._indents.append(indent)

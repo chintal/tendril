@@ -52,7 +52,7 @@ def serialno_exists(sno=None, session=None):
     try:
         controller.get_serialno_object(sno=sno, session=session)
         return True
-    except NoResultFound:
+    except (NoResultFound, controller.SerialNoNotFound):
         return False
 
 
@@ -122,6 +122,10 @@ def create_serial_series(series, start_seed, description):
 
 def get_series(sno):
     return sno.split('-')[0]
+
+
+def get_number(sno):
+    return sno.split('-')[1]
 
 
 @with_db

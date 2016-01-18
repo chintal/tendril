@@ -45,19 +45,23 @@ class IndentNotFound(EntityNotFound):
 class InventoryIndent(object):
     def __init__(self, sno=None, verbose=True, session=None):
         self._sno = sno
+        self._cobom = None
+        self._title = None
+        self._desc = None
+        self._type = None
+        self._requested_by = None
+        self._force = False
+        self._rdate = None
+        self._prod_order_sno = None
+        self._root_order_sno = None
         try:
             self.load_from_db(verbose=verbose, session=session)
             self._defined = True
         except IndentNotFound:
-            self._cobom = None
-            self._title = None
-            self._desc = None
-            self._prod_order_sno = None
-            self._requested_by = None
             self._defined = False
 
-    def create(self, cobom, title, desc=None, prod_order_sno=None,
-               requested_by=None, force=False):
+    def create(self, cobom, title, desc=None, indent_type=None,
+               requested_by=None, rdate=None, force=False):
         if self._defined is True and force is False:
             raise Exception("This inventory indent instance seems to be already "
                             "done. You can't 'create' it again.")
@@ -65,9 +69,22 @@ class InventoryIndent(object):
         self._cobom.collapse_wires()
         self._title = title
         self._desc = desc
-        self._prod_order_sno = prod_order_sno
+        self._type = indent_type
         self._requested_by = requested_by
         self._force = force
+        self._rdate = rdate
+
+    def define_auth_chain(self,  prod_order_sno=None, root_order_sno=None):
+        self._prod_order_sno = prod_order_sno
+        self._root_order_sno = root_order_sno
+
+    def register_auth_chain(self, register=True, session=None):
+        parents = self.auth_parent_snos
+        if register is True:
+            for parent in parents:
+                serialnos.link_serialno(child=self.serialno,
+                                        parent=parent,
+                                        session=session)
 
     def process(self, session=None, **kwargs):
         if self._defined is True and self._force is False:
@@ -120,8 +137,7 @@ class InventoryIndent(object):
 
     def _generate_labels(self, label_manager=None):
         if label_manager is None:
-            from tendril.dox.labelmaker import manager
-            label_manager = manager
+            label_manager = labelmaker.manager
         for idx, line in enumerate(self._cobom.lines):
             label_manager.add_label(
                 'IDT', line.ident, '.'.join([self._sno, str(idx)]),
@@ -157,11 +173,12 @@ class InventoryIndent(object):
                     prod_sno = parent.parent.sno
                     break
         if not prod_sno:
-            self._prod_order_sno = None
+            prod_sno = None
         self._prod_order_sno = prod_sno
 
     def _get_title_legacy(self):
-        self._title = self.prod_order.title
+        if self._prod_order_sno is not None:
+            self._title = self.prod_order.title
 
     def _load_legacy(self, verbose=True, session=None):
         self._get_indent_cobom(verbose=verbose, session=session)
@@ -217,16 +234,49 @@ class InventoryIndent(object):
         return self._sno
 
     @property
+    def docs(self):
+        return docstore.get_docs_list_for_serialno(serialno=self.serialno)
+
+    def make_labels(self, label_manager=None):
+        self._generate_labels(label_manager=label_manager)
+
+    # Auth Chain
+    @property
+    def auth_parents(self):
+        root_indent = self.root_indent
+        if root_indent is not self:
+            return [root_indent]
+        prod_order = self.prod_order
+        if prod_order is not None:
+            return [prod_order]
+        return self.root_orders
+
+    @property
+    def auth_parent_snos(self):
+        if self.root_indent_sno != self.serialno:
+            return [self.root_indent_sno]
+        if self.prod_order_sno is not None:
+            return [self.prod_order_sno]
+        return self.root_orders
+
+    @property
     def root_orders(self):
-        pass
+        return []
 
     @property
     def root_order_snos(self):
-        return self.prod_order.root_order_snos
+        rval = []
+        if self._root_order_sno is not None:
+            if self._root_order_sno not in rval:
+                rval.append(self._root_order_sno)
+        if self._prod_order_sno is not None:
+            if self._prod_order_sno not in rval:
+                rval.append(self._prod_order_sno)
+        return rval
 
     @property
     def prod_order(self):
-        if self._prod_order_sno is not None:
+        if self.prod_order_sno is not None:
             from tendril.production.order import ProductionOrder
             return ProductionOrder(self._prod_order_sno)
 
@@ -234,36 +284,29 @@ class InventoryIndent(object):
     def prod_order_sno(self):
         return self._prod_order_sno
 
-    @staticmethod
-    def get_root_indent_sno(serialno):
-        if '.' in serialno:
-            serialno = serialno.split['.'][0]
-        return serialno
-
     @property
     def root_indent_sno(self):
-        return self.get_root_indent_sno(self.serialno)
+        if '.' in self.serialno:
+            return self.serialno.split('.')[0]
+        return self.serialno
 
     @property
     def root_indent(self):
+        if self.root_indent_sno == self.serialno:
+            return self
         return InventoryIndent(self.root_indent_sno)
 
     @property
     def supplementary_indent_snos(self):
-        return docstore.controller.get_snos_by_document_doctype(
-                series=self.serialno + '.', doctype='INVENTORY INDENT'
-        )
+        return [x.sno for x in
+                docstore.controller.get_snos_by_document_doctype(
+                    series=self.serialno + '.',
+                    doctype='INVENTORY INDENT'
+                )]
 
     @property
     def supplementary_indents(self):
         return [InventoryIndent(x) for x in self.supplementary_indent_snos]
-
-    @property
-    def docs(self):
-        return docstore.get_docs_list_for_serialno(serialno=self.serialno)
-
-    def make_labels(self, label_manager=None):
-        self._generate_labels(label_manager=label_manager)
 
     def __repr__(self):
         return '<InventoryIndent {0} {1}>'.format(self._sno, self._title)

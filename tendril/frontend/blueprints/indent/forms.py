@@ -22,11 +22,11 @@
 Docstring for forms
 """
 
+from decimal import Decimal
 
 from flask_wtf import Form
 from wtforms.fields import StringField
 from wtforms.fields import SelectField
-from wtforms.fields import BooleanField
 from wtforms.fields import FieldList
 from wtforms.fields import FormField
 
@@ -42,6 +42,7 @@ from flask_user import current_user
 
 from tendril.frontend.parts.forms import DateInputField
 from tendril.frontend.parts.forms import user_auth_check
+from tendril.frontend.parts.forms import NewSerialNumberForm
 
 from tendril.inventory.indent import InventoryIndent
 from tendril.dox import indent as dxindent
@@ -73,7 +74,7 @@ class ComponentQtyForm(Form):
         ident = str(form.ident.data.strip())
         if fpiswire_ident(ident):
             try:
-                float(field.data.strip())
+                Decimal(field.data.strip())
                 raise ValidationError("Include Units")
             except ValidationError:
                 raise
@@ -112,21 +113,17 @@ class CreateIndentForm(Form):
                     AnyOf(dxindent.get_all_indent_sno_strings(),
                           message="Not a valid Indent")]
     )
-    indent_sno = StringField(
-        label='Serial Number',
-        validators=[]
-    )
+    indent_sno = FormField(NewSerialNumberForm)
     indent_desc = StringField(label='Indent For',
                               validators=[InputRequired()])
     indent_type = SelectField(
             label='Type', validators=[InputRequired()],
             choices=[("production", "Production"),
+                     ("prototype", "Prototype"),
                      ("testing", "Testing"),
                      ("support", "Support"),
                      ("rd", "Research & Development")],
     )
-
-    sno_generate = BooleanField(label="Auto Generate")
 
     components = FieldList(FormField(ComponentQtyForm), min_entries=1)
 
@@ -145,6 +142,17 @@ class CreateIndentForm(Form):
         super(CreateIndentForm, self).__init__(*args, **kwargs)
         self._setup_secure_fields()
         self._setup_for_supplementary()
+        self._setup_sno_fields()
+
+    def _setup_sno_fields(self):
+        sno_validator = self.indent_sno.sno.validators[0]
+        sno_validator.series = 'IDT'
+        sno_validator.new = True
+        if self.is_supplementary:
+            sno_validator.parent = self.parent_indent_sno_str
+        if not current_user.has_roles(tuple(self.admin_roles)):
+            read_only(self.indent_sno.sno_generate)
+            read_only(self.indent_sno.sno)
 
     def _setup_secure_fields(self):
         if not self.user.data:
@@ -152,7 +160,6 @@ class CreateIndentForm(Form):
         if not current_user.has_roles(tuple(self.admin_roles)):
             read_only(self.user)
             read_only(self.rdate)
-            read_only(self.sno_generate)
 
     def _setup_for_supplementary(self):
         if self.parent_indent_sno_str is None:
@@ -166,16 +173,10 @@ class CreateIndentForm(Form):
             else:
                 root_ord_sno_str = None
 
-            sindents = parent_indent.supplementary_indent_snos
-            if len(sindents):
-                sidx = str(max([int(x.split('.')[1]) for x in sindents]) + 1)
-            else:
-                sidx = '1'
-            serialno_str = '.'.join([self.parent_indent_sno_str, sidx])
-
             parent_indent_title = parent_indent.title
 
-            self.indent_title.data = "Supplement to " + self.parent_indent_sno_str
+            self.indent_title.data = "Supplement to " + \
+                                     self.parent_indent_sno_str
 
             if not self.prod_order_sno.data:
                 self.prod_order_sno.data = prod_ord_sno_str
@@ -188,8 +189,14 @@ class CreateIndentForm(Form):
             if not self.parent_indent_sno.data:
                 self.parent_indent_sno.data = self.parent_indent_sno_str
 
-            if not self.indent_sno.data:
-                self.indent_sno.data = serialno_str
-
         read_only(self.parent_indent_sno)
-        read_only(self.indent_sno)
+
+    def get_supplementary_sno_default(self):
+        parent_indent = InventoryIndent(self.parent_indent_sno_str)
+        sindents = parent_indent.supplementary_indent_snos
+        if len(sindents):
+            sidx = str(max([int(x.split('.')[1]) for x in sindents]) + 1)
+        else:
+            sidx = '1'
+        serialno_str = '.'.join([self.parent_indent_sno_str, sidx])
+        return serialno_str
