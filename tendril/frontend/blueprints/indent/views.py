@@ -31,19 +31,21 @@ from flask import redirect
 from flask import url_for
 from flask_user import login_required
 
-from . import indent as blueprint
-from .forms import CreateIndentForm
-
-from tendril.boms.outputbase import create_obom_from_listing
-from tendril.boms.outputbase import CompositeOutputBom
 from tendril.entityhub.serialnos import get_serialno
 from tendril.entityhub.serialnos import register_serialno
+
+from tendril.boms.outputbase import CompositeOutputBom
+from tendril.boms.outputbase import create_obom_from_listing
 from tendril.dox import indent as dxindent
 from tendril.inventory.indent import InventoryIndent
+
 from tendril.utils.fsutils import Crumb
-from tendril.utils.db import get_session
 from tendril.utils.fsutils import TEMPDIR
 from tendril.utils.fsutils import get_tempname
+from tendril.utils.db import get_session
+
+from . import indent as blueprint
+from .forms import CreateIndentForm
 
 
 @login_required
@@ -60,15 +62,18 @@ def new_indent(indent_sno=None):
                     register_serialno(sno=sno, efield="WEB FRONTEND INDENT",
                                       session=session)
                 else:
-                    sno = get_serialno(series='IDT', efield='WEB FRONTEND INDENT',
+                    sno = get_serialno(series='IDT',
+                                       efield='WEB FRONTEND INDENT',
                                        register=True, session=session)
             else:
                 # additional sno validation?
                 pass
             nindent = InventoryIndent(sno=sno, session=session)
             # Construct COBOM
-            obom = create_obom_from_listing(form.components.data, 'MANUAL (WEB)')
-            cobom = CompositeOutputBom([obom], name='MANUAL (WEB) {0}'.format(sno))
+            obom = create_obom_from_listing(form.components.data,
+                                            'MANUAL (WEB)')
+            cobom = CompositeOutputBom([obom],
+                                       name='MANUAL (WEB) {0}'.format(sno))
             icparams = {
                 'cobom': cobom,
                 'title': form.indent_title.data,
@@ -105,13 +110,14 @@ def new_indent(indent_sno=None):
                         }
         pagetitle = "Create New Indent"
     else:
-
         stage_crumbs = {'breadcrumbs': [Crumb(name="Inventory", path=""),
                                         Crumb(name="Indent", path="indent/"),
                                         Crumb(name=indent_sno,
                                               path="indent/" + indent_sno),
                                         Crumb(name="New",
-                                              path="indent/" + indent_sno + "/new"),
+                                              path='/'.join(["indent",
+                                                             indent_sno,
+                                                             "/new"])),
                                         ]
                         }
         pagetitle = "New Supplementary Indent for " + indent_sno
