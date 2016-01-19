@@ -19,7 +19,12 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from sqlalchemy import Column, String
+from sqlalchemy import Column
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Enum
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
 
 from tendril.utils.db import DeclBase
 from tendril.utils.db import BaseMixin
@@ -37,9 +42,56 @@ class InventoryLocationCode(BaseMixin, DeclBase):
                "(id = %s, name='%s')>" % (self.id, self.name)
 
 
-# class InventoryIndent(BaseMixin, DeclBase, TimestampMixin):
-#     pass
-#
-#
-# class InventoryIndentLine(BaseMixin, DeclBase):
-#     pass
+class InventoryIndent(DeclBase, BaseMixin, TimestampMixin):
+
+    title = Column(String(60), unique=False, nullable=True)
+    desc = Column(String, unique=False, nullable=True)
+
+    type = Column(
+            Enum('production', 'prototype', 'testing', 'support', 'rd',
+                 name='indent_type'),
+            nullable=False, default='active', server_default='active'
+    )
+
+    status = Column(
+            Enum('active', 'pending', 'archived', 'reversed',
+                 name='indent_status'),
+            nullable=False, default='active', server_default='active'
+    )
+
+    # Relationships
+    # # Documents
+    # doc_id = Column(Integer, ForeignKey('DocStoreDocument.id'),
+    #                 nullable=True, unique=True)
+    # doc = relationship("DocStoreDocument", uselist=False)
+    #
+    # doc_cobom_id = Column(Integer, ForeignKey('DocStoreDocument.id'),
+    #                       nullable=True, unique=True)
+    # doc_cobom = relationship("DocStoreDocument", uselist=False)
+
+    # Serial Numbers
+    requested_by_id = Column(Integer, ForeignKey('User.id'),
+                             nullable=False, unique=False)
+    requested_by = relationship("User", backref='indents', uselist=True)
+
+    serialno_id = Column(Integer, ForeignKey('SerialNumber.id'),
+                         nullable=False)
+    serialno = relationship(
+            "SerialNumber", uselist=False, cascade="all",
+            primaryjoin="InventoryIndent.serialno_id == SerialNumber.id"
+    )
+
+    auth_parent_id = Column(Integer, ForeignKey('SerialNumber.id'),
+                            nullable=True)
+    auth_parent = relationship(
+            "SerialNumber", backref='direct_indents', uselist=False,
+            primaryjoin="InventoryIndent.auth_parent_id == SerialNumber.id"
+    )
+
+    # Raw Data
+    cobom_id = None
+    cobom = None
+
+    def __repr__(self):
+        return "<InventoryIndent DB ({0})>".format(self.sno)
+

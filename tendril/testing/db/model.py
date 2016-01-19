@@ -22,9 +22,6 @@
 Docstring for model
 """
 
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import relationship
@@ -32,6 +29,9 @@ from sqlalchemy.orm import relationship
 from tendril.utils.db import DeclBase
 from tendril.utils.db import BaseMixin
 from tendril.utils.db import TimestampMixin
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class TestSuiteResult(TimestampMixin, BaseMixin, DeclBase):
