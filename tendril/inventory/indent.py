@@ -278,7 +278,7 @@ class InventoryIndent(object):
     def prod_order(self):
         if self.prod_order_sno is not None:
             from tendril.production.order import ProductionOrder
-            return ProductionOrder(self._prod_order_sno)
+            return ProductionOrder(sno=self.prod_order_sno)
 
     @property
     def prod_order_sno(self):

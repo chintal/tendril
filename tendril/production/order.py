@@ -592,7 +592,7 @@ class ProductionOrder(object):
         self._last_generated_at = self._yaml_data.get('last_generated_at', None)
         self._first_generated_at = self._yaml_data.get('first_generated_at', None)
         self._ordered_by = self._yaml_data.get('ordered_by', None)
-        self._sno = self._yaml_data.get('prod_order_sno', None)
+        self._sno = self._yaml_data.get('prod_order_sno', self._sno)
 
     def _load_legacy(self):
         if self._sno is None:

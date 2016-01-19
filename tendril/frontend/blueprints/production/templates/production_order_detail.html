@@ -35,14 +35,14 @@
                 <thead>
                 <tr>
                     <th class="all">Card</th>
-                    <th class="all">Quantity</th>
+                    <th class="all text-center">Quantity</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for card, qty in stage.order.card_orders.iteritems() %}
                     <tr>
                         <td> {{ card }} </td>
-                        <td> {{ qty }} </td>
+                        <td class="text-center"> {{ qty }} </td>
                     </tr>
                 {% endfor %}
                 </tbody>
