@@ -45,7 +45,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.documentedlist',
-    'sphinxcontrib.sqlalchemyviz'
+    'sphinxcontrib.sqlalchemyviz',
+    'sphinxarg.ext',
 ]
 
 INCLUDE_GA = os.environ.get('INCLUDE_GA', None) == 'True'

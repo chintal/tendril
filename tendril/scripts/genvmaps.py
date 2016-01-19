@@ -15,14 +15,52 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+Vendor Map Generation Script (``tendril-genvmaps``)
+===================================================
+
+This script generates vendor maps for all recognized components in the
+library.
+
+.. warning::
+    This script retrieves information from vendors. It will
+    take some time to execute.
+
+.. seealso::
+    :mod:`tendril.sourcing.electronics.gen_vendor_mapfile`
+
+.. rubric:: Script Usage
+
+.. argparse::
+    :module: tendril.scripts.genvmaps
+    :func: _get_parser
+    :prog: tendril-genvmaps
+    :nodefault:
+
 """
 
 import argparse
+from .helpers import add_vendor_selection_options
+
+
+def _get_parser():
+    """
+    Constructs the CLI argument parser for the tendril-genvmaps script.
+    """
+    parser = argparse.ArgumentParser(
+        description='(Re)generate vendor maps.',
+        prog='tendril-genvmap'
+    )
+    add_vendor_selection_options(parser)
+    return parser
 
 
 def run(vobj=None):
+    """
+    Generates vendor maps for the provided vendor.
+
+    :param vobj: Vendor to generate the map for, or None for all.
+
+    """
     from tendril.sourcing.electronics import gen_vendor_mapfile
     from tendril.sourcing.electronics import vendor_list
 
@@ -32,19 +70,10 @@ def run(vobj=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='(Re)generate vendor maps.',
-        prog='tendril-genvmap'
-    )
-    parser.add_argument(
-        'vendor_name', metavar='VENDOR_NAME', type=str, nargs='?',
-        help='Name of the vendor.'
-    )
-    parser.add_argument(
-        '--all', '-a', action='store_true', default=False,
-        help='Run for all vendors. If used, will ignore VENDOR_NAME.'
-    )
-
+    """
+    The tendril-genvmaps script entry point.
+    """
+    parser = _get_parser()
     args = parser.parse_args()
     if args.all:
         run()

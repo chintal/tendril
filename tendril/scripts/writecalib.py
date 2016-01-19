@@ -15,9 +15,33 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+Device Test Runner Script (``tendril-writecalib``)
+==================================================
+
+Writes calibration data to a device.
+
+.. hint::
+
+     - The calibration data is retrieved and calculated from the latest
+       test results linked to the serial number of the device.
+     - The commands to write to the device and the format of the calibration
+       data are defined by the ``calibformat`` defined in the relevant
+       product definition.
+
+.. seealso::
+    :func:`tendril.entityhub.products.get_product_calibformat`
+    :func:`tendril.testing.testrunner.write_to_device`
+
+.. rubric:: Script Usage
+
+.. argparse::
+    :module: tendril.scripts.writecalib
+    :func: _get_parser
+    :prog: tendril-writecalib
+    :nodefault:
+
 """
+
 
 import argparse
 
@@ -28,7 +52,37 @@ from tendril.utils import log
 logger = log.get_logger("writecalib", log.DEFAULT)
 
 
+def _get_parser():
+    """
+    Constructs the CLI argument parser for the tendril-writecalib script.
+    """
+    parser = argparse.ArgumentParser(
+        description='Write calibration parameters to device.',
+        prog='tendril-writecalib'
+    )
+    parser.add_argument(
+        'serialno', metavar='SNO', type=str, nargs='?',
+        help='Device serial number'
+    )
+    parser.add_argument(
+        '--detect', '-d', metavar=('MACTYPE'), type=str, nargs=1,
+        help='Autodetect serial number using the specified MACTYPE. '
+             'No effect if serial number specified.'
+    )
+    parser.add_argument(
+        '--dry-run', '-n', action='store_true', default=False,
+        help="Dry run only. Don't actually write to device."
+    )
+    return parser
+
+
 def run(serialno=None):
+    """
+    Write calibration to device.
+
+    :param serialno: The serial number of the device.
+
+    """
     if serialno is None:
         raise AttributeError("serialno cannot be None")
 
@@ -49,24 +103,10 @@ def run(serialno=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Write calibration parameters to device.',
-        prog='tendril-writecalib'
-    )
-    parser.add_argument(
-        'serialno', metavar='SNO', type=str, nargs='?',
-        help='Device serial number'
-    )
-    parser.add_argument(
-        '--detect', '-d', metavar=('MACTYPE'), type=str, nargs=1,
-        help='Autodetect serial number using the specified MACTYPE. '
-             'No effect if serial number specified.'
-    )
-    parser.add_argument(
-        '--dry-run', '-n', action='store_true', default=False,
-        help="Dry run only. Don't actually write to device."
-    )
-
+    """
+    The tendril-writecalib script entry point.
+    """
+    parser = _get_parser()
     args = parser.parse_args()
     if not args.serialno and not args.detect:
         parser.print_help()

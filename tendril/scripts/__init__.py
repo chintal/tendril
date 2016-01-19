@@ -15,6 +15,29 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+The CLI Scripts Package (:mod:`tendril.scripts`)
+================================================
+
+The :mod:`scripts` package contains various CLI scripts used to interact
+with tendril.
+
+.. rubric:: Available CLI Scripts
+
+.. toctree::
+
+   tendril.scripts.gencostsummary
+   tendril.scripts.gendox
+   tendril.scripts.genpcbpricing
+   tendril.scripts.genvmapaudits
+   tendril.scripts.genvmaps
+   tendril.scripts.getdox
+   tendril.scripts.order
+   tendril.scripts.production
+   tendril.scripts.runtest
+   tendril.scripts.validate
+   tendril.scripts.makelabels
+   tendril.scripts.testresult
+   tendril.scripts.writecalib
+
 """
+

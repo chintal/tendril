@@ -40,6 +40,22 @@ names. Each function specifies the paths it operates on.
 
 .. seealso:: :mod:`tendril.dox`, :mod:`tendril.gedaif`
 
+.. hint:: The underlying functions generate the docs in the folder specified
+          by the ``REFDOC_ROOT`` configuration option from
+          :mod:`tendril.utils.config`. This folder may be configured by your
+          instance's ``instance_config.py`` file to point to a remote
+          filesystem.
+
+          If you would like to generate the documentation on your local
+          filesystem instead, you should override the instance's ``REFDOC_ROOT``
+          configuration parameter by setting it to a folder on your local
+          filesystem in your ``local_config_overrides.py`` file.
+
+          It is strongly recommended to have this folder outside of your
+          usual project/VCS tree, in order to prevent the generated
+          documentation (which is mostly in binary file formats) from
+          littering your VCS working copies.
+
 .. rubric:: Document Set Generators
 
 .. autosummary::

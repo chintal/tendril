@@ -15,8 +15,41 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+Project Documentation Generation Script (``tendril-gendox``)
+============================================================
+
+This script (re-)generates all the documentation linked to recognized
+projects based on the criteria specified by the command parameters.
+
+.. seealso::
+    :mod:`tendril.dox.gedaproject`
+
+.. rubric:: Output Folders
+
+The underlying functions generate the docs in the folder specified by the
+``REFDOC_ROOT`` configuration option from :mod:`tendril.utils.config`. This
+folder may be configured by your instance's ``instance_config.py`` file to
+point to a remote filesystem.
+
+If you would like to generate the documentation on your local filesystem
+instead, you should override the instance's ``REFDOC_ROOT`` configuration
+parameter by setting it to a folder on your local filesystem in your
+``local_config_overrides.py`` file.
+
+.. warning::
+    It is strongly recommended to have this folder outside of
+    the normal project tree, in order to prevent the generated documentation
+    (which is mostly in binary file formats) from littering your VCS working
+    folders.
+
+.. rubric:: Script Usage
+
+.. argparse::
+    :module: tendril.scripts.gendox
+    :func: _get_parser
+    :prog: tendril-gendox
+    :nodefault:
+
 """
 
 import os
@@ -28,11 +61,42 @@ from tendril.entityhub import projects
 from tendril.dox import gedaproject
 from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.fsutils import in_directory
+
+from .helpers import add_project_selector_options
+
 from tendril.utils import log
 logger = log.get_logger("gendox", log.DEFAULT)
 
 
+def _get_parser():
+    """
+    Constructs the CLI argument parser for the tendril-gendox script.
+    """
+    parser = argparse.ArgumentParser(
+        description='(Re-)Generate gEDA project documentation.',
+        prog='tendril-gendox'
+    )
+    parser.add_argument(
+        '--force', '-f', action='store_true', default=False,
+        help='Regenerate documentation even if it seems to be up-to-date'
+    )
+    parser.add_argument(
+        '--dry-run', '-n', action='store_true', default=False,
+        help="Dry run only. Don't do anything which can change the filesystem"
+    )
+
+    add_project_selector_options(parser)
+    return parser
+
+
 def regenerate_all(force=False, dry_run=False):
+    """
+    Regenerates documentation for all projects
+
+    :param force: Regenerate even for up-to-date projects.
+    :param dry_run: Check only. Don't actually generate any documentation.
+
+    """
     for project in projects.projects:
         if dry_run:
             conffile.ConfigsFile(projects.projects[project])
@@ -43,31 +107,10 @@ def regenerate_all(force=False, dry_run=False):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='(Re-)Generate gEDA project documentation.',
-        prog='tendril-gendox'
-    )
-    parser.add_argument(
-        'projfolders', metavar='PATH', type=str, nargs='*',
-        help='gEDA Project Folder(s), ignored for --all'
-    )
-    parser.add_argument(
-        '--force', '-f', action='store_true', default=False,
-        help='Regenerate documentation even if it seems to be up-to-date'
-    )
-    parser.add_argument(
-        '--all', '-a', action='store_true', default=False,
-        help='Regenerate documentation for all projects'
-    )
-    parser.add_argument(
-        '--recurse', '-r', action='store_true', default=False,
-        help='Recursively search for projects under each provided folder'
-    )
-    parser.add_argument(
-        '--dry-run', '-n', action='store_true', default=False,
-        help="Dry run only. Don't do anything which can change the filesystem"
-    )
-
+    """
+    The tendril-gendox script entry point.
+    """
+    parser = _get_parser()
     args = parser.parse_args()
     force = args.force
     if args.all:

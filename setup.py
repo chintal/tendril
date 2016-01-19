@@ -72,6 +72,7 @@ doc_requirements = [
     'sphinxcontrib-documentedlist',
     'sphinxcontrib-sqlalchemyviz',
     'sphinxcontrib-googleanalytics==0.1.dev20150826',
+    'sphinxcontrib-argdoc',
     'versioneer'
 ]
 

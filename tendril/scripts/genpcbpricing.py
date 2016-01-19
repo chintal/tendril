@@ -15,8 +15,35 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+PCB Pricing Generation Script (``tendril-genpcbpricing``)
+=========================================================
+
+This script (re-)generates pcb pricing information for PCBs linked to
+recognized projects based on the criteria specified by the command parameters.
+
+.. hint::
+    The parameters used for obtaining the PCB pricing and the quantity range
+    are determined by the content of the project's ``configs.yaml`` file.
+
+.. warning::
+    This script retrieves pricing information from the PCB vendor. It will
+    take quite some time to execute.
+
+.. seealso::
+    :mod:`tendril.sourcing.csil`
+    :func:`tendril.sourcing.csil.generate_pcb_pricing`
+
+.. rubric:: Script Usage
+
+.. argparse::
+    :module: tendril.scripts.genpcbpricing
+    :func: _get_parser
+    :prog: tendril-genpcbpricing
+    :nodefault:
+
+.. todo::
+    Generalize this process and remove vendor specificity.
+
 """
 
 import os
@@ -30,29 +57,20 @@ from tendril.gedaif import conffile
 
 from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.fsutils import in_directory
+
+from .helpers import add_project_selector_options
+
 from tendril.utils import log
 logger = log.get_logger("genpcbpricing", log.DEFAULT)
 
 
-def regenerate_all(force=False, lazy=False, dry_run=False):
-    for project in projects.pcbs:
-        if dry_run:
-            conffile.ConfigsFile(projects.pcbs[project])
-            logger.info("Will check " + projects.pcbs[project])
-        else:
-            logger.info("Checking " + projects.pcbs[project])
-            csil.generate_pcb_pricing(projects.pcbs[project],
-                                      forceregen=force, noregen=lazy)
-
-
-def main():
+def _get_parser():
+    """
+    Constructs the CLI argument parser for the tendril-genpcbpricing script.
+    """
     parser = argparse.ArgumentParser(
         description='(Re-)Generate CSIL PCB Pricing Information.',
         prog='tendril-genpcbpricing'
-    )
-    parser.add_argument(
-        'projfolders', metavar='PATH', type=str, nargs='*',
-        help='gEDA PCB Project Folder(s), ignored for --all'
     )
     parser.add_argument(
         '--force', '-f', action='store_true', default=False,
@@ -64,18 +82,39 @@ def main():
              "seems to be out-of-date"
     )
     parser.add_argument(
-        '--all', '-a', action='store_true', default=False,
-        help='Regenerate pricing for all projects'
-    )
-    parser.add_argument(
-        '--recurse', '-r', action='store_true', default=False,
-        help='Recursively search for projects under each provided folder'
-    )
-    parser.add_argument(
         '--dry-run', '-n', action='store_true', default=False,
         help="Dry run only. Don't do anything which can change the filesystem"
     )
 
+    add_project_selector_options(parser)
+    return parser
+
+
+def regenerate_all(force=False, lazy=False, dry_run=False):
+    """
+    Regenerates PCB pricing information for all projects.
+
+    :param force: Regenerate even for up-to-date projects.
+    :param lazy: New projects only. Doesn't regenerate for projects with
+                 out-of-date pricing information
+    :param dry_run: Check only. Don't actually generate any documentation.
+
+    """
+    for project in projects.pcbs:
+        if dry_run:
+            conffile.ConfigsFile(projects.pcbs[project])
+            logger.info("Will check " + projects.pcbs[project])
+        else:
+            logger.info("Checking " + projects.pcbs[project])
+            csil.generate_pcb_pricing(projects.pcbs[project],
+                                      forceregen=force, noregen=lazy)
+
+
+def main():
+    """
+    The tendril-genpcbpricing script entry point.
+    """
+    parser = _get_parser()
     args = parser.parse_args()
     force = args.force
     lazy = args.lazy

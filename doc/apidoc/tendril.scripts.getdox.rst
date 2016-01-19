@@ -1,5 +1,3 @@
-tendril.scripts.getdox module
-=============================
 
 .. automodule:: tendril.scripts.getdox
     :members:

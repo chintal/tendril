@@ -1,5 +1,3 @@
-tendril.scripts.writecalib module
-=================================
 
 .. automodule:: tendril.scripts.writecalib
     :members:

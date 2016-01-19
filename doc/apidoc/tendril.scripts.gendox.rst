@@ -1,5 +1,3 @@
-tendril.scripts.gendox module
-=============================
 
 .. automodule:: tendril.scripts.gendox
     :members:

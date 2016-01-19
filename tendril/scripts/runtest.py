@@ -15,8 +15,32 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+Device Test Runner Script (``tendril-runtest``)
+===============================================
+
+This script runs tests for a device.
+
+.. hint::
+
+     - The test definitions are retrieved from the corresponding
+       projects's ``configs.yaml`` file.
+     - The serial number to device type mappings are determined
+       from the serial number database.
+     - The detect infrastructure is based on the device's MAC and
+       the corresponding detection code.
+
+.. seealso::
+    :mod:`tendril.testing.testrunner`
+    :mod:`tendril.entityhub.macs`
+
+.. rubric:: Script Usage
+
+.. argparse::
+    :module: tendril.scripts.runtest
+    :func: _get_parser
+    :prog: tendril-runtest
+    :nodefault:
+
 """
 
 import argparse
@@ -28,17 +52,10 @@ from tendril.utils import log
 logger = log.get_logger("runtest", log.DEFAULT)
 
 
-def run(serialno, force, stale):
-    if serialno is None:
-        raise AttributeError("serialno cannot be None")
-
-    devicetype = serialnos.get_serialno_efield(sno=serialno)
-    logger.info(serialno + " is device : " + devicetype)
-
-    testrunner.run_test(serialno, force=force, stale=stale)
-
-
-def main():
+def _get_parser():
+    """
+    Constructs the CLI argument parser for the tendril-runtest script.
+    """
     parser = argparse.ArgumentParser(
         description='Run device tests for a device',
         prog='tendril-runtest'
@@ -61,7 +78,32 @@ def main():
         '--force', '-f', action='store_true', default=False,
         help="Re-run all tests, even if fresh test passed."
     )
+    return parser
 
+
+def run(serialno, force, stale):
+    """
+    Run tests for device.
+
+    :param serialno: The serial number of the device.
+    :param force: Re-run all test suites, even if fresh passed results exist.
+    :param stale: Minimum age of test result to consider it stage.
+
+    """
+    if serialno is None:
+        raise AttributeError("serialno cannot be None")
+
+    devicetype = serialnos.get_serialno_efield(sno=serialno)
+    logger.info(serialno + " is device : " + devicetype)
+
+    testrunner.run_test(serialno, force=force, stale=stale)
+
+
+def main():
+    """
+    The tendril-runtest script entry point.
+    """
+    parser = _get_parser()
     args = parser.parse_args()
     if not args.serialno and not args.detect:
         parser.print_help()

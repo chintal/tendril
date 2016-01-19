@@ -86,8 +86,6 @@ def gen_pcb_am(configname, outfolder, sno=None, productionorderno=None,
     .. todo:: Update this function to also handle registering once the main
               scripts are better integrated into the core.
 
-    :param projfolder: The folder of the gEDA project.
-    :type projfolder: str
     :param configname: The name of the project configuration to use.
     :type configname: str
     :param outfolder: The folder within which the output file should be
@@ -106,9 +104,9 @@ def gen_pcb_am(configname, outfolder, sno=None, productionorderno=None,
 
     .. rubric:: Template Used
 
-    ``tendril\dox\\templates\pcb-assem-manifest.tex``
+    ``tendril/dox/templates/production/pcb-assem-manifest.tex``
     (:download:`Included version
-    <../../tendril/dox/templates/pcb-assem-manifest.tex>`)
+    <../../tendril/dox/templates/production/pcb-assem-manifest.tex>`)
 
     .. rubric:: Stage Keys Provided
     .. list-table::
@@ -212,9 +210,9 @@ def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
     :param orig_cardname: The name of the original card. This should be
                               present in :data:`entityhub.projects.cards`
     :type orig_cardname: str
-    :param orig_cardname: The name of the target card. This should be
+    :param target_cardname: The name of the target card. This should be
                               present in :data:`entityhub.projects.cards`
-    :type orig_cardname: str
+    :type target_cardname: str
     :param outfolder: The folder within which the output file should be
                       created.
     :type outfolder: str
@@ -231,7 +229,7 @@ def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
 
     .. rubric:: Template Used
 
-    ``tendril\dox\\templates\production\delta-assem-manifest.tex``
+    ``tendril/dox/templates/production/delta-assem-manifest.tex``
     (:download:`Included version
     <../../tendril/dox/templates/production/delta-assem-manifest.tex>`)
 

@@ -8,4 +8,6 @@ User Documentation
 
    instancedeploy
    userinstall
+   interface/interface
    conventions/conventions
+

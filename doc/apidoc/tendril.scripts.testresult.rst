@@ -1,5 +1,3 @@
-tendril.scripts.testresult module
-=================================
 
 .. automodule:: tendril.scripts.testresult
     :members:
