@@ -50,7 +50,7 @@ class InventoryIndent(DeclBase, BaseMixin, TimestampMixin):
     type = Column(
             Enum('production', 'prototype', 'testing', 'support', 'rd',
                  name='indent_type'),
-            nullable=False, default='active', server_default='active'
+            nullable=False, default='active', server_default='production'
     )
 
     status = Column(
@@ -72,7 +72,7 @@ class InventoryIndent(DeclBase, BaseMixin, TimestampMixin):
     # Serial Numbers
     requested_by_id = Column(Integer, ForeignKey('User.id'),
                              nullable=False, unique=False)
-    requested_by = relationship("User", backref='indents', uselist=True)
+    requested_by = relationship("User", backref='indents')
 
     serialno_id = Column(Integer, ForeignKey('SerialNumber.id'),
                          nullable=False)

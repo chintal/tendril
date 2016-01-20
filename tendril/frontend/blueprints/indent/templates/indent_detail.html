@@ -20,9 +20,87 @@
 <p></p>
 
 <h4>Indent {{ stage.indent.serialno }}</h4>
-{% if stage.indent.prod_order_sno %}
-<h6>for Production Order {{ stage.indent.prod_order_sno }}</h6>
-{% endif %}
+<h6>{{ stage.indent.title }}</h6>
+
+<div class="row">
+
+<div class="small-12 medium-6 columns panel header radius">
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Indent Metadata</h6>
+    </div>
+    <div class="small-12 columns">
+        <table id="metadata_table" class="display" width="100%">
+            <tbody>
+                <tr>
+                    <td class="dt-right" scope="row"> Serial No. </td>
+                    <td> <b>{{ stage.indent.serialno }}</b> </td>
+                </tr>
+                <tr>
+                    <td class="dt-right" scope="row"> Description </td>
+                    <td> {{ stage.indent.desc }} </td>
+                </tr>
+                <tr>
+                    <td class="dt-right" scope="row"> Requested By </td>
+                    <td> <b>{{ stage.indent.requested_by }}</b> </td>
+                </tr>
+                <tr>
+                    <td class="dt-right" scope="row"> Creation Date </td>
+                    <td> {{ stage.indent.rdate }} </td>
+                </tr>
+                <tr>
+                    <td class="dt-right" scope="row"> Status </td>
+                    <td> {{ stage.indent.status }} </td>
+                </tr>
+                <tr>
+                    <td class="dt-right" scope="row"> Auth Parent </td>
+                    <td> {{ stage.indent.auth_parent_snos[0] }} </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- TODO colspan breaks datatables -->
+    <!--<script type="text/javascript">-->
+        <!--$(document).ready( function () {-->
+            <!--var table = $('#metadata_table').DataTable({-->
+                <!--/* Disable initial sort */-->
+                <!--"aaSorting": [],-->
+                <!--responsive: true,-->
+                <!--"bAutoWidth": false,-->
+                <!--"paging": false,-->
+                <!--"ordering": false,-->
+                <!--"info": false,-->
+                <!--"searching": false,-->
+            <!--});-->
+        <!--});-->
+    <!--</script>-->
+</div>
+
+<div class="small-12 medium-6 columns" data-magellan-destination="documentation">
+
+    <div class="text-center">
+        <h5> Indent Documentation </h5>
+    </div>
+    <a name="documentation"></a>
+        <ul class="doclinklist">
+            {% for doc in stage.indent.docs %}
+                {% include 'parts/doc_link_list_element.html' %}
+            {% endfor %}
+            <a href="{{ stage.indent.serialno }}/getlabels" target="_blank">
+                <li class="small-12 small-centered columns panel radius active-tb shadow mrgn-20-top">
+                    <div class="row small-collapse medium-uncollapse">
+                    <div class="show-for-medium-up medium-2 columns text-center"><i class="fi-download icon"></i></div>
+                    <div class="small-9 medium-8 columns text-center">INDENT LABELS</div>
+                    <div class="small-3 medium-2 columns text-center">
+                        <img src="/static/images/pdf.png">
+                    </div>
+                    </div>
+                </li>
+            </a>
+        </ul>
+</div>
+
+</div>
+
 
 <div class="small-12 columns" data-magellan-destination="order">
 <a name="indent"></a>
@@ -76,21 +154,11 @@
 
 </div>
 
-<div class="small-12 medium-6 columns" data-magellan-destination="documentation">
-
-
-    <div class="text-center">
-        <h5>Related Documentation</h5>
+<div class="small-12 medium-6 columns">
+    <div class="small-12 columns panel header radius" data-magellan-destination="supplementary">
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Related Indents</h6>
     </div>
-    <div class="small-12 columns">
-    {% if stage.indent.prod_order_sno %}
-    <a href="/production/order/{{ stage.indent.prod_order_sno }}">
-        <div class="small-12 columns button radius active-tb shadow mrgn-20-top">
-            <div class="text-center">Production Order</div>
-            <div class="text-center"><b>{{ stage.indent.prod_order_sno }}</b></div>
-        </div>
-    </a>
-    {% endif %}
     <!--Supplementary Indents-->
     {% for sno in stage.indent.supplementary_indent_snos %}
         <a href="/inventory/indent/{{ sno }}"
@@ -107,24 +175,40 @@
         </div>
     </a>
     {% endif %}
-    <a href="/inventory/indent/new/{{ stage.indent.serialno }}">
+    <a href="/inventory/indent/new/{{ stage.indent.root_indent_sno }}">
         <div class="small-12 columns button radius alert active-tb shadow mrgn-20-top">
             <div class="text-center">New Supplementary Indent</div>
         </div>
     </a>
     </div>
 </div>
-<div class="small-12 medium-6 columns" data-magellan-destination="documentation">
 
-    <div class="text-center">
-        <h5> Indent Documentation </h5>
+<div class="small-12 medium-6 columns">
+    <div class="small-12 columns panel header radius" data-magellan-destination="related">
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Related Documentation</h6>
     </div>
-    <a name="documentation"></a>
-        <ul class="doclinklist">
-            {% for doc in stage.indent.docs %}
-                {% include 'parts/doc_link_list_element.html' %}
-            {% endfor %}
-        </ul>
+    <div class="small-12 columns">
+    {% if stage.indent.prod_order_sno %}
+    <a href="/production/order/{{ stage.indent.prod_order_sno }}">
+        <div class="small-12 columns button radius active-tb shadow mrgn-20-top">
+            <div class="text-center">Production Order</div>
+            <div class="text-center"><b>{{ stage.indent.prod_order_sno }}</b></div>
+        </div>
+    </a>
+    {% endif %}
+    {% if stage.indent.root_order_snos %}
+    {% for sno in stage.indent.root_order_snos %}
+    <a href="/auth/root/{{ sno }}">
+        <div class="small-12 columns button success radius active-tb shadow mrgn-20-top">
+            <div class="text-center">Root Order</div>
+            <div class="text-center"><b>{{ sno }}</b></div>
+        </div>
+    </a>
+    {% endfor %}
+    {% endif %}
+    </div>
+    </div>
 </div>
 
 

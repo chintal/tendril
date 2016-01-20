@@ -706,7 +706,10 @@ class ProductionOrder(object):
 
     @property
     def root_order_snos(self):
-        return self._root_order_snos
+        if isinstance(self._root_order_snos, list):
+            return self._root_order_snos
+        else:
+            return [self._root_order_snos]
 
     @property
     def indent_snos(self):

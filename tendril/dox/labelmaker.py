@@ -25,7 +25,9 @@ import atexit
 import cPickle
 
 import render
+from tendril.utils.pdf import merge_pdf
 from tendril.utils.fsutils import TEMPDIR
+
 from tendril.utils.config import COMPANY_NAME
 from tendril.utils.config import COMPANY_LOGO_PATH
 from tendril.utils.config import INSTANCE_CACHE
@@ -375,6 +377,17 @@ class LabelMaker(object):
             if opath is not None:
                 rval.append(opath)
         return rval
+
+    def generate_pdf(self, targetfolder, force=False):
+        files = self.generate_pdfs(targetfolder, force=force)
+        if len(files) == 0:
+            return None
+        elif len(files) == 1:
+            return files[0]
+        else:
+            return merge_pdf(files,
+                             os.path.join(targetfolder, 'labels.pdf'),
+                             remove_sources=True)
 
     @property
     def nl(self):

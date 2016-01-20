@@ -25,8 +25,22 @@ Docstring for controller
 from tendril.utils.db import with_db
 
 from .model import User
+from .model import UserAuth
 
 
 @with_db
 def get_users_list(session=None):
     return session.query(User.full_name).all()
+
+
+@with_db
+def get_username_from_full_name(full_name=None, session=None):
+    return session.query(UserAuth.username).filter(
+            UserAuth.user.has(full_name=full_name)
+    ).one()
+
+
+@with_db
+def get_user_object(username=None, session=None):
+    return session.query(User).filter(User.user_auth.has(username=username)).one()
+

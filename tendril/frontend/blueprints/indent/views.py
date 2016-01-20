@@ -26,6 +26,7 @@ import os
 import arrow
 import shutil
 
+from flask import Response
 from flask import render_template
 from flask import redirect
 from flask import url_for
@@ -34,6 +35,7 @@ from flask_user import login_required
 from tendril.entityhub.serialnos import get_serialno
 from tendril.entityhub.serialnos import register_serialno
 
+from tendril.dox.labelmaker import get_manager
 from tendril.boms.outputbase import CompositeOutputBom
 from tendril.boms.outputbase import create_obom_from_listing
 from tendril.dox import indent as dxindent
@@ -43,9 +45,32 @@ from tendril.utils.fsutils import Crumb
 from tendril.utils.fsutils import TEMPDIR
 from tendril.utils.fsutils import get_tempname
 from tendril.utils.db import get_session
+from tendril.auth.db.controller import get_username_from_full_name
 
 from . import indent as blueprint
 from .forms import CreateIndentForm
+
+
+@blueprint.route('/<indent_sno>/getlabels')
+@login_required
+def get_indent_labels(indent_sno=None):
+    rindent = InventoryIndent(sno=indent_sno)
+    fe_workspace_path = os.path.join(TEMPDIR, 'frontend')
+    if not os.path.exists(fe_workspace_path):
+        os.makedirs(fe_workspace_path)
+    workspace_path = os.path.join(fe_workspace_path, get_tempname())
+    os.makedirs(workspace_path)
+    labelmanager = get_manager()
+    rindent.make_labels(label_manager=labelmanager)
+    rfile = labelmanager.generate_pdf(workspace_path, force=True)
+
+    if not rfile:
+        return "Didn't get a manifest set!"
+    try:
+        content = open(rfile).read()
+        return Response(content, mimetype="application/pdf")
+    except IOError as exc:
+        return str(exc)
 
 
 @login_required
@@ -74,11 +99,15 @@ def new_indent(indent_sno=None):
                                             'MANUAL (WEB)')
             cobom = CompositeOutputBom([obom],
                                        name='MANUAL (WEB) {0}'.format(sno))
+
+            requested_by = get_username_from_full_name(full_name=form.user.data,
+                                                       session=session)
+
             icparams = {
                 'cobom': cobom,
                 'title': form.indent_title.data,
                 'desc': form.indent_desc.data,
-                'requested_by': form.user.data,
+                'requested_by': requested_by,
                 'rdate': form.rdate.data or arrow.utcnow(),
                 'indent_type': form.indent_type.data,
             }

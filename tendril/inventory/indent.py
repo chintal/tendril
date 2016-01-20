@@ -25,9 +25,10 @@ Docstring for indent
 import os
 
 from tendril.entityhub import serialnos
-from tendril.entityhub.entitybase import EntityNotFound
+
 from tendril.entityhub.db.controller import SerialNoNotFound
 from tendril.dox.db.controller import DocumentNotFound
+from .db.controller import IndentNotFound
 
 from tendril.dox import docstore
 from tendril.dox import labelmaker
@@ -35,11 +36,8 @@ from tendril.dox import labelmaker
 from tendril.dox.indent import gen_stock_idt_from_cobom
 from tendril.boms.outputbase import load_cobom_from_file
 
+from .db import controller
 from tendril.utils.db import get_session
-
-
-class IndentNotFound(EntityNotFound):
-    pass
 
 
 class InventoryIndent(object):
@@ -49,13 +47,14 @@ class InventoryIndent(object):
         self._title = None
         self._desc = None
         self._type = None
+        self._status = None
         self._requested_by = None
         self._force = False
         self._rdate = None
         self._prod_order_sno = None
         self._root_order_sno = None
         try:
-            self.load_from_db(verbose=verbose, session=session)
+            self.load(verbose=verbose, session=session)
             self._defined = True
         except IndentNotFound:
             self._defined = False
@@ -103,6 +102,8 @@ class InventoryIndent(object):
                          verbose=verbose, session=session)
         self._generate_doc(outfolder, register=register,
                            verbose=verbose, session=session)
+        if register is True:
+            self._sync_to_db(session=session)
 
     def _process_shortage(self):
         pass
@@ -144,11 +145,23 @@ class InventoryIndent(object):
                 qty=line.quantity
             )
 
-    def _get_indent_cobom(self, verbose=True, session=None):
+    def _sync_to_db(self, session=None):
+        controller.upsert_inventory_indent(
+            serialno=self._sno,
+            title=self._title,
+            desc=self._desc,
+            itype=self._type,
+            requested_by=self._requested_by,
+            rdate=self._rdate,
+            auth_parent_sno=self.auth_parent_snos[0],
+            session=session
+        )
+
+    def _get_indent_cobom(self, session, verbose=True):
         try:
             cobom_path = docstore.get_docs_list_for_sno_doctype(
-                serialno=self._sno, doctype='PRODUCTION COBOM CSV', one=True,
-                session=session
+                serialno=self._sno, doctype='PRODUCTION COBOM CSV',
+                one=True, session=session
             ).path
         except SerialNoNotFound:
             raise IndentNotFound
@@ -180,15 +193,51 @@ class InventoryIndent(object):
         if self._prod_order_sno is not None:
             self._title = self.prod_order.title
 
-    def _load_legacy(self, verbose=True, session=None):
-        self._get_indent_cobom(verbose=verbose, session=session)
+    def _load_legacy(self, session, verbose=True):
+        self._get_indent_cobom(session=session, verbose=verbose)
         self._get_prod_ord_sno_legacy()
         self._get_title_legacy()
 
-    def load_from_db(self, verbose=True, session=None):
+    def _resolve_auth_parents(self, auth_parent, verbose=True):
+        # TODO Improve resolution. Handle multiple/complex parents.
+        if auth_parent.sno.startswith('IDT-'):
+            # This seems to be a parent indent
+            assert self.root_indent_sno == auth_parent.sno
+        elif auth_parent.sno.startswith('PROD-'):
+            # This seems to be a production order
+            self._prod_order_sno = auth_parent.sno
+        else:
+            self._root_order_sno = auth_parent.sno
+
+    def _load_from_db(self, session, verbose=True):
+        dbindent = controller.get_inventory_indent(serialno=self._sno,
+                                                   session=session)
+        self._title = dbindent.title
+        self._desc = dbindent.desc
+        self._type = dbindent.type
+        self._requested_by = dbindent.requested_by.full_name
+        self._rdate = dbindent.created_at
+        self._status = dbindent.status
+        auth_parent = dbindent.auth_parent
+        self._resolve_auth_parents(auth_parent=auth_parent, verbose=verbose)
+        self._get_indent_cobom(session=session, verbose=verbose)
+
+    def _load(self, session, verbose=True):
         if self._sno is None:
             raise ValueError
-        self._load_legacy(verbose=verbose, session=session)
+        try:
+            self._load_from_db(session, verbose=verbose)
+            return
+        except IndentNotFound:
+            pass
+        self._load_legacy(session=session, verbose=verbose)
+
+    def load(self, verbose=True, session=None):
+        if session is None:
+            with get_session() as session:
+                self._load(session=session, verbose=verbose)
+        else:
+            self._load(session=session, verbose=verbose)
 
     @property
     def context(self):
@@ -217,6 +266,14 @@ class InventoryIndent(object):
             return 'for {0} : {1}'.format(self._prod_order_sno, self.context)
 
     @property
+    def requested_by(self):
+        return self._requested_by
+
+    @property
+    def rdate(self):
+        return self._rdate
+
+    @property
     def cobom(self):
         return self._cobom
 
@@ -227,7 +284,7 @@ class InventoryIndent(object):
 
     @property
     def status(self):
-        pass
+        return self._status
 
     @property
     def serialno(self):
@@ -267,11 +324,21 @@ class InventoryIndent(object):
     def root_order_snos(self):
         rval = []
         if self._root_order_sno is not None:
-            if self._root_order_sno not in rval:
-                rval.append(self._root_order_sno)
-        if self._prod_order_sno is not None:
-            if self._prod_order_sno not in rval:
-                rval.append(self._prod_order_sno)
+            if isinstance(self._root_order_sno, list):
+                for sno in self._root_order_sno:
+                    if sno not in rval:
+                        rval.append(sno)
+            else:
+                if self._root_order_sno not in rval:
+                    rval.append(self._root_order_sno)
+        if self.root_indent_sno != self.serialno:
+            for sno in self.root_indent.root_order_snos:
+                if sno not in rval:
+                    rval.extend(sno)
+        for sno in self.prod_order.root_order_snos:
+            if sno not in rval:
+                rval.append(sno)
+        print rval
         return rval
 
     @property
@@ -282,7 +349,10 @@ class InventoryIndent(object):
 
     @property
     def prod_order_sno(self):
-        return self._prod_order_sno
+        if self._prod_order_sno is not None:
+            return self._prod_order_sno
+        elif self.root_indent_sno != self.serialno:
+            return self.root_indent.prod_order_sno
 
     @property
     def root_indent_sno(self):
