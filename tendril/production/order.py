@@ -478,7 +478,8 @@ class ProductionOrder(object):
         indent.create(cobom, title="FOR {0}".format(self.serialno),
                       desc=None, indent_type='production',
                       requested_by=self._ordered_by, force=force)
-        indent.define_auth_chain(prod_order_sno=self.serialno)
+        indent.define_auth_chain(prod_order_sno=self.serialno,
+                                 session=session)
         indent.process(outfolder=outfolder, register=register,
                        verbose=False, session=session)
         self._indents.append(indent)

@@ -38,8 +38,9 @@ from tendril.entityhub.serialnos import register_serialno
 from tendril.dox.labelmaker import get_manager
 from tendril.boms.outputbase import CompositeOutputBom
 from tendril.boms.outputbase import create_obom_from_listing
-from tendril.dox import indent as dxindent
 from tendril.inventory.indent import InventoryIndent
+from tendril.inventory.indent import AuthChainNotValidError
+from tendril.dox import indent as dxindent
 
 from tendril.utils.fsutils import Crumb
 from tendril.utils.fsutils import TEMPDIR
@@ -78,60 +79,67 @@ def get_indent_labels(indent_sno=None):
 @blueprint.route('/new', methods=['POST', 'GET'])
 def new_indent(indent_sno=None):
     form = CreateIndentForm(parent_indent_sno=indent_sno)
-    if form.validate_on_submit():
-        with get_session() as session:
-            sno = form.indent_sno.sno.data
-            if not sno:
-                if indent_sno is not None:
-                    sno = form.get_supplementary_sno_default()
-                    register_serialno(sno=sno, efield="WEB FRONTEND INDENT",
-                                      session=session)
-                else:
-                    sno = get_serialno(series='IDT',
-                                       efield='WEB FRONTEND INDENT',
-                                       register=True, session=session)
-            else:
-                # additional sno validation?
-                pass
-            nindent = InventoryIndent(sno=sno, session=session)
-            # Construct COBOM
-            obom = create_obom_from_listing(form.components.data,
-                                            'MANUAL (WEB)')
-            cobom = CompositeOutputBom([obom],
-                                       name='MANUAL (WEB) {0}'.format(sno))
-
-            requested_by = get_username_from_full_name(full_name=form.user.data,
-                                                       session=session)
-
-            icparams = {
-                'cobom': cobom,
-                'title': form.indent_title.data,
-                'desc': form.indent_desc.data,
-                'requested_by': requested_by,
-                'rdate': form.rdate.data or arrow.utcnow(),
-                'indent_type': form.indent_type.data,
-            }
-            nindent.create(**icparams)
-
-            root_order_sno = form.root_order_sno.data
-            prod_order_sno = form.prod_order_sno.data
-            nindent.define_auth_chain(prod_order_sno=prod_order_sno,
-                                      root_order_sno=root_order_sno)
-            nindent.register_auth_chain(session=session)
-
-            fe_workspace_path = os.path.join(TEMPDIR, 'frontend')
-            if not os.path.exists(fe_workspace_path):
-                os.makedirs(fe_workspace_path)
-            workspace_path = os.path.join(fe_workspace_path, get_tempname())
-            os.makedirs(workspace_path)
-
-            nindent.process(outfolder=workspace_path,
-                            register=True, session=session)
-
-            shutil.rmtree(workspace_path)
-        return redirect(url_for('.indent', indent_sno=str(sno)))
-
     stage = {'crumbroot': '/inventory'}
+    if form.validate_on_submit():
+        try:
+            with get_session() as session:
+                sno = form.indent_sno.sno.data
+                if not sno:
+                    if indent_sno is not None:
+                        sno = form.get_supplementary_sno_default()
+                        register_serialno(sno=sno, efield="WEB FRONTEND INDENT",
+                                          session=session)
+                    else:
+                        sno = get_serialno(series='IDT',
+                                           efield='WEB FRONTEND INDENT',
+                                           register=True, session=session)
+                else:
+                    # additional sno validation?
+                    pass
+                nindent = InventoryIndent(sno=sno, session=session)
+                # Construct COBOM
+                obom = create_obom_from_listing(form.components.data,
+                                                'MANUAL (WEB)')
+                cobom = CompositeOutputBom([obom],
+                                           name='MANUAL (WEB) {0}'.format(sno))
+
+                requested_by = get_username_from_full_name(full_name=form.user.data,
+                                                           session=session)
+
+                icparams = {
+                    'cobom': cobom,
+                    'title': form.indent_title.data,
+                    'desc': form.indent_desc.data,
+                    'requested_by': requested_by,
+                    'rdate': form.rdate.data or arrow.utcnow(),
+                    'indent_type': form.indent_type.data,
+                }
+                nindent.create(**icparams)
+
+                root_order_sno = form.root_order_sno.data
+                prod_order_sno = form.prod_order_sno.data
+                try:
+                    nindent.define_auth_chain(prod_order_sno=prod_order_sno,
+                                              root_order_sno=root_order_sno,
+                                              session=session)
+                except AuthChainNotValidError:
+                    raise
+                nindent.register_auth_chain(session=session)
+
+                fe_workspace_path = os.path.join(TEMPDIR, 'frontend')
+                if not os.path.exists(fe_workspace_path):
+                    os.makedirs(fe_workspace_path)
+                workspace_path = os.path.join(fe_workspace_path, get_tempname())
+                os.makedirs(workspace_path)
+
+                nindent.process(outfolder=workspace_path,
+                                register=True, session=session)
+
+                shutil.rmtree(workspace_path)
+            return redirect(url_for('.indent', indent_sno=str(sno)))
+        except AuthChainNotValidError:
+            stage['auth_not_valid'] = True
+
     if indent_sno is None:
         stage_crumbs = {'breadcrumbs': [Crumb(name="Inventory", path=""),
                                         Crumb(name="Indent", path="indent/"),

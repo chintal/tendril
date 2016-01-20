@@ -55,8 +55,15 @@
                     <div class="small-12 large-6 columns">
                         {{ forms.render_field(form.root_order_sno, autocomplete="off", list="json-rootordlist", placeholder="Top-level order or project code") }}
                     </div>
+                    {% if stage.auth_not_valid %}
+                    <div {% if stage.auth_not_valid %}class="small-12 columns error"{% endif %}>
+                        <small class="error">Unable to Validate Authorization Chain.</small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="row">
                     <div class="small-12 columns">
-                        {{ forms.render_field(form.indent_desc) }}
+                            {{ forms.render_field(form.indent_desc) }}
                     </div>
                 </div>
             </fieldset>
