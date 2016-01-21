@@ -329,7 +329,7 @@ class CardProductionAction(ProductionActionBase):
 
 
 class ProductionOrder(object):
-    def __init__(self, sno=None):
+    def __init__(self, sno=None, session=None):
         self._sno = sno
         self._card_actions = []
         self._delta_actions = []
@@ -350,7 +350,7 @@ class ProductionOrder(object):
         self._ordered_by = None
 
         try:
-            self.load_from_db()
+            self.load(session=session)
             self._defined = True
         except ProductionOrderNotFound:
             self._defined = False
@@ -604,9 +604,23 @@ class ProductionOrder(object):
         self._load_order_yaml_data()
         self._load_snomap_legacy()
 
-    def load_from_db(self):
+    def _load_from_db(self, session):
+        raise ProductionOrderNotFound
+
+    def load_from_db(self, session=None):
+        if not session:
+            with get_session() as session:
+                self._load_from_db(session)
+        else:
+            self._load_from_db(session)
+
+    def load(self, session=None):
         # Retrieve old production orders. If process is called on a loaded
         # production order, it'll overwrite whatever came before.
+        try:
+            self.load_from_db(session=session)
+        except ProductionOrderNotFound:
+            pass
         self._load_legacy()
 
     @property

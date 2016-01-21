@@ -299,6 +299,11 @@ config_options_fs = [
         "os.path.join(INSTANCE_ROOT, 'refdocs')",
         "Folder for the refdocs filesystem"
     ),
+    ConfigOption(
+        'MQ_SERVER',
+        'None',
+        'Message Queue Server URL'
+    )
 ]
 
 load_config(config_options_fs)

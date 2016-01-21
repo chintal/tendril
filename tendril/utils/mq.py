@@ -19,31 +19,46 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for models
+Docstring for mq
 """
 
-from sqlalchemy import Column, String
 
-from tendril.utils.db import DeclBase
-from tendril.utils.db import BaseMixin
-from tendril.utils.db import TimestampMixin
-
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
+import xmlrpclib
+import atexit
+import uuid
 
 
-# class ProductionOrder(DeclBase, BaseMixin, TimestampMixin):
-#     pass
+from tendril.utils.config import MQ_SERVER
 
 
-# # TODO Figure out inheritence
-# class ProductionActionBase(DeclBase):
-#     pass
-#
-#
-# class ProductionActionCard(ProductionActionBase):
-#     pass
-#
-#
-# class ProductionActionDelta(ProductionActionBase):
-#     pass
+def _connect_to_mq_server():
+    s = xmlrpclib.Server(MQ_SERVER + '/control')
+    return s
+
+mq_server = _connect_to_mq_server()
+owned_keys = []
+
+
+def create_mq(key=None):
+    if key is None:
+        key = uuid.uuid4()
+    mq_server.create_mq(key)
+    owned_keys.append(key)
+    return key
+
+
+def publish(key, data):
+    mq_server.publish(key, data)
+    owned_keys.append(key)
+
+
+def delete_mq(key):
+    mq_server.delete_mq(key)
+    owned_keys.append(key)
+
+
+def cleanup():
+    for key in owned_keys:
+        delete_mq(key)
+
+atexit.register(cleanup)

@@ -65,3 +65,10 @@ def favicon():
         os.path.join(app.root_path, 'static', 'images'),
         'favicon.ico', mimetype='image/vnd.microsoft.icon'
     )
+
+
+@app.route('/progress/<taskid>')
+def progress(taskid):
+    stage = {'taskid': taskid}
+    return render_template('pages/progress.html', stage=stage,
+                           pagetitle='Task Progress')

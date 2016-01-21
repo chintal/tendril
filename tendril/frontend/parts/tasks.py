@@ -19,31 +19,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for models
+Docstring for tasks
 """
-
-from sqlalchemy import Column, String
-
-from tendril.utils.db import DeclBase
-from tendril.utils.db import BaseMixin
-from tendril.utils.db import TimestampMixin
-
-from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
-
-
-# class ProductionOrder(DeclBase, BaseMixin, TimestampMixin):
-#     pass
-
-
-# # TODO Figure out inheritence
-# class ProductionActionBase(DeclBase):
-#     pass
-#
-#
-# class ProductionActionCard(ProductionActionBase):
-#     pass
-#
-#
-# class ProductionActionDelta(ProductionActionBase):
-#     pass

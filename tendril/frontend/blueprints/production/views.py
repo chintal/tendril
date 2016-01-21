@@ -91,6 +91,8 @@ def new_production_order():
                 # Check for Authorization
                 # Nothing right now.
                 # Create Order
+
+                # TODO detach at this point
                 fe_workspace_path = os.path.join(TEMPDIR, 'frontend')
                 if not os.path.exists(fe_workspace_path):
                     os.makedirs(fe_workspace_path)
