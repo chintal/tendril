@@ -81,12 +81,16 @@ class ComponentQtyForm(Form):
             except:
                 pass
             try:
-                lengths.Length(field.data.strip())
+                qty = lengths.Length(field.data.strip())
+                if qty <= 0:
+                    raise ValidationError("Invalid Length")
             except:
                 raise ValidationError("Invalid Length")
         else:
             try:
-                int(field.data.strip())
+                qty = int(field.data.strip())
+                if qty <= 0:
+                    raise ValidationError("Invalid Qty")
             except:
                 raise ValidationError("Invalid Qty")
 

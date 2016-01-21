@@ -32,8 +32,8 @@ from wtforms.fields import FormField
 
 from wtforms.validators import InputRequired
 from wtforms.validators import Length
-from wtforms.validators import AnyOf
 from wtforms.validators import Optional
+from wtforms.validators import AnyOf
 from wtforms.validators import ValidationError
 
 from wtforms_components import read_only
@@ -41,8 +41,11 @@ from wtforms_components import read_only
 from flask_user import current_user
 
 from tendril.frontend.parts.forms import DateInputField
+from tendril.frontend.parts.forms import NewSerialNumberForm
 from tendril.frontend.parts.forms import user_auth_check
 
+from tendril.entityhub import serialnos
+from tendril.entityhub.db.controller import SerialNoNotFound
 from tendril.entityhub.projects import cards
 # from tendril.inventory.electronics import get_recognized_repr
 
@@ -51,23 +54,23 @@ class ModuleQtyForm(Form):
     # TODO add customization field
     ident = StringField(label='Module',
                         validators=[
-                            InputRequired(message="Blank rows aren't allowed")
+                            Optional(),
+                            AnyOf(cards.keys(), message="Module not recognized.")
                         ])
     qty = StringField(label='Qty',
-                      validators=[InputRequired(message="Specify")])
-
-    def validate_ident(form, field):
-        if field.data.strip() in cards.keys():
-            return
-        # if field.data.strip() in get_recognized_repr():
-        #     return
-        raise ValidationError("Module not recognized")
+                      validators=[])
 
     def validate_qty(form, field):
-        try:
-            int(field.data.strip())
-        except:
-            raise ValidationError("Invalid Qty")
+        if form.ident.data:
+            try:
+                qty = int(field.data.strip())
+                if qty <= 0:
+                    raise ValidationError("Invalid Qty.")
+            except:
+                raise ValidationError("Invalid Qty.")
+        else:
+            if field.data:
+                raise ValidationError("Detached Qty.")
 
 
 class DeltaOrderForm(Form):
@@ -78,6 +81,48 @@ class DeltaOrderForm(Form):
     sno = StringField(label='Serial Number',
                       validators=[])
 
+    def validate_orig_cardname(form, field):
+        cardname = field.data.strip()
+        if form.sno.data and not cardname:
+            raise ValidationError("Specify original Indent.")
+        if form.target_cardname.data and not cardname:
+            raise ValidationError("Specify original Indent.")
+        if not cardname:
+            return
+        if cardname:
+            if cardname not in cards.keys():
+                raise ValidationError("Ident not recognized.")
+        try:
+            efield = serialnos.get_serialno_efield(sno=form.sno.data.strip())
+            if cardname != efield:
+                raise ValidationError("S.No. seems to be {0}.".format(efield))
+        except SerialNoNotFound:
+            pass
+
+    def validate_target_cardname(form, field):
+        cardname = field.data.strip()
+        if form.sno.data and not cardname:
+            raise ValidationError("Specify target Indent.")
+        if form.orig_cardname.data and not cardname:
+            raise ValidationError("Specify target Indent.")
+        if not cardname:
+            return
+        if cardname not in cards.keys():
+            raise ValidationError("Ident not recognized.")
+        if form.orig_cardname.data.strip() == cardname:
+            raise ValidationError("No change?")
+
+    def validate_sno(form, field):
+        sno = field.data.strip()
+        if form.orig_cardname.data and not sno:
+            raise ValidationError("Specify Serial No.")
+        if form.target_cardname.data and not sno:
+            raise ValidationError("Specify Serial No.")
+        if not sno:
+            return
+        if not serialnos.serialno_exists(sno=sno):
+            raise ValidationError("S.No. not recognized.")
+
 
 class CreateProductionOrderForm(Form):
     user = StringField(label='Ordered By',
@@ -87,14 +132,14 @@ class CreateProductionOrderForm(Form):
             label='Title',
             validators=[InputRequired(), Length(max=50)]
     )
+    desc = StringField(label='Description',
+                       validators=[InputRequired()])
     root_order_sno = StringField(
         label='Root Order',
         validators=[Optional()]
     )
-    prod_order_sno = StringField(
-        label='Serial Number',
-        validators=[]
-    )
+    prod_order_sno = FormField(NewSerialNumberForm)
+
     production_type = SelectField(
             label='Type', validators=[InputRequired()],
             choices=[("production", "Production"),
@@ -103,8 +148,6 @@ class CreateProductionOrderForm(Form):
                      ("support", "Support"),
                      ("rd", "Research & Development")],
     )
-
-    sno_generate = BooleanField(label="Auto Generate")
 
     modules = FieldList(FormField(ModuleQtyForm), min_entries=1)
     deltas = FieldList(FormField(DeltaOrderForm), min_entries=1)
@@ -116,7 +159,16 @@ class CreateProductionOrderForm(Form):
         else:
             self.admin_roles = ['inventory_admin']
         super(CreateProductionOrderForm, self).__init__(*args, **kwargs)
+        self._setup_sno_fields()
         self._setup_secure_fields()
+
+    def _setup_sno_fields(self):
+        sno_validator = self.prod_order_sno.sno.validators[0]
+        sno_validator.series = 'PROD'
+        sno_validator.new = True
+        if not current_user.has_roles(tuple(self.admin_roles)):
+            read_only(self.prod_order_sno.sno_generate)
+        read_only(self.prod_order_sno.sno)
 
     def _setup_secure_fields(self):
         if not self.user.data:
@@ -124,5 +176,3 @@ class CreateProductionOrderForm(Form):
         if not current_user.has_roles(tuple(self.admin_roles)):
             read_only(self.user)
             read_only(self.rdate)
-            read_only(self.sno_generate)
-        read_only(self.prod_order_sno)

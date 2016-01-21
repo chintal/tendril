@@ -19,7 +19,9 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from flask import render_template, abort, flash
+from flask import render_template
+from flask import abort, flash
+from flask import jsonify
 from flask_user import login_required
 from nvd3 import lineChart
 
@@ -40,6 +42,13 @@ from tendril.gedaif.conffile import ConfigsFile
 from tendril.inventory import electronics as invelectronics
 from tendril.utils.fsutils import Crumb
 from tendril.utils.types.currency import BASE_CURRENCY_SYMBOL
+
+
+@blueprint.route('/modules.json')
+@login_required
+def modules_list():
+    modules = sorted(ehprojects.cards.keys())
+    return jsonify({'modules': modules})
 
 
 @blueprint.route('/cards/<cardname>')

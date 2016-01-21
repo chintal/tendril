@@ -78,16 +78,17 @@ class InventoryIndent(object):
         self._rdate = rdate
 
     def define_auth_chain(self,  prod_order_sno=None, root_order_sno=None,
-                          session=None):
+                          prod_order_scaffold=False, session=None):
         if prod_order_sno is not None:
             if not serialnos.serialno_exists(sno=prod_order_sno,
                                              session=session):
                 raise AuthChainNotValidError
-            from tendril.production.order import ProductionOrder
-            prod_order = ProductionOrder(prod_order_sno)
-            if len(prod_order.indent_snos) and \
-                    self.serialno not in prod_order.indent_snos:
-                raise AuthChainNotValidError
+            if not prod_order_scaffold:
+                from tendril.production.order import ProductionOrder
+                prod_order = ProductionOrder(prod_order_sno)
+                if len(prod_order.indent_snos) and \
+                        self.serialno not in prod_order.indent_snos:
+                    raise AuthChainNotValidError
             self._prod_order_sno = prod_order_sno
 
         if root_order_sno is not None:

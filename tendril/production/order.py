@@ -343,8 +343,8 @@ class ProductionOrder(object):
         self._sourcing_order_snos = []
         self._snomap_path = None
         self._snomap = None
-        self._cards = None
-        self._deltas = None
+        self._cards = {}
+        self._deltas = []
         self._order_yaml_path = None
         self._yaml_data = None
         self._ordered_by = None
@@ -370,21 +370,21 @@ class ProductionOrder(object):
             with open(self._order_yaml_path, 'r') as f:
                 self._yaml_data = yaml.load(f)
             self._load_order_yaml_data()
-        if title is not None:
+        if title:
             self._title = title
-        if desc is not None:
+        if desc:
             self._desc = desc
-        if cards is not None:
+        if cards:
             self._cards = cards
-        if deltas is not None:
+        if deltas:
             self._deltas = deltas
-        if sourcing_order_snos is not None:
+        if sourcing_order_snos:
             self._sourcing_order_snos = sourcing_order_snos
-        if root_order_snos is not None:
+        if root_order_snos:
             self._root_order_snos = root_order_snos
-        if ordered_by is not None:
+        if ordered_by:
             self._ordered_by = ordered_by
-        if snomap_path is not None:
+        if snomap_path:
             self._snomap_path = snomap_path
 
         if len(self._cards) + len(self._deltas) == 0:
@@ -479,13 +479,18 @@ class ProductionOrder(object):
                       desc=None, indent_type='production',
                       requested_by=self._ordered_by, force=force)
         indent.define_auth_chain(prod_order_sno=self.serialno,
-                                 session=session)
+                                 session=session, prod_order_scaffold=True)
         indent.process(outfolder=outfolder, register=register,
                        verbose=False, session=session)
         self._indents.append(indent)
 
         pb.next(note="Generating Production Order Document")
         # Make production order doc
+        self._last_generated_at = arrow.utcnow().isoformat()
+        if self._first_generated_at is None:
+            self._first_generated_at = arrow.utcnow().isoformat()
+        self._dump_order_yaml(outfolder=outfolder, register=register,
+                              session=session)
         self._generate_doc(outfolder=outfolder, register=register,
                            session=session)
 
@@ -494,14 +499,9 @@ class ProductionOrder(object):
                          stacked_pb=stacked_pb, leaf_pb=leaf_pb)
 
         pb.next(note="Finalizing Production Order")
-        self._last_generated_at = arrow.utcnow().isoformat()
-        if self._first_generated_at is None:
-            self._first_generated_at = arrow.utcnow().isoformat()
         for action in actions:
             action.scaffold = False
             action.unset_session()
-        self._dump_order_yaml(outfolder=outfolder, register=register,
-                              session=session)
         self._snomap.dump_to_file(outfolder)
         self._snomap.unset_session()
 
@@ -529,6 +529,8 @@ class ProductionOrder(object):
             )
 
     def _build_yaml_data(self):
+        if self._yaml_data is None:
+            self._yaml_data = {}
         self._yaml_data['title'] = self._title
         self._yaml_data['desc'] = self._desc
         self._yaml_data['cards'] = self._cards

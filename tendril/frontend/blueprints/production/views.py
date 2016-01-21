@@ -22,18 +22,29 @@
 Docstring for views
 """
 
+import os
+import shutil
+
 from flask import render_template
 from flask_user import login_required
 from flask import abort
 from flask import Response
 from flask import jsonify
+from flask import redirect
+from flask import url_for
 
 from . import production as blueprint
 from .forms import CreateProductionOrderForm
 
 from tendril.production import order
+from tendril.inventory.indent import AuthChainNotValidError
+from tendril.entityhub.serialnos import get_serialno
 from tendril.dox import production as dxproduction
+from tendril.auth.db.controller import get_username_from_full_name
 from tendril.utils.fsutils import Crumb
+from tendril.utils.fsutils import TEMPDIR
+from tendril.utils.fsutils import get_tempname
+from tendril.utils.db import get_session
 
 
 @blueprint.route('/orders.json')
@@ -46,17 +57,53 @@ def orders():
 @login_required
 def new_production_order():
     form = CreateProductionOrderForm()
-    if form.validate_on_submit():
-        # Construct Production Order
-
-        # Check for Authorization
-        # Nothing right now.
-
-        # Create Order
-
-        # Redirect to Created Indent
-        pass
     stage = {'crumbroot': '/production'}
+    if form.validate_on_submit():
+        try:
+            sno = form.prod_order_sno.sno.data
+            with get_session() as session:
+                title = form.prod_order_title.data.strip()
+                if not sno:
+                    sno = get_serialno(series='PROD', efield=title,
+                                       register=True, session=session)
+                else:
+                    # additional sno validation?
+                    pass
+
+                cards = {x['ident']: int(x['qty']) for x in form.modules.data if x['ident']}
+                deltas = [{'orig-cardname': x['orig_cardname'],
+                           'target-cardname': x['target_cardname'],
+                           'sno': x['sno']}
+                          for x in form.deltas.data if x['sno']]
+                requested_by = get_username_from_full_name(full_name=form.user.data,
+                                                           session=session)
+                # Construct Production Order
+                prod_order = order.ProductionOrder(sno=sno)
+                prod_order.create(
+                    title=form.prod_order_title.data.strip(),
+                    desc=form.desc.data.strip(),
+                    cards=cards,
+                    deltas=deltas,
+                    sourcing_order_snos=None,
+                    root_order_snos=form.root_order_sno.data,
+                    ordered_by=requested_by,
+                )
+                # Check for Authorization
+                # Nothing right now.
+                # Create Order
+                fe_workspace_path = os.path.join(TEMPDIR, 'frontend')
+                if not os.path.exists(fe_workspace_path):
+                    os.makedirs(fe_workspace_path)
+                workspace_path = os.path.join(fe_workspace_path, get_tempname())
+                os.makedirs(workspace_path)
+                prod_order.process(outfolder=workspace_path,
+                                   register=True, session=session)
+                shutil.rmtree(workspace_path)
+                # Redirect to Created Order
+            return redirect(url_for('.production_orders', order_sno=str(sno)))
+        except AuthChainNotValidError:
+            stage['auth_not_valid'] = True
+
     stage_crumbs = {'breadcrumbs': [Crumb(name="Production", path=""),
                                     Crumb(name="Orders", path="order/"),
                                     Crumb(name="New", path="order/new")],

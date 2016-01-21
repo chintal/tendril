@@ -10,7 +10,7 @@ Tendril documentation
 .. include:: ../README.rst
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    userdoc/userdoc
    devdoc/devdoc

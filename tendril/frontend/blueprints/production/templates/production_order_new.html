@@ -34,11 +34,12 @@
                     </div>
                 </div>
                 <div class="row">
+                    {{ form.prod_order_sno.hidden_tag() }}
                     <div class="small-4 columns text-center">
-                        {{ forms.render_switch(form.sno_generate, checked=True) }}
+                        {{ forms.render_switch(form.prod_order_sno.sno_generate, checked=True) }}
                     </div>
                     <div class="small-8 columns">
-                        {{ forms.render_field(form.prod_order_sno, autocomplete="off") }}
+                        {{ forms.render_field(form.prod_order_sno.sno, autocomplete="off") }}
                     </div>
                 </div>
                 <div class="row">
@@ -47,6 +48,16 @@
                     </div>
                     <div class="small-12 large-6 columns">
                         {{ forms.render_field(form.root_order_sno, autocomplete="off", list="json-rootordlist", placeholder="Top-level order or project code") }}
+                    </div>
+                    {% if stage.auth_not_valid %}
+                    <div {% if stage.auth_not_valid %}class="small-12 columns error"{% endif %}>
+                        <small class="error">Unable to Validate Authorization Chain.</small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="row">
+                    <div class="small-12 columns">
+                        {{ forms.render_field(form.desc) }}
                     </div>
                 </div>
             </fieldset>
@@ -58,9 +69,10 @@
                 </legend>
 
                 {% for module in form.modules %}
+                {{ module.hidden_tag() }}
                 <div class="row component-row">
                     <div class="small-8 columns">
-                        {{ forms.render_clean_field(module.ident, list="json-modulelist", autocomplete="off") }}
+                        {{ forms.render_clean_field(module.ident, list="json-moduleidentlist", autocomplete="off") }}
                     </div>
                     <div class="small-3 columns">
                         {{ forms.render_clean_field(module.qty, autocomplete="off") }}
@@ -87,15 +99,16 @@
                 </legend>
 
                 {% for delta in form.deltas %}
+                {{ delta.hidden_tag() }}
                 <div class="row component-row">
                     <div class="small-3 columns">
                         {{ forms.render_clean_field(delta.sno, list="json-snolist", autocomplete="off") }}
                     </div>
                     <div class="small-4 columns">
-                        {{ forms.render_clean_field(delta.orig_cardname, list="json-modulelist", autocomplete="off") }}
+                        {{ forms.render_clean_field(delta.orig_cardname, list="json-moduleidentlist", autocomplete="off") }}
                     </div>
                     <div class="small-4 columns">
-                        {{ forms.render_clean_field(delta.target_cardname, list="json-modulelist", autocomplete="off") }}
+                        {{ forms.render_clean_field(delta.target_cardname, list="json-moduleidentlist", autocomplete="off") }}
                     </div>
                     <div class="small-1 columns">
                         <a>
@@ -174,7 +187,7 @@
               var jsonOptions = JSON.parse(moduleIdentRequest.responseText);
 
               // Loop over the JSON array.
-              jsonOptions.idents.forEach(function(item) {
+              jsonOptions.modules.forEach(function(item) {
                 // Create a new <option> element.
                 var option = document.createElement('option');
                 // Set the value using the item in the JSON array.
@@ -216,32 +229,18 @@
                 $(document).foundation('reflow');
             }
         });
-        $(".component-rows").on("focusout", ".component-row input[name$='ident']", function(){
-            var ctx = this;
-            $.ajax({
-                 type: "POST",
-                 url: "/inventory/location/status.json",
-                 contentType: "application/json; charset=utf-8",
-                 async: true,
-                 data: JSON.stringify({ident: $( this ).val()}),
-                 dataType: "json",
-                 success: function(data){
-                    $( ctx ).closest('.component-row').find('span').text(data.qty);
-                 }
-            });
-        });
 
         <!-- COBOM Input Ends -->
 
         <!-- Serial No Form Elements -->
-        var prod_order_sno = $("#prod_order_sno")[0].value
-        $("#sno_generate").change(function(event) {
+        var prod_order_sno = $("#prod_order_sno-sno")[0].value
+        $("#prod_order_sno-sno_generate").change(function(event) {
             var checkbox = event.target;
             if (checkbox.checked) {
-                $("#prod_order_sno")[0].value = prod_order_sno;
-                $("#prod_order_sno")[0].readOnly = true;
+                $("#prod_order_sno-sno")[0].value = prod_order_sno;
+                $("#prod_order_sno-sno")[0].readOnly = true;
             } else {
-                $("#prod_order_sno")[0].readOnly = false;
+                $("#prod_order_sno-sno")[0].readOnly = false;
             }
         });
 

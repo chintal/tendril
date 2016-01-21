@@ -37,7 +37,7 @@ def get_users_list(session=None):
 def get_username_from_full_name(full_name=None, session=None):
     return session.query(UserAuth.username).filter(
             UserAuth.user.has(full_name=full_name)
-    ).one()
+    ).one().username
 
 
 @with_db
