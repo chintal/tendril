@@ -87,7 +87,7 @@ class InventoryIndent(object):
                 from tendril.production.order import ProductionOrder
                 prod_order = ProductionOrder(prod_order_sno)
                 if len(prod_order.indent_snos) and \
-                        self.serialno not in prod_order.indent_snos:
+                        self.root_indent_sno not in prod_order.indent_snos:
                     raise AuthChainNotValidError
             self._prod_order_sno = prod_order_sno
 
