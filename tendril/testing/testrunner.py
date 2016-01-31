@@ -155,6 +155,15 @@ def replace_in_test_cnf_dict(cnf_dict, token, value, channelmap=None):
 
 
 def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
+    """
+
+    :param cnf_suite:
+    :param gcf:
+    :type gcf: tendril.gedaif.conffile.ConfigsFile
+    :param devicetype:
+    :param offline:
+    :return:
+    """
     if len(cnf_suite.keys()) != 1:
         raise ValueError("Suite configurations are expected "
                          "to have exactly one key at the top level")
@@ -163,7 +172,7 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
     testvars = gcf.testvars(devicetype)
     bomobj = import_pcb(gcf.projectfolder)
     bomobj.configure_motifs(devicetype)
-    cnf_grouplist = gcf.config_grouplist(devicetype)
+    cnf_grouplist = gcf.configuration_grouplist(devicetype)
 
     desc = None
     title = None
