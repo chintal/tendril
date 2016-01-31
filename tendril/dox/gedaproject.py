@@ -115,6 +115,7 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 
 def get_project_doc_folder(projectfolder):
+    # TODO replace with doc_folder from configs?
     projectfolder = os.path.realpath(projectfolder)
     projectfolder = os.path.relpath(projectfolder, PROJECTS_ROOT)
     pth = path.join(projectfolder, 'doc')
@@ -188,9 +189,9 @@ def gen_confbom(projfolder, configname, force=False):
     stage = {'configname': obom.descriptor.configname,
              'pcbname': obom.descriptor.pcbname,
              'lines': obom.lines}
-    for config in obom.descriptor.configurations.configurations:
-        if config['configname'] == configname:
-            stage['desc'] = config['desc']
+
+    config = obom.descriptor.configurations.configuration(configname)
+    stage['desc'] = config['desc']
 
     template = 'projects/geda-bom-simple.tex'
 
@@ -261,9 +262,9 @@ def gen_confdoc(projfolder, configname, force=False):
              'bom': bom,
              'obom': obom,
              'group_oboms': group_oboms}
-    for config in obom.descriptor.configurations.configurations:
-        if config['configname'] == configname:
-            stage['desc'] = config['desc']
+
+    config = obom.descriptor.configurations.configuration(configname)
+    stage['desc'] = config['desc']
 
     template = 'projects/geda-conf-doc.tex'
 
@@ -335,7 +336,7 @@ def gen_schpdf(projfolder, namebase, force=False):
                 'Last modified : ' + str(sch_mtime) +
                 '; Last Created : ' + str(outf_mtime))
 
-    if configfile.configdata is not None:
+    if configfile.rawconfig is not None:
         workspace_outpath = workspace_fs.getsyspath(schpdfpath)
         workspace_folder = workspace_fs.getsyspath(path.dirname(schpdfpath))
         workspace_fs.makedir(path.dirname(schpdfpath),
@@ -525,10 +526,10 @@ def gen_cobom_csv(projfolder, namebase, force=False):
                 '; Last Created : ' + str(outf_mtime))
 
     bomlist = []
-    for cfn in configfile.configdata['configurations']:
-        gen_confpdf(projfolder, cfn['configname'], namebase, force=force)
+    for cfn in configfile.configuration_names:
+        gen_confpdf(projfolder, cfn, namebase, force=force)
         lbom = boms_electronics.import_pcb(projfolder)
-        lobom = lbom.create_output_bom(cfn['configname'])
+        lobom = lbom.create_output_bom(cfn)
         bomlist.append(lobom)
     cobom = boms_outputbase.CompositeOutputBom(bomlist)
 
@@ -572,7 +573,7 @@ def gen_pcb_pdf(projfolder, force=False):
         return
     docfolder = get_project_doc_folder(projfolder)
     pdffile = path.join(docfolder,
-                        configfile.configdata['pcbname'] + '-pcb.pdf')
+                        configfile.pcbname + '-pcb.pdf')
     outf_mtime = fsutils.get_file_mtime(pdffile, fs=refdoc_fs)
 
     if not force and outf_mtime is not None and outf_mtime > pcb_mtime:
@@ -590,7 +591,7 @@ def gen_pcb_pdf(projfolder, force=False):
 
     pcb.conv_pcb2pdf(
         os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
-        workspace_folder, configfile.configdata['pcbname']
+        workspace_folder, configfile.pcbname
     )
 
     copyfile(workspace_fs, pdffile, refdoc_fs, pdffile, overwrite=True)
@@ -730,7 +731,7 @@ def gen_pcb_dxf(projfolder, force=False):
         return
     docfolder = get_project_doc_folder(projfolder)
     dxffile = path.normpath(os.path.join(docfolder, os.pardir,
-                            configfile.configdata['pcbname'] + '.dxf'))
+                            configfile.pcbname + '.dxf'))
 
     outf_mtime = fsutils.get_file_mtime(dxffile, fs=refdoc_fs)
 
@@ -748,7 +749,7 @@ def gen_pcb_dxf(projfolder, force=False):
 
     pcb.conv_pcb2dxf(
         os.path.join(configfile.projectfolder, 'pcb', gpf.pcbfile + '.pcb'),
-        workspace_folder, configfile.configdata['pcbname']
+        workspace_folder, configfile.pcbname
     )
 
     copyfile(workspace_fs, dxffile, refdoc_fs, dxffile, overwrite=True)
@@ -876,21 +877,17 @@ def generate_docs(projfolder, force=False):
 
     """
     configfile = conffile.ConfigsFile(projfolder)
-    try:
-        namebase = configfile.configdata['pcbname']
-    except KeyError:
-        logger.error("pcbname Key Not Found in configs.yaml, skipping")
-        return
+    namebase = configfile.pcbname
     if namebase is None:
         try:
-            namebase = configfile.configdata['cblname']
+            namebase = configfile.rawconfig['cblname']
         except KeyError:
             logger.error("Project does not have a known identifier. "
                          "Skipping : " + projfolder)
             return
     gen_masterdoc(projfolder, namebase, force)
     gen_cobom_csv(projfolder, namebase, force)
-    if configfile.configdata['pcbname'] is not None:
+    if configfile.is_pcb:
         gen_pcb_pdf(projfolder, force)
         gen_pcb_gbr(projfolder, force)
         gen_pcb_dxf(projfolder, force)
@@ -900,7 +897,7 @@ def generate_docs(projfolder, force=False):
 def get_img_list(projfolder, cardname=None):
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
-    namebase = configfile.configdata['pcbname']
+    namebase = configfile.pcbname
 
     project_doc_folder = get_project_doc_folder(projfolder)
     if not project_doc_folder:
@@ -932,11 +929,11 @@ def get_img_list(projfolder, cardname=None):
 
 def get_docs_list(projfolder, cardname=None):
     configfile = conffile.ConfigsFile(projfolder)
-    namebase = configfile.configdata['pcbname']
+    namebase = configfile.pcbname
     is_cable = False
     if namebase is None:
         try:
-            namebase = configfile.configdata['cblname']
+            namebase = configfile.rawconfig['cblname']
             is_cable = True
         except KeyError:
             logger.error("Project does not have a known identifier. "
@@ -975,8 +972,7 @@ def get_docs_list(projfolder, cardname=None):
                      ExposedDocument(namebase + ' PCB DXF',
                                      path.join(
                                          project_doc_folder, os.pardir,
-                                         configfile.configdata['pcbname'] +
-                                         '.dxf'),
+                                         configfile.pcbname + '.dxf'),
                                      refdoc_fs),
                      ExposedDocument(namebase + ' PCB Gerber',
                                      path.join(project_doc_folder, os.pardir,

@@ -25,7 +25,7 @@ Docstring for __init__.py
 import os
 
 from tendril.gedaif.conffile import ConfigsFile
-from tendril.gedaif.conffile import NoGedaProjectException
+from tendril.gedaif.conffile import NoGedaProjectError
 
 from tendril.entityhub import serialnos
 from tendril.entityhub import projects
@@ -54,7 +54,7 @@ def get_mac_from_sno(serialno=None, session=None):
         gcf = ConfigsFile(projectfolder)
         logger.debug("Using gEDA configs file from : " +
                      projects.cards[devicetype])
-    except NoGedaProjectException:
+    except NoGedaProjectError:
         raise AttributeError("gEDA project for " + devicetype + " not found.")
 
     modname = gcf.mactype
@@ -78,7 +78,7 @@ def get_sno_from_mac(mac=None, mactype=None, devicetype=None, session=None):
             gcf = ConfigsFile(projectfolder)
             logger.debug("Using gEDA configs file from : " +
                          projects.cards[devicetype])
-        except NoGedaProjectException:
+        except NoGedaProjectError:
             raise AttributeError(
                 "gEDA project for " + devicetype + " not found."
             )

@@ -29,7 +29,7 @@ from tendril.entityhub import macs
 from tendril.entityhub.products import get_product_calibformat
 
 from tendril.gedaif.conffile import ConfigsFile
-from tendril.gedaif.conffile import NoGedaProjectException
+from tendril.gedaif.conffile import NoGedaProjectError
 from tendril.boms.electronics import import_pcb
 
 from tendril.utils.fsutils import import_
@@ -155,6 +155,15 @@ def replace_in_test_cnf_dict(cnf_dict, token, value, channelmap=None):
 
 
 def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
+    """
+
+    :param cnf_suite:
+    :param gcf:
+    :type gcf: tendril.gedaif.conffile.ConfigsFile
+    :param devicetype:
+    :param offline:
+    :return:
+    """
     if len(cnf_suite.keys()) != 1:
         raise ValueError("Suite configurations are expected "
                          "to have exactly one key at the top level")
@@ -163,7 +172,7 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
     testvars = gcf.testvars(devicetype)
     bomobj = import_pcb(gcf.projectfolder)
     bomobj.configure_motifs(devicetype)
-    cnf_grouplist = gcf.config_grouplist(devicetype)
+    cnf_grouplist = gcf.configuration_grouplist(devicetype)
 
     desc = None
     title = None
@@ -258,7 +267,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder,
         gcf = ConfigsFile(projectfolder)
         logger.info("Using gEDA configs file from : " +
                     projects.cards[devicetype])
-    except NoGedaProjectException:
+    except NoGedaProjectError:
         raise AttributeError("gEDA project for " + devicetype + " not found.")
     cnf_suites = gcf.tests()
     for cnf_suite in cnf_suites:
