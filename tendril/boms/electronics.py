@@ -42,12 +42,13 @@ Module Members:
 
 """
 
-import copy
 import os
+import warnings
 
-import tendril.conventions.electronics
-import tendril.gedaif.bomparser
-import tendril.gedaif.conffile
+from tendril.conventions.electronics import fpiswire
+from tendril.conventions.electronics import ident_transform
+from tendril.gedaif.bomparser import MotifAwareBomParser
+from tendril.gedaif.conffile import ConfigsFile
 
 from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import EntityBomBase
@@ -55,8 +56,8 @@ from tendril.entityhub.entitybase import EntityGroupBase
 
 from outputbase import OutputBom
 from outputbase import OutputElnBomDescriptor
-from tendril.utils import log
 
+from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 
@@ -128,9 +129,7 @@ class EntityElnComp(EntityBase):
 
     @property
     def ident(self):
-        return tendril.conventions.electronics.ident_transform(self.device,
-                                                               self.value,
-                                                               self.footprint)
+        return ident_transform(self.device, self.value, self.footprint)
 
     @property
     def device(self):
@@ -172,7 +171,6 @@ class EntityElnGroup(EntityGroupBase):
     """ Container for a group of EntityElnComp objects.
 
         :ivar groupname: Name of the group
-        :ivar eln_comp_list: List of EntityElnComp objects
 
     """
     def __init__(self, groupname, contextname):
@@ -208,94 +206,8 @@ class EntityElnGroup(EntityGroupBase):
             self.complist.append(comp)
 
 
-class EntityElnBomConf(object):
-    def __init__(self, configfile):
-        super(EntityElnBomConf, self).__init__()
-        self._configfile = configfile
-        configdata = configfile.configdata
-        self.pcbname = configdata["pcbname"]
-        self.rawconfig = configdata
-
-    @property
-    def grouplist(self):
-        return self._configfile.grouplist
-
-    def get_group_desc(self, groupname):
-        return self._configfile.get_group_desc(groupname)
-
-    @property
-    def motiflist(self):
-        return self._configfile.motiflist
-
-    @property
-    def sjlist(self):
-        return self._configfile.sjlist
-
-    @property
-    def configurations(self):
-        return self._configfile.configurations
-
-    @property
-    def configsections(self):
-        return self._configfile.configsections
-
-    def get_configurations(self):
-        rval = []
-        for configuration in self.configurations:
-            rval.append(configuration["configname"])
-        return rval
-
-    def get_configsections(self):
-        return self._configfile.configsection_names
-
-    def get_sec_groups(self, sectionname, config):
-        raise NotImplementedError
-
-    def get_configuration(self, configname):
-        return self._configfile.config_grouplist(configname)
-
-    def get_configuration_motifs(self, configname):
-        for configuration in self.configurations:
-            if configuration["configname"] == configname:
-                try:
-                    return configuration["motiflist"]
-                except KeyError:
-                    logger.debug(
-                        "Configuration missing motiflist : " + configname
-                    )
-                    return None
-        raise ValueError
-
-    def get_configuration_gens(self, configname):
-        for configuration in self.configurations:
-            if configuration["configname"] == configname:
-                try:
-                    return configuration["genlist"]
-                except KeyError:
-                    logger.debug(
-                        "Configuration missing genlist : " + configname
-                    )
-                    return None
-        raise ValueError
-
-    def get_configuration_sjs(self, configname):
-        if self.sjlist is not None:
-            sjlist = copy.copy(self.sjlist)
-        else:
-            sjlist = None
-        for configuration in self.configurations:
-            if configuration['configname'] == configname:
-                try:
-                    if configuration['sjlist'] is not None:
-                        sjlist.update(configuration['sjlist'])
-                        return sjlist
-                    return configuration['sjlist']
-                except KeyError:
-                    logger.debug(
-                        "Configuration missing SJ list : " + configname
-                    )
-                    return sjlist
-        raise ValueError
+class EntityElnBomConf(ConfigsFile):
+    pass
 
 
 class EntityElnBom(EntityBomBase):
@@ -305,16 +217,30 @@ class EntityElnBom(EntityBomBase):
         :type configfile: gedaif.conffile.ConfigsFile
         """
         super(EntityElnBom, self).__init__()
-        self.pcbname = configfile.configdata["pcbname"]
-        self.projfile = configfile.configdata["projfile"]
-        self.projfolder = configfile.projectfolder
-
-        self.configurations = EntityElnBomConf(configfile)
+        self.configurations = configfile
         self._included_motifs = []
         self._motifs = []
         self._configured_for = None
         self.create_groups()
         self.populate_bom()
+
+    @property
+    def pcbname(self):
+        warnings.warn("Deprecated access of pcbname",
+                      DeprecationWarning)
+        return self.configurations.pcbname
+
+    @property
+    def projfile(self):
+        warnings.warn("Deprecated access of projfile",
+                      DeprecationWarning)
+        return self.configurations.projectfile
+
+    @property
+    def projectfolder(self):
+        warnings.warn("Deprecated access of projectfolder",
+                      DeprecationWarning)
+        return self.configurations.projectfolder
 
     @property
     def motifs(self, all_defined=False):
@@ -324,14 +250,23 @@ class EntityElnBom(EntityBomBase):
             return self._included_motifs
 
     def create_groups(self):
-        groupnamelist = [x['name'] for x in self.configurations.grouplist]
+        groupnamelist = self.configurations.group_names
         if 'default' not in groupnamelist:
-            x = EntityElnGroup('default', self.pcbname)
+            x = EntityElnGroup('default', self.configurations.pcbname)
             self.grouplist.append(x)
         for group in groupnamelist:
             logger.debug("Creating Group: " + str(group))
-            x = EntityElnGroup(group, self.pcbname)
+            x = EntityElnGroup(group, self.configurations.pcbname)
             self.grouplist.append(x)
+
+    def find_group(self, groupname):
+        """
+
+        :rtype : EntityElnGroup
+        """
+        for group in self.grouplist:
+            if group.groupname == groupname:
+                return group
 
     def find_tgroup(self, item):
         """
@@ -346,18 +281,30 @@ class EntityElnBom(EntityBomBase):
                 "Could not find group in config file : " + gname
             )
             gname = 'default'
-        for group in self.grouplist:
-            if group.groupname == gname:
-                return group
+        return self.find_group(gname)
 
-    def find_group(self, groupname):
-        """
-
-        :rtype : EntityElnGroup
-        """
-        for group in self.grouplist:
-            if group.groupname == groupname:
-                return group
+    def _add_item(self, item):
+        if item.data['device'] == 'TESTPOINT':
+            return
+        tgroup = self.find_tgroup(item)
+        skip = False
+        if item.data['footprint'] == 'MY-TO220':
+            comp = EntityElnComp()
+            comp.define('HS' + item.data['refdes'][1:],
+                        'HEAT SINK', 'TO220')
+            tgroup.insert_eln_comp(comp)
+        if item.data['device'] == 'MODULE LCD' and \
+                item.data['value'] == "CHARACTER PARALLEL 16x2" and \
+                item.data['footprint'] == "MY-MTA100-16":
+            comp = EntityElnComp()
+            comp.define(
+                item.data['refdes'], 'CONN SIP',
+                "16PIN PM ST", "MY-MTA100-16"
+            )
+            tgroup.insert_eln_comp(comp)
+            skip = True
+        if not skip:
+            tgroup.insert(item)
 
     def populate_bom(self):
         if self.configurations.pcbname is not None:
@@ -365,31 +312,9 @@ class EntityElnBom(EntityBomBase):
             comp = EntityElnComp()
             comp.define('PCB', 'PCB', self.configurations.pcbname)
             tgroup.insert_eln_comp(comp)
-        parser = tendril.gedaif.bomparser.MotifAwareBomParser(
-            self.projfolder, "bom"
-        )
+        parser = MotifAwareBomParser(self.configurations.projectfolder, "bom")
         for item in parser.line_gen:
-            if item.data['device'] == 'TESTPOINT':
-                continue
-            tgroup = self.find_tgroup(item)
-            skip = False
-            if item.data['footprint'] == 'MY-TO220':
-                comp = EntityElnComp()
-                comp.define('HS' + item.data['refdes'][1:],
-                            'HEAT SINK', 'TO220')
-                tgroup.insert_eln_comp(comp)
-            if item.data['device'] == 'MODULE LCD' and \
-                    item.data['value'] == "CHARACTER PARALLEL 16x2" and \
-                    item.data['footprint'] == "MY-MTA100-16":
-                comp = EntityElnComp()
-                comp.define(
-                    item.data['refdes'], 'CONN SIP',
-                    "16PIN PM ST", "MY-MTA100-16"
-                )
-                tgroup.insert_eln_comp(comp)
-                skip = True
-            if not skip:
-                tgroup.insert(item)
+            self._add_item(item)
         for item in parser.motif_gen:
             self._motifs.append(item)
 
@@ -406,48 +331,43 @@ class EntityElnBom(EntityBomBase):
     def configure_motifs(self, configname):
         self._configured_for = configname
         self._included_motifs = []
-        motifconfs = self.configurations.get_configuration_motifs(configname)
+        motifconfs = self.configurations.configuration_motiflist(configname)
         if motifconfs is not None:
             for key, motifconf in motifconfs.iteritems():
                 motif = self.get_motif_by_refdes(key)
                 if motif is None:
                     logger.error("Motif not defined : " + key)
                     continue
-                motifconf_act = motif.get_configdict_stub()
+                motif_actconf = motif.get_configdict_stub()
                 if self.configurations.motiflist is not None:
-                    basemotifconfs = self.configurations.motiflist
-                    for bkey, baseconf in basemotifconfs.iteritems():
-                        if bkey == key:
-                            logger.debug(
-                                "Found Base Configuration for : " + key
-                            )
-                            motifconf_act.update(baseconf)
-                motifconf_act.update(motifconf)
-                motif.configure(motifconf_act)
+                    motif_actconf.update(self.configurations.motif_baseconf(key))
+                motif_actconf.update(motifconf)
+                motif.configure(motif_actconf)
                 self._included_motifs.append(motif)
 
     def create_output_bom(self, configname, groupname=None):
-        if configname not in self.configurations.get_configurations():
+        if configname not in self.configurations.configuration_names:
             raise ValueError
         outbomdescriptor = OutputElnBomDescriptor(
-            self.pcbname, self.projfolder, configname, self.configurations,
+            self.configurations.pcbname,
+            self.configurations.projectfolder,
+            configname, self.configurations,
             groupname=groupname
         )
         outbom = OutputBom(outbomdescriptor)
         if groupname is None:
             is_group_bom = False
-            outgroups = self.configurations.get_configuration(configname)
+            outgroups = self.configurations.configuration_grouplist(configname)  # noqa
         else:
             is_group_bom = True
             outgroups = [groupname]
 
-        genlist = self.configurations.get_configuration_gens(configname)
-
+        genlist = self.configurations.configuration_genlist(configname)
         gen_refdeslist = None
         if genlist is not None:
             gen_refdeslist = genlist.keys()
 
-        sjlist = self.configurations.get_configuration_sjs(configname)
+        sjlist = self.configurations.configuration_sjlist(configname)
         sj_refdeslist = None
         if sjlist is not None:
             sj_refdeslist = sjlist.keys()
@@ -462,7 +382,7 @@ class EntityElnBom(EntityBomBase):
             for comp in grpobj.complist:
                 if gen_refdeslist is not None and \
                         comp.refdes in gen_refdeslist:
-                    if tendril.conventions.electronics.fpiswire(comp.device):
+                    if fpiswire(comp.device):
                         comp.footprint = genlist[comp.refdes]
                     else:
                         comp.value = genlist[comp.refdes]
@@ -484,7 +404,7 @@ class EntityElnBom(EntityBomBase):
                         comp.fillstatus = 'DNP'
                 outbom.insert_component(comp)
 
-        motifconfs = self.configurations.get_configuration_motifs(configname)
+        motifconfs = self.configurations.configuration_motiflist(configname)
         if motifconfs is None:
             outbom.sort_by_ident()
             return outbom
@@ -506,10 +426,10 @@ class EntityElnBom(EntityBomBase):
         return outbom
 
     def get_group_boms(self, configname):
-        if configname not in self.configurations.get_configurations():
+        if configname not in self.configurations.configuration_names:
             raise ValueError
         rval = []
-        for group in self.configurations.get_configuration(configname):
+        for group in self.configurations.configuration_grouplist(configname):
             rval.append(self.create_output_bom(configname, groupname=group))
         return rval
 
@@ -538,8 +458,8 @@ def import_pcb(cardfolder):
     """
     cardfolder = os.path.abspath(cardfolder)
     pcbbom = None
-    configfile = tendril.gedaif.conffile.ConfigsFile(cardfolder)
-    if configfile.configdata is not None:
+    configfile = ConfigsFile(cardfolder)
+    if configfile.rawconfig is not None:
         pcbbom = EntityElnBom(configfile)
     return pcbbom
 

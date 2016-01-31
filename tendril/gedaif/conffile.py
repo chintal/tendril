@@ -52,6 +52,13 @@ class ConfigsFile(ConfigBase):
         super(ConfigsFile, self).validate()
 
     @property
+    def pcbname(self):
+        if self.is_pcb:
+            return self._configdata['pcbname']
+        else:
+            return None
+
+    @property
     def is_pcb(self):
         if 'pcbname' in self._configdata.keys() and \
                 self._configdata['pcbname'] is not None:

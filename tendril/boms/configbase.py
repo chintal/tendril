@@ -122,6 +122,10 @@ class ConfigBase(object):
         else:
             return [{'name': 'default', 'desc': 'Unclassified'}]
 
+    @property
+    def group_names(self):
+        return [x['name'] for x in self.grouplist]
+
     def get_group_desc(self, groupname):
         for group in self.grouplist:
             if group['name'] == groupname:
@@ -133,6 +137,17 @@ class ConfigBase(object):
             return self._configdata["motiflist"]
         else:
             return []
+
+    @property
+    def motif_refdeslist(self):
+        return self.motiflist.keys()
+
+    def motif_baseconf(self, refdes):
+        for mrefdes, mconf in self.motiflist.iteritems():
+            if mrefdes == refdes:
+                return mconf
+        raise ValueError("Motif with refdes {0} not defined for {1}"
+                         "".format(refdes, self._projectfolder))
 
     @property
     def sjlist(self):
@@ -220,6 +235,11 @@ class ConfigBase(object):
     def configsection_names(self):
         return [x['sectionname'] for x in self.configsections]
 
+    def get_configsections(self):
+        warnings.warn("Deprecated access of get_configsections",
+                      DeprecationWarning)
+        return self.configsection_names
+
     def configsection(self, sectionname):
         for configsection in self.configsections:
             if configsection['sectionname'] == sectionname:
@@ -245,6 +265,11 @@ class ConfigBase(object):
     def configsection_configgroups(self, sectionname, configname):
         return self.configsection_config(sectionname, configname)['groups']
 
+    def get_sec_groups(self, sectionname, config):
+        warnings.warn("Deprecated access of get_sec_groups",
+                      DeprecationWarning)
+        return self.configsection_configgroups(sectionname, config)
+
     # Configurations #
     @property
     def configurations(self):
@@ -257,12 +282,17 @@ class ConfigBase(object):
             if configuration['configname'] in self._configmatrix_baseconfigs():  # noqa
                 rval.extend(self._expand_configmatrix(configuration))
             else:
-                rval.append(configurations)
+                rval.append(configuration)
         return rval
 
     @property
     def configuration_names(self):
         return [x['configname'] for x in self.configurations]
+
+    def get_configurations(self):
+        warnings.warn("Deprecated access of get_configurations",
+                      DeprecationWarning)
+        return self.configuration_names
 
     def configuration(self, configname):
         for x in self.configurations:
@@ -270,14 +300,74 @@ class ConfigBase(object):
                 return x
         raise ValueError(configname + ' Not Found')
 
+    def _configuration_direct_grouplist(self, configname):
+        configuration = self.configuration(configname)
+        if 'grouplist' in configuration.keys():
+            return configuration['grouplist']
+        else:
+            return []
+
     def configuration_grouplist(self, configname):
         rval = ["default"]
         configuration = self.configuration(configname)
         if 'config' in configuration.keys():
-            for section, sconfig in configuration.iteritems():
-                rval += self.configsection_configgroups(section, sconfig)
-        rval = rval + configuration['grouplist']
+            for section, sconfig in configuration['config'].iteritems():
+                rval.extend(self.configsection_configgroups(section, sconfig))
+        rval.extend(self._configuration_direct_grouplist(configname))
+        while None in rval:
+            rval.remove(None)
         return list(set(rval))
+
+    def get_configuration(self, configname):
+        warnings.warn("Deprecated access of get_configuration",
+                      DeprecationWarning)
+        return self.configuration_grouplist(configname)
+
+    def configuration_motiflist(self, configname):
+        # TODO Also deal with defaults here?
+        configuration = self.configuration(configname)
+        if 'motiflist' in configuration.keys():
+            return configuration['motiflist']
+        else:
+            return None
+
+    def get_configuration_motifs(self, configname):
+        warnings.warn("Deprecated access of get_configuration_motifs",
+                      DeprecationWarning)
+        return self.configuration_motiflist(configname)
+
+    def configuration_genlist(self, configname):
+        configuration = self.configuration(configname)
+        if 'genlist' in configuration.keys():
+            return configuration['genlist']
+        else:
+            return None
+
+    def get_configuration_gens(self, configname):
+        warnings.warn("Deprecated access of get_configuration_gens",
+                      DeprecationWarning)
+        return self.configuration_genlist(configname)
+
+    def configuration_sjlist(self, configname):
+        if self.sjlist is not None:
+            sjlist = copy.copy(self.sjlist)
+        else:
+            sjlist = None
+        configuration = self.configuration(configname)
+        if 'sjlist' in configuration.keys():
+            csjlist = configuration['sjlist']
+            if sjlist is not None:
+                sjlist.update(csjlist)
+                return sjlist
+            else:
+                return csjlist
+        else:
+            return sjlist
+
+    def get_configuration_sjs(self, configname):
+        warnings.warn("Deprecated access of get_configuration_sjs",
+                      DeprecationWarning)
+        return self.configuration_sjlist(configname)
 
     def description(self, configname=None):
         if configname is None:

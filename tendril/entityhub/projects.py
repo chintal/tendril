@@ -101,13 +101,12 @@ def get_projects(basefolder=None):
                     os.path.relpath(os.path.join(root, d), basefolder)
                 ] = os.path.join(root, d)
                 cf = conffile.ConfigsFile(os.path.join(root, d))
-                if 'pcbname' in cf.configdata.keys() and cf.configdata['pcbname'] is not None:  # noqa
-                    lpcbs[cf.configdata['pcbname']] = os.path.join(root, d)
-                for config in cf.configdata['configurations']:
-                    lcards[config['configname']] = os.path.join(root, d)
-                    lcard_reporoot[
-                        config['configname']
-                    ] = os.path.relpath(os.path.join(root, d), basefolder)
+                if cf.is_pcb:
+                    lpcbs[cf.pcbname] = os.path.join(root, d)
+                for config in cf.configuration_names:
+                    lcards[config] = os.path.join(root, d)
+                    lcard_reporoot[config] = \
+                        os.path.relpath(os.path.join(root, d), basefolder)
 
     return lprojects, lpcbs, lcards, lcard_reporoot
 
@@ -143,21 +142,17 @@ def get_module_config(modulename):
 
 def get_module_snoseries(modulename):
     cf = get_module_config(modulename)
-    return cf.configdata['snoseries']
+    return cf.snoseries
 
 
 def check_module_is_card(modulename):
-    cf = get_module_config(modulename).configdata
-    if 'pcbname' in cf.keys() and cf['pcbname'] is not None:
-        return True
-    return False
+    cf = get_module_config(modulename)
+    return cf.is_pcb
 
 
 def check_module_is_cable(modulename):
-    cf = get_module_config(modulename).configdata
-    if 'cblname' in cf.keys() and cf['cblname'] is not None:
-        return True
-    return False
+    cf = get_module_config(modulename)
+    return cf.is_cable
 
 
 def get_project_repo_repr(modulename):
