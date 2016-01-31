@@ -249,7 +249,7 @@ class EntityElnBomConf(object):
         return self._configfile.configsection_names
 
     def get_sec_groups(self, sectionname, config):
-        return self._configfile.get_sec_groups(sectionname, config)
+        raise NotImplementedError
 
     def get_configuration(self, configname):
         return self._configfile.config_grouplist(configname)

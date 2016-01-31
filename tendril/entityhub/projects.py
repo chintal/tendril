@@ -29,7 +29,7 @@ from tendril.boms.electronics import import_pcb
 from tendril.boms.outputbase import CompositeOutputBom
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
+logger = log.get_logger(__name__, log.DEBUG)
 
 
 def is_project_folder(folder):

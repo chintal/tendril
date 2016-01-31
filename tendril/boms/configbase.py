@@ -145,6 +145,7 @@ class ConfigBase(object):
     def genlist(self):
         raise NotImplementedError
 
+    # Configmatrices #
     @property
     def configmatrices(self):
         if "configmatrix" in self._configdata.keys():
@@ -207,6 +208,44 @@ class ConfigBase(object):
                 rval.append(nconfig)
         return rval
 
+    # Configsections #
+    @property
+    def configsections(self):
+        if "configsections" in self._configdata.keys():
+            return self._configdata["configsections"]
+        else:
+            return []
+
+    @property
+    def configsection_names(self):
+        return [x['sectionname'] for x in self.configsections]
+
+    def configsection(self, sectionname):
+        for configsection in self.configsections:
+            if configsection['sectionname'] == sectionname:
+                return configsection
+        raise ValueError('Configsection {0} not found for {1}'
+                         ''.format(sectionname, self._projectfolder))
+
+    def configsection_groups(self, sectionname):
+        return self.configsection(sectionname)['grouplist']
+
+    def configsection_configs(self, sectionname):
+        return self.configsection(sectionname)['configurations']
+
+    def configsection_config(self, sectionname, configname):
+        for config in self.configsection_configs(sectionname):
+            if config['configname'] == configname:
+                return config
+        raise ValueError(
+                'Config {0} not found for section {1} for {2}'
+                ''.format(configname, sectionname, self._projectfolder)
+        )
+
+    def configsection_configgroups(self, sectionname, configname):
+        return self.configsection_config(sectionname, configname)['groups']
+
+    # Configurations #
     @property
     def configurations(self):
         if 'configurations' not in self._configdata.keys():
@@ -226,51 +265,19 @@ class ConfigBase(object):
         return [x['configname'] for x in self.configurations]
 
     def configuration(self, configname):
-        for x in self._configdata['configurations']:
+        for x in self.configurations:
             if x['configname'] == configname:
                 return x
         raise ValueError(configname + ' Not Found')
 
-    @property
-    def configsections(self):
-        if "configsections" in self._configdata.keys():
-            return self._configdata["configsections"]
-        else:
-            return []
-
-    @property
-    def configsection_names(self):
-        return [x['sectionname'] for x in self.configsections]
-
-    def get_sec_groups(self, sectionname, configname):
-        rval = []
-        for section in self.configsections:
-            if section["sectionname"] == sectionname:
-                for configuration in section["configurations"]:
-                    if configuration["configname"] == configname:
-                        for group in configuration["groups"]:
-                            if group is not None:
-                                rval.append(group)
-        return rval
-
-    def config_grouplist(self, configname):
+    def configuration_grouplist(self, configname):
         rval = ["default"]
-        for configuration in self.configurations:
-            if configuration["configname"] == configname:
-                try:
-                    for configsection in self.get_configsections():
-                        sec_confname = configuration["config"][configsection]
-                        rval = rval + self.get_sec_groups(configsection,
-                                                          sec_confname)
-                except TypeError:
-                    rval = ["default"]
-                    try:
-                        for group in configuration["grouplist"]:
-                            if group != "default":
-                                rval = rval + [group]
-                    except:
-                        raise AttributeError
-        return rval
+        configuration = self.configuration(configname)
+        if 'config' in configuration.keys():
+            for section, sconfig in configuration.iteritems():
+                rval += self.configsection_configgroups(section, sconfig)
+        rval = rval + configuration['grouplist']
+        return list(set(rval))
 
     def description(self, configname=None):
         if configname is None:
