@@ -246,7 +246,7 @@ class EntityElnBomConf(object):
         return rval
 
     def get_configsections(self):
-        return self._configfile.get_configsections
+        return self._configfile.configsection_names
 
     def get_sec_groups(self, sectionname, config):
         return self._configfile.get_sec_groups(sectionname, config)

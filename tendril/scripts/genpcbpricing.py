@@ -52,7 +52,7 @@ import argparse
 from tendril.entityhub import projects
 from tendril.sourcing import csil
 
-from tendril.gedaif.conffile import NoGedaProjectException
+from tendril.gedaif.conffile import NoGedaProjectError
 from tendril.gedaif import conffile
 
 from tendril.utils.config import PROJECTS_ROOT
@@ -148,7 +148,7 @@ def main():
                     else:
                         conffile.ConfigsFile(target)
                         logger.info("Will check " + target)
-                except NoGedaProjectException:
+                except NoGedaProjectError:
                     # Make a guess.
                     if os.path.split(target)[1] == 'configs.yaml':
                         target == os.path.split(target)[0]
@@ -163,7 +163,7 @@ def main():
                         else:
                             conffile.ConfigsFile(target)
                             logger.info("Will check " + target)
-                    except NoGedaProjectException:
+                    except NoGedaProjectError:
                         logger.error("No gEDA Project found at " + target)
 
 

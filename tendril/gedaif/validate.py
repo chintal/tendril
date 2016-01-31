@@ -24,7 +24,7 @@ import tendril.gedaif.gsymlib
 
 import tendril.boms.electronics
 
-from tendril.gedaif.conffile import NoGedaProjectException
+from tendril.gedaif.conffile import NoGedaProjectError
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
@@ -37,7 +37,7 @@ def check(projectfolder):
     logger.info("Attempting to Validate Project at : " + projectfolder)
     try:
         gpf = tendril.gedaif.projfile.GedaProjectFile(projectfolder)
-    except NoGedaProjectException:
+    except NoGedaProjectError:
         logger.critical(
             "Configs file missing. No further validation will be attempted"
         )

@@ -29,7 +29,7 @@ from tendril.entityhub import macs
 from tendril.entityhub.products import get_product_calibformat
 
 from tendril.gedaif.conffile import ConfigsFile
-from tendril.gedaif.conffile import NoGedaProjectException
+from tendril.gedaif.conffile import NoGedaProjectError
 from tendril.boms.electronics import import_pcb
 
 from tendril.utils.fsutils import import_
@@ -258,7 +258,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder,
         gcf = ConfigsFile(projectfolder)
         logger.info("Using gEDA configs file from : " +
                     projects.cards[devicetype])
-    except NoGedaProjectException:
+    except NoGedaProjectError:
         raise AttributeError("gEDA project for " + devicetype + " not found.")
     cnf_suites = gcf.tests()
     for cnf_suite in cnf_suites:
