@@ -17,6 +17,7 @@
 
 
 from decimal import Decimal
+from decimal import InvalidOperation
 from .unitbase import NumericalUnitBase
 
 
@@ -40,3 +41,37 @@ class Temperature(NumericalUnitBase):
 
     def __repr__(self):
         return str(self._value) + self._dostr
+
+
+def parse_power(value):
+    value = value.strip()
+
+    try:
+        num_val = Decimal(value[:-1])
+        ostr = value[-1:]
+    except InvalidOperation:
+        num_val = Decimal(value[:-2])
+        ostr = value[-2:]
+
+    if ostr == 'W':
+        return num_val
+    elif ostr == 'mW':
+        return num_val / 1000
+    elif ostr == 'uW':
+        return num_val / 1000000
+    elif ostr == 'nW':
+        return num_val / 1000000000
+    elif ostr == 'kW':
+        return num_val * 1000
+    elif ostr == 'MW':
+        return num_val * 1000
+    else:
+        raise ValueError
+
+
+class ThermalDissipation(NumericalUnitBase):
+    def __init__(self, value):
+        _ostrs = ['nW', 'uW', 'mW', 'W', 'kW', 'MW']
+        _dostr = 'W'
+        _parse_func = parse_power
+        super(ThermalDissipation, self).__init__(value, _ostrs, _dostr, _parse_func)
