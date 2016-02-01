@@ -68,6 +68,7 @@ names. Each function specifies the paths it operates on.
 
     gen_confbom
     gen_confdoc
+    gen_configsdoc
     gen_schpdf
     gen_masterdoc
     gen_confpdf
@@ -77,6 +78,13 @@ names. Each function specifies the paths it operates on.
     gen_pcb_dxf
     gen_pcb_img
     gen_pcbpricing
+
+.. rubric:: Frontend Interface Functions
+
+.. autosummary::
+
+    get_img_list
+    get_docs_list
 
 """
 
@@ -141,6 +149,9 @@ def gen_confbom(projfolder, configname, force=False):
     :type projfolder: str
     :param configname: The configuration name for which the BOM should be
                        generated.
+    :type configname: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -215,6 +226,9 @@ def gen_confdoc(projfolder, configname, force=False):
     :type projfolder: str
     :param configname: The configuration name for which the BOM should be
                        generated.
+    :type configname: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -239,6 +253,7 @@ def gen_confdoc(projfolder, configname, force=False):
           - The name of the base PCB.
         * - ``obom``
           - An :mod:`tendril.boms.outputbase.OutputBom` instance
+
     """
     gpf = projfile.GedaProjectFile(projfolder)
     sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
@@ -290,6 +305,8 @@ def gen_configsdoc(projfolder, namebase, force=False):
     :type projfolder: str
     :param namebase: The project name.
     :type namebase: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -311,6 +328,8 @@ def gen_schpdf(projfolder, namebase, force=False):
     :type projfolder: str
     :param namebase: The project name.
     :type namebase: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -369,6 +388,8 @@ def gen_masterdoc(projfolder, namebase, force=False):
     :type projfolder: str
     :param namebase: The project name.
     :type namebase: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -431,6 +452,8 @@ def gen_confpdf(projfolder, configname, namebase, force=False):
     :type configname: str
     :param namebase: The project name.
     :type namebase: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -500,6 +523,8 @@ def gen_cobom_csv(projfolder, namebase, force=False):
     :type projfolder: str
     :param namebase: The project name.
     :type namebase: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -555,6 +580,8 @@ def gen_pcb_pdf(projfolder, force=False):
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -612,6 +639,8 @@ def gen_pcb_gbr(projfolder, force=False):
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -713,6 +742,8 @@ def gen_pcb_dxf(projfolder, force=False):
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -785,6 +816,8 @@ def gen_pcbpricing(projfolder, namebase, force=False):
     :type projfolder: str
     :param namebase: The project name.
     :type namebase: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -859,6 +892,8 @@ def generate_docs(projfolder, force=False):
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
+    :param force: Regenerate even if up-to-date.
+    :type force: bool
     :return: The output file path.
 
     .. rubric:: Paths
@@ -895,6 +930,19 @@ def generate_docs(projfolder, force=False):
 
 
 def get_img_list(projfolder, cardname=None):
+    """
+    Returns a list of :class:`docstore.ExposedDocument` instances, pointing to
+    the generated renders for the gEDA project or card specified by the
+    parameters.
+
+    Currently, the ``cardname`` parameter is ignored, since no configuration
+    specific images are generated.
+
+    :param projfolder: The gEDA project folder.
+    :param cardname: The cardname.
+    :return: list of :class:`ExposedDocument`
+
+    """
     configfile = conffile.ConfigsFile(projfolder)
     gpf = projfile.GedaProjectFile(configfile.projectfolder)
     namebase = configfile.pcbname
@@ -928,6 +976,22 @@ def get_img_list(projfolder, cardname=None):
 
 
 def get_docs_list(projfolder, cardname=None):
+    """
+    Returns a list of :class:`docstore.ExposedDocument` instances, pointing to
+    the documentation linked to the gEDA project or card specified by the
+    parameters.
+
+    If the ``cardname`` is not specified, the documents linked to the base PCB
+    only are returned.
+
+    If the ``cardname`` is specified, the documents defining the specific
+    configuration only are returned.
+
+    :param projfolder: The gEDA project folder.
+    :param cardname: The cardname.
+    :return: list of :class:`ExposedDocument`
+
+    """
     configfile = conffile.ConfigsFile(projfolder)
     namebase = configfile.pcbname
     is_cable = False
