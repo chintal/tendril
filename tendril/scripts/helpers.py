@@ -19,11 +19,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for helpers
+Script Helpers
+==============
+
+Small functions to help simplify and streamline script creation.
+
 """
 
 
 def add_project_selector_options(parser):
+    """
+    Add arguments for project selection to the provided
+    parser.
+
+    The following arguments are added :
+
+        - ``projfolders``
+        - ``recurse``
+        - ``all``
+
+    :param parser: The parser to add the arguments to.
+    :type parser: :class:`argparse.ArgumentParser`
+
+    """
     parser.add_argument(
         'projfolders', metavar='PATH', type=str, nargs='*',
         help='gEDA Project Folder(s), ignored for --all.'
@@ -39,6 +57,20 @@ def add_project_selector_options(parser):
 
 
 def add_vendor_selection_options(parser):
+    """
+    Add arguments for vendor selection to the provided
+    parser.
+
+    The following arguments are added :
+
+        - ``vendor_name``
+        - ``all``
+
+    :param parser: The parser to add the arguments to.
+    :type parser: :class:`argparse.ArgumentParser`
+
+    """
+
     parser.add_argument(
         'vendor_name', metavar='VENDOR_NAME', type=str, nargs='?',
         help='Name of the vendor. Ignored for --all.'
