@@ -83,9 +83,9 @@ def cards(cardname=None):
         stage_docs = get_docs_list(cardfolder, cardname)
 
         if gcf.is_pcb:
-            barepcb = gcf.configdata['pcbname']
+            barepcb = gcf.pcbname
         elif gcf.is_cable:
-            barepcb = gcf.configdata['cblname']
+            barepcb = gcf.rawconfig['cblname']
         else:
             raise ValueError("Doesn't seem to be a card or a cable : " +
                              cardname)

@@ -204,7 +204,7 @@ class ConfigBase(object):
                     )
 
                     # Update desc
-                    nconfig['configname'] = nconfig['configname'].replace(
+                    nconfig['desc'] = nconfig['desc'].replace(
                             '<{0}:{1}>'.format(dimname, 'tpart'),
                             component['tpart']
                     )
