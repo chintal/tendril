@@ -7,6 +7,7 @@ Submodules
 .. toctree::
 
    tendril.boms.electronics
+   tendril.boms.configbase
    tendril.boms.outputbase
    tendril.boms.products
 

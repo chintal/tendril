@@ -7,6 +7,7 @@ Submodules
 .. toctree::
 
    tendril.frontend.parts.forms
+   tendril.frontend.parts.tasks
 
 Module contents
 ---------------

@@ -39,5 +39,11 @@ with tendril.
    tendril.scripts.testresult
    tendril.scripts.writecalib
 
+.. rubric:: Helper Modules
+
+.. toctree::
+
+   tendril.scripts.helpers
+
 """
 

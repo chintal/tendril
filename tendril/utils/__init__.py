@@ -65,6 +65,7 @@ Tendril application code.
     tendril.utils.fsutils
     tendril.utils.libreoffice
     tendril.utils.log
+    tendril.utils.mq
     tendril.utils.pdf
     tendril.utils.vcs
     tendril.utils.www
