@@ -27,6 +27,9 @@ from tendril.conventions.motifs.motifbase import MotifBase
 from tendril.conventions import electronics
 from tendril.gedaif import gsymlib
 
+from tendril.utils.types.electromagnetic import Voltage
+from tendril.utils.types.electromagnetic import Current
+from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
@@ -34,11 +37,13 @@ logger = log.get_logger(__name__, log.DEFAULT)
 class MotifLREGS1(MotifBase):
     def __init__(self, identifier):
         super(MotifLREGS1, self).__init__(identifier)
+        self._target_vout = None
 
     def configure(self, configdict):
         self._configdict = configdict
+        self._target_vout = Voltage(configdict['Vout'])
         self._autoset_r2()
-        self.Vout = configdict['Vout']
+        self._autoset_r1()
         self.validate()
 
     def _autoset_r2(self):
@@ -52,16 +57,19 @@ class MotifLREGS1(MotifBase):
                                              self._configdict['Rmin'],
                                              self._configdict['Rmax'])
 
-        required_res_val = fabs(self.Vref / self.Imin)
+        required_res_val = fabs(self.Vref.value / self.Imin.value)
+        required_res_val = Resistance(required_res_val)
 
         rval = None
-        lastval = None
         for val in allowed_res_vals:
             lastval = rval
-            rval = electronics.parse_resistance(val)
+            rval = Resistance(val)
             if rval >= required_res_val:
                 self.get_elem_by_idx('R2').data['value'] = gsymlib.find_resistor(lastval, r2_fp, r2_dev)  # noqa
                 break
+
+    def _autoset_r1(self):
+        self.Vout = self._target_vout
 
     @property
     def Vout(self):
@@ -79,13 +87,12 @@ class MotifLREGS1(MotifBase):
                                              self._configdict['Rmin'],
                                              self._configdict['Rmax'])
 
-        required_res_val = ((electronics.parse_voltage(value) / self.Vref) - 1) * self.R2  # noqa
+        required_res_val = ((value / self.Vref) - 1) * self.R2
 
         rval = None
-        lastval = None
         for val in allowed_res_vals:
             lastval = rval
-            rval = electronics.parse_resistance(val)
+            rval = Resistance(val)
             if rval >= required_res_val:
                 self.get_elem_by_idx('R1').data['value'] = gsymlib.find_resistor(lastval, r1_fp, r1_dev)  # noqa
                 break
@@ -94,25 +101,25 @@ class MotifLREGS1(MotifBase):
     def R1(self):
         elem = self.get_elem_by_idx('R1')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
+        return Resistance(electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0]))  # noqa
 
     @property
     def R2(self):
         elem = self.get_elem_by_idx('R2')
         assert elem.data['device'] in ['RES SMD', 'RES THRU']
-        return electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0])  # noqa
+        return Resistance(electronics.parse_resistance(electronics.parse_resistor(elem.data['value'])[0]))  # noqa
 
     @property
     def Vref(self):
-        return electronics.parse_voltage(self._configdict['Vref'])
+        return Voltage(self._configdict['Vref'])
 
     @property
     def Imin(self):
-        return electronics.parse_current(self._configdict['Imin'])
+        return Current(self._configdict['Imin'])
 
     @property
     def Il(self):
-        return self.Vref / self.R2
+        return Current(self.Vref.value / self.R2.value)
 
     @property
     def listing(self):
@@ -127,6 +134,7 @@ class MotifLREGS1(MotifBase):
             ('R1', "Lower Feedback Resistor", ''),
             ('R2', "Upper Feedback Resistor", ''),
             ('Vout', "Actual Output Voltage", self._configdict['Vout']),
+            ('Il', "Actual Minimum Load", self.Imin)
         ]
         parameters = [
             (p_vout, "Output Voltage Setting"),
@@ -138,11 +146,11 @@ class MotifLREGS1(MotifBase):
         inputs = [
             ('desc', 'Positive LDO Output Voltage Setter', 'description', str),
             ('Vref', '1.225V',
-             'Internal Reference for Output Voltage Feedback', str),
+             'Internal Reference for Output Voltage Feedback', Voltage),
             ('Rseries', 'E24', 'Resistance Series', str),
-            ('Rmin', '10E', 'Minimum Resistance', str),
-            ('Rmax', '10M', 'Maximum Resistance', str),
-            ('Imin', '1mA', 'Minimum Load Current for Regulation', str),
-            ('Vout', '', 'Output Voltage', str),
+            ('Rmin', '10E', 'Minimum Resistance', Resistance),
+            ('Rmax', '10M', 'Maximum Resistance', Resistance),
+            ('Imin', '1mA', 'Minimum Load Current for Regulation', Current),
+            ('Vout', '', 'Output Voltage', Voltage),
         ]
         return inputs

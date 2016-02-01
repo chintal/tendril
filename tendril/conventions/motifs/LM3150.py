@@ -42,6 +42,7 @@ from tendril.utils.types.electromagnetic import Charge
 from tendril.utils.types.time import Frequency
 from tendril.utils.types.time import TimeSpan
 from tendril.utils.types.electromagnetic import DutyCycle
+from tendril.utils.types.thermodynamic import ThermalDissipation
 from tendril.utils.types.unitbase import Percentage
 
 from tendril.utils import log
@@ -210,7 +211,8 @@ class MotifLM3150(MotifBase):
         logger.debug('Rdson: {0}'.format(self.fet_Rdson))
 
         d_typ = DutyCycle(100 * self.Vout / self.Vin_typ)
-        self.Pcond = self.Iout.value ** 2 * self.fet_Rdson.value * d_typ.value / 100  # noqa
+        p_cond = self.Iout.value ** 2 * self.fet_Rdson.value * d_typ.value / 100  # noqa
+        self.Pcond = ThermalDissipation(p_cond)
 
         # This results in about 10 times greater dissipation than the
         # datasheet calculation, due to 1.5nC used as the gate charge.
@@ -218,12 +220,13 @@ class MotifLM3150(MotifBase):
         psw_t1 = self.Vin_typ.value * self.Iout.value * self.fet_Qgh.value
         vth = 2.5
         psw_t2 = self.Fsw.value * Decimal((8.5 / (6 - vth)) + (6.8 / vth))
-        self.Psw = Decimal(0.5) * psw_t1 * psw_t2
+        self.Psw = ThermalDissipation(Decimal(0.5) * psw_t1 * psw_t2)
 
         self.Pdh = self.Pcond + self.Psw
 
         nd = (1 - d_typ.value / 100)
-        self.Pdl = self.Iout.value ** 2 * self.fet_Rdson.value * nd
+        p_dl = self.Iout.value ** 2 * self.fet_Rdson.value * nd
+        self.Pdl = ThermalDissipation(p_dl)
 
     def _autoset_ilim(self):
         rlim_dev = self.get_elem_by_idx('RLIM').data['device']
