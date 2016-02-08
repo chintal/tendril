@@ -108,6 +108,7 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         elif configdata['documentation']['am'] is False:
             # No Assembly manifest needed
             rval['prodst'] = "@THIS"
+            rval['genmanifest'] = False
         if configdata['productionstrategy']['testing'] == 'normal':
             # Normal test procedure, Test when made
             rval['testst'] = "@NOW"

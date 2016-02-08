@@ -401,6 +401,11 @@ config_options_network_caching = [
         "False",
         "Whether or not to use the replicator cache"
     ),
+    ConfigOption(
+        'FIREFOX_PROFILE_PATH',
+        "None",
+        "Path to the firefox profile to use for splinter."
+    )
 ]
 
 load_config(config_options_network_caching)

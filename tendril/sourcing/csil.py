@@ -35,6 +35,7 @@ from tendril.utils.types import currency
 from tendril.utils.terminal import TendrilProgressBar
 
 from tendril.utils.config import VENDORS_DATA
+from tendril.utils.config import FIREFOX_PROFILE_PATH
 
 from tendril.gedaif import projfile
 from tendril.entityhub import projects
@@ -96,21 +97,7 @@ def get_csil_prices(params=exparams, rval=None):
         6: '2184',
     }
 
-    # proxyIP = NETWORK_PROXY_IP
-    # proxyPort = int(NETWORK_PROXY_PORT)
-
-    # proxy_settings = {'network.proxy.type': 1,
-    #                   'network.proxy.http': proxyIP,
-    #                   'network.proxy.http_port': proxyPort,
-    #                   'network.proxy.ssl': proxyIP,
-    #                   'network.proxy.ssl_port': proxyPort,
-    #                   'network.proxy.socks': proxyIP,
-    #                   'network.proxy.socks_port':proxyPort,
-    #                   'network.proxy.ftp': proxyIP,
-    #                   'network.proxy.ftp_port':proxyPort
-    #                   }
-
-    browser = splinter.Browser('firefox')
+    browser = splinter.Browser('firefox', profile=FIREFOX_PROFILE_PATH)
     url = 'http://www.pcbpower.com:8080'
     browser.visit(url)
     values = {
