@@ -213,7 +213,15 @@ class ConfigBase(object):
                         if action == 'pass':
                             continue
                         if action == 'update':
-                            if param in ['genlist']:
+                            if param in ['genlist', 'sjlist']:
+                                if param not in nconfig.keys():
+                                    nconfig[param] = {}
+                                if param not in component.keys():
+                                    warnings.warn(
+                                        "Something wrong with Matrix Definitions",
+                                        Warning
+                                    )
+                                    continue
                                 nconfig[param].update(component[param])
                                 continue
                         raise AttributeError("{0} Action not recognized for "
