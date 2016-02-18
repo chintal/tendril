@@ -321,6 +321,11 @@ class GSymGeneratorFile(object):
                         self._iseries.append(iseries)
                         values.extend(vals.values())
                 return values
+            elif gendata['type'] == 'wire':
+                for gauge in gendata['gauges']:
+                    for color in gendata['colors']:
+                        values.append('{0} {1}'.format(gauge, color))
+                return values
         else:
             logger.ERROR("Config file schema is not supported")
 
