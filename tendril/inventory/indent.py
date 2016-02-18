@@ -79,6 +79,7 @@ class InventoryIndent(object):
 
     def define_auth_chain(self,  prod_order_sno=None, root_order_sno=None,
                           prod_order_scaffold=False, session=None):
+        prod_order_sno = prod_order_sno or None
         if prod_order_sno is not None:
             if not serialnos.serialno_exists(sno=prod_order_sno,
                                              session=session):
