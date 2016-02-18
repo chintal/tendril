@@ -343,7 +343,7 @@ class InventoryIndent(object):
 
     @property
     def root_orders(self):
-        return []
+        return [self._root_order_sno]
 
     @property
     def root_order_snos(self):
