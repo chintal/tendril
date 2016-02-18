@@ -203,7 +203,7 @@ def fpiswire_ident(ident):
     return False
 
 
-def ident_transform(device, value, footprint, tf=None):
+def ident_transform(device, value, footprint, tf=None, generic=False):
     """
     Auto-generated ident string from the component ``device``, ``value``
     and ``footprint`` attributes.
@@ -238,6 +238,8 @@ def ident_transform(device, value, footprint, tf=None):
         logging.critical("Malformed ident : " + ident)
     else:
         if no_fp(device):
+            ident = device + " " + value
+        if generic is True and fpiswire(device):
             ident = device + " " + value
     if tf is None:
         return ident

@@ -104,6 +104,13 @@ class GedaSymbol(object):
                                                                self.footprint)
 
     @property
+    def ident_generic(self):
+        return tendril.conventions.electronics.ident_transform(self.device,
+                                                               self.value,
+                                                               self.footprint,
+                                                               generic=True)
+
+    @property
     def sym_ok(self):
         rval = False
         if self.device in tendril.conventions.electronics.DEVICE_CLASSES:
@@ -396,7 +403,7 @@ def gen_symlib(path=GEDA_SYMLIB_ROOT, recursive=True,
 def gen_index(symlist, upper=False):
     lindex = {}
     for symbol in symlist:
-        ident = symbol.ident
+        ident = symbol.ident_generic
         if upper:
             ident = ident.upper()
         if ident in lindex.keys():
