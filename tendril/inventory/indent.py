@@ -195,7 +195,7 @@ class InventoryIndent(object):
         with docstore.docstore_fs.open(cobom_path, 'r') as f:
             cobom = load_cobom_from_file(
                 f, os.path.splitext(os.path.split(cobom_path)[1])[0],
-                verbose=verbose
+                verbose=verbose, generic=True
             )
         self._cobom = cobom
 

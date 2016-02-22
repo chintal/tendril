@@ -342,7 +342,7 @@ def create_obom_from_listing(component_list, head):
     return obom
 
 
-def load_cobom_from_file(f, name, tf=None, verbose=True):
+def load_cobom_from_file(f, name, tf=None, verbose=True, generic=False):
     bomlist = []
     header = []
     reader = csv.reader(f)
@@ -374,10 +374,10 @@ def load_cobom_from_file(f, name, tf=None, verbose=True):
             print line[0] + ' Possibly not recognized'
         if tf:
             device, value, footprint = parse_ident(
-                tf.get_canonical_repr(line[0])
+                tf.get_canonical_repr(line[0]), generic=generic
             )
         else:
-            device, value, footprint = parse_ident(line[0])
+            device, value, footprint = parse_ident(line[0], generic=generic)
         logger.debug("Trying to insert line : " + line[0])
         # print base_tf.get_canonical_repr(line[0])
         from tendril.boms.electronics import EntityElnComp

@@ -247,7 +247,7 @@ def ident_transform(device, value, footprint, tf=None, generic=False):
         return tf.get_canonical(tf)
 
 
-def parse_ident(ident):
+def parse_ident(ident, generic=False):
     """
 
     :type ident: str
@@ -266,6 +266,9 @@ def parse_ident(ident):
         if device is not None and device.startswith(st):
             footprint = None
             value = ' '.join(parts)
+    if generic is True and fpiswire(device):
+        footprint = None
+        value = ' '.join(parts)
     if value is None:
         footprint = parts[-1]
         value = ' '.join(parts[:-1])
