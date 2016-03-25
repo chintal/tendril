@@ -381,7 +381,7 @@ class ConfigBase(object):
         if configname is None:
             return self._configdata['desc']
         else:
-            for configuration in self._configdata['configurations']:
+            for configuration in self.configurations:
                 if configuration['configname'] == configname:
                     return configuration['desc']
         raise ValueError
