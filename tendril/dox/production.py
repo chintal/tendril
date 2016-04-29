@@ -34,26 +34,21 @@ produce the output files after constructing the appropriate stage.
 """
 
 import os
-import yaml
 
 from fs.utils import copyfile
 
-from tendril.boms import electronics as boms_electronics
+import docstore
+import render
 from tendril.boms.outputbase import DeltaOutputBom
-
 from tendril.entityhub import projects
 from tendril.entityhub import serialnos
 from tendril.entityhub.modules import get_module_instance
 from tendril.entityhub.modules import get_module_prototype
 from tendril.gedaif.conffile import ConfigsFile
-from tendril.utils.fsutils import temp_fs
-from tendril.utils.fsutils import get_tempname
-from tendril.utils.pdf import merge_pdf
-
-import render
-import docstore
-
 from tendril.utils import log
+from tendril.utils.fsutils import get_tempname
+from tendril.utils.fsutils import temp_fs
+from tendril.utils.files.pdf import merge_pdf
 logger = log.get_logger(__name__, log.DEBUG)
 
 

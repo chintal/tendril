@@ -19,19 +19,18 @@ Inventory Acquire Module documentation (:mod:`inventory.acquire`)
 =================================================================
 """
 
-import os
 import csv
-import re
 import datetime
+import os
+import re
 
-from tendril.utils import libreoffice
-from tendril.utils import fsutils
-from tendril.utils import config
-
-from tendril.gedaif import gsymlib
 from tendril.entityhub import transforms
-
+from tendril.gedaif import gsymlib
+from tendril.utils import config
+from tendril.utils import fsutils
 from tendril.utils import log
+from tendril.utils.files import libreoffice
+
 logger = log.get_logger(__name__, log.DEFAULT)
 
 

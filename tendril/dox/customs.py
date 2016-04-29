@@ -56,23 +56,23 @@ produce the output files after constructing the appropriate stage.
 
 from __future__ import print_function
 
-import os
-import datetime
 import copy
-import yaml
-import fs
+import datetime
+import os
 
+import fs
+import yaml
+
+import docstore
 import render
 import wallet
-import docstore
-
-from tendril.utils import pdf
-from tendril.utils.db import with_db
 from tendril.entityhub import serialnos
+from tendril.utils.config import COMPANY_GOVT_POINT
+from tendril.utils.db import with_db
 from tendril.utils.fsutils import get_tempname
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.terminal import TendrilProgressBar
-from tendril.utils.config import COMPANY_GOVT_POINT
+from tendril.utils.files import pdf
 
 
 def gen_declaration(invoice, target_folder, copyt, serialno):

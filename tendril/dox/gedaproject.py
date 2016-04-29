@@ -88,35 +88,30 @@ names. Each function specifies the paths it operates on.
 
 """
 
-import os
 import csv
-import yaml
+import os
 import shutil
 
-from tendril.gedaif import gschem
-from tendril.gedaif import conffile
-from tendril.gedaif import projfile
-from tendril.gedaif import pcb
-from tendril.gedaif import gerberfiles
-
-from tendril.utils import pdf
-from tendril.utils import fsutils
-
-from tendril.boms import electronics as boms_electronics
-from tendril.boms import outputbase as boms_outputbase
+import yaml
+from fs import path
+from fs.errors import PermissionDeniedError
+from fs.utils import copyfile
 
 import render
-from fs import path
-from fs.utils import copyfile
-from fs.errors import PermissionDeniedError
-
 from docstore import ExposedDocument
 from docstore import refdoc_fs
-
-from tendril.utils.config import PROJECTS_ROOT
-
+from tendril.boms import electronics as boms_electronics
+from tendril.boms import outputbase as boms_outputbase
+from tendril.gedaif import conffile
+from tendril.gedaif import gerberfiles
+from tendril.gedaif import gschem
+from tendril.gedaif import pcb
+from tendril.gedaif import projfile
+from tendril.utils import fsutils
 from tendril.utils import log
+from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.fsutils import temp_fs
+from tendril.utils.files import pdf
 
 workspace_fs = temp_fs.makeopendir('workspace_gpd')
 logger = log.get_logger(__name__, log.DEFAULT)

@@ -19,20 +19,20 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-import os
-import qrcode
 import atexit
 import cPickle
+import os
+
+import qrcode
 
 import render
-from tendril.utils.pdf import merge_pdf
-from tendril.utils.fsutils import TEMPDIR
-
-from tendril.utils.config import COMPANY_NAME
-from tendril.utils.config import COMPANY_LOGO_PATH
-from tendril.utils.config import INSTANCE_CACHE
-
 from tendril.utils import log
+from tendril.utils.config import COMPANY_LOGO_PATH
+from tendril.utils.config import COMPANY_NAME
+from tendril.utils.config import INSTANCE_CACHE
+from tendril.utils.fsutils import TEMPDIR
+from tendril.utils.files.pdf import merge_pdf
+
 logger = log.get_logger(__name__, log.INFO)
 
 

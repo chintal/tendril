@@ -21,15 +21,15 @@ See the COPYING, README, and INSTALL files for more information
 
 import os
 import subprocess
+
 import pyparsing
 
-import tendril.utils.pdf
-
-from tendril.utils.types.lengths import Length
-from tendril.utils.types.cartesian import CartesianPoint
-from tendril.utils.types.cartesian import CartesianLineSegment
-
+from tendril.utils.files import pdf
 from tendril.utils import log
+from tendril.utils.types.cartesian import CartesianLineSegment
+from tendril.utils.types.cartesian import CartesianPoint
+from tendril.utils.types.lengths import Length
+
 logger = log.get_logger(__name__, log.INFO)
 
 
@@ -633,7 +633,7 @@ def conv_pcb2pdf(pcbpath, docfolder, projname):
                      '--outline', '--media', 'A4', '--show-legend',
                      pcb_file], cwd=pcb_folder)
     pdffile = os.path.join(docfolder, projname + '-pcb.pdf')
-    tendril.utils.pdf.conv_ps2pdf(psfile, pdffile)
+    pdf.conv_ps2pdf(psfile, pdffile)
     os.remove(psfile)
     return pdffile
 

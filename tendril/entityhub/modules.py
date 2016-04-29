@@ -158,6 +158,9 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
             self._obom = self.bom.create_output_bom(configname=self.ident)
         return self._obom
 
+    def _get_status(self):
+        raise NotImplementedError
+
     def _get_production_strategy(self):
         rval = {}
         configdata = self.configs.rawconfig

@@ -19,12 +19,13 @@ gEDA gschem module documentation (:mod:`gedaif.gschem`)
 =======================================================
 """
 
-import re
 import os
+import re
 import subprocess
 from collections import deque
 
 import tendril.utils.log
+
 logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
 
 rex_vstring = re.compile(ur'^v (?P<gsch_ver>\d+) (?P<file_ver>\d+)$')
@@ -100,7 +101,7 @@ map_shownamevalue = {0: 'SHOW NAME VALUE',
                      }
 
 
-import tendril.utils.pdf
+from tendril.utils.files import pdf
 from tendril.utils.types.cartesian import CartesianPoint
 from tendril.utils.types.cartesian import CartesianLineSegment
 
@@ -333,7 +334,7 @@ def conv_gsch2pdf(schpath, docfolder):
         gschem_pscmd = "gschem -o" + pspath + \
                        " -s" + GEDA_SCHEME_DIR + '/print.scm ' + schpath
         subprocess.call(gschem_pscmd.split(' '))
-        tendril.utils.pdf.conv_ps2pdf(pspath, pdfpath)
+        pdf.conv_ps2pdf(pspath, pdfpath)
         os.remove(pspath)
     else:
         gaf_pdfcmd = [os.path.join(GAF_BIN_ROOT, 'gaf'),
