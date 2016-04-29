@@ -22,7 +22,10 @@
 Docstring for status
 """
 
-DEFINED_STATUS = {
+import numbers
+
+
+STATUS_ORDER = {
     'Prototype': 10,
     'Active': 20,
     'Deprecated': 30,
@@ -34,5 +37,56 @@ DEFINED_STATUS = {
 }
 
 
+class Status(object):
+    def __init__(self, ststr):
+        self._ststr = ststr
+        self._stint = STATUS_ORDER[ststr]
+
+    def __repr__(self):
+        return self._ststr
+
+    def __str__(self):
+        return self._ststr
+
+    def __eq__(self, other):
+        # TODO Fix for thorough string handling
+        if isinstance(other, str):
+            return other == self._ststr
+        if isinstance(other, numbers.Number):
+            return other == self._stint
+        if isinstance(other, Status):
+            return other._stint == self._stint
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, Status):
+            return self._stint < other._stint
+        return NotImplemented
+
+    def __le__(self, other):
+        if isinstance(other, Status):
+            return self._stint <= other._stint
+        return NotImplemented
+
+    def __gt__(self, other):
+        if isinstance(other, Status):
+            return self._stint > other._stint
+        return NotImplemented
+
+    def __ge__(self, other):
+        if isinstance(other, Status):
+            return self._stint >= other._stint
+        return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, Status):
+            return self._stint != other._stint
+
+
+status_objects = {}
+
+
 def get_status(ststr):
-    return DEFINED_STATUS[ststr]
+    if ststr not in status_objects.keys():
+        status_objects[ststr] = Status(ststr)
+    return status_objects[ststr]

@@ -24,6 +24,7 @@ import os
 from tendril.boms.configbase import ConfigBase
 from tendril.boms.configbase import NoProjectError
 from tendril.boms.configbase import SchemaNotSupportedError
+from tendril.conventions import status
 
 
 class NoGedaProjectError(NoProjectError):
@@ -87,10 +88,10 @@ class ConfigsFile(ConfigBase):
     @property
     def status(self):
         try:
-            return self._configdata['pcbdetails']['status']
+            return status.get_status(self._configdata['pcbdetails']['status'])
         except KeyError:
             try:
-                return self._configdata['paneldetails']['status']
+                return status.get_status(self._configdata['paneldetails']['status'])
             except KeyError:
                 raise KeyError(
                     "pcbdetails.status not in: " + self._projectfolder
