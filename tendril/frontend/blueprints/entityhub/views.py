@@ -28,12 +28,17 @@ from nvd3 import lineChart
 from . import entityhub as blueprint
 from .forms import CreateSnoSeriesForm
 
+from tendril.entityhub.modules import prototypes
+from tendril.entityhub.modules import CardPrototype
+from tendril.entityhub.modules import CablePrototype
+
+# TODO Consider migration of the next section of imports
+# to a prototype like structure
 from tendril.entityhub import projects as ehprojects
 from tendril.entityhub import products as ehproducts
 from tendril.entityhub import serialnos as ehserialnos
 from tendril.entityhub.db.controller import SeriesNotFound
 
-from tendril.boms.electronics import import_pcb
 from tendril.dox.gedaproject import get_docs_list
 from tendril.dox.gedaproject import get_img_list
 from tendril.dox.gedaproject import get_pcbpricing_data
@@ -47,7 +52,7 @@ from tendril.utils.types.currency import BASE_CURRENCY_SYMBOL
 @blueprint.route('/modules.json')
 @login_required
 def modules_list():
-    modules = sorted(ehprojects.cards.keys())
+    modules = sorted(prototypes.keys())
     return jsonify({'modules': modules})
 
 
@@ -56,18 +61,16 @@ def modules_list():
 @login_required
 def cards(cardname=None):
     if cardname is None:
-        stage_cards = [{'name': k,
-                        'detail': ConfigsFile(v).configuration(k)}
-                       for k, v in ehprojects.cards.iteritems()
-                       if ConfigsFile(v).is_pcb]
+        stage_cards = [v for k, v in prototypes.iteritems()
+                       if isinstance(v, CardPrototype)]
+        stage_cards.sort(key=lambda x: (x.status, x.ident))
 
-        stage_cables = [{'name': k,
-                         'detail': ConfigsFile(v).configuration(k)}
-                        for k, v in ehprojects.cards.iteritems()
-                        if ConfigsFile(v).is_cable]
+        stage_cables = [v for k, v in prototypes.iteritems()
+                        if isinstance(v, CablePrototype)]
+        stage_cables.sort(key=lambda x: (x.status, x.ident))
 
-        stage = {'cards': sorted(stage_cards, key=lambda x: x['name']),
-                 'cables': sorted(stage_cables, key=lambda x: x['name']),
+        stage = {'cards': stage_cards,
+                 'cables': stage_cables,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Cards", path="cards/")]
@@ -75,16 +78,16 @@ def cards(cardname=None):
         return render_template('entityhub_cards.html', stage=stage,
                                pagetitle="Cards")
     else:
-        cardfolder = ehprojects.cards[cardname]
-        gcf = ConfigsFile(cardfolder)
+        prototype = prototypes[cardname]
+        cardfolder = prototype.projfolder
+        gcf = prototype.configs
         stage_card = gcf.configuration(cardname)
-        stage_bom = import_pcb(cardfolder)
-        stage_bom.configure_motifs(cardname)
+        stage_bom = prototype.bom
         stage_docs = get_docs_list(cardfolder, cardname)
 
-        if gcf.is_pcb:
+        if isinstance(prototype, CardPrototype):
             barepcb = gcf.pcbname
-        elif gcf.is_cable:
+        elif isinstance(prototype, CablePrototype):
             barepcb = gcf.rawconfig['cblname']
         else:
             raise ValueError("Doesn't seem to be a card or a cable : " +
@@ -95,6 +98,7 @@ def cards(cardname=None):
                  'refbom': stage_bom.create_output_bom(cardname),
                  'docs': stage_docs,
                  'barepcb': barepcb,
+                 'prototype': prototype,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Cards", path="cards/"),

@@ -23,13 +23,14 @@ Docstring for status
 """
 
 DEFINED_STATUS = {
-    'Experimental': 10,
-    'Prototype': 20,
-    'Active': 30,
-    'Deprecated': 40,
-    'Suspended': 50,
-    'Archived': 60,
-    'Discarded': 70,
+    'Prototype': 10,
+    'Active': 20,
+    'Deprecated': 30,
+    'Suspended': 40,
+    'Prospective': 50,
+    'Experimental': 60,
+    'Archived': 70,
+    'Discarded': 80,
 }
 
 

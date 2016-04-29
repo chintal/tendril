@@ -23,10 +23,34 @@
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
     {% for card in stage.cards %}
     <li>
-        <a href="{{ card.name }}">
+        <a href="{{ card.ident }}">
             <ul class="pricing-table active-tb shadow mrgn-20-top">
-                <li class="title autoscale"> {{ card.name }} </li>
-                <li class="description"> {{ card.detail.desc }} </li>
+                <li class="title autoscale"> {{ card.ident }} </li>
+                <li class="description"> {{ card.desc }} </li>
+                {% if card.status == 'Discarded' %}
+                  <span class="right label radius alert">Discarded</span>
+                {% endif %}
+                {% if card.status == 'Deprecated' %}
+                  <span class="right label radius warning">Deprecated</span>
+                {% endif %}
+                {% if card.status == 'Active' %}
+                  <span class="right label radius success">Active</span>
+                {% endif %}
+                {% if card.status == 'Prototype' %}
+                  <span class="right label radius">Prototype</span>
+                {% endif %}
+                {% if card.status == 'Experimental' %}
+                  <span class="right label radius info">Experimental</span>
+                {% endif %}
+                {% if card.status == 'Suspended' %}
+                  <span class="right label radius disabled">Suspended</span>
+                {% endif %}
+                {% if card.status == 'Prospective' %}
+                  <span class="right label radius alert">Prospective</span>
+                {% endif %}
+                {% if card.status == 'Archived' %}
+                  <span class="right label radius secondary">Archived</span>
+                {% endif %}
             </ul>
         </a>
     </li>
@@ -42,10 +66,31 @@
     <li>
         <a href="{{ card.name }}">
             <ul class="pricing-table active-tb shadow mrgn-20-top">
-                <li class="title autoscale"> {{ card.name }} </li>
-                <li class="description"> {{ card.detail.desc }} </li>
+                <li class="title autoscale"> {{ card.ident }} </li>
+                <li class="description"> {{ card.desc }} </li>
             </ul>
         </a>
+        {% if card.status == 'Discarded' %}
+          <span class="right label radius alert">Discarded</span>
+        {% endif %}
+        {% if card.status == 'Deprecated' %}
+          <span class="right label radius warning">Deprecated</span>
+        {% endif %}
+        {% if card.status == 'Active' %}
+          <span class="right label radius success">Active</span>
+        {% endif %}
+        {% if card.status == 'Prototype' %}
+          <span class="right label radius">Prototype</span>
+        {% endif %}
+        {% if card.status == 'Experimental' %}
+          <span class="right label radius info">Experimental</span>
+        {% endif %}
+        {% if card.status == 'Suspended' %}
+          <span class="right label radius disabled">Suspended</span>
+        {% endif %}
+        {% if card.status == 'Archived' %}
+          <span class="right label radius secondary">Archived</span>
+        {% endif %}
     </li>
     {% endfor %}
 </ul>

@@ -93,6 +93,10 @@ class ModulePrototypeBase(object):
         self._get_changelog()
 
     @property
+    def desc(self):
+        raise NotImplementedError
+
+    @property
     def status(self):
         if self._status is None:
             self._get_status()
@@ -135,8 +139,16 @@ class ModulePrototypeBase(object):
     def make_labels(self, sno, label_manager=None):
         raise NotImplementedError
 
+    @property
+    def projfolder(self):
+        raise NotImplementedError
+
 
 class EDAModulePrototypeBase(ModulePrototypeBase):
+    @property
+    def desc(self):
+        return self.configs.description(self.ident)
+
     @property
     def configs(self):
         if not self._configs:
