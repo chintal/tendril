@@ -657,7 +657,10 @@ def conv_pcb2dxf(pcbpath, outfolder, pcbname):
                      '--media', 'A4', '--show-legend', '--multi-file',
                      pcb_file], cwd=pcb_folder)
     psfile = os.path.join(outfolder, pcbname + '.top.ps')
+    bottom_psfile = os.path.join(outfolder, pcbname + '.bottom.ps')
+    bottom_dxffile = os.path.join(outfolder, pcbname + 'bottom.dxf')
     subprocess.call(['pstoedit', '-f', 'dxf', psfile, dxffile])
+    subprocess.call(['pstoedit', '-f', 'dxf', bottom_psfile, bottom_dxffile])
     cleanlist = [f for f in os.listdir(outfolder) if f.endswith(".ps")]
     for f in cleanlist:
         os.remove(os.path.join(outfolder, f))

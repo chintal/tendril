@@ -387,7 +387,7 @@ class ConfigBase(object):
         raise ValueError
 
     def status_config(self, configname):
-        raise NotImplementedError
+        return self.status
 
     @property
     def status(self):

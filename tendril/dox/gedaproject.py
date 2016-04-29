@@ -763,6 +763,8 @@ def gen_pcb_dxf(projfolder, force=False):
     docfolder = get_project_doc_folder(projfolder)
     dxffile = path.normpath(os.path.join(docfolder, os.pardir,
                             configfile.pcbname + '.dxf'))
+    bottom_dxffile = path.normpath(os.path.join(docfolder, os.pardir,
+                                   configfile.pcbname + 'bottom.dxf'))
 
     outf_mtime = fsutils.get_file_mtime(dxffile, fs=refdoc_fs)
 
@@ -784,6 +786,7 @@ def gen_pcb_dxf(projfolder, force=False):
     )
 
     copyfile(workspace_fs, dxffile, refdoc_fs, dxffile, overwrite=True)
+    copyfile(workspace_fs, bottom_dxffile, refdoc_fs, bottom_dxffile, overwrite=True)
     return dxffile
 
 

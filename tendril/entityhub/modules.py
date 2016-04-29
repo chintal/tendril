@@ -22,15 +22,21 @@
 Docstring for modules
 """
 
+import os
 from copy import deepcopy
 
-from tendril.dox import labelmaker
+from tendril.utils import changelog
+from tendril.gedaif.conffile import ConfigsFile
+from tendril.boms.electronics import EntityElnBom
 
 from .entitybase import EntityBase
 from . import serialnos
 from . import projects
 
 from .db.controller import SerialNoNotFound
+
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class ModuleNotRecognizedError(Exception):
@@ -45,14 +51,25 @@ class ModuleInstanceTypeMismatchError(Exception):
     pass
 
 
+class ContextualConfigError(Exception):
+    pass
+
+
+class ModuleStrategyParseError(ContextualConfigError):
+    pass
+
+
 class ModulePrototypeBase(object):
     validator = None
 
     def __init__(self, modulename):
         self._modulename = None
+        self._configs = None
         self._bom = None
         self._obom = None
+        self._status = None
         self._strategy = None
+        self._changelog = None
         self.ident = modulename
 
     @property
@@ -68,16 +85,54 @@ class ModulePrototypeBase(object):
             raise ModuleTypeError("Module {0} is not a not a valid module for "
                                   "{1}".format(value, self.__class__))
         self._modulename = value
-        self._strategy = self._get_production_strategy()
+        try:
+            self._strategy = self._get_production_strategy()
+        except KeyError:
+            raise ModuleStrategyParseError(
+                "Missing Key(s) loading strategy for {}"
+                "".format(self.ident)
+            )
+        self._get_changelog()
+
+    @property
+    def status(self):
+        if self._status is None:
+            self._get_status()
+        return self._status
 
     @property
     def strategy(self):
         if self._strategy is None:
-            self._strategy = self._get_production_strategy()
+            try:
+                self._strategy = self._get_production_strategy()
+            except KeyError:
+                raise ModuleStrategyParseError(
+                    "Missing Key(s) loading strategy for {}"
+                    "".format(self.ident)
+                )
         return self._strategy
+
+    @property
+    def changelog(self):
+        if self._changelog is None:
+            self._get_changelog()
+        return self._changelog
 
     def _get_production_strategy(self):
         raise NotImplementedError
+
+    def _get_status(self):
+        raise NotImplementedError
+
+    @property
+    def _changelogpath(self):
+        raise NotImplementedError
+
+    def _get_changelog(self):
+        try:
+            self._changelog = changelog.ChangeLog(self._changelogpath)
+        except changelog.ChangeLogNotFoundError:
+            pass
 
     def make_labels(self, sno, label_manager=None):
         raise NotImplementedError
@@ -85,10 +140,15 @@ class ModulePrototypeBase(object):
 
 class EDAModulePrototypeBase(ModulePrototypeBase):
     @property
+    def configs(self):
+        if not self._configs:
+            self._configs = ConfigsFile(self.projfolder)
+        return self._configs
+
+    @property
     def bom(self):
         if not self._bom:
-            from tendril.boms.electronics import import_pcb
-            self._bom = import_pcb(projects.cards[self.ident])
+            self._bom = EntityElnBom(self.configs)
             self._bom.configure_motifs(self.ident)
         return self._bom
 
@@ -100,7 +160,7 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
 
     def _get_production_strategy(self):
         rval = {}
-        configdata = self.bom.configurations.rawconfig
+        configdata = self.configs.rawconfig
         if configdata['documentation']['am'] is True:
             # Assembly manifest should be used
             rval['prodst'] = "@AM"
@@ -152,6 +212,10 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
                 )
 
     @property
+    def _changelogpath(self):
+        return os.path.join(self.projfolder, 'ChangeLog')
+
+    @property
     def projfolder(self):
         return projects.cards[self.ident]
 
@@ -163,6 +227,9 @@ class CardPrototype(EDAModulePrototypeBase):
     def pcbname(self):
         return self.bom.configurations.rawconfig['pcbname']
 
+    def _get_status(self):
+        self._status = self.configs.status_config(self.ident)
+
     def __repr__(self):
         return '<CardPrototype {0}>'.format(self.ident)
 
@@ -172,6 +239,9 @@ class CablePrototype(EDAModulePrototypeBase):
 
     def __repr__(self):
         return '<CablePrototype {0}>'.format(self.ident)
+
+    def _get_status(self):
+        return None
 
     @property
     def cblname(self):
@@ -321,3 +391,15 @@ def get_module_instance(sno, ident=None, scaffold=False, session=None):
     if projects.check_module_is_cable(modulename):
         return CableInstance(sno=sno, ident=ident,
                              scaffold=scaffold, session=session)
+
+
+def generate_prototype_lib():
+    lprototypes = {}
+    for card, folder in projects.cards.iteritems():
+        if projects.check_module_is_card(card):
+            lprototypes[card] = CardPrototype(card)
+        elif projects.check_module_is_cable(card):
+            lprototypes[card] = CablePrototype(card)
+    return lprototypes
+
+prototypes = generate_prototype_lib()

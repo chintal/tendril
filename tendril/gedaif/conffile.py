@@ -82,8 +82,7 @@ class ConfigsFile(ConfigBase):
             raise AttributeError("No MACTYPE defined for this project")
 
     def status_config(self, configname):
-        # TODO
-        raise NotImplementedError
+        return self.status
 
     @property
     def status(self):
