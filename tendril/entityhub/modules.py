@@ -25,17 +25,15 @@ Docstring for modules
 import os
 from copy import deepcopy
 
-from tendril.utils import changelog
-from tendril.gedaif.conffile import ConfigsFile
 from tendril.boms.electronics import EntityElnBom
-
-from .entitybase import EntityBase
-from . import serialnos
-from . import projects
-
-from .db.controller import SerialNoNotFound
-
+from tendril.gedaif.conffile import ConfigsFile
 from tendril.utils import log
+from tendril.utils.parsers import changelog
+from . import projects
+from . import serialnos
+from .db.controller import SerialNoNotFound
+from .entitybase import EntityBase
+
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
