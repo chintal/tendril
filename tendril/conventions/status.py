@@ -99,3 +99,10 @@ def get_status(ststr):
     if ststr not in status_objects.keys():
         status_objects[ststr] = Status(ststr)
     return status_objects[ststr]
+
+
+def get_known_statuses():
+    rval = []
+    for k in STATUS_ORDER.keys():
+        rval.append(get_status(k))
+    return sorted(rval)

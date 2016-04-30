@@ -28,6 +28,7 @@ from nvd3 import lineChart
 from . import entityhub as blueprint
 from .forms import CreateSnoSeriesForm
 
+from tendril.conventions import status
 from tendril.entityhub.modules import prototypes
 from tendril.entityhub.modules import CardPrototype
 from tendril.entityhub.modules import CablePrototype
@@ -120,7 +121,19 @@ def cards(cardname=None):
                        if isinstance(v, CardPrototype)]
         stage_cards.sort(key=lambda x: (x.status, x.ident))
 
-        stage = {'cards': stage_cards,
+        series = {}
+        tstatuses = {str(x): 0 for x in status.get_known_statuses()}
+        for card in stage_cards:
+            if card.configs.snoseries not in series.keys():
+                series[card.configs.snoseries] = 1
+            else:
+                series[card.configs.snoseries] += 1
+            tstatuses[str(card.status)] += 1
+        statuses = [(x, tstatuses[str(x)]) for x in status.get_known_statuses()]
+
+        stage = {'statuses': statuses,
+                 'series': series,
+                 'cards': stage_cards,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Modules", path="modules/"),
