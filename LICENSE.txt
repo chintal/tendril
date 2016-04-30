@@ -40,7 +40,8 @@ Licensing Roadmap
 Tendril sources are distributed under the terms of the "Dominant License",
 i.e. AGPLv3+, unless otherwise specified within individual source files.
 This license is chosen so as to remain compliant with the licenses of the
-various open source dependencies of Tendril.
+various open source dependencies of Tendril and to encourage open source
+development of Tendril.
 
 Over time, it is intended to refactor and release selected sections of
 Tendril under a more permissive license. This refactoring and re-licensing

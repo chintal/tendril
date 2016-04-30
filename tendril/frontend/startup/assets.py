@@ -40,6 +40,7 @@ bundles = {
         'js/vendor/modernizr.js',
         'js/vendor/jquery.js',
         'js/vendor/jquery.textfill.js',
+        'js/vendor/jquery.mixitup.min.js',
         output='gen/base.js',
         filters='jsmin'),
 
