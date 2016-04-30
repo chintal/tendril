@@ -83,19 +83,46 @@ class ConfigsFile(ConfigBase):
             raise AttributeError("No MACTYPE defined for this project")
 
     def status_config(self, configname):
-        return self.status
+        if self.status_forced:
+            return self.status
+        configuration = self.configuration(configname)
+        if 'status' in configuration.keys():
+            return status.get_status(configuration['status'])
+        else:
+            return self.status
 
     @property
     def status(self):
         try:
-            return status.get_status(self._configdata['pcbdetails']['status'])
+            if 'pcbdetails' in self._configdata.keys():
+                ststr = self._configdata['pcbdetails']['status']
+            elif 'paneldetails' in self._configdata.keys():
+                ststr = self._configdata['paneldetails']['status']
+            else:
+                raise AttributeError('Status not defined or not found for {0}'
+                                     ''.format(self._projectfolder))
         except KeyError:
-            try:
-                return status.get_status(self._configdata['paneldetails']['status'])
-            except KeyError:
-                raise KeyError(
-                    "pcbdetails.status not in: " + self._projectfolder
-                )
+            raise AttributeError('Status not defined or not found for {0}'
+                                 ''.format(self._projectfolder))
+        if self.status_forced:
+            ststr = ststr[1:]
+        return status.get_status(ststr)
+
+    @property
+    def status_forced(self):
+        try:
+            if 'pcbdetails' in self._configdata.keys():
+                ststr = self._configdata['pcbdetails']['status']
+            elif 'paneldetails' in self._configdata.keys():
+                ststr = self._configdata['paneldetails']['status']
+            else:
+                raise AttributeError('Status not defined or not found for {0}'
+                                     ''.format(self._projectfolder))
+        except KeyError:
+            raise AttributeError('Status not defined or not found for {0}'
+                                 ''.format(self._projectfolder))
+        if ststr.startswith('!'):
+            return True
 
     @property
     def pcbdescriptors(self):

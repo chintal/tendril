@@ -387,15 +387,11 @@ class ConfigBase(object):
         raise ValueError
 
     def status_config(self, configname):
-        return self.status
+        raise NotImplementedError
 
     @property
     def status(self):
-        if 'status' in self._configdata.keys():
-            return self._configdata['status']
-        else:
-            raise AttributeError('Status not defined or not found for {0}'
-                                 ''.format(self._projectfolder))
+        raise NotImplementedError
 
     @property
     def snoseries(self):
