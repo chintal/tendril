@@ -109,7 +109,7 @@
                 <tr>
                     <th class="all">Card</th>
                     <th class="desktop">Description</th>
-                    <th class="all">PCB Status</th>
+                    <th class="all">Status</th>
                     <th class="all">Quantity</th>
                 </tr>
                 </thead>
@@ -118,7 +118,9 @@
                     <tr>
                         <td> <a href="/entityhub/cards/{{row.0}}">{{ row.0 }}</a> </td>
                         <td> {{ row.1 }} </td>
-                        <td class="text-center"> {{ row.2 }} </td>
+                        <td data-sort={{ row.2.num }} class="text-center">
+                            <span class="center label radius {{ row.2.html_class }}"> {{ row.2 }} </span>
+                        </td>
                         <td class="text-center"> {{ row.3 }} </td>
                     </tr>
                 {% endfor %}

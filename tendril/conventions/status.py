@@ -26,27 +26,36 @@ import numbers
 
 
 STATUS_ORDER = {
-    'Prototype': 10,
-    'Active': 20,
-    'Deprecated': 30,
-    'Suspended': 40,
-    'Prospective': 50,
-    'Experimental': 60,
-    'Archived': 70,
-    'Discarded': 80,
+    'Prototype': (10, None),
+    'Active': (20, 'success'),
+    'Deprecated': (30, 'warning'),
+    'Suspended': (40, 'disabled'),
+    'Prospective': (50, 'info'),
+    'Experimental': (60, 'warning'),
+    'Archived': (70, 'secondary'),
+    'Discarded': (80, 'alert'),
 }
 
 
 class Status(object):
     def __init__(self, ststr):
         self._ststr = ststr
-        self._stint = STATUS_ORDER[ststr]
+        self._stint = STATUS_ORDER[ststr][0]
+        self._sthtml = STATUS_ORDER[ststr][1]
 
     def __repr__(self):
         return self._ststr
 
     def __str__(self):
         return self._ststr
+
+    @property
+    def html_class(self):
+        return self._sthtml
+
+    @property
+    def num(self):
+        return self._stint
 
     def __eq__(self, other):
         # TODO Fix for thorough string handling

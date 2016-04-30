@@ -17,31 +17,12 @@
             <ul class="pricing-table active-tb shadow mrgn-20-top">
                 <li class="title autoscale"> {{ card.ident }} </li>
                 <li class="description"> {{ card.desc }} </li>
-                {% if card.status == 'Discarded' %}
-                  <span class="right label radius alert">Discarded</span>
+                {% if card.status %}
+                  <span class="right label radius {{ card.status.html_class }}"> {{ card.status }}</span>
                 {% endif %}
-                {% if card.status == 'Deprecated' %}
-                  <span class="right label radius warning">Deprecated</span>
+                {% if card.configs.snoseries %}
+                  <span class="right label radius secondary">{{ card.configs.snoseries }}</span>
                 {% endif %}
-                {% if card.status == 'Active' %}
-                  <span class="right label radius success">Active</span>
-                {% endif %}
-                {% if card.status == 'Prototype' %}
-                  <span class="right label radius">Prototype</span>
-                {% endif %}
-                {% if card.status == 'Experimental' %}
-                  <span class="right label radius info">Experimental</span>
-                {% endif %}
-                {% if card.status == 'Suspended' %}
-                  <span class="right label radius disabled">Suspended</span>
-                {% endif %}
-                {% if card.status == 'Prospective' %}
-                  <span class="right label radius alert">Prospective</span>
-                {% endif %}
-                {% if card.status == 'Archived' %}
-                  <span class="right label radius secondary">Archived</span>
-                {% endif %}
-                <span class="right label radius secondary">{{ card.configs.snoseries }}</span>
             </ul>
         </a>
     </li>

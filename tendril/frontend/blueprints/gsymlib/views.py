@@ -137,14 +137,9 @@ def get_geda_symbol_context(ident):
         for idx, column in enumerate(line.columns):
             if column > 0:
                 cardname = cobom.descriptors[idx].configname
-                carddesc = None
-                for config in cobom.descriptors[idx].configurations.configurations:
-                    if config['configname'] == cardname:
-                        carddesc = config['desc']
-                try:
-                    pcbstatus = cobom.descriptors[idx].configurations.rawconfig['pcbdetails']['status']
-                except KeyError:
-                    pcbstatus = ''
+                configs = cobom.descriptors[idx].configurations
+                carddesc = configs.description(cardname)
+                pcbstatus = configs.status_config(cardname)
                 cards.append((cardname, carddesc, pcbstatus, column))
 
     stage = {'ident': ident,

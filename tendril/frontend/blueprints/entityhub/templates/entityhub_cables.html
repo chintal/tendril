@@ -16,28 +16,12 @@
             <ul class="pricing-table active-tb shadow mrgn-20-top">
                 <li class="title autoscale"> {{ cable.ident }} </li>
                 <li class="description"> {{ cable.desc }} </li>
-                {% if cable.status == 'Discarded' %}
-                  <span class="right label radius alert">Discarded</span>
+                {% if cable.status %}
+                  <span class="right label radius {{ cable.status.html_class }}"> {{ cable.status }}</span>
                 {% endif %}
-                {% if cable.status == 'Deprecated' %}
-                  <span class="right label radius warning">Deprecated</span>
+                {% if cable.configs.snoseries %}
+                  <span class="right label radius secondary">{{ cable.configs.snoseries }}</span>
                 {% endif %}
-                {% if cable.status == 'Active' %}
-                  <span class="right label radius success">Active</span>
-                {% endif %}
-                {% if cable.status == 'Prototype' %}
-                  <span class="right label radius">Prototype</span>
-                {% endif %}
-                {% if cable.status == 'Experimental' %}
-                  <span class="right label radius info">Experimental</span>
-                {% endif %}
-                {% if cable.status == 'Suspended' %}
-                  <span class="right label radius disabled">Suspended</span>
-                {% endif %}
-                {% if cable.status == 'Archived' %}
-                  <span class="right label radius secondary">Archived</span>
-                {% endif %}
-                <span class="right label radius secondary">{{ cable.configs.snoseries }}</span>
             </ul>
         </a>
     </li>
