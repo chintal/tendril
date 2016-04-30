@@ -759,6 +759,21 @@ config_options_vendors = [
 load_config(config_options_vendors)
 
 
+config_options_execution = [
+    ConfigOption(
+        'SUPPORT_INTERPRETER_PERSISTENCE',
+        "False",
+        "Whether tendril should support interpreter persistence. This "
+        "is generally in the form of warming up and/or maintaining in-memory "
+        "caches, reloading sources from the filesystem, etc. This slows "
+        "startup time, and therefore is only appropriate for server "
+        "deployments."
+    ),
+]
+
+load_config(config_options_vendors)
+
+
 def doc_render(group):
     """
     Converts a list of :class:`ConfigOption` or :class:`ConfigConstant`
@@ -796,7 +811,9 @@ all_config_option_groups = [
     [doc_render(config_options_inventory),
      "Options to configure inventory details"],
     [doc_render(config_options_vendors),
-     "Options to configure vendor details"]
+     "Options to configure vendor details"],
+    [doc_render(config_options_execution),
+     "Options to configure tendril execution behavior"]
 ]
 
 

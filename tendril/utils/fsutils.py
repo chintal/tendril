@@ -54,6 +54,9 @@ import glob
 import string
 import hashlib
 import base64
+import time
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 from fs.opener import fsopendir
 from fs.errors import ResourceNotFoundError
@@ -64,7 +67,7 @@ from collections import namedtuple
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
-
+log.logging.getLogger('watchdog.observers.inotify_buffer').setLevel(log.WARNING)
 
 if tempfile.tempdir is None:
     tempfile.tempdir = tempfile.mkdtemp()
@@ -156,6 +159,53 @@ def get_path_breadcrumbs(path, base=None, rootst='Root'):
         path = head
     crumbs = [Crumb(name=rootst, path='')] + crumbs
     return crumbs
+
+
+observers = []
+
+
+def register_for_changes(path, callback, *args, **kwargs):
+    # TODO Communicate interest to MQ / Watchdog server
+    # event_handler = ThrottledEventHandler()
+    # event_handler.add_callback((callback, args, kwargs))
+
+    # observer = Observer()
+    # observer.schedule(event_handler, path, recursive=True)
+    # observer.start()
+    # observers.append(observer)
+    pass
+
+
+class ThrottledEventHandler(FileSystemEventHandler):
+    def __init__(self, spacing=0):
+        self._spacing = spacing
+        self._triggered = False
+        self._armed = True
+        self._last_executed = None
+        self._callbacks = []
+
+    def add_callback(self, callback, *args, **kwargs):
+        self._callbacks.append((callback, args, kwargs))
+
+    def on_any_event(self, event):
+        if self._triggered is True:
+            return
+        else:
+            self.trigger()
+
+    def arm(self):
+        self._armed = True
+
+    def disarm(self):
+        self._armed = False
+
+    def trigger(self):
+        if self._last_executed is None or \
+                time.time() - self._last_executed > self._spacing:
+            self._last_executed = time.time()
+            for cb, args, kwargs in self._callbacks:
+                print "Executing {0}".format(cb)
+                cb(*args, **kwargs)
 
 
 def get_folder_mtime(folder, fs=None):
@@ -401,6 +451,10 @@ def fsutils_cleanup():
         os.rmdir(tempfile.gettempdir())
     except OSError:
         pass
+
+    # TODO: Communicate disinterest to MQ / Watchdog server
+    for observer in observers:
+        observer.stop()
 
 
 def import_(fpath):

@@ -29,6 +29,7 @@ from tendril.boms.electronics import EntityElnBom
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.utils import log
 from tendril.utils.parsers import changelog
+from tendril.utils.fsutils import register_for_changes
 from . import projects
 from . import serialnos
 from .db.controller import SerialNoNotFound
@@ -69,6 +70,7 @@ class ModulePrototypeBase(object):
         self._strategy = None
         self._changelog = None
         self.ident = modulename
+        self._register_for_changes()
 
     @property
     def ident(self):
@@ -142,6 +144,21 @@ class ModulePrototypeBase(object):
     @property
     def projfolder(self):
         raise NotImplementedError
+
+    def _register_for_changes(self):
+        # register_for_changes(self.projfolder, self._reload)
+        pass
+
+    def _reload(self):
+        # Not handled :
+        #   - Name changes
+        #   - Ripple effects to any downstream objects
+        self._configs = None
+        self._bom = None
+        self._obom = None
+        self._status = None
+        self._strategy = None
+        self._changelog = None
 
 
 class EDAModulePrototypeBase(ModulePrototypeBase):
