@@ -12,6 +12,9 @@
         <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
         <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
         <dd data-magellan-arrival="refbom"><a href="#refbom">BOM</a></dd>
+        {% if stage.prototype.changelog %}
+            <dd data-magellan-arrival="changelog"><a href="#changelog">ChangeLog</a></dd>
+        {% endif %}
     </dl>
 </div>
 {% endblock %}
@@ -81,7 +84,7 @@
     {% endif %}
 </ul>
 
-    <div class="small-11 columns panel header radius">
+    <div class="small-12 columns panel header radius">
         <div class="sign small-9 medium-6 small-centered columns autoscale">
             <h6>References</h6>
         </div>
@@ -115,9 +118,11 @@
 <!-- BOM -->
 <div class="row">
 <div class="small-12 medium-6 columns" data-magellan-destination="refbom">
-<h3> Reference BOM </h3>
 <a name="refbom"></a>
-
+<div class="small-12 columns panel header radius">
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+        <h6>Reference BOM</h6>
+    </div>
     <div class="small-12 columns">
         <table id="refbom_table" class="display" data-paging='false'>
             <thead>
@@ -151,9 +156,43 @@
                 .appendTo( '#refbom_table_wrapper .small-12.medium-6.columns:eq(0)' );
         });
     </script>
-
+</div>
 </div>
 
+{% if stage.prototype.changelog %}
+<div class="small-12 medium-6 columns" data-magellan-destination="changelog">
+    <a name="changelog"></a>
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>ChangeLog</h6>
+        </div>
+
+        <div class="small-12 columns">
+        {% for part in stage.prototype.changelog.parts %}
+            {% set outer_loop = loop %}
+            <h6>{{ part.title }}</h6>
+            <ul class="accordion" data-accordion>
+                {% for section in part.sections %}
+                <li class="accordion-navigation">
+                    <a href="#panelcl{{outer_loop.index}}{{ loop.index }}">{{ section.title }}</a>
+                    <div id="panelcl{{outer_loop.index}}{{ loop.index }}" class="content">
+                        {% for entry in section.entries %}
+                            {{ entry.initials }} {{ entry.date.humanize() }}
+                            <ul>
+                            {% for change in entry.changes %}
+                                    <li> {{ change.body }} </li>
+                            {% endfor %}
+                            </ul>
+                        {% endfor %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
     <!-- Test Protocols -->
     <!-- Pricing -->

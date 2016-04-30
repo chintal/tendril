@@ -152,6 +152,17 @@
             equalize_on_stack: false,
             // Allow equalizer to resize hidden elements
             act_on_hidden_el: false
+        },
+        accordion: {
+            // specify the class used for accordion panels
+            content_class: 'content',
+            // specify the class used for active (or open) accordion panels
+            active_class: 'active',
+            // allow multiple accordion panels to be active at the same time
+            multi_expand: true,
+            // allow accordion panels to be closed by clicking on their headers
+            // setting to false only closes accordion panels when another is opened
+            toggleable: true
         }
     });
     $('.autoscale').textfill({

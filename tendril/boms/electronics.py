@@ -393,9 +393,7 @@ class EntityElnBom(EntityBomBase):
                             "with fillstatus {1}".format(comp.refdes,
                                                          comp.fillstatus)
                         )
-                        # TODO figure out why this breaks with group boms.
-                        if not is_group_bom:
-                            raise AttributeError
+                        # TODO figure out why this breaks.
                     if sjlist[comp.refdes]:
                         logger.debug("Setting Fillstatus : " + comp.refdes)
                         comp.fillstatus = ''

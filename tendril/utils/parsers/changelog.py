@@ -85,6 +85,10 @@ class ChangeLogBase(object):
     def _add_child(self, child):
         self._children.append(child)
 
+    @property
+    def title(self):
+        return self._title
+
 
 # A specific change
 class ChangeLogChange(ChangeLogBase):
@@ -97,6 +101,10 @@ class ChangeLogChange(ChangeLogBase):
 
     def __repr__(self):
         return '<ChangeLogChange {}>'.format(self._body)
+
+    @property
+    def body(self):
+        return self._body
 
 
 # A specific changelog entry
@@ -111,6 +119,14 @@ class ChangeLogEntry(ChangeLogBase):
     @property
     def changes(self):
         return self._children
+
+    @property
+    def initials(self):
+        return ''.join([x[0] for x in self._author.split()])
+
+    @property
+    def date(self):
+        return self._date
 
     def _set_title(self, title):
         pieces = title[1]._pieces

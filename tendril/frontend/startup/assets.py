@@ -54,6 +54,7 @@ bundles = {
         'js/foundation/foundation.clearing.js',
         'js/foundation/foundation.tooltip.js',
         'js/foundation/foundation.abide.js',
+        'js/foundation/foundation.accordion.js',
         'js/vendor/stickyFooter.js',
         'js/vendor/foundation-datepicker.js',
         output='gen/foundation.js',
