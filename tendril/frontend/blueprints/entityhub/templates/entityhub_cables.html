@@ -7,46 +7,41 @@
 
 
 {% block main %}
-<div class="row" data-magellan-destination="cards">
-<a name="cards"></a>
-<h3> All Cards </h3>
+
+<h3> All Cables </h3>
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
-    {% for card in stage.cards %}
+    {% for cable in stage.cables %}
     <li>
-        <a href="{{ card.ident }}">
+        <a href="{{ cable.ident }}">
             <ul class="pricing-table active-tb shadow mrgn-20-top">
-                <li class="title autoscale"> {{ card.ident }} </li>
-                <li class="description"> {{ card.desc }} </li>
-                {% if card.status == 'Discarded' %}
+                <li class="title autoscale"> {{ cable.ident }} </li>
+                <li class="description"> {{ cable.desc }} </li>
+                {% if cable.status == 'Discarded' %}
                   <span class="right label radius alert">Discarded</span>
                 {% endif %}
-                {% if card.status == 'Deprecated' %}
+                {% if cable.status == 'Deprecated' %}
                   <span class="right label radius warning">Deprecated</span>
                 {% endif %}
-                {% if card.status == 'Active' %}
+                {% if cable.status == 'Active' %}
                   <span class="right label radius success">Active</span>
                 {% endif %}
-                {% if card.status == 'Prototype' %}
+                {% if cable.status == 'Prototype' %}
                   <span class="right label radius">Prototype</span>
                 {% endif %}
-                {% if card.status == 'Experimental' %}
+                {% if cable.status == 'Experimental' %}
                   <span class="right label radius info">Experimental</span>
                 {% endif %}
-                {% if card.status == 'Suspended' %}
+                {% if cable.status == 'Suspended' %}
                   <span class="right label radius disabled">Suspended</span>
                 {% endif %}
-                {% if card.status == 'Prospective' %}
-                  <span class="right label radius alert">Prospective</span>
-                {% endif %}
-                {% if card.status == 'Archived' %}
+                {% if cable.status == 'Archived' %}
                   <span class="right label radius secondary">Archived</span>
                 {% endif %}
-                <span class="right label radius secondary">{{ card.configs.snoseries }}</span>
+                <span class="right label radius secondary">{{ cable.configs.snoseries }}</span>
             </ul>
         </a>
     </li>
     {% endfor %}
 </ul>
-</div>
 
 {% endblock %}

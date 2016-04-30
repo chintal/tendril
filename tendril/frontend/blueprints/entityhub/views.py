@@ -56,6 +56,61 @@ def modules_list():
     return jsonify({'modules': modules})
 
 
+@blueprint.route('/modules/<modulename>')
+@blueprint.route('/modules/')
+@login_required
+def modules(modulename=None):
+    if modulename is None:
+        stage = {}
+        return render_template('entityhub_modules.html', stage=stage,
+                               pagetitle="Modules")
+    else:
+        # Find appropriate module and redirect to page
+        pass
+
+
+@blueprint.route('/cables/<cblname>')
+@blueprint.route('/cables/')
+@login_required
+def cables(cblname=None):
+    if cblname is None:
+        stage_cables = [v for k, v in prototypes.iteritems()
+                        if isinstance(v, CablePrototype)]
+        stage_cables.sort(key=lambda x: (x.status, x.ident))
+
+        stage = {'cables': stage_cables,
+                 'crumbroot': '/entityhub',
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Modules", path="modules/"),
+                                 Crumb(name="Cables", path="cables/")]
+                 }
+        return render_template('entityhub_cables.html', stage=stage,
+                               pagetitle="Cables")
+    else:
+        prototype = prototypes[cblname]
+        cablefolder = prototype.projfolder
+        gcf = prototype.configs
+        stage_cable = gcf.configuration(cblname)
+        stage_bom = prototype.bom
+        stage_docs = get_docs_list(cablefolder, cblname)
+        barepcb = gcf.rawconfig['cblname']
+        stage = {'name': cblname,
+                 'cable': stage_cable,
+                 'bom': stage_bom,
+                 'refbom': stage_bom.create_output_bom(cblname),
+                 'docs': stage_docs,
+                 'barepcb': barepcb,
+                 'prototype': prototype,
+                 'crumbroot': '/entityhub',
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Modules", path="modules/"),
+                                 Crumb(name="Cables", path="cables/"),
+                                 Crumb(name=cblname, path="cables/"+cblname)]
+                 }
+        return render_template('entityhub_cable_detail.html', stage=stage,
+                               pagetitle=cblname + " Cable Details")
+
+
 @blueprint.route('/cards/<cardname>')
 @blueprint.route('/cards/')
 @login_required
@@ -65,14 +120,10 @@ def cards(cardname=None):
                        if isinstance(v, CardPrototype)]
         stage_cards.sort(key=lambda x: (x.status, x.ident))
 
-        stage_cables = [v for k, v in prototypes.iteritems()
-                        if isinstance(v, CablePrototype)]
-        stage_cables.sort(key=lambda x: (x.status, x.ident))
-
         stage = {'cards': stage_cards,
-                 'cables': stage_cables,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Modules", path="modules/"),
                                  Crumb(name="Cards", path="cards/")]
                  }
         return render_template('entityhub_cards.html', stage=stage,
@@ -84,14 +135,7 @@ def cards(cardname=None):
         stage_card = gcf.configuration(cardname)
         stage_bom = prototype.bom
         stage_docs = get_docs_list(cardfolder, cardname)
-
-        if isinstance(prototype, CardPrototype):
-            barepcb = gcf.pcbname
-        elif isinstance(prototype, CablePrototype):
-            barepcb = gcf.rawconfig['cblname']
-        else:
-            raise ValueError("Doesn't seem to be a card or a cable : " +
-                             cardname)
+        barepcb = gcf.pcbname
         stage = {'name': cardname,
                  'card': stage_card,
                  'bom': stage_bom,
@@ -101,6 +145,7 @@ def cards(cardname=None):
                  'prototype': prototype,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="Modules", path="modules/"),
                                  Crumb(name="Cards", path="cards/"),
                                  Crumb(name=cardname, path="cards/"+cardname)]
                  }

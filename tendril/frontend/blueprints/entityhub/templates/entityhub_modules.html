@@ -1,0 +1,31 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block main %}
+
+<p></p>
+
+<h2>Modules</h2>
+
+<div class="row">
+    <div class="header panel radius">
+        <div class="sign small-9 medium-4 columns radius autoscale">
+            <h5> Module Types </h5>
+        </div>
+        <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer>
+            <li><a href="/entityhub/cards/" class="button square radius expand bg-t1" data-equalizer-watch>
+                <b> Cards </b></a>
+            </li>
+            <li><a href="/entityhub/cables/" class="button square radius expand bg-t2" data-equalizer-watch>
+                <b> Cables </b></a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+
+{% endblock %}
