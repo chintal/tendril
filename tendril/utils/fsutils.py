@@ -56,7 +56,6 @@ import hashlib
 import base64
 import time
 from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
 
 from fs.opener import fsopendir
 from fs.errors import ResourceNotFoundError
@@ -165,14 +164,6 @@ observers = []
 
 
 def register_for_changes(path, callback, *args, **kwargs):
-    # TODO Communicate interest to MQ / Watchdog server
-    # event_handler = ThrottledEventHandler()
-    # event_handler.add_callback((callback, args, kwargs))
-
-    # observer = Observer()
-    # observer.schedule(event_handler, path, recursive=True)
-    # observer.start()
-    # observers.append(observer)
     pass
 
 

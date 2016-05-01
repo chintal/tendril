@@ -146,7 +146,7 @@ class ModulePrototypeBase(object):
         raise NotImplementedError
 
     def _register_for_changes(self):
-        # register_for_changes(self.projfolder, self._reload)
+        register_for_changes(self.projfolder, self._reload)
         pass
 
     def _reload(self):
