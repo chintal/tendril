@@ -166,30 +166,8 @@
         <div class="sign small-9 medium-6 small-centered columns autoscale">
             <h6>ChangeLog</h6>
         </div>
-
-        <div class="small-12 columns">
-        {% for part in stage.prototype.changelog.parts %}
-            {% set outer_loop = loop %}
-            <h6>{{ part.title }}</h6>
-            <ul class="accordion" data-accordion>
-                {% for section in part.sections %}
-                <li class="accordion-navigation">
-                    <a href="#panelcl{{outer_loop.index}}{{ loop.index }}">{{ section.title }}</a>
-                    <div id="panelcl{{outer_loop.index}}{{ loop.index }}" class="content">
-                        {% for entry in section.entries %}
-                            {{ entry.initials }} {{ entry.date.humanize() }}
-                            <ul>
-                            {% for change in entry.changes %}
-                                    <li> {{ change.body }} </li>
-                            {% endfor %}
-                            </ul>
-                        {% endfor %}
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-        {% endfor %}
-        </div>
+        {% set changelog = stage.prototype.changelog.parts %}
+        {% include 'parts/changelog.html' %}
     </div>
 </div>
 {% endif %}

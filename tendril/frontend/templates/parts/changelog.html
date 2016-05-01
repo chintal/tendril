@@ -1,0 +1,40 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+<div class="small-12 columns changelog">
+
+{% for part in stage.prototype.changelog.parts %}
+    {% set outer_loop = loop %}
+    <h5>{{ part.title }}</h5>
+    <ul class="accordion" data-accordion>
+        {% for section in part.sections %}
+        <li class="accordion-navigation">
+            <a class="sectiontitle" href="#panelcl{{outer_loop.index}}{{ loop.index }}">{{ section.title }}</a>
+            <div id="panelcl{{outer_loop.index}}{{ loop.index }}" class="content">
+                {% for entry in section.entries %}
+                <article class="entry">
+                    <div class="entry-date">
+                        <p class="entry-year">{{ entry.date.year }}</p>
+                        <p class="entry-day">{{ entry.date.month|monthname }} {{ entry.date.day }}</p>
+                    </div>
+                    <div class="entry-initials">
+                        {{ entry.initials }}
+                    </div>
+                    <div class="entry-desc">
+                        <ul>
+                        {% for change in entry.changes %}
+                                <li class="changenote"> {{ change.body }} </li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                </article>
+                <hr>
+                {% endfor %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+{% endfor %}
+</div>

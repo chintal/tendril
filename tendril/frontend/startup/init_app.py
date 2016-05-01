@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import arrow
 import logging
 from logging.handlers import SMTPHandler
 from urllib2 import quote, unquote
@@ -24,6 +25,8 @@ from flask_mail import Mail
 from flask_user import UserManager, SQLAlchemyAdapter
 
 import db
+
+arrow_locale = arrow.locales.get_locale('EN')
 
 
 def init_app(app):
@@ -56,6 +59,10 @@ def init_app(app):
     def strip(s):
         return s.strip()
     app.jinja_env.filters['strip'] = strip
+
+    def monthname(s):
+        return arrow_locale.month_abbreviation(s)
+    app.jinja_env.filters['monthname'] = monthname
 
     def latex_render_filter(s):
         # TODO make this generic
