@@ -18,17 +18,15 @@
 This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
+import csv
 import os
 import re
-import csv
 
+from tendril.gedaif import conffile
+from tendril.utils import log
 from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.vcs import get_path_revision
-from tendril.gedaif import conffile
-from tendril.boms.electronics import import_pcb
-from tendril.boms.outputbase import CompositeOutputBom
 
-from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
@@ -112,25 +110,6 @@ def get_projects(basefolder=None):
 
 
 projects, pcbs, cards, card_reporoot = get_projects()
-
-superset_cobom = None
-
-
-def get_bom_superset(regen=False):
-    global superset_cobom
-    if not regen and superset_cobom is not None:
-        return superset_cobom
-    boms = []
-    logger.info("Building superset composite BOM")
-    for card, path in cards.iteritems():
-        logger.debug("Getting BOM for {0}".format(card))
-        bom = import_pcb(path)
-        obom = bom.create_output_bom(card)
-        boms.append(obom)
-    logger.info("Collating into superset composite BOM")
-    superset_cobom = CompositeOutputBom(boms, name='ALL')
-    superset_cobom.collapse_wires()
-    return superset_cobom
 
 
 def get_module_config(modulename):

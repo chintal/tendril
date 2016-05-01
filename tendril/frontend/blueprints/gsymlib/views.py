@@ -28,15 +28,16 @@ from flask import render_template, abort, request
 from flask import jsonify
 from flask_user import login_required
 
+
 import tendril.gedaif.gsymlib
 
 from . import gsymlib as blueprint
 
+from tendril.entityhub import supersets
 from tendril.utils.fsutils import get_path_breadcrumbs
 from tendril.utils.fsutils import Crumb
 from tendril.utils.config import GEDA_SYMLIB_ROOT
 
-from tendril.entityhub import projects
 from tendril.inventory import electronics as invelectronics
 from tendril.inventory import guidelines as invguidelines
 from tendril.entityhub import guidelines as ehguidelines
@@ -129,7 +130,7 @@ def get_geda_symbol_context(ident):
         breadcrumbs.insert(-1, Crumb(name=os.path.splitext(symbol[0].fname)[0] + '.gen',  # noqa
                                      path='detail/' + os.path.splitext(symbol[0].fname)[0] + '.gen'))  # noqa
 
-    cobom = projects.get_bom_superset()
+    cobom = supersets.get_bom_superset()
     line = cobom.find_by_ident(ident)
     cards = None
     if line:
