@@ -773,12 +773,12 @@ config_options_execution = [
         'WARM_UP_CACHES',
         "False",
         "Whether tendril caches should be warmed up on startup. This "
-        "slows startup time, and therefore is only appropriate for server "
-        "deployments."
+        "significantly slows startup time, and therefore is only "
+        "appropriate for server deployments."
     )
 ]
 
-load_config(config_options_vendors)
+load_config(config_options_execution)
 
 
 def doc_render(group):

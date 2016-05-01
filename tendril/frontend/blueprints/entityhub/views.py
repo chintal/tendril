@@ -54,8 +54,8 @@ from tendril.utils.types.currency import BASE_CURRENCY_SYMBOL
 @login_required
 def modules_list():
     prototypes = get_prototype_lib()
-    modules = sorted(prototypes.keys())
-    return jsonify({'modules': modules})
+    moduls = sorted(prototypes.keys())
+    return jsonify({'modules': moduls})
 
 
 @blueprint.route('/modules/<modulename>')
