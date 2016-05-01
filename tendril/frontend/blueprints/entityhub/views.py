@@ -29,7 +29,7 @@ from . import entityhub as blueprint
 from .forms import CreateSnoSeriesForm
 
 from tendril.conventions import status
-from tendril.entityhub.modules import prototypes
+from tendril.entityhub.modules import get_prototype_lib
 from tendril.entityhub.modules import CardPrototype
 from tendril.entityhub.modules import CablePrototype
 
@@ -53,6 +53,7 @@ from tendril.utils.types.currency import BASE_CURRENCY_SYMBOL
 @blueprint.route('/modules.json')
 @login_required
 def modules_list():
+    prototypes = get_prototype_lib()
     modules = sorted(prototypes.keys())
     return jsonify({'modules': modules})
 
@@ -74,6 +75,7 @@ def modules(modulename=None):
 @blueprint.route('/cables/')
 @login_required
 def cables(cblname=None):
+    prototypes = get_prototype_lib()
     if cblname is None:
         stage_cables = [v for k, v in prototypes.iteritems()
                         if isinstance(v, CablePrototype)]
@@ -116,6 +118,7 @@ def cables(cblname=None):
 @blueprint.route('/cards/')
 @login_required
 def cards(cardname=None):
+    prototypes = get_prototype_lib()
     if cardname is None:
         stage_cards = [v for k, v in prototypes.iteritems()
                        if isinstance(v, CardPrototype)]

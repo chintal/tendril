@@ -23,7 +23,8 @@ Docstring for supersets.py
 """
 
 from tendril.boms.outputbase import CompositeOutputBom
-from tendril.entityhub.modules import prototypes
+from tendril.entityhub.modules import get_prototype_lib
+from tendril.utils.config import WARM_UP_CACHES
 from tendril.utils import log
 
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -36,6 +37,7 @@ def get_bom_superset(regen=False):
     global superset_cobom
     if not regen and superset_cobom is not None:
         return superset_cobom
+    prototypes = get_prototype_lib()
     boms = []
     logger.info("Building superset composite BOM")
     for ident, prototype in prototypes.iteritems():
@@ -44,3 +46,6 @@ def get_bom_superset(regen=False):
     superset_cobom = CompositeOutputBom(boms, name='ALL')
     superset_cobom.collapse_wires()
     return superset_cobom
+
+if WARM_UP_CACHES is True:
+    get_bom_superset()

@@ -27,9 +27,12 @@ from copy import deepcopy
 
 from tendril.boms.electronics import EntityElnBom
 from tendril.gedaif.conffile import ConfigsFile
-from tendril.utils import log
+
 from tendril.utils.parsers import changelog
 from tendril.utils.fsutils import register_for_changes
+from tendril.utils.config import WARM_UP_CACHES
+from tendril.utils import log
+
 from . import projects
 from . import serialnos
 from .db.controller import SerialNoNotFound
@@ -423,13 +426,21 @@ def get_module_instance(sno, ident=None, scaffold=False, session=None):
                              scaffold=scaffold, session=session)
 
 
-def generate_prototype_lib():
-    lprototypes = {}
+prototypes = {}
+
+
+def get_prototype_lib(regen=False):
+    global prototypes
+    if regen is False and prototypes:
+        return prototypes
+    prototypes = {}
     for card, folder in projects.cards.iteritems():
         if projects.check_module_is_card(card):
-            lprototypes[card] = CardPrototype(card)
+            prototypes[card] = CardPrototype(card)
         elif projects.check_module_is_cable(card):
-            lprototypes[card] = CablePrototype(card)
-    return lprototypes
+            prototypes[card] = CablePrototype(card)
+    return prototypes
 
-prototypes = generate_prototype_lib()
+
+if WARM_UP_CACHES is True:
+    get_prototype_lib()

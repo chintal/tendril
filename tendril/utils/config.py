@@ -764,11 +764,18 @@ config_options_execution = [
         'SUPPORT_INTERPRETER_PERSISTENCE',
         "False",
         "Whether tendril should support interpreter persistence. This "
-        "is generally in the form of warming up and/or maintaining in-memory "
-        "caches, reloading sources from the filesystem, etc. This slows "
+        "is generally in the form of maintaining in-memory caches, "
+        "reloading sources from the filesystem, etc. This slows "
         "startup time, and therefore is only appropriate for server "
         "deployments."
     ),
+    ConfigOption(
+        'WARM_UP_CACHES',
+        "False",
+        "Whether tendril caches should be warmed up on startup. This "
+        "slows startup time, and therefore is only appropriate for server "
+        "deployments."
+    )
 ]
 
 load_config(config_options_vendors)
