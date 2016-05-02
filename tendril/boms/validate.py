@@ -49,7 +49,12 @@ class ValidationError(Exception):
         return self._policy
 
     def render(self):
-        return [self.msg, self._policy.context.render()]
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': self._policy.context.render(),
+            'detail': None,
+        }
 
 
 class MissingFileError(ValidationError):
@@ -62,6 +67,34 @@ class MissingFileError(ValidationError):
         return "<MissingFileWarning {0} {1}>".format(
             self._policy.context, self._policy.path
         )
+
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "Missing {0}".format(self._policy.context.render()),
+            'detail': self._policy.path,
+        }
+
+
+class MangledFileError(ValidationError):
+    msg = "Unable to Parse File"
+
+    def __init__(self, policy):
+        super(MangledFileError, self).__init__(policy)
+
+    def __repr__(self):
+        return "<MangledFileError {0} {1}>".format(
+            self._policy.context, self._policy.path
+        )
+
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "Mangled {0}".format(self._policy.context.render()),
+            'detail': self._policy.path,
+        }
 
 
 class ContextualConfigError(ValidationError):
@@ -76,6 +109,14 @@ class ContextualConfigError(ValidationError):
         else:
             return self._policy.path
 
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': self._policy.context.render(),
+            'detail': "Configuration seems to be incorrect.",
+        }
+
 
 class ConfigKeyError(ContextualConfigError):
     msg = "Configuration Key Missing"
@@ -88,9 +129,20 @@ class ConfigKeyError(ContextualConfigError):
                "".format(self._policy.context, self._format_path())
 
     def render(self):
-        parts = super(ConfigKeyError, self).render()
-        parts += self._format_path()
-        return parts
+        if self._policy.options:
+            option_str = "Valid options are {0}" \
+                         "".format(','.join(self._policy.options))
+        else:
+            option_str = ''
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "{0} missing in {1}"
+                        "".format(self._format_path(),
+                                  self._policy.context.render()),
+            'detail': "This required configuration option could not be "
+                      "found in the configs file. " + option_str,
+        }
 
 
 class ConfigValueInvalidError(ContextualConfigError):
@@ -105,9 +157,19 @@ class ConfigValueInvalidError(ContextualConfigError):
                "".format(self._policy.context, self._format_path())
 
     def render(self):
-        parts = super(ConfigValueInvalidError, self).render()
-        parts += self._format_path()
-        return parts
+        if self._policy.options:
+            option_str = "Valid options are {0}".format(','.join(self._policy.options))
+        else:
+            option_str = ''
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "Invalid {0} for {1} in {2}"
+                        "".format(self._value, self._format_path(),
+                                  self._policy.context.render()),
+            'detail': "The value provided for this configuration option is "
+                      "unrecognized or not allowed in this context. " + option_str,
+        }
 
 
 class ValidationPolicy(object):
@@ -190,7 +252,7 @@ class ErrorCollector(ValidationError):
     def _group_errors(errors):
         rval = {}
         for error in errors:
-            etype = error.pop(0)
+            etype = error['group']
             if etype in rval.keys():
                 rval[etype].append(error)
             else:

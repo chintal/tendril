@@ -3,48 +3,44 @@
     Released under the MIT license
 #}
 
-<div class="small-12 columns changelog">
-    {% if validation_errors.nerrors %}
-    <h5>Errors</h5>
+{% macro render_error(error, level) -%}
+    <article class="error">
+        <div class="error-head">
+            {{ error.headline }}
+        </div>
+        <div class="error-detail">
+            {{ error.detail }}
+        </div>
+    </article>
+{% endmacro %}
+
+{% macro render_error_list(errors_by_type, level) -%}
     <ul class="accordion" data-accordion>
+        {% for etype, errors in errors_by_type.iteritems() %}
         <li class="accordion-navigation">
-        {% for etype, errors in validation_errors.errors_by_type.iteritems() %}
-            <a class="sectiontitle" href="#panelve{{ loop.index }}">{{ etype }} ({{ errors|length }})</a>
-            <div id="panelve{{ loop.index }}" class="content">
+            <a class="validation sectiontitle {{ level }}" href="#panel{{ level }}{{ loop.index }}">
+                {{ etype }} ({{ errors|length }})
+            </a>
+            <div id="panel{{ level }}{{ loop.index }}" class="content validation-{{ level }}">
             {% for error in errors %}
-                <article class="entry">
-                    <div class="entry-desc">
-                        {% for part in error %}
-                            {{ part }}
-                        {% endfor %}
-                    </div>
-                </article>
+                {{ render_error(error, level) }}
             {% endfor %}
             </div>
-        {% endfor %}
         </li>
+        {% endfor %}
     </ul>
+{% endmacro %}
+
+{% macro render_validation_errors(validation_errors) -%}
+<div class="small-12 columns validation">
+    {% if validation_errors.nerrors %}
+    <h5>Errors</h5>
+        {{ render_error_list(validation_errors.errors_by_type, 'alert') }}
     {% endif %}
     {% if validation_errors.nwarnings %}
     <h5>Warnings</h5>
-    <ul class="accordion" data-accordion>
-        <li class="accordion-navigation">
-        {% for etype, errors in validation_errors.warnings_by_type.iteritems() %}
-            <a class="sectiontitle" href="#panelvw{{ loop.index }}">{{ etype }} ({{ errors|length }})</a>
-            <div id="panelvw{{ loop.index }}" class="content">
-            {% for error in errors %}
-                <article class="entry">
-                    <div class="entry-desc">
-                        {% for part in error %}
-                            {{ part }}
-                        {% endfor %}
-                    </div>
-                </article>
-                <hr>
-            {% endfor %}
-            </div>
-        {% endfor %}
-        </li>
-    </ul>
+        {{ render_error_list(validation_errors.warnings_by_type, 'warning') }}
     {% endif %}
 </div>
+{% endmacro %}
+

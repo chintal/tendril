@@ -4,6 +4,7 @@
 #}
 
 {% extends "base_templates/base.html" %}
+{% import "parts/validation_errors.html" as validation %}
 
 {% block magellan %}
 <!-- Magellan -->
@@ -179,8 +180,7 @@
         <div class="sign small-9 medium-6 small-centered columns autoscale">
             <h6>Validation Errors</h6>
         </div>
-        {% set validation_errors = stage.prototype.validation_errors %}
-        {% include 'parts/validation_errors.html' %}
+        {{ validation.render_validation_errors(stage.prototype.validation_errors) }}
     </div>
 </div>
 {% endif %}

@@ -36,6 +36,7 @@ from tendril.boms.validate import ValidationError
 from tendril.boms.validate import ConfigOptionPolicy
 from tendril.boms.validate import FilePolicy
 from tendril.boms.validate import MissingFileError
+from tendril.boms.validate import MangledFileError
 
 from tendril.boms.validate import ErrorCollector
 from tendril.boms.validate import get_dict_val
@@ -151,6 +152,11 @@ class ModulePrototypeBase(object):
             ctx.locality = 'ChangeLog'
             policy = FilePolicy(ctx, self._changelogpath, False)
             raise MissingFileError(policy)
+        except changelog.ChangeLogParseError:
+            ctx = copy(self._validation_context)
+            ctx.locality = 'ChangeLog'
+            policy = FilePolicy(ctx, self._changelogpath, False)
+            raise MangledFileError(policy)
 
     def make_labels(self, sno, label_manager=None):
         raise NotImplementedError
