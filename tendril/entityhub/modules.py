@@ -98,7 +98,6 @@ class ModulePrototypeBase(object):
             raise ModuleTypeError("Module {0} is not a not a valid module for "
                                   "{1}".format(value, self.__class__))
         self._modulename = value
-
         self._validation_context = ValidationContext(value)
 
         try:
@@ -205,7 +204,12 @@ class PCBPrototype(ModulePrototypeBase):
             raise ModuleNotRecognizedError(
                     "PCB {0} not recognized".format(value))
         self._modulename = value
-        self._get_changelog()
+        self._validation_context = ValidationContext(value)
+
+        try:
+            self._get_changelog()
+        except ValidationError as e:
+            self._validation_errors.add(e)
 
     @property
     def projfolder(self):
