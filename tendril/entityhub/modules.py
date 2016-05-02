@@ -108,10 +108,10 @@ class ModulePrototypeBase(object):
         except ValidationError as e:
             self._validation_errors.add(e)
 
-        # try:
-        #     self._get_changelog()
-        # except ValidationError as e:
-        #     self._validation_errors.add(e)
+        try:
+            self._get_changelog()
+        except ValidationError as e:
+            self._validation_errors.add(e)
 
     @property
     def desc(self):
@@ -185,6 +185,9 @@ class ModulePrototypeBase(object):
 
     def _validate(self):
         raise NotImplementedError
+
+    def validate(self):
+        self._validate()
 
     @property
     def validation_errors(self):
@@ -641,6 +644,12 @@ def get_pcb_lib(regen=False):
     return pcbs
 
 
+def fill_prototype_lib():
+    for prototype in prototypes:
+        prototype.validate()
+
+
 if WARM_UP_CACHES is True:
     get_prototype_lib()
+    fill_prototype_lib()
     get_pcb_lib()

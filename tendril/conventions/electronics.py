@@ -35,6 +35,7 @@ DEVICE_CLASSES_DOC = [
     ('POT DIAL', 'Dial Pots'),
     ('VARISTOR', 'Varistors and MOVs'),
     ('CAP CER SMD', 'SMD Ceramic Capacitors'),
+    ('CAP MICA SMD', 'SMD Mica Capacitors'),
     ('CAP TANT SMD', 'SMD Tantalum Capacitors'),
     ('CAP TANT THRU', 'THRU Tantalum Capacitors'),
     ('CAP CER THRU', 'THRU Ceramic Capacitors'),
@@ -124,7 +125,8 @@ DEVICE_CLASSES_DOC = [
     ('POWER CORD', 'Power Cords'),
     ('USB CABLE', 'USB Cables'),
     ('RTD', 'Temperature Dependent Resistors'),
-    ('SOCKET ZIF', 'Zero Insertion Force IC Sockets')
+    ('SOCKET ZIF', 'Zero Insertion Force IC Sockets'),
+    ('LIGHT PIPE', 'Light Pipes'),
 ]
 
 
