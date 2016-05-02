@@ -20,10 +20,11 @@ gEDA ConfigsFile module documentation (:mod:`gedaif.conffile`)
 """
 
 import os
+from decimal import Decimal
 
 from tendril.boms.configbase import ConfigBase
 from tendril.boms.configbase import NoProjectError
-from tendril.boms.configbase import SchemaNotSupportedError
+
 from tendril.conventions import status
 
 
@@ -32,6 +33,10 @@ class NoGedaProjectError(NoProjectError):
 
 
 class ConfigsFile(ConfigBase):
+    schema_name = 'pcbconfigs'
+    schema_version_max = Decimal("1.0")
+    schema_version_min = Decimal("1.0")
+
     NoProjectErrorType = NoGedaProjectError
 
     def __init__(self, projectfolder):
@@ -41,13 +46,6 @@ class ConfigsFile(ConfigBase):
     @property
     def _cfpath(self):
         return os.path.join(self.projectfolder, "schematic", "configs.yaml")
-
-    def _verify_schema_decl(self, configdata):
-        if configdata["schema"]["name"] == "pcbconfigs" and \
-           configdata["schema"]["version"] == 1.0:
-            return configdata
-        else:
-            raise SchemaNotSupportedError
 
     def validate(self):
         super(ConfigsFile, self).validate()
@@ -87,7 +85,10 @@ class ConfigsFile(ConfigBase):
             return self.status
         configuration = self.configuration(configname)
         if 'status' in configuration.keys():
-            return status.get_status(configuration['status'])
+            try:
+                return status.get_status(configuration['status'])
+            except KeyError:
+                pass
         else:
             return self.status
 

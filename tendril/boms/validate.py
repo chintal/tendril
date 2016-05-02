@@ -34,8 +34,13 @@ class ValidationContext(object):
         else:
             return self.mod
 
+    def render(self):
+        return self.locality
+
 
 class ValidationError(Exception):
+    msg = "Validation Error"
+
     def __init__(self, policy):
         self._policy = policy
 
@@ -43,8 +48,13 @@ class ValidationError(Exception):
     def policy(self):
         return self._policy
 
+    def render(self):
+        return [self.msg, self._policy.context.render()]
+
 
 class MissingFileError(ValidationError):
+    msg = "Missing File"
+
     def __init__(self, policy):
         super(MissingFileError, self).__init__(policy)
 
@@ -55,6 +65,8 @@ class MissingFileError(ValidationError):
 
 
 class ContextualConfigError(ValidationError):
+    msg = "Incorrect Configuration"
+
     def __init__(self, policy):
         super(ContextualConfigError, self).__init__(policy)
 
@@ -66,6 +78,8 @@ class ContextualConfigError(ValidationError):
 
 
 class ConfigKeyError(ContextualConfigError):
+    msg = "Configuration Key Missing"
+
     def __init__(self, policy):
         super(ConfigKeyError, self).__init__(policy)
 
@@ -73,8 +87,15 @@ class ConfigKeyError(ContextualConfigError):
         return "<ConfigKeyError {0} {1}>" \
                "".format(self._policy.context, self._format_path())
 
+    def render(self):
+        parts = super(ConfigKeyError, self).render()
+        parts += self._format_path()
+        return parts
+
 
 class ConfigValueInvalidError(ContextualConfigError):
+    msg = "Configuration Value Unrecognized"
+
     def __init__(self, policy, value):
         super(ConfigValueInvalidError, self).__init__(policy)
         self._value = value
@@ -82,6 +103,11 @@ class ConfigValueInvalidError(ContextualConfigError):
     def __repr__(self):
         return "<ConfigValueInvalidError {0} {1}>" \
                "".format(self._policy.context, self._format_path())
+
+    def render(self):
+        parts = super(ConfigValueInvalidError, self).render()
+        parts += self._format_path()
+        return parts
 
 
 class ValidationPolicy(object):
@@ -91,7 +117,7 @@ class ValidationPolicy(object):
 
 
 class ConfigOptionPolicy(ValidationPolicy):
-    def __init__(self, context, path, options, default, is_error):
+    def __init__(self, context, path, options=None, default=None, is_error=True):
         super(ConfigOptionPolicy, self).__init__(context, is_error)
         self.path = path
         self.options = options
@@ -139,3 +165,44 @@ class ErrorCollector(ValidationError):
     @property
     def errors(self):
         return self._errors
+
+    @property
+    def terrors(self):
+        return len(self._errors)
+
+    @property
+    def derrors(self):
+        return [x for x in self._errors if x.policy.is_error]
+
+    @property
+    def dwarnings(self):
+        return [x for x in self._errors if not x.policy.is_error]
+
+    @property
+    def nerrors(self):
+        return len(self.derrors)
+
+    @property
+    def nwarnings(self):
+        return len(self.dwarnings)
+
+    @staticmethod
+    def _group_errors(errors):
+        rval = {}
+        for error in errors:
+            etype = error.pop(0)
+            if etype in rval.keys():
+                rval[etype].append(error)
+            else:
+                rval[etype] = [error]
+        return rval
+
+    @property
+    def errors_by_type(self):
+        lerrors = [x.render() for x in self.derrors]
+        return self._group_errors(lerrors)
+
+    @property
+    def warnings_by_type(self):
+        lwarnings = [x.render() for x in self.dwarnings]
+        return self._group_errors(lwarnings)

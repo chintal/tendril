@@ -78,6 +78,7 @@ class ModulePrototypeBase(object):
         self._status = None
         self._strategy = None
         self._changelog = None
+        self._validated = False
         self._validation_context = None
         self._validation_errors = ErrorCollector()
         self.ident = modulename
@@ -174,10 +175,17 @@ class ModulePrototypeBase(object):
         self._changelog = None
 
     def validate(self):
+        self._validated = True
         return self._validate()
 
     def _validate(self):
         raise NotImplementedError
+
+    @property
+    def validation_errors(self):
+        if not self._validated:
+            self.validate()
+        return self._validation_errors
 
 
 class PCBPrototype(ModulePrototypeBase):
@@ -221,6 +229,7 @@ class PCBPrototype(ModulePrototypeBase):
         return os.path.join(self.projfolder, 'ChangeLog')
 
     def _validate(self):
+        # TODO Verify PCB size, layers
         pass
 
 
@@ -372,6 +381,19 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
     @property
     def projfolder(self):
         return projects.cards[self.ident]
+
+    def _validate(self):
+        temp = self.status
+        temp = self.strategy
+        temp = self.changelog
+        # TODO Validate all OBOM line idents
+        # TODO Validate all OBOM line quantity types
+        # TODO Validate all motifs as configured
+        # TODO Validate all SJs are expected
+        # TODO Validate all SJs are accounted for
+        # TODO Validate all Generators are expected
+        # TODO Higher order configuration validation
+        pass
 
 
 class CardPrototype(EDAModulePrototypeBase):

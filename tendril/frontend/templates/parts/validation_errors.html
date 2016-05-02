@@ -1,0 +1,50 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+<div class="small-12 columns changelog">
+    {% if validation_errors.nerrors %}
+    <h5>Errors</h5>
+    <ul class="accordion" data-accordion>
+        <li class="accordion-navigation">
+        {% for etype, errors in validation_errors.errors_by_type.iteritems() %}
+            <a class="sectiontitle" href="#panelve{{ loop.index }}">{{ etype }} ({{ errors|length }})</a>
+            <div id="panelve{{ loop.index }}" class="content">
+            {% for error in errors %}
+                <article class="entry">
+                    <div class="entry-desc">
+                        {% for part in error %}
+                            {{ part }}
+                        {% endfor %}
+                    </div>
+                </article>
+            {% endfor %}
+            </div>
+        {% endfor %}
+        </li>
+    </ul>
+    {% endif %}
+    {% if validation_errors.nwarnings %}
+    <h5>Warnings</h5>
+    <ul class="accordion" data-accordion>
+        <li class="accordion-navigation">
+        {% for etype, errors in validation_errors.warnings_by_type.iteritems() %}
+            <a class="sectiontitle" href="#panelvw{{ loop.index }}">{{ etype }} ({{ errors|length }})</a>
+            <div id="panelvw{{ loop.index }}" class="content">
+            {% for error in errors %}
+                <article class="entry">
+                    <div class="entry-desc">
+                        {% for part in error %}
+                            {{ part }}
+                        {% endfor %}
+                    </div>
+                </article>
+                <hr>
+            {% endfor %}
+            </div>
+        {% endfor %}
+        </li>
+    </ul>
+    {% endif %}
+</div>

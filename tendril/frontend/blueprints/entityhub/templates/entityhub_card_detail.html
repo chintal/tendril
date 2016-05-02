@@ -172,6 +172,19 @@
 </div>
 {% endif %}
 
+{% if stage.prototype.validation_errors.terrors %}
+<div class="small-12 medium-6 columns" data-magellan-destination="validation">
+    <a name="validation"></a>
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Validation Errors</h6>
+        </div>
+        {% set validation_errors = stage.prototype.validation_errors %}
+        {% include 'parts/validation_errors.html' %}
+    </div>
+</div>
+{% endif %}
+
     <!-- Test Protocols -->
     <!-- Pricing -->
     <!-- Inclusion Information -->

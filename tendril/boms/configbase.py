@@ -55,6 +55,16 @@ import copy
 import yaml
 import itertools
 import warnings
+from decimal import Decimal
+
+from tendril.boms.validate import ValidationContext
+from tendril.boms.validate import ErrorCollector
+from tendril.boms.validate import ValidationError
+from tendril.boms.validate import ValidationPolicy
+from tendril.boms.validate import ConfigOptionPolicy
+
+from tendril.boms.validate import get_dict_val
+
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -64,15 +74,41 @@ class NoProjectError(Exception):
     pass
 
 
-class SchemaNotSupportedError(Exception):
-    pass
+class SchemaPolicy(ValidationPolicy):
+    def __init__(self, context, name, vmax, vmin):
+        super(SchemaPolicy, self).__init__(context)
+        self.name = name
+        self.vmax = vmax
+        self.vmin = vmin
+
+    def validate(self, name, version):
+        if name == self.name and self.vmin <= version <= self.vmax:
+            return True
+        else:
+            return False
+
+
+class SchemaNotSupportedError(ValidationError):
+    def __init__(self, policy, value):
+        super(SchemaNotSupportedError, self).__init__(policy)
+        self._value = value
+
+    def __repr__(self):
+        return "<SchemaNotSupportedError {0}{1}>" \
+               "".format(self._policy.context, self._value)
 
 
 class ConfigBase(object):
     NoProjectErrorType = NoProjectError
+    schema_name = None
+    schema_version_max = None
+    schema_version_min = None
 
     def __init__(self, projectfolder):
         self._projectfolder = os.path.normpath(projectfolder)
+        self._validation_context = ValidationContext(self.projectfolder,
+                                                     locality='Configs')
+        self._validation_errors = ErrorCollector()
         try:
             self._configdata = self.get_configs_file()
         except IOError:
@@ -87,12 +123,34 @@ class ConfigBase(object):
             configdata = yaml.load(configfile)
             try:
                 return self._verify_schema_decl(configdata)
-            except SchemaNotSupportedError:
-                logger.error("Schema not supported for project : {0}"
-                             "".format(self._projectfolder))
+            except SchemaNotSupportedError as e:
+                self._validation_errors.add(e)
+
+    @property
+    def _schema_name_policy(self):
+        return ConfigOptionPolicy(
+            self._validation_context, ('schema', 'name')
+        )
+
+    @property
+    def _schema_ver_policy(self):
+        return ConfigOptionPolicy(
+            self._validation_context, ('schema', 'version')
+        )
 
     def _verify_schema_decl(self, configdata):
-        raise NotImplementedError
+        schema_policy = SchemaPolicy(
+            self._validation_context, self.schema_name,
+            self.schema_version_max, self.schema_version_min
+        )
+        schema_name = get_dict_val(configdata, self._schema_name_policy)
+        schema_version = Decimal(get_dict_val(configdata, self._schema_ver_policy))
+        if schema_policy.validate(schema_name, schema_version):
+            return configdata
+        else:
+            raise SchemaNotSupportedError(
+                schema_policy, '{0}v{1}'.format(schema_name, schema_version)
+            )
 
     def validate(self):
         raise NotImplementedError

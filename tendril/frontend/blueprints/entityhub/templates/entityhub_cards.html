@@ -64,6 +64,12 @@
                     {% if card.configs.snoseries %}
                       <span class="right label radius secondary">{{ card.configs.snoseries }}</span>
                     {% endif %}
+                    {% if card.validation_errors.nerrors %}
+                      <span class="left label radius alert">{{ card.validation_errors.nerrors }} Errors</span>
+                    {% endif %}
+                    {% if card.validation_errors.nwarnings %}
+                      <span class="left label radius warning">{{ card.validation_errors.nwarnings }} Warnings</span>
+                    {% endif %}
                 </ul>
             </a>
         </li>
