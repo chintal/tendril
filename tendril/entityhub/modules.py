@@ -24,12 +24,22 @@ Docstring for modules
 
 import os
 from copy import deepcopy
+from copy import copy
 
-from tendril.boms.electronics import EntityElnBom
 from tendril.gedaif.conffile import ConfigsFile
-
+from tendril.boms.electronics import EntityElnBom
 from tendril.utils.parsers import changelog
 from tendril.utils.fsutils import register_for_changes
+
+from tendril.boms.validate import ValidationContext
+from tendril.boms.validate import ValidationError
+from tendril.boms.validate import ConfigOptionPolicy
+from tendril.boms.validate import FilePolicy
+from tendril.boms.validate import MissingFileError
+
+from tendril.boms.validate import ErrorCollector
+from tendril.boms.validate import get_dict_val
+
 from tendril.utils.config import WARM_UP_CACHES
 from tendril.utils import log
 
@@ -53,16 +63,12 @@ class ModuleInstanceTypeMismatchError(Exception):
     pass
 
 
-class ContextualConfigError(Exception):
-    pass
-
-
-class ModuleStrategyParseError(ContextualConfigError):
+class MissingInformationError(Exception):
     pass
 
 
 class ModulePrototypeBase(object):
-    validator = None
+    prevalidator = None
 
     def __init__(self, modulename):
         self._modulename = None
@@ -72,6 +78,8 @@ class ModulePrototypeBase(object):
         self._status = None
         self._strategy = None
         self._changelog = None
+        self._validation_context = None
+        self._validation_errors = ErrorCollector()
         self.ident = modulename
         self._register_for_changes()
 
@@ -84,18 +92,22 @@ class ModulePrototypeBase(object):
         if value not in projects.cards.keys():
             raise ModuleNotRecognizedError(
                     "Module {0} not recognized".format(value))
-        if not self.validator(value):
+        if not self.prevalidator(value):
             raise ModuleTypeError("Module {0} is not a not a valid module for "
                                   "{1}".format(value, self.__class__))
         self._modulename = value
+
+        self._validation_context = ValidationContext(value)
+
         try:
             self._strategy = self._get_production_strategy()
-        except KeyError:
-            raise ModuleStrategyParseError(
-                "Missing Key(s) loading strategy for {}"
-                "".format(self.ident)
-            )
-        self._get_changelog()
+        except ValidationError as e:
+            self._validation_errors.add(e)
+
+        try:
+            self._get_changelog()
+        except ValidationError as e:
+            self._validation_errors.add(e)
 
     @property
     def desc(self):
@@ -110,19 +122,14 @@ class ModulePrototypeBase(object):
     @property
     def strategy(self):
         if self._strategy is None:
-            try:
-                self._strategy = self._get_production_strategy()
-            except KeyError:
-                raise ModuleStrategyParseError(
-                    "Missing Key(s) loading strategy for {}"
-                    "".format(self.ident)
-                )
+            raise MissingInformationError(
+                "Production strategy information missing for {0}"
+                "".format(self.ident)
+            )
         return self._strategy
 
     @property
     def changelog(self):
-        if self._changelog is None:
-            self._get_changelog()
         return self._changelog
 
     def _get_production_strategy(self):
@@ -139,7 +146,10 @@ class ModulePrototypeBase(object):
         try:
             self._changelog = changelog.ChangeLog(self._changelogpath)
         except changelog.ChangeLogNotFoundError:
-            pass
+            ctx = copy(self._validation_context)
+            ctx.locality = 'ChangeLog'
+            policy = FilePolicy(ctx, self._changelogpath, False)
+            raise MissingFileError(policy)
 
     def make_labels(self, sno, label_manager=None):
         raise NotImplementedError
@@ -162,6 +172,12 @@ class ModulePrototypeBase(object):
         self._status = None
         self._strategy = None
         self._changelog = None
+
+    def validate(self):
+        return self._validate()
+
+    def _validate(self):
+        raise NotImplementedError
 
 
 class PCBPrototype(ModulePrototypeBase):
@@ -204,6 +220,9 @@ class PCBPrototype(ModulePrototypeBase):
     def _changelogpath(self):
         return os.path.join(self.projfolder, 'ChangeLog')
 
+    def _validate(self):
+        pass
+
 
 class EDAModulePrototypeBase(ModulePrototypeBase):
     @property
@@ -232,44 +251,105 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
     def _get_status(self):
         raise NotImplementedError
 
+    @property
+    def _psctx(self):
+        ctx = copy(self._validation_context)
+        ctx.locality = 'Strategy'
+        return ctx
+
+    @property
+    def _pspol_doc_am(self):
+        return ConfigOptionPolicy(
+            context=self._psctx, path=('documentation', 'am'),
+            options=[True, False], is_error=True, default=True
+        )
+
+    @property
+    def _pspol_testing(self):
+        return ConfigOptionPolicy(
+            context=self._psctx, path=('productionstrategy', 'testing'),
+            options=['normal', 'lazy'], is_error=True, default='normal'
+        )
+
+    @property
+    def _pspol_labelling(self):
+        return ConfigOptionPolicy(
+            context=self._psctx, path=('productionstrategy', 'labelling'),
+            options=['normal', 'lazy'], is_error=True, default='normal'
+        )
+
+    @property
+    def _pspol_labeldefs(self):
+        return ConfigOptionPolicy(
+            context=self._psctx, path=('documentation', 'labels'),
+            options=None, is_error=True, default=None
+        )
+
     def _get_production_strategy(self):
         rval = {}
         configdata = self.configs.rawconfig
-        if configdata['documentation']['am'] is True:
+        ec = ErrorCollector()
+
+        try:
+            am = get_dict_val(configdata, self._pspol_doc_am)
+        except ValidationError as e:
+            am = e.policy.default
+            ec.add(e)
+        if am is True:
             # Assembly manifest should be used
             rval['prodst'] = "@AM"
             rval['genmanifest'] = True
-        elif configdata['documentation']['am'] is False:
+        else:
             # No Assembly manifest needed
             rval['prodst'] = "@THIS"
             rval['genmanifest'] = False
-        if configdata['productionstrategy']['testing'] == 'normal':
+
+        try:
+            testing = get_dict_val(configdata, self._pspol_testing)
+        except ValidationError as e:
+            testing = e.policy.default
+            ec.add(e)
+        if testing == 'normal':
             # Normal test procedure, Test when made
             rval['testst'] = "@NOW"
-        if configdata['productionstrategy']['testing'] == 'lazy':
+        if testing == 'lazy':
             # Lazy test procedure, Test when used
             rval['testst'] = "@USE"
-        if configdata['productionstrategy']['labelling'] == 'normal':
+
+        try:
+            labelling = get_dict_val(configdata, self._pspol_labelling)
+        except ValidationError as e:
+            labelling = e.policy.default
+            ec.add(e)
+        if labelling == 'normal':
             # Normal test procedure, Label when made
             rval['lblst'] = "@NOW"
-        if configdata['productionstrategy']['testing'] == 'lazy':
+        if labelling == 'lazy':
             # Lazy test procedure, Label when used
             rval['lblst'] = "@USE"
         rval['genlabel'] = False
         rval['labels'] = []
-        if isinstance(configdata['documentation']['label'], dict):
-            for k in sorted(configdata['documentation']['label'].keys()):
+
+        try:
+            labeldefs = get_dict_val(configdata, self._pspol_labeldefs)
+        except ValidationError as e:
+            labeldefs = e.policy.default
+            ec.add(e)
+
+        if labeldefs is not None:
+            if isinstance(labeldefs, dict):
+                for k in sorted(labeldefs.keys()):
+                    rval['labels'].append(
+                        {'code': k,
+                         'ident': self.ident + '.' + configdata['label'][k]}
+                    )
+                rval['genlabel'] = True
+            elif isinstance(labeldefs, str):
                 rval['labels'].append(
-                    {'code': k,
-                     'ident': self.ident + '.' + configdata['label'][k]}
+                    {'code': labeldefs,
+                     'ident': self.ident}
                 )
-            rval['genlabel'] = True
-        elif isinstance(configdata['documentation']['label'], str):
-            rval['labels'].append(
-                {'code': configdata['documentation']['label'],
-                 'ident': self.ident}
-            )
-            rval['genlabel'] = True
+                rval['genlabel'] = True
         return rval
 
     def make_labels(self, sno, label_manager=None):
@@ -295,7 +375,7 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
 
 
 class CardPrototype(EDAModulePrototypeBase):
-    validator = staticmethod(projects.check_module_is_card)
+    prevalidator = staticmethod(projects.check_module_is_card)
 
     @property
     def pcbname(self):
@@ -309,7 +389,7 @@ class CardPrototype(EDAModulePrototypeBase):
 
 
 class CablePrototype(EDAModulePrototypeBase):
-    validator = staticmethod(projects.check_module_is_cable)
+    prevalidator = staticmethod(projects.check_module_is_cable)
 
     def __repr__(self):
         return '<CablePrototype {0}>'.format(self.ident)
@@ -330,7 +410,7 @@ def get_module_prototype(modulename):
 
 
 class ModuleInstanceBase(EntityBase):
-    validator = None
+    prevalidator = None
 
     def __init__(self, sno=None, ident=None, create=False,
                  scaffold=False, session=None):
@@ -352,7 +432,7 @@ class ModuleInstanceBase(EntityBase):
         if value not in projects.cards.keys():
             raise ModuleNotRecognizedError("Module {0} not recognized"
                                            "".format(value))
-        if not self.validator(value):
+        if not self.prevalidator(value):
             raise ModuleTypeError("Module {0} is not a not a valid module for"
                                   " {1}".format(value, self.__class__))
         self._ident = value
@@ -420,7 +500,7 @@ class EDAModuleInstanceBase(ModuleInstanceBase):
 
 
 class CardInstance(EDAModuleInstanceBase):
-    validator = staticmethod(projects.check_module_is_card)
+    prevalidator = staticmethod(projects.check_module_is_card)
 
     def __repr__(self):
         if self._customization is not None:
@@ -437,7 +517,7 @@ class CardInstance(EDAModuleInstanceBase):
 
 
 class CableInstance(EDAModuleInstanceBase):
-    validator = staticmethod(projects.check_module_is_cable)
+    prevalidator = staticmethod(projects.check_module_is_cable)
 
     def __repr__(self):
         if self._customization is not None:
