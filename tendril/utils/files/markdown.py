@@ -22,10 +22,14 @@
 Docstring for markdown
 """
 
+import re
 
 from mistune import escape
 from mistune import Renderer
 from mistune import Markdown
+
+
+regex_email = re.compile(ur'^<([\w]+\.*[\w]*)+@(([\w]+\.[\w]*)+)>$')
 
 
 class TendrilMistuneRenderer(Renderer):
@@ -102,7 +106,12 @@ class TendrilMistuneRenderer(Renderer):
         raise NotImplementedError
 
     def inline_html(self, html):
-        raise NotImplementedError
+        # TODO we're only doing the bare minimum here to handle
+        # mislabelled email addresses.
+        m = regex_email.match(html)
+        if m:
+            email = m.groups()[0] + '@' + m.groups()[1]
+            return 'email', 'mailto:' + email, email
 
     def newline(self):
         raise NotImplementedError
