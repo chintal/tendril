@@ -11,6 +11,7 @@
     <dl class="sub-nav">
         <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
         <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
+        <dd data-magellan-arrival="changelog"><a href="#changelog">ChangeLog</a></dd>
         <dd data-magellan-arrival="costing"><a href="#costing">Costing</a></dd>
         <dd data-magellan-arrival="configurations"><a href="#configurations">Configurations</a></dd>
     </dl>
@@ -66,14 +67,10 @@
                 </ul>
             </li>
             {% endif %}
-            {% if stage.configdata.status == 'Experimental' %}
-              <span class="right label radius warning">Experimental</span>
-            {% endif %}
-            {% if stage.configdata.status == 'Active' %}
-              <span class="right label radius success">Active</span>
-            {% endif %}
-            {% if stage.configdata.status == 'Deprecated' %}
-              <span class="right label radius alert">Deprecated</span>
+            {% if stage.prototype.status %}
+              <span class="right label radius {{stage.prototype.status.html_class}}">
+                  {{stage.prototype.status}}
+              </span>
             {% endif %}
         </ul>
 </div>
@@ -102,6 +99,23 @@
         {% endfor %}
     </ul>
 </div>
+
+<!--ChangeLog and Issues-->
+<div class="row">
+    {% if stage.prototype.changelog %}
+    <div class="small-12 medium-6 columns" data-magellan-destination="changelog">
+        <a name="changelog"></a>
+        <div class="small-12 columns panel header radius">
+            <div class="sign small-9 medium-6 small-centered columns autoscale">
+                <h6>ChangeLog</h6>
+            </div>
+            {% set changelog = stage.prototype.changelog.parts %}
+            {% include 'parts/changelog.html' %}
+        </div>
+    </div>
+{% endif %}
+</div>
+
 
 <div class="row">
 <!-- Pricing Information -->

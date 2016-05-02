@@ -164,6 +164,47 @@ class ModulePrototypeBase(object):
         self._changelog = None
 
 
+class PCBPrototype(ModulePrototypeBase):
+    @property
+    def ident(self):
+        return self._modulename
+
+    @ident.setter
+    def ident(self, value):
+        if value not in projects.pcbs.keys():
+            raise ModuleNotRecognizedError(
+                    "PCB {0} not recognized".format(value))
+        self._modulename = value
+        self._get_changelog()
+
+    @property
+    def projfolder(self):
+        return projects.pcbs[self.ident]
+
+    def make_labels(self, sno, label_manager=None):
+        pass
+
+    @property
+    def configs(self):
+        if not self._configs:
+            self._configs = ConfigsFile(self.projfolder)
+        return self._configs
+
+    def _get_status(self):
+        self._status = self.configs.status
+
+    def _get_production_strategy(self):
+        raise NotImplementedError
+
+    @property
+    def desc(self):
+        return self.configs.description()
+
+    @property
+    def _changelogpath(self):
+        return os.path.join(self.projfolder, 'ChangeLog')
+
+
 class EDAModulePrototypeBase(ModulePrototypeBase):
     @property
     def desc(self):
@@ -442,5 +483,19 @@ def get_prototype_lib(regen=False):
     return prototypes
 
 
+pcbs = {}
+
+
+def get_pcb_lib(regen=False):
+    global pcbs
+    if regen is False and pcbs:
+        return pcbs
+    pcbs = {}
+    for pcbname, folder in projects.pcbs.iteritems():
+        pcbs[pcbname] = PCBPrototype(pcbname)
+    return pcbs
+
+
 if WARM_UP_CACHES is True:
     get_prototype_lib()
+    get_pcb_lib()

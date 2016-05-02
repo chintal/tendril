@@ -11,32 +11,23 @@
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
     {% for pcb in stage.pcbs %}
     <li>
-        <a href="/entityhub/pcbs/{{ pcb.name }}">
+        <a href="/entityhub/pcbs/{{ pcb.ident }}">
         <ul class="pricing-table active-tb shadow mrgn-20-top">
-            <li class="price {% if stage.pcbs|length < 40 %} autoscale {% endif %}"> {{ pcb.name }} </li>
-            <li class="description"> {{ pcb.configdata.description() }} </li>
+            <li class="price {% if stage.pcbs|length < 40 %} autoscale {% endif %}"> {{ pcb.ident }} </li>
+            <li class="description"> {{ pcb.desc }} </li>
             <li class="title"> PCB Details </li>
-            {% for descriptor in pcb.configdata.pcbdescriptors %}
+            {% for descriptor in pcb.configs.pcbdescriptors %}
             <li class="bullet-item"> {{ descriptor }} </li>
             {% endfor %}
             <li class="title"> Configurations </li>
-            {% for configuration in pcb.configdata.configurations[:3] %}
+            {% for configuration in pcb.configs.configurations[:3] %}
             <li class="bullet-item"> {{ configuration.configname }} </li>
             {% endfor %}
-            {% if pcb.configdata.configurations|length > 3 %}
-            <li class="bullet-item"> And {{ pcb.configdata.configurations|length - 3 }} others.. </li>
+            {% if pcb.configs.configurations|length > 3 %}
+            <li class="bullet-item"> And {{ pcb.configs.configurations|length - 3 }} others.. </li>
             {% endif %}
-            {% if pcb.configdata.status == 'Experimental' %}
-              <span class="right label radius warning">Experimental</span>
-            {% endif %}
-            {% if pcb.configdata.status == 'Active' %}
-              <span class="right label radius success">Active</span>
-            {% endif %}
-            {% if pcb.configdata.status == 'WIP' %}
-              <span class="right label radius alert">WIP</span>
-            {% endif %}
-            {% if pcb.configdata.status == 'Deprecated' %}
-              <span class="right label radius alert">Deprecated</span>
+            {% if pcb.status %}
+              <span class="right label radius {{ pcb.status.html_class}}">{{pcb.status}}</span>
             {% endif %}
         </ul>
         </a>

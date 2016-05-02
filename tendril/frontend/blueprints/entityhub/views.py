@@ -33,6 +33,8 @@ from tendril.entityhub.modules import get_prototype_lib
 from tendril.entityhub.modules import CardPrototype
 from tendril.entityhub.modules import CablePrototype
 
+from tendril.entityhub.modules import get_pcb_lib
+
 # TODO Consider migration of the next section of imports
 # to a prototype like structure
 from tendril.entityhub import projects as ehprojects
@@ -212,30 +214,23 @@ def get_pcb_costing_chart(projectfolder):
 @blueprint.route('/pcbs/')
 @login_required
 def pcbs(pcbname=None):
+    pcblib = get_pcb_lib()
     if pcbname is None:
-        stage_pcbs = [{'name': k,
-                       'configdata': ConfigsFile(v)}
-                      for k, v in ehprojects.pcbs.iteritems()]
-        stage = {'pcbs': sorted([x for x in stage_pcbs if x['configdata'].status == 'Experimental'],  # noqa
-                                key=lambda y: y['name']) +
-                         sorted([x for x in stage_pcbs if x['configdata'].status == 'Active'],  # noqa
-                                key=lambda y: y['name']) +
-                         sorted([x for x in stage_pcbs if x['configdata'].status == 'WIP'],  # noqa
-                                key=lambda y: y['name']) +
-                         sorted([x for x in stage_pcbs if x['configdata'].status == 'Deprecated'],  # noqa
-                                key=lambda y: y['name']),
+        stage_pcbs = [v for k, v in pcblib.iteritems()]
+        stage = {'pcbs': sorted([x for x in stage_pcbs], key=lambda y: (y.status, y.ident)),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Bare PCBs", path="pcbs/")]}
         return render_template('entityhub_pcbs.html', stage=stage,
                                pagetitle="Bare PCBs")
     else:
-
-        stage = {'name': pcbname,
-                 'configdata': ConfigsFile(ehprojects.pcbs[pcbname]),
-                 'docs': get_docs_list(ehprojects.pcbs[pcbname]),
-                 'imgs': get_img_list(ehprojects.pcbs[pcbname]),
-                 'costing': get_pcb_costing_chart(ehprojects.pcbs[pcbname]),
+        prototype = pcblib[pcbname]
+        stage = {'prototype': prototype,
+                 'name': pcbname,
+                 'configdata': prototype.configs,
+                 'docs': get_docs_list(prototype.projfolder),
+                 'imgs': get_img_list(prototype.projfolder),
+                 'costing': get_pcb_costing_chart(prototype.projfolder),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Bare PCBs", path="pcbs/"),

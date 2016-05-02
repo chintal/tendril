@@ -134,6 +134,12 @@ def check_module_is_cable(modulename):
     return cf.is_cable
 
 
+def check_is_pcb(pcbname):
+    if pcbname in pcbs.keys():
+        return True
+    return False
+
+
 def get_project_repo_repr(modulename):
     repo = card_reporoot[modulename]
     rev = get_path_revision(os.path.join(PROJECTS_ROOT, repo))
