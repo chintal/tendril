@@ -23,6 +23,10 @@ Docstring for validate
 """
 
 
+from tendril.conventions.electronics import parse_ident
+from tendril.conventions.electronics import DEVICE_CLASSES
+
+
 class ValidationContext(object):
     def __init__(self, mod, locality=None):
         self.mod = mod
@@ -173,9 +177,106 @@ class ConfigValueInvalidError(ContextualConfigError):
         }
 
 
+class IdentErrorBase(ValidationError):
+    def __init__(self, policy, ident, refdeslist):
+        self.ident = ident
+        self.refdeslist = refdeslist
+        self._policy = policy
+
+
+class IdentNotRecognized(IdentErrorBase):
+    msg = "Ident Not Recognized"
+
+    def __init__(self, policy, ident, refdeslist):
+        super(IdentNotRecognized, self).__init__(policy, ident, refdeslist)
+
+    def __repr__(self):
+        return "<IdentNotRecognized {0} {1}>" \
+               "".format(self.ident, ', '.join(self.refdeslist))
+
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "'{0}' is not a recognized ident."
+                        "".format(self.ident),
+            'detail': "This ident is not recognized by the library and is "
+                      "therefore deemed invalid. Used by refdes {0}"
+                      "".format(', '.join(self.refdeslist)),
+        }
+
+
+class DeviceNotRecognized(IdentErrorBase):
+    msg = "Device Not Recognized"
+
+    def __init__(self, policy, ident, refdeslist):
+        super(DeviceNotRecognized, self).__init__(policy, ident, refdeslist)
+
+    def __repr__(self):
+        return "<DeviceNotRecognized {0} {1}>" \
+               "".format(self.ident, ', '.join(self.refdeslist))
+
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "'{0}' does not have a recognized Device."
+                        "".format(self.ident),
+            'detail': "This ident does not have a recognized device "
+                      "string. It is therefore unlikely to be correctly "
+                      "handled. Used by refdes {0}"
+                      "".format(', '.join(self.refdeslist)),
+        }
+
+
+class QuantityTypeError(IdentErrorBase):
+    msg = "Quantity Type Mismatch"
+
+    def __init__(self, policy, ident, refdeslist):
+        super(QuantityTypeError, self).__init__(policy, ident, refdeslist)
+
+    def __repr__(self):
+        return "<QuantityTypeError {0} {1}>" \
+               "".format(self.ident, ', '.join(self.refdeslist))
+
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "Quantity for '{0}' could not be determined."
+                        "".format(self.ident),
+            'detail': "The quantity for this ident could not be determined. "
+                      "This is often due to mismatches / errors in the types "
+                      "for one or more of the specified quantities. See {0}."
+                      "".format(', '.join(self.refdeslist)),
+        }
+
+
 class ValidationPolicy(object):
     def __init__(self, context, is_error=True):
         self.context = context
+        self.is_error = is_error
+
+
+class IdentPolicy(ValidationError):
+    def __init__(self, context, rfunc):
+        super(IdentPolicy, self).__init__(context)
+        self.is_error = False
+        self._rfunc = rfunc
+
+    def check(self, ident, refdeslist, cstatus):
+        d, v, f = parse_ident(ident)
+        if d not in DEVICE_CLASSES:
+            self.is_error = True
+            raise DeviceNotRecognized(self, ident, refdeslist)
+        if not self._rfunc(ident):
+            self.is_error = False
+            raise IdentNotRecognized(self, ident, refdeslist)
+
+
+class IdentQtyPolicy(ValidationError):
+    def __init__(self, context, is_error):
+        super(IdentQtyPolicy, self).__init__(context)
         self.is_error = is_error
 
 

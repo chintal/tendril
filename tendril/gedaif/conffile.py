@@ -28,9 +28,7 @@ from tendril.boms.configbase import NoProjectError
 from tendril.conventions import status
 
 from tendril.boms.validate import ValidationError
-from tendril.boms.validate import ValidationPolicy
 from tendril.boms.validate import ConfigOptionPolicy
-
 from tendril.boms.validate import get_dict_val
 
 

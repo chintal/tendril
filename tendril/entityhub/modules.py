@@ -37,6 +37,9 @@ from tendril.boms.validate import ConfigOptionPolicy
 from tendril.boms.validate import FilePolicy
 from tendril.boms.validate import MissingFileError
 from tendril.boms.validate import MangledFileError
+from tendril.boms.validate import IdentPolicy
+from tendril.boms.validate import IdentQtyPolicy
+from tendril.boms.validate import QuantityTypeError
 
 from tendril.boms.validate import ErrorCollector
 from tendril.boms.validate import get_dict_val
@@ -172,6 +175,7 @@ class ModulePrototypeBase(object):
         # Not handled :
         #   - Name changes
         #   - Ripple effects to any downstream objects
+        self._validation_errors = None
         self._configs = None
         self._bom = None
         self._obom = None
@@ -387,26 +391,51 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
     def projfolder(self):
         return projects.cards[self.ident]
 
+    def _validate_obom(self, ec):
+        obom = self.obom
+        ctx = copy(self._validation_context)
+        ctx.locality = "OBOM"
+        for line in obom.lines:
+            policy = IdentPolicy(ctx, projects.is_recognized)
+            try:
+                policy.check(line.ident, line.refdeslist, self.status)
+            except ValidationError as e:
+                ec.add(e)
+            policy = IdentQtyPolicy(ctx, True)
+            try:
+                temp = line.quantity
+            except ValueError:
+                ec.add(QuantityTypeError(policy, line.ident, line.refdeslist))
+
     def _validate(self):
+        # One Time Validators
         temp = self.configs
         temp = self.status
         temp = self.strategy
-        #temp = self.changelog
-        # TODO Validate all OBOM line idents
-        # TODO Validate all OBOM line quantity types
+        temp = self.changelog
+
+        # Validators for Reconstructed Structures
+        lvalidation_errors = ErrorCollector()
+        # Validate all OBOM line devices
+        # Validate all OBOM line idents
+        # Validate all OBOM line quantity types
+        self._validate_obom(lvalidation_errors)
+
         # TODO Validate all motifs as configured
         # TODO Validate all SJs are expected
         # TODO Validate all SJs are accounted for
         # TODO Validate all Generators are expected
         # TODO Higher order configuration validation
         self._validated = True
+        return lvalidation_errors
 
     @property
     def validation_errors(self):
-        self._validate()
+        lverrors = self._validate()
         rval = ErrorCollector()
         rval.add(self._validation_errors)
         rval.add(self._configs.validation_errors)
+        rval.add(lverrors)
         return rval
 
 

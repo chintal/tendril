@@ -22,6 +22,7 @@ import csv
 import os
 import re
 
+from tendril.gedaif import gsymlib
 from tendril.gedaif import conffile
 from tendril.utils import log
 from tendril.utils.config import PROJECTS_ROOT
@@ -144,3 +145,14 @@ def get_project_repo_repr(modulename):
     repo = card_reporoot[modulename]
     rev = get_path_revision(os.path.join(PROJECTS_ROOT, repo))
     return "{0}::r{1}".format(repo, rev)
+
+
+pcblib = set(['PCB {0}'.format(x) for x in pcbs.keys()])
+
+
+def is_recognized(ident):
+    if gsymlib.is_recognized(ident):
+        return True
+    if ident in pcblib:
+        return True
+    return False

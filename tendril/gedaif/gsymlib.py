@@ -447,7 +447,7 @@ def regenerate_symlib():
     generator_names = [os.path.splitext(x.fname)[0] + '.gen'
                        for x in generators]
     global gsymlib_idents
-    gsymlib_idents = sorted(index.keys())
+    gsymlib_idents = set(index.keys())
     global custom_series
     custom_series = {}
     for sym in generators:

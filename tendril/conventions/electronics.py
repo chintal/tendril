@@ -128,45 +128,24 @@ DEVICE_CLASSES_DOC = [
 ]
 
 
-DEVICE_CLASSES = [x[0] for x in DEVICE_CLASSES_DOC]
+DEVICE_CLASSES = set([x[0] for x in DEVICE_CLASSES_DOC])
 
-nofp_strs = [
-    "PCB",
-    "CONN",
-    "MODULE",
-    "CRYSTAL OSC",
-    "HEAT SINK",
-    "SOCKET POWER",
-    "FUSE",
-    "SWITCH PUSHBTN",
-    "SWITCH ROCKER",
-    "TRANSFORMER HEAVY",
-    "CRIMP",
-    "THIMBLE",
-    "CABLE MARKER",
-    "POWER CORD",
-    "USB CABLE"
-]
+nofp_strs = {"PCB", "CONN", "MODULE", "CRYSTAL OSC", "HEAT SINK",
+             "SOCKET POWER", "FUSE", "SWITCH PUSHBTN",
+             "SWITCH ROCKER", "TRANSFORMER HEAVY", "CRIMP", "THIMBLE",
+             "CABLE MARKER", "POWER CORD", "USB CABLE"}
 
 nofp_pattern = r"^(?:%s)" % '|'.join(nofp_strs)
 rex_nofp = re.compile(nofp_pattern)
 
 
-fpiswire_strs = [
-    "CABLE ROUND",
-    "WIRE",
-    "CABLE FRC",
-    "SLEEVE SHRINK",
-]
+fpiswire_strs = {"CABLE ROUND", "WIRE", "CABLE FRC", "SLEEVE SHRINK"}
 
 wire_pattern = r"^(?:%s)" % '|'.join(fpiswire_strs)
 rex_wire = re.compile(wire_pattern)
 
 
-fpismodlen_strs = [
-    "CABLE SIP SSC",
-    "CONN DF13 WIRE"
-]
+fpismodlen_strs = {"CABLE SIP SSC", "CONN DF13 WIRE"}
 
 modlen_pattern = r"^(?:%s)" % '|'.join(fpismodlen_strs)
 rex_modlen = re.compile(modlen_pattern)

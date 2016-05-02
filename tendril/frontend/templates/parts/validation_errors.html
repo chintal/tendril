@@ -4,6 +4,7 @@
 #}
 
 {% macro render_error(error, level) -%}
+    <div class="validation-{{level}}">
     <article class="error">
         <div class="error-head">
             {{ error.headline }}
@@ -12,6 +13,7 @@
             {{ error.detail }}
         </div>
     </article>
+    </div>
 {% endmacro %}
 
 {% macro render_error_list(errors_by_type, level) -%}
@@ -21,7 +23,7 @@
             <a class="validation sectiontitle {{ level }}" href="#panel{{ level }}{{ loop.index }}">
                 {{ etype }} ({{ errors|length }})
             </a>
-            <div id="panel{{ level }}{{ loop.index }}" class="content validation-{{ level }}">
+            <div id="panel{{ level }}{{ loop.index }}" class="content">
             {% for error in errors %}
                 {{ render_error(error, level) }}
             {% endfor %}
