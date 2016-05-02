@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# Copyright (C) 2015 Chintalagiri Shashank
+# Copyright (C) 2016 Chintalagiri Shashank
 #
 # This file is part of tendril.
 #
@@ -19,19 +19,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for run
+Docstring for __init__.py
 """
-
-import sourcing.vendors
-import gedaif.gsymlib
-import entityhub.modules
-
-
-def run():
-    gedaif.gsymlib.main()
-    sourcing.vendors.main()
-    entityhub.modules.main()
-
-
-if __name__ == '__main__':
-    run()

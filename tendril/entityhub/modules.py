@@ -105,10 +105,10 @@ class ModulePrototypeBase(object):
         except ValidationError as e:
             self._validation_errors.add(e)
 
-        try:
-            self._get_changelog()
-        except ValidationError as e:
-            self._validation_errors.add(e)
+        # try:
+        #     self._get_changelog()
+        # except ValidationError as e:
+        #     self._validation_errors.add(e)
 
     @property
     def desc(self):
@@ -391,7 +391,7 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         temp = self.configs
         temp = self.status
         temp = self.strategy
-        temp = self.changelog
+        #temp = self.changelog
         # TODO Validate all OBOM line idents
         # TODO Validate all OBOM line quantity types
         # TODO Validate all motifs as configured
