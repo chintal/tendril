@@ -43,6 +43,7 @@ class ValidationError(Exception):
 
     def __init__(self, policy):
         self._policy = policy
+        self.detail = None
 
     @property
     def policy(self):
@@ -53,7 +54,7 @@ class ValidationError(Exception):
             'is_error': self.policy.is_error,
             'group': self.msg,
             'headline': self._policy.context.render(),
-            'detail': None,
+            'detail': self.detail,
         }
 
 
@@ -131,7 +132,7 @@ class ConfigKeyError(ContextualConfigError):
     def render(self):
         if self._policy.options:
             option_str = "Valid options are {0}" \
-                         "".format(','.join(self._policy.options))
+                         "".format(', '.join(self._policy.options))
         else:
             option_str = ''
         return {
@@ -158,13 +159,13 @@ class ConfigValueInvalidError(ContextualConfigError):
 
     def render(self):
         if self._policy.options:
-            option_str = "Valid options are {0}".format(','.join(self._policy.options))
+            option_str = "Valid options are {0}".format(', '.join(self._policy.options))
         else:
             option_str = ''
         return {
             'is_error': self.policy.is_error,
             'group': self.msg,
-            'headline': "Invalid {0} for {1} in {2}"
+            'headline': "'{0}' Invalid for {1} in {2}"
                         "".format(self._value, self._format_path(),
                                   self._policy.context.render()),
             'detail': "The value provided for this configuration option is "
@@ -197,12 +198,16 @@ def get_dict_val(d, policy=None):
     if isinstance(policy.path, tuple):
         try:
             for key in policy.path:
+                if key not in d.keys():
+                    raise KeyError
                 d = d.get(key)
         except KeyError:
             raise ConfigKeyError(policy=policy)
         rval = d
     else:
         try:
+            if policy.path not in d.keys():
+                raise KeyError
             rval = d.get(policy.path)
         except KeyError:
             raise ConfigKeyError(policy=policy)
@@ -220,7 +225,7 @@ class ErrorCollector(ValidationError):
     def add(self, e):
         if isinstance(e, ErrorCollector):
             for error in e.errors:
-                self.add(error)
+                self._errors.append(error)
         else:
             self._errors.append(e)
 
@@ -268,3 +273,9 @@ class ErrorCollector(ValidationError):
     def warnings_by_type(self):
         lwarnings = [x.render() for x in self.dwarnings]
         return self._group_errors(lwarnings)
+
+    def __repr__(self):
+        rval = 'Collected Errors:\n'
+        for e in self._errors:
+            rval += '  {0}\n'.format(repr(e))
+        return rval

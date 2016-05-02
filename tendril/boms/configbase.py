@@ -488,3 +488,7 @@ class ConfigBase(object):
         warnings.warn("Deprecated Access of configdata",
                       DeprecationWarning)
         return self._configdata
+
+    @property
+    def validation_errors(self):
+        return self._validation_errors

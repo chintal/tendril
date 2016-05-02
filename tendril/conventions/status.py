@@ -106,3 +106,7 @@ def get_known_statuses():
     for k in STATUS_ORDER.keys():
         rval.append(get_status(k))
     return sorted(rval)
+
+
+def allowed_status_values():
+    return STATUS_ORDER.keys()

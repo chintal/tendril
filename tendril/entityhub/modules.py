@@ -179,17 +179,12 @@ class ModulePrototypeBase(object):
         self._strategy = None
         self._changelog = None
 
-    def validate(self):
-        self._validated = True
-        return self._validate()
-
     def _validate(self):
         raise NotImplementedError
 
     @property
     def validation_errors(self):
-        if not self._validated:
-            self.validate()
+        self._validate()
         return self._validation_errors
 
 
@@ -393,6 +388,7 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         return projects.cards[self.ident]
 
     def _validate(self):
+        temp = self.configs
         temp = self.status
         temp = self.strategy
         temp = self.changelog
@@ -403,7 +399,15 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         # TODO Validate all SJs are accounted for
         # TODO Validate all Generators are expected
         # TODO Higher order configuration validation
-        pass
+        self._validated = True
+
+    @property
+    def validation_errors(self):
+        self._validate()
+        rval = ErrorCollector()
+        rval.add(self._validation_errors)
+        rval.add(self._configs.validation_errors)
+        return rval
 
 
 class CardPrototype(EDAModulePrototypeBase):

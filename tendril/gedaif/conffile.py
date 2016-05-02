@@ -27,6 +27,12 @@ from tendril.boms.configbase import NoProjectError
 
 from tendril.conventions import status
 
+from tendril.boms.validate import ValidationError
+from tendril.boms.validate import ValidationPolicy
+from tendril.boms.validate import ConfigOptionPolicy
+
+from tendril.boms.validate import get_dict_val
+
 
 class NoGedaProjectError(NoProjectError):
     pass
@@ -42,6 +48,7 @@ class ConfigsFile(ConfigBase):
     def __init__(self, projectfolder):
         super(ConfigsFile, self).__init__(projectfolder)
         self.projectfile = self._configdata['projfile']
+        self._cached_status = None
 
     @property
     def _cfpath(self):
@@ -94,19 +101,50 @@ class ConfigsFile(ConfigBase):
 
     @property
     def status(self):
-        try:
+        # TODO This is horribly ugly. Consider serious refactoring.
+        if self._cached_status is None:
+            allowed_status_values = status.allowed_status_values()
+            allowed_status_values += ['!' + x
+                                      for x in status.allowed_status_values()]
             if 'pcbdetails' in self._configdata.keys():
-                ststr = self._configdata['pcbdetails']['status']
+                try:
+                    policy = ConfigOptionPolicy(
+                        self._validation_context,
+                        ('pcbdetails', 'status'),
+                        allowed_status_values,
+                        default='Experimental',
+                        is_error=True
+                    )
+                    ststr = get_dict_val(self._configdata, policy)
+                except ValidationError as e:
+                    ststr = e.policy.default
+                    self._validation_errors.add(e)
             elif 'paneldetails' in self._configdata.keys():
-                ststr = self._configdata['paneldetails']['status']
+                try:
+                    policy = ConfigOptionPolicy(
+                        self._validation_context,
+                        ('paneldetails', 'status'),
+                        allowed_status_values,
+                        default='Experimental',
+                        is_error=True
+                    )
+                    ststr = get_dict_val(self._configdata, policy)
+                except ValidationError as e:
+                    ststr = e.policy.default
+                    self._validation_errors.add(e)
             else:
-                raise AttributeError('Status not defined or not found for {0}'
-                                     ''.format(self._projectfolder))
-        except KeyError:
-            raise AttributeError('Status not defined or not found for {0}'
-                                 ''.format(self._projectfolder))
-        if self.status_forced:
-            ststr = ststr[1:]
+                e = ValidationError(ConfigOptionPolicy(
+                        self._validation_context,
+                        'pcbdetails', is_error=True)
+                )
+                e.detail = "Status not defined or not found in config file."
+                ststr = None
+                self._validation_errors.add(e)
+
+            if ststr and self.status_forced:
+                ststr = ststr[1:]
+        else:
+            ststr = self._cached_status
         return status.get_status(ststr)
 
     @property
@@ -117,13 +155,12 @@ class ConfigsFile(ConfigBase):
             elif 'paneldetails' in self._configdata.keys():
                 ststr = self._configdata['paneldetails']['status']
             else:
-                raise AttributeError('Status not defined or not found for {0}'
-                                     ''.format(self._projectfolder))
+                return False
         except KeyError:
-            raise AttributeError('Status not defined or not found for {0}'
-                                 ''.format(self._projectfolder))
+            return False
         if ststr.startswith('!'):
             return True
+        return False
 
     @property
     def pcbdescriptors(self):
