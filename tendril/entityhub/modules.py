@@ -645,7 +645,7 @@ def get_pcb_lib(regen=False):
 
 
 def fill_prototype_lib():
-    for prototype in prototypes:
+    for k, prototype in prototypes.iteritems():
         prototype.validate()
 
 
