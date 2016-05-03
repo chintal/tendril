@@ -4,6 +4,7 @@
 #}
 
 {% extends "base_templates/base.html" %}
+{% import "parts/validation_errors.html" as validation %}
 
 {% block magellan %}
 <!-- Magellan -->
@@ -12,6 +13,9 @@
         <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
         <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
         <dd data-magellan-arrival="refbom"><a href="#refbom">BOM</a></dd>
+        {% if stage.prototype.validation_errors.terrors %}
+            <dd data-magellan-arrival="validation"><a href="#validation">Validation</a></dd>
+        {% endif %}
     </dl>
 </div>
 {% endblock %}
@@ -115,8 +119,11 @@
 <!-- BOM -->
 <div class="row">
 <div class="small-12 medium-6 columns" data-magellan-destination="refbom">
-<h3> Reference BOM </h3>
 <a name="refbom"></a>
+    <div class="small-12 columns panel header radius">
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+        <h6>Reference BOM</h6>
+    </div>
 
     <div class="small-12 columns">
         <table id="refbom_table" class="display" data-paging='false'>
@@ -151,8 +158,20 @@
                 .appendTo( '#refbom_table_wrapper .small-12.medium-6.columns:eq(0)' );
         });
     </script>
-
 </div>
+</div>
+
+{% if stage.prototype.validation_errors.terrors %}
+<div class="small-12 medium-6 columns" data-magellan-destination="validation">
+    <a name="validation"></a>
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Validation Errors</h6>
+        </div>
+        {{ validation.render_validation_errors(stage.prototype.validation_errors) }}
+    </div>
+</div>
+{% endif %}
 
 
     <!-- Test Protocols -->

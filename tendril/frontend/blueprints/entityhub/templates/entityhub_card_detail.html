@@ -16,6 +16,9 @@
         {% if stage.prototype.changelog %}
             <dd data-magellan-arrival="changelog"><a href="#changelog">ChangeLog</a></dd>
         {% endif %}
+        {% if stage.prototype.validation_errors.terrors %}
+            <dd data-magellan-arrival="validation"><a href="#validation">Validation</a></dd>
+        {% endif %}
     </dl>
 </div>
 {% endblock %}
