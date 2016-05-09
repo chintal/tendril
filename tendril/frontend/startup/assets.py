@@ -105,6 +105,12 @@ bundles = {
         output='gen/nv.d3.css',
         filters='cssmin'
     ),
+
+    'mixer_js': Bundle(
+        'js/mixer.js',
+        output='gen/tendril.js',
+        filters='jsmin',
+    )
 }
 
 

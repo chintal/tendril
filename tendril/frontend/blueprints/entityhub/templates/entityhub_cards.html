@@ -11,17 +11,16 @@
 <h3> Cards </h3>
 
 <div class="row">
-    <form><fieldset>
+    <form id="filters"><fieldset>
     <legend> Sort & Filter Options </legend>
-
         <div class="row collapse">
             <div class="large-2 columns">
                 <span class="prefix"> Filter By Status </span>
             </div>
             <div class="large-10 columns">
-                <ul class="button-group radius">
+                <ul class="filter-group button-group radius">
                 <li>
-                    <a class="filter button tiny" data-filter="all">All ({{ stage.cards|length }})</a>
+                    <a class="filter button tiny active" data-filter="all">All ({{ stage.cards|length }})</a>
                 </li>
                 {% for st in stage.statuses %}
                 <li><a class="filter button tiny" data-filter=".{{ st.0 }}">
@@ -36,9 +35,9 @@
                 <span class="prefix"> Filter By Series </span>
             </div>
             <div class="large-10 columns">
-                <ul class="button-group radius">
+                <ul class="filter-group button-group radius">
                 <li>
-                    <a class="filter button tiny" data-filter="all">All ({{ stage.cards|length }})</a>
+                    <a class="filter button tiny active" data-filter="all">All ({{ stage.cards|length }})</a>
                 </li>
                 {% for series, count in stage.series|dictsort %}
                 <li><a class="filter button tiny" data-filter=".{{ series }}">
@@ -48,12 +47,29 @@
                 </ul>
             </div>
         </div>
+        <div class="row collapse">
+            <div class="large-6 small-12 columns">
+                <div class="row collapse">
+                    <div class="large-4 columns">
+                        <span class="prefix"> Filter By Title </span>
+                    </div>
+                    <div class="filter-group search large-8 columns">
+                        <input type="text" placeholder="Search ..."/>
+                    </div>
+                </div>
+            </div>
+            <div class="large-6 small-12 columns">
+                <div class="small-4 columns right">
+                    <a id="reset" class="button expand tiny">Reset</a>
+                </div>
+            </div>
+        </div>
     </fieldset></form>
 </div>
 <div class="row">
     <ul id="card-container" class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
         {% for card in stage.cards %}
-        <li class="card-instance {{ card.status }} {{ card.configs.snoseries }}">
+        <li class="card-instance {{ card.status }} {{ card.configs.snoseries }}" data-title="{{ card.ident|lower }}">
             <a href="{{ card.ident }}">
                 <ul class="pricing-table active-tb shadow mrgn-20-top">
                     <li class="title autoscale"> {{ card.ident }} </li>
@@ -75,16 +91,9 @@
         </li>
         {% endfor %}
     </ul>
-    <script type="text/javascript">
-        $(document).ready( function(){
-            // Instantiate MixItUp:
-            $('#card-container').mixItUp({
-                selectors: {
-	        	    target: '.card-instance'
-	            }
-            });
-        });
-    </script>
+    {% assets "mixer_js" %}
+          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
 </div>
 
 {% endblock %}
