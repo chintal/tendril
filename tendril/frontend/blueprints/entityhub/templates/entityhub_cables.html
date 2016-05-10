@@ -4,14 +4,30 @@
 #}
 
 {% extends "base_templates/base.html" %}
-
+{% import "parts/sort_filter.html" as sort_filter %}
 
 {% block main %}
 
-<h3> All Cables </h3>
-<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
+<h3> Cables </h3>
+<div class="row">
+    <form id="filters"><fieldset>
+    <legend> Sort & Filter Options </legend>
+        {{ sort_filter.render_dimension('Series', 'series', stage.series|dictsort, stage.cables|length) }}
+        <div class="row collapse">
+            {{ sort_filter.render_text_filter('Title', 'title') }}
+            <div class="large-6 small-12 columns">
+                <div class="small-4 columns right">
+                    <a id="reset" class="button expand tiny">Reset</a>
+                </div>
+            </div>
+        </div>
+    </fieldset></form>
+</div>
+<div class="row">
+
+<ul id="card-container" class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
     {% for cable in stage.cables %}
-    <li>
+    <li class="card-instance" data-status="{{ cable.status }}" data-series="{{ cable.configs.snoseries }}" data-title="{{ cable.ident }}">
         <a href="{{ cable.ident }}">
             <ul class="pricing-table active-tb shadow mrgn-20-top">
                 <li class="title autoscale"> {{ cable.ident }} </li>
@@ -33,5 +49,8 @@
     </li>
     {% endfor %}
 </ul>
-
+{% assets "mixer_js" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}
+</div>
 {% endblock %}

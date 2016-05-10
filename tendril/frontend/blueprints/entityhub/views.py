@@ -83,7 +83,16 @@ def cables(cblname=None):
                         if isinstance(v, CablePrototype)]
         stage_cables.sort(key=lambda x: (x.status, x.ident))
 
-        stage = {'cables': stage_cables,
+        series = {}
+
+        for cable in stage_cables:
+            if cable.configs.snoseries not in series.keys():
+                series[cable.configs.snoseries] = 1
+            else:
+                series[cable.configs.snoseries] += 1
+
+        stage = {'series': series,
+                 'cables': stage_cables,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Modules", path="modules/"),
