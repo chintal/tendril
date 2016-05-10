@@ -13,15 +13,19 @@
 <div class="row">
     <form id="filters"><fieldset>
     <legend> Sort & Filter Options </legend>
-        {{ sort_filter.render_dimension('Status', 'cstatus', stage.statuses, stage.cards|length) }}
-        {{ sort_filter.render_dimension('Series', 'cseries', stage.series|dictsort, stage.cards|length) }}
+        {{ sort_filter.render_dimension('Status', 'status', stage.statuses, stage.cards|length) }}
+        {{ sort_filter.render_dimension('Series', 'series', stage.series|dictsort, stage.cards|length) }}
         <div class="row collapse">
             <div class="large-6 small-12 columns">
                 <div class="row collapse">
                     <div class="large-2 small-3 columns text-right">
                         <ul class="sort-group button-group radius">
-                            <li><a class="sort button tiny" data-sort="ctitle:asc"><i class="fi-arrow-up"></i></a></li>
-                            <li><a class="sort button tiny" data-sort="ctitle:desc"><i class="fi-arrow-down"></i></a></li>
+                            <li><a class="sort button tiny" data-sort="title:asc">
+                                <i class="fi-arrow-up"></i>
+                            </a></li>
+                            <li><a class="sort button tiny" data-sort="title:desc">
+                                <i class="fi-arrow-down"></i>
+                            </a></li>
                         </ul>
                     </div>
                     <div class="large-2 small-9 columns">
@@ -45,7 +49,7 @@
 <div class="row">
     <ul id="card-container" class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
         {% for card in stage.cards %}
-        <li class="card-instance {{ card.status }} {{ card.configs.snoseries }}" data-title="{{ card.ident|lower }}">
+        <li class="card-instance" data-status="{{ card.status }}" data-series="{{ card.configs.snoseries }}" data-title="{{ card.ident|lower }}">
             <a href="{{ card.ident }}">
                 <ul class="pricing-table active-tb shadow mrgn-20-top">
                     <li class="title autoscale"> {{ card.ident }} </li>

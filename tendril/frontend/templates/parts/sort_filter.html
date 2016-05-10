@@ -3,17 +3,17 @@
     Released under the MIT license
 #}
 
-{% macro render_dimension(title, sortcode, elems, all_len) -%}
+{% macro render_dimension(title, fieldcode, elems, all_len) -%}
     <div class="row collapse">
         <div class="large-1 small-3 columns text-right">
             <ul class="sort-group button-group radius">
                 <li>
-                    <a class="sort button tiny" data-sort="{{ sortcode }}:asc">
+                    <a class="sort button tiny" data-sort="{{ fieldcode }}:asc">
                         <i class="fi-arrow-up"></i>
                     </a>
                 </li>
                 <li>
-                    <a class="sort button tiny" data-sort="{{ sortcode }}:desc">
+                    <a class="sort button tiny" data-sort="{{ fieldcode }}:desc">
                         <i class="fi-arrow-down"></i>
                     </a>
                 </li>
@@ -30,7 +30,7 @@
                 <a class="filter button tiny active" data-filter="all">All ({{ all_len }})</a>
             </li>
             {% for st in elems %}
-            <li><a class="filter button tiny" data-filter=".{{ st.0 }}">
+            <li><a class="filter button tiny" data-filter="[data-{{ fieldcode }}={{ st.0 }}]">
                 {{ st.0 }} ({{ st.1 }})
             </a></li>
             {% endfor %}
