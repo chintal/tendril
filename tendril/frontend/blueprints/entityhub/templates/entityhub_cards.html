@@ -16,28 +16,7 @@
         {{ sort_filter.render_dimension('Status', 'status', stage.statuses, stage.cards|length) }}
         {{ sort_filter.render_dimension('Series', 'series', stage.series|dictsort, stage.cards|length) }}
         <div class="row collapse">
-            <div class="large-6 small-12 columns">
-                <div class="row collapse">
-                    <div class="large-2 small-3 columns text-right">
-                        <ul class="sort-group button-group radius">
-                            <li><a class="sort button tiny" data-sort="title:asc">
-                                <i class="fi-arrow-up"></i>
-                            </a></li>
-                            <li><a class="sort button tiny" data-sort="title:desc">
-                                <i class="fi-arrow-down"></i>
-                            </a></li>
-                        </ul>
-                    </div>
-                    <div class="large-2 small-9 columns">
-                        <div class="filterhead">
-                            Title
-                        </div>
-                    </div>
-                    <div class="filter-group search large-8 columns">
-                        <input type="text" placeholder="Search ..."/>
-                    </div>
-                </div>
-            </div>
+            {{ sort_filter.render_text_filter('Title', 'title') }}
             <div class="large-6 small-12 columns">
                 <div class="small-4 columns right">
                     <a id="reset" class="button expand tiny">Reset</a>
