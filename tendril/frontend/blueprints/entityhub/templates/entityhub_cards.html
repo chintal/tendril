@@ -4,7 +4,7 @@
 #}
 
 {% extends "base_templates/base.html" %}
-
+{% import "parts/sort_filter.html" as sort_filter %}
 
 {% block main %}
 
@@ -13,45 +13,21 @@
 <div class="row">
     <form id="filters"><fieldset>
     <legend> Sort & Filter Options </legend>
-        <div class="row collapse">
-            <div class="large-2 columns">
-                <span class="prefix"> Filter By Status </span>
-            </div>
-            <div class="large-10 columns">
-                <ul class="filter-group button-group radius">
-                <li>
-                    <a class="filter button tiny active" data-filter="all">All ({{ stage.cards|length }})</a>
-                </li>
-                {% for st in stage.statuses %}
-                <li><a class="filter button tiny" data-filter=".{{ st.0 }}">
-                    {{ st.0 }} ({{ st.1 }})
-                </a></li>
-                {% endfor %}
-                </ul>
-            </div>
-        </div>
-        <div class="row collapse">
-            <div class="large-2 columns">
-                <span class="prefix"> Filter By Series </span>
-            </div>
-            <div class="large-10 columns">
-                <ul class="filter-group button-group radius">
-                <li>
-                    <a class="filter button tiny active" data-filter="all">All ({{ stage.cards|length }})</a>
-                </li>
-                {% for series, count in stage.series|dictsort %}
-                <li><a class="filter button tiny" data-filter=".{{ series }}">
-                    {{ series }} ({{ count }})
-                </a></li>
-                {% endfor %}
-                </ul>
-            </div>
-        </div>
+        {{ sort_filter.render_dimension('Status', 'cstatus', stage.statuses, stage.cards|length) }}
+        {{ sort_filter.render_dimension('Series', 'cseries', stage.series|dictsort, stage.cards|length) }}
         <div class="row collapse">
             <div class="large-6 small-12 columns">
                 <div class="row collapse">
-                    <div class="large-4 columns">
-                        <span class="prefix"> Filter By Title </span>
+                    <div class="large-2 small-3 columns text-right">
+                        <ul class="sort-group button-group radius">
+                            <li><a class="sort button tiny" data-sort="ctitle:asc"><i class="fi-arrow-up"></i></a></li>
+                            <li><a class="sort button tiny" data-sort="ctitle:desc"><i class="fi-arrow-down"></i></a></li>
+                        </ul>
+                    </div>
+                    <div class="large-2 small-9 columns">
+                        <div class="filterhead">
+                            Title
+                        </div>
                     </div>
                     <div class="filter-group search large-8 columns">
                         <input type="text" placeholder="Search ..."/>

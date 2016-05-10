@@ -1,0 +1,40 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% macro render_dimension(title, sortcode, elems, all_len) -%}
+    <div class="row collapse">
+        <div class="large-1 small-3 columns text-right">
+            <ul class="sort-group button-group radius">
+                <li>
+                    <a class="sort button tiny" data-sort="{{ sortcode }}:asc">
+                        <i class="fi-arrow-up"></i>
+                    </a>
+                </li>
+                <li>
+                    <a class="sort button tiny" data-sort="{{ sortcode }}:desc">
+                        <i class="fi-arrow-down"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="large-1 small-9 columns">
+            <div class="filterhead">
+                {{ title }}
+            </div>
+        </div>
+        <div class="large-10 small-12 columns">
+            <ul class="filter-group button-group radius">
+            <li>
+                <a class="filter button tiny active" data-filter="all">All ({{ all_len }})</a>
+            </li>
+            {% for st in elems %}
+            <li><a class="filter button tiny" data-filter=".{{ st.0 }}">
+                {{ st.0 }} ({{ st.1 }})
+            </a></li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endmacro %}
