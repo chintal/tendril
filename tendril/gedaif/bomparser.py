@@ -25,6 +25,10 @@ import shutil
 
 from tendril.conventions.motifs import create_motif_object
 from tendril.conventions.electronics import ident_transform
+from tendril.boms.validate import ValidationContext
+from tendril.boms.validate import ErrorCollector
+from tendril.boms.validate import BomMotifPolicy
+from tendril.boms.validate import BomMotifUnrecognizedError
 
 import projfile
 
@@ -70,6 +74,9 @@ class GedaBomParser(object):
         self.line_gen = None
         self.projectfolder = os.path.normpath(projectfolder)
         self._gpf = projfile.GedaProjectFile(self.projectfolder)
+        self._validation_context = ValidationContext(self.projectfolder,
+                                                     'BOMParser')
+        self._validation_errors = ErrorCollector()
 
         self._namebase = os.path.relpath(self.projectfolder, PROJECTS_ROOT)
         self._basefolder = 'schematic'
@@ -125,6 +132,10 @@ class GedaBomParser(object):
         self.temp_bom.close()
         self.delete_temp_bom()
 
+    @property
+    def validation_errors(self):
+        return self._validation_errors
+
 
 class MotifAwareBomParser(GedaBomParser):
     def __init__(self, projectfolder, backend):
@@ -132,6 +143,7 @@ class MotifAwareBomParser(GedaBomParser):
         self._motifs = []
         # self._motifconfigs = self._gpf.configsfile.configdata['motiflist']
         self.motif_gen = None
+        self._motif_policy = BomMotifPolicy(self._validation_context)
 
     def get_motif(self, motifst):
         motifst = motifst.split(':')[0]
@@ -139,26 +151,22 @@ class MotifAwareBomParser(GedaBomParser):
             if motif.refdes == motifst:
                 return motif
         logger.info("Creating new motif : " + motifst)
-        try:
-            motif = create_motif_object(motifst)
-            self._motifs.append(motif)
-        except ValueError:
-            logger.error("Failed to create motif : " + motifst)
-            motif = None
+        motif = create_motif_object(motifst)
+        self._motifs.append(motif)
         return motif
 
     def get_lines(self):
         for line in self.temp_bom:
             bomline = BomLine(line, self.columns)
             if bomline.data['motif'] != 'unknown':
-                logger.debug("Found motif element : " + bomline.data['motif'])
-                motif = self.get_motif(bomline.data['motif'])
-                if motif is not None:
+                try:
+                    motif = self.get_motif(bomline.data['motif'])
                     motif.add_element(bomline)
-                else:
-                    logger.warning(
-                        "Element not inserted : " + bomline.data["refdes"]
-                    )
+                except ValueError:
+                    e = BomMotifUnrecognizedError(self._motif_policy,
+                                                  bomline.data['motif'],
+                                                  bomline.data['refdes'])
+                    self._validation_errors.add(e)
             else:
                 yield bomline
         self.motif_gen = self.get_motifs()

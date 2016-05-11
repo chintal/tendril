@@ -28,6 +28,9 @@ from tendril.conventions.electronics import parse_ident
 from tendril.utils import log
 from tendril.utils.types.lengths import Length
 
+from .validate import ValidationContext
+from .validate import ErrorCollector
+
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
@@ -101,6 +104,10 @@ class OutputBom(object):
         """
         self.lines = []
         self.descriptor = descriptor
+        self._validation_context = ValidationContext(
+            self.descriptor.configname, 'OBOM'
+        )
+        self.validation_errors = ErrorCollector()
 
     def sort_by_ident(self):
         self.lines.sort(key=lambda x: x.ident, reverse=False)

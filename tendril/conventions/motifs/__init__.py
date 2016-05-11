@@ -36,8 +36,12 @@ def create_motif_object(motifst):
     except (ImportError, AttributeError):
         raise ValueError("Motif Unrecognized :" + motifst)
 
+motifs_list = None
+
 
 def get_motifs_list():
+    if motifs_list is not None:
+        return motifs_list
     motifspath = os.path.join(TENDRIL_ROOT, 'conventions', 'motifs')
     candidates = [f for f in os.listdir(motifspath)
                   if os.path.isfile(os.path.join(motifspath, f))]
@@ -52,4 +56,6 @@ def get_motifs_list():
             except ValueError:
                 pass
 
-    return motifs
+    global motifs_list
+    motifs_list = motifs
+    return motifs_list

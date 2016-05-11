@@ -175,7 +175,7 @@ class ModulePrototypeBase(object):
         # Not handled :
         #   - Name changes
         #   - Ripple effects to any downstream objects
-        self._validation_errors = None
+        self._validation_errors = ErrorCollector()
         self._configs = None
         self._bom = None
         self._obom = None
@@ -187,6 +187,7 @@ class ModulePrototypeBase(object):
         raise NotImplementedError
 
     def validate(self):
+        logger.debug("Validating {0}".format(self.ident))
         self._validate()
 
     @property
@@ -395,6 +396,19 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         return projects.cards[self.ident]
 
     def _validate_obom(self, ec):
+        # Final Validation of Output BOMs. This validation is of the
+        # ultimate BOM generated, a last check after all possible
+        # transformations are complete.
+
+        # On-construction validation of OBOMs only includes the
+        # specific mechanisms for construction and transformation,
+        # and not validation of the output itself. The output is
+        # therefore done here, at the very last minute.
+
+        # NOTE Tentatively, validation errors are to be reported at the
+        # instant when the data required to fully explain the error is
+        # about to go out of immediately accessible scope.
+
         obom = self.obom
         ctx = copy(self._validation_context)
         ctx.locality = "OBOM"
@@ -416,6 +430,7 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         temp = self.status
         temp = self.strategy
         temp = self.changelog
+        temp = self.bom
 
         # Validators for Reconstructed Structures
         lvalidation_errors = ErrorCollector()
@@ -424,8 +439,9 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         # Validate all OBOM line quantity types
         self._validate_obom(lvalidation_errors)
 
+        # TODO Check for empty groups?
+        # TODO Check for unused motifs?
         # TODO Validate all motifs as configured
-        # TODO Validate all SJs are expected
         # TODO Validate all SJs are accounted for
         # TODO Validate all Generators are expected
         # TODO Higher order configuration validation
@@ -434,10 +450,15 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
 
     @property
     def validation_errors(self):
+        # Regenerate Validation reconstructed structures
         lverrors = self._validate()
         rval = ErrorCollector()
         rval.add(self._validation_errors)
+        # Obtain validation errors from Configs load
         rval.add(self._configs.validation_errors)
+        # Obtain validation errors collected during construction
+        # from Parser -> BOM -> OBOM
+        rval.add(self._obom.validation_errors)
         rval.add(lverrors)
         return rval
 
@@ -622,12 +643,14 @@ def get_prototype_lib(regen=False):
     global prototypes
     if regen is False and prototypes:
         return prototypes
+    logger.debug("Generating Prototype Library")
     prototypes = {}
     for card, folder in projects.cards.iteritems():
         if projects.check_module_is_card(card):
             prototypes[card] = CardPrototype(card)
         elif projects.check_module_is_cable(card):
             prototypes[card] = CablePrototype(card)
+    logger.debug("Prototype Library Generated")
     return prototypes
 
 
@@ -645,8 +668,10 @@ def get_pcb_lib(regen=False):
 
 
 def fill_prototype_lib():
-    for k, prototype in prototypes.iteritems():
+    logger.debug("Filling out Prototype Library")
+    for k, prototype in get_prototype_lib().iteritems():
         prototype.validate()
+    logger.debug("Prototype Library Filled Out")
 
 
 if WARM_UP_CACHES is True:

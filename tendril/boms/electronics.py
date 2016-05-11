@@ -42,6 +42,7 @@ Module Members:
 
 """
 
+import copy
 import os
 import warnings
 
@@ -54,11 +55,22 @@ from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import EntityBomBase
 from tendril.entityhub.entitybase import EntityGroupBase
 
+from .validate import ValidationContext
+from .validate import ErrorCollector
+from .validate import ValidationError
+from .validate import BomGroupPolicy
+from .validate import ConfigMotifPolicy
+from .validate import ConfigMotifMissingError
+from .validate import ConfigGroupError
+from .validate import ConfigGroupPolicy
+from .validate import ConfigSJPolicy
+from .validate import ConfigSJUnexpectedError
+
 from outputbase import OutputBom
 from outputbase import OutputElnBomDescriptor
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class EntityElnComp(EntityBase):
@@ -221,8 +233,16 @@ class EntityElnBom(EntityBomBase):
         self._included_motifs = []
         self._motifs = []
         self._configured_for = None
+        self._validation_context = ValidationContext(
+                    self.configurations.projectfolder, 'BOM')
+        self._group_policy = None
+        self._validation_errors = ErrorCollector()
         self.create_groups()
         self.populate_bom()
+
+    @property
+    def validation_errors(self):
+        return self._validation_errors
 
     @property
     def pcbname(self):
@@ -252,12 +272,13 @@ class EntityElnBom(EntityBomBase):
     def create_groups(self):
         groupnamelist = self.configurations.group_names
         if 'default' not in groupnamelist:
-            x = EntityElnGroup('default', self.configurations.pcbname)
-            self.grouplist.append(x)
+            groupnamelist.append('default')
         for group in groupnamelist:
             logger.debug("Creating Group: " + str(group))
             x = EntityElnGroup(group, self.configurations.pcbname)
             self.grouplist.append(x)
+        self._group_policy = BomGroupPolicy(self._validation_context,
+                                            groupnamelist)
 
     def find_group(self, groupname):
         """
@@ -273,17 +294,16 @@ class EntityElnBom(EntityBomBase):
 
         :rtype : EntityElnGroup
         """
-        gname = item.data['group']
-        if gname == 'unknown':
-            gname = 'default'
-        if gname not in [x['name'] for x in self.configurations.grouplist]:
-            logger.warning(
-                "Could not find group in config file : " + gname
-            )
-            gname = 'default'
+        try:
+            gname = self._group_policy.check(item)
+        except ValidationError as e:
+            self._validation_errors.add(e)
+            gname = self._group_policy.default
         return self.find_group(gname)
 
     def _add_item(self, item):
+        # TODO This function includes very specific special cases
+        # These need to come out of core and into the instance.
         if item.data['device'] == 'TESTPOINT':
             return
         tgroup = self.find_tgroup(item)
@@ -315,8 +335,9 @@ class EntityElnBom(EntityBomBase):
         parser = MotifAwareBomParser(self.configurations.projectfolder, "bom")
         for item in parser.line_gen:
             self._add_item(item)
-        for item in parser.motif_gen:
-            self._motifs.append(item)
+        for motif in parser.motif_gen:
+            self._motifs.append(motif)
+        self._validation_errors.add(parser.validation_errors)
 
     def get_motif_by_refdes(self, refdes):
         for motif in self._motifs:
@@ -331,12 +352,16 @@ class EntityElnBom(EntityBomBase):
     def configure_motifs(self, configname):
         self._configured_for = configname
         self._included_motifs = []
+        ctx = copy.copy(self._validation_context)
+        ctx.locality = 'BOM_CM_{0}'.format(configname)
         motifconfs = self.configurations.configuration_motiflist(configname)
         if motifconfs is not None:
+            policy = ConfigMotifPolicy(ctx)
             for key, motifconf in motifconfs.iteritems():
                 motif = self.get_motif_by_refdes(key)
                 if motif is None:
-                    logger.error("Motif not defined : " + key)
+                    e = ConfigMotifMissingError(policy, key)
+                    self._validation_errors.add(e)
                     continue
                 motif_actconf = motif.get_configdict_stub()
                 if self.configurations.motiflist is not None:
@@ -372,28 +397,30 @@ class EntityElnBom(EntityBomBase):
         if sjlist is not None:
             sj_refdeslist = sjlist.keys()
 
+        ctx = self._validation_context
+        _policy_ge = ConfigGroupPolicy(ctx, self._group_policy.known_groups)
+        _policy_sj = ConfigSJPolicy(ctx)
+
         for group in outgroups:
             grpobj = self.find_group(group)
             if grpobj is None:
-                logger.critical("outgroups : " + str(outgroups))
-                logger.critical(
-                    "grpobj not found : " + str(group) + ":for " + configname
-                )
+                e = ConfigGroupError(_policy_ge, group)
+                self._validation_errors.add(e)
+                continue
             for comp in grpobj.complist:
                 if gen_refdeslist is not None and \
                         comp.refdes in gen_refdeslist:
+                    # TODO Verify refdes has Generator status in schematic
                     if fpiswire(comp.device):
                         comp.footprint = genlist[comp.refdes]
                     else:
                         comp.value = genlist[comp.refdes]
                 if sj_refdeslist is not None and comp.refdes in sj_refdeslist:
                     if not comp.fillstatus == 'CONF':
-                        logger.error(
-                            "sjlist attempts to change non-configurable {0} "
-                            "with fillstatus {1}".format(comp.refdes,
-                                                         comp.fillstatus)
-                        )
-                        # TODO figure out why this breaks.
+                        e = ConfigSJUnexpectedError(_policy_sj,
+                                                    comp.refdes,
+                                                    comp.fillstatus)
+                        self._validation_errors.add(e)
                     if sjlist[comp.refdes]:
                         logger.debug("Setting Fillstatus : " + comp.refdes)
                         comp.fillstatus = ''
@@ -405,13 +432,17 @@ class EntityElnBom(EntityBomBase):
         motifconfs = self.configurations.configuration_motiflist(configname)
         if motifconfs is None:
             outbom.sort_by_ident()
+            outbom.validation_errors.add(self._validation_errors)
             return outbom
 
-        self.configure_motifs(configname)
+        if self._configured_for != configname:
+            self.configure_motifs(configname)
 
         for key, motifconf in motifconfs.iteritems():
             motif = self.get_motif_by_refdes(key)
             if motif is None:
+                # This error would already have beed reported when
+                # motifs were configured.
                 logger.error("Motif not defined : " + key)
                 continue
             for item in motif.get_line_gen():
@@ -421,6 +452,7 @@ class EntityElnBom(EntityBomBase):
                     outbom.insert_component(EntityElnComp(item))
 
         outbom.sort_by_ident()
+        outbom.validation_errors.add(self._validation_errors)
         return outbom
 
     def get_group_boms(self, configname):

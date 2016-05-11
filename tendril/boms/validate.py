@@ -20,10 +20,13 @@
 
 """
 Docstring for validate
+
 """
 
+# TODO Seriously refactor this file
 
 from tendril.conventions.electronics import parse_ident
+from tendril.conventions.electronics import ident_transform
 from tendril.conventions.electronics import DEVICE_CLASSES
 
 
@@ -252,10 +255,186 @@ class QuantityTypeError(IdentErrorBase):
         }
 
 
+class BomGroupError(ValidationError):
+    msg = "Group not found in Configs file"
+
+    def __init__(self, policy, tgroup, refdes, ident=None):
+        super(BomGroupError, self).__init__(policy)
+        self._tgroup = tgroup
+        self._refdes = refdes
+        self._ident = ident
+
+    def __repr__(self):
+        return '<BomGroupError {0} {1}>'.format(self._tgroup, self._refdes)
+
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "Group '{0}' for {1} not found in the configs file."
+                        "".format(self._tgroup, self._refdes),
+            'detail': "The declared group should either be added to the "
+                      "configs file, or changed to one of the defined "
+                      "component groups - {0}."
+                      "".format(', '.join(self.policy.known_groups)),
+        }
+
+
+class BomMotifUnrecognizedError(ValidationError):
+    msg = "Motif Definition Unrecognized"
+
+    def __init__(self, policy, motifst, refdes):
+        super(BomMotifUnrecognizedError, self).__init__(policy)
+        self._motifst = motifst
+        self._refdes = refdes
+
+    def __repr__(self):
+        return '<BomMotifUnrecognizedError {0} {1}>' \
+               ''.format(self._policy.context.render, self._motifst)
+
+    def render(self):
+        return {
+            'group': self.msg,
+            'is_error': self.policy.is_error,
+            'headline': "Motif '{0}' for {1} is not recognized."
+                        "".format(self._motifst, self._refdes),
+            'detail': "The listed motif is not recognized by tendril and is "
+                      "not handled. Component {0} is not included in the BOM."
+                      "".format(self._refdes),
+        }
+
+
+class ConfigMotifMissingError(ValidationError):
+    msg = "Motif in Configs not found in Schematic"
+
+    def __init__(self, policy, refdes):
+        super(ConfigMotifMissingError, self).__init__(policy)
+        self.refdes = refdes
+
+    def __repr__(self):
+        return "<ConfigMotifMissingError {0} {1}>" \
+               "".format(self.policy.context.render, self.refdes)
+
+    def render(self):
+        return {
+            'group': self.msg,
+            'is_error': self.policy.is_error,
+            'headline': "Motif '{0}' could not be found in the schematic."
+                        "".format(self.refdes),
+            'detail': "No elements corresponding to motif {0} were found in "
+                      "the schematic. None of the transformations related to "
+                      "this motif configuration will be made to the BOM."
+                      "".format(self.refdes),
+        }
+
+
+class ConfigGroupError(ValidationError):
+    msg = "Group in config definitions unrecognized"
+
+    def __init__(self, policy, groupname):
+        super(ConfigGroupError, self).__init__(policy)
+        self.groupname = groupname
+
+    def __repr__(self):
+        return "<ConfigGroupError {0}>".format(self.groupname)
+
+    def render(self):
+        return {
+            'group': self.msg,
+            'is_error': self.policy.is_error,
+            'headline': "Group '{0}' unrecognized."
+                        "".format(self.groupname),
+            'detail': "This group is listed for inclusion in this "
+                      "configuration but is not recognized. Recheck "
+                      "configuration grouplist. Defined groups are : {0}."
+                      "".format(', '.join(self.policy.known_groups)),
+        }
+
+
+class ConfigSJUnexpectedError(ValidationError):
+    msg = "Fillstatus of non-configurable component changed"
+
+    def __init__(self, policy, refdes, fillstatus):
+        super(ConfigSJUnexpectedError, self).__init__(policy)
+        self.refdes = refdes
+        self.fillstatus = fillstatus
+
+    def __repr__(self):
+        return "<ConfigSJUnexpectedError {0} {1}>" \
+               "".format(self.refdes, self.fillstatus)
+
+    def render(self):
+        return {
+            'group': self.msg,
+            'is_error': self.policy.is_error,
+            'headline': "Unexpected inclusion of '{0}' with fillstatus '{1}' "
+                        "in sjlist.".format(self.refdes, self.fillstatus),
+            'detail': "This component's fillstatus is not expected to be "
+                      "changed by the configs via the sjlist route. If "
+                      "such modification is intended, change it's fillstatus "
+                      "in the schematic to 'CONF'.",
+        }
+
+
 class ValidationPolicy(object):
     def __init__(self, context, is_error=True):
         self.context = context
         self.is_error = is_error
+
+
+class ConfigMotifPolicy(ValidationPolicy):
+    def __init__(self, context):
+        super(ConfigMotifPolicy, self).__init__(context)
+        self.is_error = True
+
+
+class ConfigGroupPolicy(ValidationPolicy):
+    def __init__(self, context, known_groups):
+        super(ConfigGroupPolicy, self).__init__(context)
+        self.is_error = True
+        self.known_groups = known_groups
+
+
+class ConfigSJPolicy(ValidationPolicy):
+    def __init__(self, context):
+        super(ConfigSJPolicy, self).__init__(context)
+        self.is_error = False
+
+
+class BomMotifPolicy(ValidationPolicy):
+    def __init__(self, context):
+        super(BomMotifPolicy, self).__init__(context)
+        self.is_error = True
+
+
+class BomGroupPolicy(ValidationPolicy):
+    def __init__(self, context, known_groups, allow_blank=True, default='default'):
+        super(BomGroupPolicy, self).__init__(context)
+        self._known_groups = known_groups
+        self._allow_blank = allow_blank
+        self._default = default
+        self.is_error = False
+
+    def check(self, item):
+        group = item.data['group']
+        if not group or group == 'unknown':
+            group = 'default'
+        if group not in self._known_groups:
+            raise BomGroupError(self, group,
+                                item.data['refdes'],
+                                ident_transform(item.data['device'],
+                                                item.data['value'],
+                                                item.data['footprint'])
+                                )
+        return group
+
+    @property
+    def default(self):
+        return self._default
+
+    @property
+    def known_groups(self):
+        return self._known_groups
 
 
 class IdentPolicy(ValidationError):
