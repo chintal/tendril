@@ -20,7 +20,6 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import os
-import yaml
 import re
 import csv
 import codecs
@@ -37,6 +36,7 @@ from tendril.utils.types import currency
 from tendril.utils.config import PRICELISTVENDORS_FOLDER
 from tendril.utils.config import INSTANCE_ROOT
 
+from tendril.utils.files import yml as yaml
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 

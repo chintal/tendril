@@ -20,7 +20,6 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import os
-import yaml
 
 from tendril.dox.labelmaker import manager
 
@@ -29,6 +28,7 @@ from tendril.utils.config import INSTANCE_ROOT
 
 from .entitybase import EntityBase
 
+from tendril.utils.files import yml as yaml
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 

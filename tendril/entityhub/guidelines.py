@@ -19,12 +19,12 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-import yaml
 from decimal import Decimal
 
 from tendril.conventions.electronics import parse_ident
 from tendril.conventions.electronics import check_for_std_val
 
+from tendril.utils.files import yml as yaml
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 

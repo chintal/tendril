@@ -92,7 +92,6 @@ import csv
 import os
 import shutil
 
-import yaml
 from fs import path
 from fs.errors import PermissionDeniedError
 from fs.utils import copyfile
@@ -112,6 +111,8 @@ from tendril.utils import log
 from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.files import pdf
+from tendril.utils.files import yml as yaml
+
 
 workspace_fs = temp_fs.makeopendir('workspace_gpd')
 logger = log.get_logger(__name__, log.DEFAULT)

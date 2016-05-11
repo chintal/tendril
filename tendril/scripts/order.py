@@ -19,7 +19,7 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-import yaml
+import re
 import csv
 import os
 
@@ -37,8 +37,7 @@ from tendril.utils.terminal import TendrilProgressBar
 import tendril.inventory.guidelines
 
 from tendril.utils.config import INSTANCE_ROOT
-
-import re
+from tendril.utils.files import yml as yaml
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)

@@ -38,5 +38,5 @@ def load(f):
     return oload(f, Loader=Loader)
 
 
-def dump(data, f, **kwargs):
-    return odump(data, f, Dumper=Dumper, **kwargs)
+def dump(data, f=None, **kwargs):
+    return odump(data, stream=f, Dumper=Dumper, **kwargs)

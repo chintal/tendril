@@ -23,7 +23,6 @@ Docstring for order
 """
 
 import os
-import yaml
 import arrow
 from copy import deepcopy
 
@@ -51,6 +50,7 @@ from tendril.inventory.indent import InventoryIndent
 from tendril.utils.db import get_session
 from tendril.utils.terminal import TendrilProgressBar
 from tendril.utils.terminal import DummyProgressBar
+from tendril.utils.files import yml as yaml
 
 
 class ProductionOrderNotFound(EntityNotFound):

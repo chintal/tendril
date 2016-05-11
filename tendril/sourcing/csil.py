@@ -22,7 +22,6 @@ CSIL Sourcing Module documentation (:mod:`sourcing.csil`)
 import time
 import locale
 import os
-import yaml
 from collections import OrderedDict
 
 import splinter
@@ -42,6 +41,7 @@ from tendril.entityhub import projects
 from tendril.dox import purchaseorder
 
 from selenium.webdriver.remote.remote_connection import LOGGER
+from tendril.utils.files import yml as yaml
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 LOGGER.setLevel(log.WARNING)

@@ -61,7 +61,6 @@ import datetime
 import os
 
 import fs
-import yaml
 
 import docstore
 import render
@@ -73,6 +72,7 @@ from tendril.utils.fsutils import get_tempname
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.terminal import TendrilProgressBar
 from tendril.utils.files import pdf
+from tendril.utils.files import yml as yaml
 
 
 def gen_declaration(invoice, target_folder, copyt, serialno):
