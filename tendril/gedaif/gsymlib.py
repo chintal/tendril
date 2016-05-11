@@ -22,7 +22,6 @@ gEDA gsymlib Module documentation (:mod:`gedaif.gsymlib`)
 import os
 import csv
 
-import yaml
 import jinja2
 
 import iec60063
@@ -41,6 +40,7 @@ from tendril.utils.types.electromagnetic import Capacitance
 
 from gschem import conv_gsch2png
 
+from tendril.utils.files import yml as yaml
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 

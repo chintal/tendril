@@ -52,7 +52,6 @@ Specialized Structures:
 
 import os
 import copy
-import yaml
 import itertools
 import warnings
 from decimal import Decimal
@@ -65,7 +64,7 @@ from tendril.boms.validate import ConfigOptionPolicy
 
 from tendril.boms.validate import get_dict_val
 
-
+from tendril.utils.files import yml as yaml
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 

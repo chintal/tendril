@@ -645,13 +645,31 @@ def get_prototype_lib(regen=False):
         return prototypes
     logger.debug("Generating Prototype Library")
     prototypes = {}
-    for card, folder in projects.cards.iteritems():
-        if projects.check_module_is_card(card):
-            prototypes[card] = CardPrototype(card)
-        elif projects.check_module_is_cable(card):
-            prototypes[card] = CablePrototype(card)
+    for ident in projects.cards.keys():
+        get_prototype(ident)
     logger.debug("Prototype Library Generated")
     return prototypes
+
+
+def get_prototype(ident):
+    global prototypes
+    if ident in prototypes.keys():
+        return prototypes[ident]
+
+    try:
+        prototypes[ident] = CardPrototype(ident)
+        return
+    except ModuleTypeError:
+        pass
+
+    try:
+        prototypes[ident] = CablePrototype(ident)
+        return
+    except ModuleTypeError:
+        pass
+
+    raise ModuleTypeError("Could not determine type for ident {0}"
+                          "".format(ident))
 
 
 pcbs = {}
