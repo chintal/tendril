@@ -309,7 +309,7 @@ def get_recognized_repr(regen=False):
         for loc in inventory_locations:
             rval.extend(list(loc.tf.names))
         recognized_representations = rval
-    return recognized_representations
+    return set(recognized_representations)
 
 recognized_representations = None
 get_recognized_repr()

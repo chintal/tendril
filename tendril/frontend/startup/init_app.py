@@ -26,6 +26,9 @@ from flask_user import UserManager, SQLAlchemyAdapter
 
 import db
 
+from tendril.utils.config import WARM_UP_CACHES
+from .warmup import warm_up_caches
+
 arrow_locale = arrow.locales.get_locale('EN')
 
 
@@ -39,11 +42,14 @@ def init_app(app):
         # Disable CSRF checks while testing
         app.config['WTF_CSRF_ENABLED'] = False
 
+    # Warm up caches
+    if WARM_UP_CACHES is True:
+        warm_up_caches()
+
     # Initialize Assets
     from tendril.frontend.startup import assets  # noqa
 
     # Create Filters
-
     def unicode_filter(s):
         return unicode(s, 'utf-8')
     app.jinja_env.filters['unicode'] = unicode_filter

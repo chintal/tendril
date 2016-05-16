@@ -21,3 +21,35 @@
 """
 Docstring for directory
 """
+
+from tendril.gedaif import gsymlib
+
+
+def in_gsymlib(ident):
+    return gsymlib.is_recognized(ident)
+
+
+def gsymlib_idents():
+    return gsymlib.gsymlib_idents
+
+
+def in_pcblib(ident):
+    pass
+
+
+def in_prototypelib(ident):
+    pass
+
+
+def is_project_folder(projfolder):
+    pass
+
+
+def is_recognized(ident):
+    if in_gsymlib(ident):
+        return True
+    if in_prototypelib(ident):
+        return True
+    if in_pcblib(ident):
+        return True
+    return False
