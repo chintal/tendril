@@ -25,7 +25,6 @@ from tendril.frontend.startup.init_app import init_app
 
 init_app(app)
 
-
 if __name__ == '__main__':
     app.use_x_sendfile = False
     app.run(debug=True, host='0.0.0.0')
