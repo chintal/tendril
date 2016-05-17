@@ -323,6 +323,15 @@ class EntityElnBom(EntityBomBase):
             )
             tgroup.insert_eln_comp(comp)
             skip = True
+        if item.data['device'] == 'RES SMD' and \
+                item.data['value'] == '0E':
+            comp = EntityElnComp()
+            comp.define(
+                item.data['refdes'], 'SOLDER DOT', '0E',
+                footprint='MY-0603', fillstatus=item.data['fillstatus']
+            )
+            tgroup.insert_eln_comp(comp)
+            skip = True
         if not skip:
             tgroup.insert(item)
 

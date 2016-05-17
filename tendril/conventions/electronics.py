@@ -75,6 +75,7 @@ DEVICE_CLASSES_DOC = [
     ('RELAY', 'Relays'),
     ('MODULE', 'Modules'),
     ('PCB', 'Printed Circuit Board'),
+    ('PCB EDGE', 'Printed Circuit Board Edges'),
     ('BUZZER', 'Buzzers'),
     ('CONN CIRCULAR', 'Circular Connectors'),
     ('CONN BNC', 'BNC Connectors'),
@@ -132,7 +133,7 @@ DEVICE_CLASSES_DOC = [
 
 DEVICE_CLASSES = set([x[0] for x in DEVICE_CLASSES_DOC])
 
-nofp_strs = {"PCB", "CONN", "MODULE", "CRYSTAL OSC", "HEAT SINK",
+nofp_strs = {"PCB", "PCB EDGE", "CONN", "MODULE", "CRYSTAL OSC", "HEAT SINK",
              "SOCKET POWER", "FUSE", "SWITCH PUSHBTN",
              "SWITCH ROCKER", "TRANSFORMER HEAVY", "CRIMP", "THIMBLE",
              "CABLE MARKER", "POWER CORD", "USB CABLE"}
