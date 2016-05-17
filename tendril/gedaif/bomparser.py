@@ -32,6 +32,7 @@ from tendril.boms.validate import BomMotifUnrecognizedError
 
 import projfile
 
+from tendril.utils.config import INSTANCE_CACHE
 from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils import fsutils
 from tendril.utils import log
@@ -89,7 +90,7 @@ class CachedBomParser(object):
 
     @property
     def _cache_folder(self):
-        return os.path.join(self.projectfolder, '.tendril', 'cache')
+        return os.path.join(INSTANCE_CACHE, 'gedaproject', self._namebase)
 
     @property
     def _cached_bom_path(self):
