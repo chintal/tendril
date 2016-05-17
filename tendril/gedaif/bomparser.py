@@ -33,7 +33,7 @@ from tendril.boms.validate import BomMotifUnrecognizedError
 import projfile
 
 from tendril.utils.config import PROJECTS_ROOT
-from tendril.utils.fsutils import TEMPDIR
+from tendril.utils import fsutils
 from tendril.utils import log
 logger = log.get_logger(__name__, level=log.WARNING)
 
@@ -65,30 +65,76 @@ class BomLine(object):
             raise AttributeError
 
 
-class GedaBomParser(object):
+class CachedBomParser(object):
+    _basefolder = None
 
-    def __init__(self, projectfolder, backend):
-        self.gpf = None
-        self.temp_bom = None
-        self.columns = []
-        self.line_gen = None
+    def __init__(self, projectfolder, use_cached=True, **kwargs):
         self.projectfolder = os.path.normpath(projectfolder)
-        self._gpf = projfile.GedaProjectFile(self.projectfolder)
-        self._validation_context = ValidationContext(self.projectfolder,
-                                                     'BOMParser')
-        self._validation_errors = ErrorCollector()
-
         self._namebase = os.path.relpath(self.projectfolder, PROJECTS_ROOT)
-        self._basefolder = 'schematic'
+        self._validation_context = ValidationContext(
+            self.projectfolder, 'BOMParser'
+        )
+        self._validation_errors = ErrorCollector()
+        self.line_gen = None
+        self._use_cached = use_cached
+        self._generator_args = kwargs
 
-        self._temp_folder = os.path.join(TEMPDIR, self._namebase,
-                                         self._basefolder)
-        self._temp_bom_path = os.path.join(self._temp_folder,
-                                           "tempbom.net")
-        self._get_temp_schematic()
-        self._transform_schematic()
-        self.generate_temp_bom(backend)
-        self.prep_temp_bom()
+    @property
+    def _temp_folder(self):
+        return os.path.join(fsutils.TEMPDIR, self._namebase, self._basefolder)
+
+    @property
+    def _temp_bom_path(self):
+        return os.path.join(self._temp_folder, "tempbom.net")
+
+    @property
+    def _cache_folder(self):
+        return os.path.join(self.projectfolder, '.tendril', 'cache')
+
+    @property
+    def _cached_bom_path(self):
+        return os.path.join(self._cache_folder, 'bom.net')
+
+    def generate_bom_file(self, outfile, **kwargs):
+        raise NotImplementedError
+
+    def get_bom_file(self):
+        if not os.path.exists(self._cache_folder):
+            os.makedirs(self._cache_folder)
+
+        bom_mtime = fsutils.get_file_mtime(self._cached_bom_path)
+        source_folder = os.path.join(self.projectfolder, self._basefolder)
+        source_mtime = fsutils.get_folder_mtime(source_folder)
+
+        if self._use_cached is True and bom_mtime is not None \
+                and source_mtime < bom_mtime:
+            return open(self._cached_bom_path, 'r')
+        else:
+            self.generate_bom_file(self._temp_bom_path,
+                                   **self._generator_args)
+            shutil.copy(self._temp_bom_path, self._cached_bom_path)
+            return open(self._cached_bom_path, 'r')
+
+    def get_lines(self):
+        raise NotImplementedError
+
+    @property
+    def validation_errors(self):
+        return self._validation_errors
+
+
+class GedaBomParser(CachedBomParser):
+    _basefolder = 'schematic'
+
+    def __init__(self, projectfolder, use_cached=True, backend=None):
+        super(GedaBomParser, self).__init__(projectfolder,
+                                            use_cached=use_cached,
+                                            backend=backend)
+        self._gpf = projfile.GedaProjectFile(self.projectfolder)
+        self.bom_reader = None
+        self.columns = []
+        self.schpaths = []
+        self.prep_bom()
 
     def _get_temp_schematic(self):
         self.schpaths = []
@@ -100,12 +146,10 @@ class GedaBomParser(object):
             shutil.copy(schpath, tschpath)
             self.schpaths.append(tschpath)
 
-    def _transform_schematic(self):
-        pass
-
-    def generate_temp_bom(self, backend):
+    def generate_bom_file(self, outpath, backend=None):
+        self._get_temp_schematic()
         cmd = ["gnetlist",
-               '-o', self._temp_bom_path,
+               '-o', outpath,
                '-g', backend,
                '-Oattrib_file=' + os.path.join(self.projectfolder,
                                                self._basefolder,
@@ -115,31 +159,29 @@ class GedaBomParser(object):
         subprocess.call(cmd,
                         stdout=FNULL,
                         stderr=subprocess.STDOUT,)
+        return outpath
 
-    def prep_temp_bom(self):
-        self.temp_bom = open(self._temp_bom_path, 'r')
-        self.columns = self.temp_bom.readline().split('\t')[:-1]
+    def prep_bom(self):
+        self.bom_reader = self.get_bom_file()
+        self.columns = self.bom_reader.readline().split('\t')[:-1]
         self.line_gen = self.get_lines()
 
-    def delete_temp_bom(self):
-        os.remove(self._temp_bom_path)
+    def get_lines(self):
+        for line in self.bom_reader:
+            yield BomLine(line, self.columns)
+        self.cleanup()
+
+    def cleanup(self):
+        self.bom_reader.close()
+        if os.path.exists(self._temp_bom_path):
+            os.remove(self._temp_bom_path)
         for tschpath in self.schpaths:
             os.remove(tschpath)
 
-    def get_lines(self):
-        for line in self.temp_bom:
-            yield BomLine(line, self.columns)
-        self.temp_bom.close()
-        self.delete_temp_bom()
-
-    @property
-    def validation_errors(self):
-        return self._validation_errors
-
 
 class MotifAwareBomParser(GedaBomParser):
-    def __init__(self, projectfolder, backend):
-        super(MotifAwareBomParser, self).__init__(projectfolder, backend)
+    def __init__(self, projectfolder, **kwargs):
+        super(MotifAwareBomParser, self).__init__(projectfolder, **kwargs)
         self._motifs = []
         # self._motifconfigs = self._gpf.configsfile.configdata['motiflist']
         self.motif_gen = None
@@ -156,7 +198,7 @@ class MotifAwareBomParser(GedaBomParser):
         return motif
 
     def get_lines(self):
-        for line in self.temp_bom:
+        for line in self.bom_reader:
             bomline = BomLine(line, self.columns)
             if bomline.data['motif'] != 'unknown':
                 try:
@@ -170,8 +212,7 @@ class MotifAwareBomParser(GedaBomParser):
             else:
                 yield bomline
         self.motif_gen = self.get_motifs()
-        self.temp_bom.close()
-        self.delete_temp_bom()
+        self.cleanup()
 
     def get_motifs(self):
         for motif in self._motifs:

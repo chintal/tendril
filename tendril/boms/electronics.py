@@ -223,7 +223,7 @@ class EntityElnBomConf(ConfigsFile):
 
 
 class EntityElnBom(EntityBomBase):
-    def __init__(self, configfile):
+    def __init__(self, configfile, use_cached=True):
         """
 
         :type configfile: gedaif.conffile.ConfigsFile
@@ -238,7 +238,7 @@ class EntityElnBom(EntityBomBase):
         self._group_policy = None
         self._validation_errors = ErrorCollector()
         self.create_groups()
-        self.populate_bom()
+        self.populate_bom(use_cached=use_cached)
 
     @property
     def validation_errors(self):
@@ -326,13 +326,14 @@ class EntityElnBom(EntityBomBase):
         if not skip:
             tgroup.insert(item)
 
-    def populate_bom(self):
+    def populate_bom(self, use_cached=True):
         if self.configurations.pcbname is not None:
             tgroup = self.find_group('default')
             comp = EntityElnComp()
             comp.define('PCB', 'PCB', self.configurations.pcbname)
             tgroup.insert_eln_comp(comp)
-        parser = MotifAwareBomParser(self.configurations.projectfolder, "bom")
+        parser = MotifAwareBomParser(self.configurations.projectfolder,
+                                     use_cached=use_cached, backend="bom")
         for item in parser.line_gen:
             self._add_item(item)
         for motif in parser.motif_gen:

@@ -36,15 +36,15 @@ def init_app(app):
     """
     Initialize Flask applicaton
     """
+    # Warm up caches
+    if WARM_UP_CACHES is True:
+        warm_up_caches()
+
     # Initialize app config settings
     app.config.from_object('tendril.frontend.startup.settings')
     if app.testing:
         # Disable CSRF checks while testing
         app.config['WTF_CSRF_ENABLED'] = False
-
-    # Warm up caches
-    if WARM_UP_CACHES is True:
-        warm_up_caches()
 
     # Initialize Assets
     from tendril.frontend.startup import assets  # noqa
