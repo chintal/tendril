@@ -15,6 +15,7 @@ Submodules
 
    tendril.conventions.electronics
    tendril.conventions.series
+   tendril.conventions.status
 
 Module contents
 ---------------

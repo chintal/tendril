@@ -10,6 +10,7 @@ Submodules
    tendril.boms.configbase
    tendril.boms.outputbase
    tendril.boms.products
+   tendril.boms.validate
 
 Module contents
 ---------------

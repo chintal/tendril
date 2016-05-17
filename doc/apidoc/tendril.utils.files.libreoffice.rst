@@ -1,5 +1,4 @@
-
-.. automodule:: tendril.utils.libreoffice
+.. automodule:: tendril.utils.files.libreoffice
     :members:
     :undoc-members:
     :show-inheritance:

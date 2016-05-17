@@ -11,6 +11,7 @@ Submodules
    tendril.frontend.startup.helpers
    tendril.frontend.startup.init_app
    tendril.frontend.startup.settings
+   tendril.frontend.startup.warmup
 
 Module contents
 ---------------

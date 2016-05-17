@@ -11,7 +11,7 @@
         ServerAdmin webmaster@localhost
 
         WSGIDaemonProcess tendril threads=5
-        WSGIScriptAlias / /home/tendril/.tendril/tendril.wsgi
+        WSGIScriptAlias / /home/tendril/.tendril/tendril.wsgi process-group=tendril application-group=%{GLOBAL}
 
         <Directory /home/tendril/.tendril>
                 WSGIProcessGroup tendril
