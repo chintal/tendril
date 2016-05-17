@@ -26,8 +26,6 @@ from flask_user import UserManager, SQLAlchemyAdapter
 
 import db
 
-from tendril.utils.config import WARM_UP_CACHES
-from .warmup import warm_up_caches
 
 arrow_locale = arrow.locales.get_locale('EN')
 
@@ -36,9 +34,6 @@ def init_app(app):
     """
     Initialize Flask applicaton
     """
-    # Warm up caches
-    if WARM_UP_CACHES is True:
-        warm_up_caches()
 
     # Initialize app config settings
     app.config.from_object('tendril.frontend.startup.settings')

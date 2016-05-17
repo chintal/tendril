@@ -22,6 +22,12 @@ See the COPYING, README, and INSTALL files for more information
 
 from flask import Flask
 
+from tendril.utils.config import WARM_UP_CACHES
+from tendril.frontend.startup.warmup import warm_up_caches
+
+# Warm up caches
+if WARM_UP_CACHES is True:
+    warm_up_caches()
 
 # This is the WSGI compliant web application object
 app = Flask(__name__)
