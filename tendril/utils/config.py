@@ -381,6 +381,11 @@ config_options_geda = [
         "The folder containing your gEDA symbols."
     ),
     ConfigOption(
+        'GEDA_SUBCIRCUITS_ROOT',
+        "os.path.join(GAF_ROOT, 'pieces')",
+        "The folder containing schematics for your gEDA subcircuit symbols."
+    ),
+    ConfigOption(
         'MAKE_GSYMLIB_IMG_CACHE',
         "True",
         "Whether or not to generate the gsymlib image cache."

@@ -59,7 +59,10 @@
         {% for symbol in stage.symbols %}
         <li>
             <ul class="pricing-table active-tb shadow mrgn-20-top" data-equalizer-watch="symbol">
-                {% if symbol.generator %}
+                {% if symbol.is_subcircuit %}
+                <a href = "/gsymlib/detail/{{symbol.subcircuitident|quote}}.sc">
+                <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.subcircuitident}}</span></li>
+                {% elif symbol.generator %}
                 <a href = " /gsymlib/detail/{{symbol.genident|quote}} ">
                 <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.genident}}</span></li>
                 {% else %}
@@ -81,6 +84,9 @@
                 {% endif %}
                 {% if not symbol.sym_ok %}
                   <span class="right label radius alert">Bad Symbol</span>
+                {% endif %}
+                {% if symbol.is_subcircuit %}
+                  <span class="right label radius">Subcircuit</span>
                 {% endif %}
                 {% if symbol.is_generator %}
                   <span class="right label radius warning">Generator</span>

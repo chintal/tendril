@@ -1,0 +1,81 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="symbol"><a href="#symbol">Symbol</a></dd>
+        <dd data-magellan-arrival="schematic"><a href="#schematic">Schematic</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+
+{% block main %}
+
+<h3> gEDA Subcircuit Detail </h3>
+
+<!--Symbol Information-->
+<div class="row" data-equalizer="r1" data-magellan-destination="symbol">
+<a name="symbol"></a>
+    <div class="small-12 medium-6 large-4 columns" data-equalizer-watch="r1">
+        <ul class="pricing-table shadow">
+            <li class="price autoscale">{{stage.symbol.subcircuitident}}</li>
+            <li class="description">{{stage.symbol.fname}}</li>
+            <li class="description">
+                {% for path in stage.sympaths%}
+                    {% if loop.first %} <b> {% endif %}{{path}}{% if loop.first %} </b> {% endif %}
+                    {% if not loop.last %} <br> {% endif %}
+                {% endfor %}
+            </li>
+            {% if stage.symbol.description %}
+            <li class="description">{{stage.symbol.description|unicode}}</li>
+            {% endif %}
+
+            {% if not stage.symbol.sym_ok %}
+              <span class="right label radius alert">Bad Symbol</span>
+            {% endif %}
+            {% if stage.symbol.is_deprecated %}
+              <span class="right label radius alert">Deprecated</span>
+            {% endif %}
+            {% if stage.symbol.is_experimental %}
+              <span class="right label radius warning">Experimental</span>
+            {% endif %}
+        </ul>
+    </div>
+
+    <div class="small-12 medium-6 large-8 columns end" data-equalizer-watch="r1">
+        <ul class="large-block-grid-3 clearing-thumbs" data-clearing>
+            <li>
+                <!-- TODO The hidden images aren't displayed in the lightbox. Fix this. -->
+                <a class="th" href="/gsymlib/gsymlib/{{ stage.imgpath }}">
+                    <img data-caption="{{ stage.imgpath }}" src="/gsymlib/gsymlib/{{ stage.imgpath }}">
+                </a>
+            </li>
+        </ul>
+    </div>
+
+</div>
+
+<div class="row" data-magellan-destination="schematic">
+<a name="schematic"></a>
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Schematic</h6>
+        </div>
+        <div class="small-12 columns">
+            <img src="/gsymlib/gsymlib/{{ stage.schimgpath }}">
+        </div>
+    </div>
+
+</div>
+<!--Sourcing Information-->
+
+<!--Sourcing History-->
+
+{% endblock %}

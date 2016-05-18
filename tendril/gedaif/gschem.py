@@ -344,40 +344,39 @@ def conv_gsch2pdf(schpath, docfolder):
     return pdfpath
 
 
-def conv_gsch2png(schpath, outfolder):
+def conv_gsch2png(schpath, outfolder, include_extension=False):
     schpath = os.path.normpath(schpath)
-    schfname, ext = os.path.splitext(os.path.split(schpath)[1])
+    if include_extension is False:
+        schfname, ext = os.path.splitext(os.path.split(schpath)[1])
+    else:
+        schfname = os.path.split(schpath)[1]
 
     outpath = os.path.join(outfolder, schfname + '.png')
     epspath = os.path.join(outfolder, schfname + '.eps')
 
-    if ext == '.sym':
-        if USE_SYSTEM_GAF_BIN:
-            try:
-                sym2eps.convert(schpath, epspath)
-            except RuntimeError:
-                logger.error(
-                    "SYM2EPS Segmentation Fault on symbol : " + schpath
-                )
-            gschem_pngcmd = [
-                "convert", epspath, "-transparent", "white", outpath
-            ]
-            subprocess.call(gschem_pngcmd)
-            try:
-                os.remove(epspath)
-            except OSError:
-                logger.warning("Temporary .eps file not found to remove : " +
-                               epspath)
-        else:
-            gaf_pngcmd = [
-                os.path.join(GAF_BIN_ROOT, 'gaf'),
-                'export', '-c', '-o', outpath,
-                schpath
-            ]
-            subprocess.call(gaf_pngcmd)
-    elif ext == '.sch':
-        gschem_pngcmd = "gschem -p -o" + outpath + " -s" + GEDA_SCHEME_DIR + '/image.scm ' + schpath  # noqa
+    if USE_SYSTEM_GAF_BIN:
+        try:
+            sym2eps.convert(schpath, epspath)
+        except RuntimeError:
+            logger.error(
+                "SYM2EPS Segmentation Fault on symbol : " + schpath
+            )
+        gschem_pngcmd = [
+            "convert", epspath, "-transparent", "white", outpath
+        ]
         subprocess.call(gschem_pngcmd)
+        try:
+            os.remove(epspath)
+        except OSError:
+            logger.warning("Temporary .eps file not found to remove : " +
+                           epspath)
+    else:
+        gaf_pngcmd = [
+            os.path.join(GAF_BIN_ROOT, 'gaf'),
+            'export', '-c', '-o', outpath,
+            schpath
+        ]
+        subprocess.call(gaf_pngcmd)
     return outpath
 
 

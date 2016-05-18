@@ -27,6 +27,7 @@ import jinja2
 import iec60063
 
 from tendril.utils.config import GEDA_SYMLIB_ROOT
+from tendril.utils.config import GEDA_SUBCIRCUITS_ROOT
 from tendril.utils.config import AUDIT_PATH
 from tendril.utils.config import TENDRIL_ROOT
 from tendril.utils.config import INSTANCE_CACHE
@@ -55,11 +56,16 @@ class GedaSymbol(object):
         self.description = ''
         self.status = ''
         self.package = ''
+        self.source = ''
         self._is_virtual = ''
         self._img_repr_path = ''
         self._img_repr_fname = ''
+        self._sch_img_repr_path = ''
+        self._sch_img_repr_fname = ''
         self._acq_sym(fpath)
         self._img_repr()
+        if self.is_subcircuit:
+            self._sch_img_repr()
 
     def _acq_sym(self, fpath):
         with open(fpath, 'r') as f:
@@ -78,6 +84,8 @@ class GedaSymbol(object):
                     self.status = line.split('=')[1].strip()
                 if line.startswith('package'):
                     self.package = line.split('=')[1].strip()
+                if line.startswith('source'):
+                    self.source = line.split('=')[1].strip()
             if self.status == '':
                 self.status = 'Active'
 
@@ -93,9 +101,26 @@ class GedaSymbol(object):
         if MAKE_GSYMLIB_IMG_CACHE:
             conv_gsch2png(self.fpath, outfolder)
 
+    def _sch_img_repr(self):
+        outfolder = os.path.join(INSTANCE_CACHE, 'gsymlib')
+        self._sch_img_repr_fname = os.path.splitext(self.source)[0] + '.sch.png'
+        self._sch_img_repr_path = os.path.join(outfolder, self._sch_img_repr_fname)
+        if not os.path.exists(outfolder):
+            os.makedirs(outfolder)
+        if os.path.exists(self._sch_img_repr_path):
+            if tendril.utils.fsutils.get_file_mtime(self._sch_img_repr_path) > tendril.utils.fsutils.get_file_mtime(
+                    self.schematic_path):  # noqa
+                return
+        if MAKE_GSYMLIB_IMG_CACHE:
+            conv_gsch2png(self.schematic_path, outfolder, include_extension=True)
+
     @property
     def img_repr_fname(self):
         return self._img_repr_fname
+
+    @property
+    def sch_img_repr_fname(self):
+        return self._sch_img_repr_fname
 
     @property
     def ident(self):
@@ -112,10 +137,32 @@ class GedaSymbol(object):
 
     @property
     def sym_ok(self):
-        rval = False
-        if self.device in tendril.conventions.electronics.DEVICE_CLASSES:
-            rval = True
-        return rval
+        if self.is_subcircuit:
+            if self.source.endswith('.sch'):
+                if not os.path.exists(self.schematic_path):
+                    return False
+                return True
+        if self.device not in tendril.conventions.electronics.DEVICE_CLASSES:
+            return False
+        return True
+
+    @property
+    def is_subcircuit(self):
+        if self.source != '':
+            return True
+        return False
+
+    @property
+    def schematic_path(self):
+        if not self.is_subcircuit:
+            raise AttributeError
+        return os.path.join(GEDA_SUBCIRCUITS_ROOT, self.source)
+
+    @property
+    def subcircuitident(self):
+        if not self.is_subcircuit:
+            raise AttributeError
+        return os.path.splitext(self.fname)[0]
 
     @property
     def is_generator(self):
@@ -376,6 +423,8 @@ def get_folder_symbols(path, template=None,
                         with open(genpath, 'w') as gf:
                             gf.write(template.render(stage=stage))
             else:
+                if symbol.is_subcircuit:
+                    subcircuits.append(symbol)
                 symbols.append(symbol)
     return symbols
 
@@ -426,17 +475,21 @@ def _jinja_init():
 
 
 generators = []
+subcircuits = []
 custom_series = {}
 gsymlib = []
 index = {}
 index_upper = {}
 generator_names = []
+subcircuit_names = []
 gsymlib_idents = []
 
 
 def regenerate_symlib():
     global generators
     generators = []
+    global subcircuits
+    subcircuits = []
     global gsymlib
     gsymlib = gen_symlib(GEDA_SYMLIB_ROOT)
     global index
@@ -446,6 +499,8 @@ def regenerate_symlib():
     global generator_names
     generator_names = [os.path.splitext(x.fname)[0] + '.gen'
                        for x in generators]
+    global subcircuit_names
+    subcircuit_names = [x.subcircuitident for x in subcircuits]
     global gsymlib_idents
     gsymlib_idents = set(index.keys())
     global custom_series
@@ -462,6 +517,12 @@ def get_generator(gen):
     for generator in generators:
         if os.path.splitext(generator.fname)[0] + '.gen' == gen:
             return generator
+
+
+def get_subcircuit(sc):
+    for subcircuit in subcircuits:
+        if subcircuit.subcircuitident == sc:
+            return subcircuit
 
 
 def is_recognized(ident):

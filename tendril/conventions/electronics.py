@@ -74,6 +74,8 @@ DEVICE_CLASSES_DOC = [
     ('SOCKET DIP', 'IC sockets and bases'),
     ('RELAY', 'Relays'),
     ('MODULE', 'Modules'),
+    ('MODULE SMPS', 'OTS Prefabricated SMPS Modules'),
+    ('MODULE LCD', 'LCDs'),
     ('PCB', 'Printed Circuit Board'),
     ('PCB EDGE', 'Printed Circuit Board Edges'),
     ('BUZZER', 'Buzzers'),
