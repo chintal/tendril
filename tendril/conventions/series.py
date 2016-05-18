@@ -141,6 +141,11 @@ class CustomValueSeries(ValueSeries):
                              "".format(stype, self._name))
         return self._value_generator(start=start, end=end)
 
+    def get_partno(self, value):
+        if isinstance(value, self._typeclass):
+            value = str(value)
+        return self._values[value]
+
     def get_symbol(self, value, device=None, footprint=None):
         if isinstance(value, self._typeclass):
             value = str(value)

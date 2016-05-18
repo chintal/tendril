@@ -83,10 +83,10 @@
                             {% endfor %}
                         </ul>
                     </li>
-                    {% for type_value, value in iseries._values|dictsort %}
+                    {% for value in iseries.gen_vals() %}
                     <li class="bullet-item">
-                        <div class="small-6 columns">{{ type_value }}</div>
                         <div class="small-6 columns">{{ value }}</div>
+                        <div class="small-6 columns">{{ iseries.get_partno(value) }}</div>
                     </li>
                     {% endfor %}
                 {% endfor %}
