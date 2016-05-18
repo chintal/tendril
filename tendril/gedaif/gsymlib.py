@@ -159,6 +159,12 @@ class GedaSymbol(object):
         return os.path.join(GEDA_SUBCIRCUITS_ROOT, self.source)
 
     @property
+    def schematic_fname(self):
+        if not self.is_subcircuit:
+            raise AttributeError
+        return self.source
+
+    @property
     def subcircuitident(self):
         if not self.is_subcircuit:
             raise AttributeError

@@ -33,6 +33,10 @@
                     {% if not loop.last %} <br> {% endif %}
                 {% endfor %}
             </li>
+            <li class="description">{{stage.symbol.schematic_fname}}</li>
+            <li class="description">
+                <img src="/gsymlib/gsymlib/{{ stage.imgpath }}">
+            </li>
             {% if stage.symbol.description %}
             <li class="description">{{stage.symbol.description|unicode}}</li>
             {% endif %}
@@ -49,15 +53,13 @@
         </ul>
     </div>
 
-    <div class="small-12 medium-6 large-8 columns end" data-equalizer-watch="r1">
-        <ul class="large-block-grid-3 clearing-thumbs" data-clearing>
-            <li>
-                <!-- TODO The hidden images aren't displayed in the lightbox. Fix this. -->
-                <a class="th" href="/gsymlib/gsymlib/{{ stage.imgpath }}">
-                    <img data-caption="{{ stage.imgpath }}" src="/gsymlib/gsymlib/{{ stage.imgpath }}">
-                </a>
-            </li>
-        </ul>
+    <div class="small-12 medium-6 large-8 columns" data-equalizer-watch="r1">
+        <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>BOM</h6>
+        </div>
+
+        </div>
     </div>
 
 </div>
