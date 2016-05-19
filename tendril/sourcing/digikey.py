@@ -333,11 +333,11 @@ class VendorDigiKey(VendorBase):
                          'FERRITE BEAD SMD',
                          'TRANSISTOR THRU',
                          'TRANSISTOR SMD',
-                         #'CONN DF13',
-                         #'CONN DF13 HOUS',
-                         #'CONN DF13 WIRE',
-                         #'CONN DF13 CRIMP',
-                         #'CONN MODULAR',
+                         'CONN DF13',
+                         'CONN DF13 HOUS',
+                         'CONN DF13 WIRE',
+                         'CONN DF13 CRIMP',
+                         'CONN MODULAR',
                          'DIODE SMD',
                          'DIODE THRU',
                          'VARISTOR',
@@ -346,7 +346,7 @@ class VendorDigiKey(VendorBase):
                          'RES THRU',
                          'CAP CER SMD',
                          'CAP TANT SMD',
-                         #'TRANSFORMER SMD',
+                         'TRANSFORMER SMD',
                          'INDUCTOR SMD',
                          'CRYSTAL AT'
                          ]
@@ -560,11 +560,11 @@ class VendorDigiKey(VendorBase):
         :type row: dict
         :rtype: ``SearchPart``
         """
-        pno = row['Digi-Key Part Number'].strip()
-        package = row['Package / Case'].strip()
-        minqty = row['Minimum Quantity'].strip()
-        mfgpno = row['Manufacturer Part Number'].strip()
-        unitp = row['Unit Price (USD)'].strip()
+        pno = row.pop('Digi-Key Part Number', '').strip()
+        package = row.pop('Package / Case', '').strip()
+        minqty = row.pop('Minimum Quantity', '').strip()
+        mfgpno = row.pop('Manufacturer Part Number', '').strip()
+        unitp = row.pop('Unit Price (USD)', '').strip()
         try:
             unitp = locale.atof(unitp)
         except ValueError:
@@ -725,7 +725,7 @@ class VendorDigiKey(VendorBase):
         if parts[0].package is None or footprint is None:
             # No package, so no basis to filter
             sr = self._filter_results_unfiltered(parts)
-            return True, sr.parts, sr.strategy
+            return SearchResult(True, sr.parts, sr.strategy)
 
         # Find Exact Match Package
         sr = self._find_exact_match_package(parts, value)

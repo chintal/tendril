@@ -65,6 +65,7 @@ def gen_mapfile(vendor, idents):
                                     strategy=strategy, session=session)
             controller.set_amap_vpnos(vendor=vendor_obj, ident=ident,
                                       vpnos=avpnos, session=session)
+    vendor.map._dump_mapfile()
     pb.finish()
 
 
