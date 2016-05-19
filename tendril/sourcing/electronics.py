@@ -52,7 +52,7 @@ def gen_mapfile(vendor, idents):
         pb.next(note=ident)
         vpnos, strategy = vendor.search_vpnos(ident)
         if vpnos is not None:
-            pb.writeln("Found: {0}".format(ident))
+            # pb.writeln("Found: {0}\n".format(ident))
             avpnos = vpnos
         else:
             if strategy not in ['NODEVICE', 'NOVALUE',
@@ -60,6 +60,7 @@ def gen_mapfile(vendor, idents):
                 pb.writeln("Not Found: {0}::{1}\n".format(ident, strategy))
             avpnos = []
         with get_session() as session:
+            # pb.writeln("{0:25} {1}\n".format(ident, avpnos))
             controller.set_strategy(vendor=vendor_obj, ident=ident,
                                     strategy=strategy, session=session)
             controller.set_amap_vpnos(vendor=vendor_obj, ident=ident,

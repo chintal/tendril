@@ -260,69 +260,6 @@ def get_csil_prices(params=exparams, rval=None):
     return rval
 
 
-class VendorCSIL(vendors.VendorBase):
-    _partclass = CSILPart
-
-    def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code=None, currency_symbol=None,
-                 username=None, password=None):
-        self._username = username
-        self._password = password
-        self._devices = ['PCB']
-        super(VendorCSIL, self).__init__(
-            name, dname, pclass, mappath, currency_code, currency_symbol
-        )
-        self._vpart_class = CSILPart
-        self.add_order_additional_cost_component("Excise (12.5\%)", 12.5)
-        self.add_order_additional_cost_component("CST (5\%)", 5.625)
-
-    def search_vpnos(self, ident):
-        return [ident], 'CUSTOM'
-
-    def get_optimal_pricing(self, ident, rqty):
-        # return super(VendorCSIL, self).get_optimal_pricing(ident, rqty)
-        candidate_names = self.get_vpnos(ident)
-        candidates = [self.get_vpart(x) for x in candidate_names]
-
-        if len(candidates) == 0:
-            return self, None, None, None, None, None
-
-        candidate = candidates[0]
-        if len(candidate._prices) == 0:
-            return self, None, None, None, None, None
-        ubprice, nbprice, urationale, olduprice = candidate.get_price(rqty)
-        oqty = ubprice.moq
-        effprice = self.get_effective_price(ubprice)
-        return self, candidate.vpno, oqty, nbprice, \
-            ubprice, effprice, urationale, olduprice
-
-    def _generate_purchase_order(self, path):
-        stagebase = super(VendorCSIL, self)._generate_purchase_order(path)
-        if stagebase is not None:
-            stagebase = {}
-        for line in self._order.lines:
-            stage = stagebase
-            stage['intref'] = self._order.orderref
-            stage['username'] = user
-            stage['name'] = line[2]
-            stage['qty'] = line[3]
-            stage['unitp'] = line[5].unit_price.source_value
-            totalv = line[5].extended_price(line[3]).source_value
-            stage['totalp'] = totalv
-            addl_costs = self.get_additional_costs(line[5].extended_price(line[3]))  # noqa
-            stage['addl_costs'] = [{'desc': x[0], 'cost': x[1]}
-                                   for x in addl_costs]
-            for desc, cost in addl_costs:
-                totalv += cost
-            stage['total'] = totalv
-            vpart = self.get_vpart(line[2])
-            stage['description'] = "\\\\".join(vpart.descriptors)
-            purchaseorder.render_po(
-                stage, self._name,
-                os.path.join(path, self._name + '-PO-' + line[2] + '.pdf')
-            )
-
-
 class CSILPart(vendors.VendorPartBase):
     def __init__(self, vpartno, ident, vendor):
         if vendor is None:
@@ -429,6 +366,69 @@ class CSILPart(vendors.VendorPartBase):
                     mintot = price.extended_price(price.moq).native_value
                     rationale = "TC Reduction"
             return selprice, super(CSILPart, self).get_price(selprice.moq + 1)[0], rationale, base_price  # noqa
+
+
+class VendorCSIL(vendors.VendorBase):
+    _partclass = CSILPart
+
+    def __init__(self, name, dname, pclass, mappath=None,
+                 currency_code=None, currency_symbol=None,
+                 username=None, password=None):
+        self._username = username
+        self._password = password
+        self._devices = ['PCB']
+        super(VendorCSIL, self).__init__(
+            name, dname, pclass, mappath, currency_code, currency_symbol
+        )
+        self._vpart_class = CSILPart
+        self.add_order_additional_cost_component("Excise (12.5\%)", 12.5)
+        self.add_order_additional_cost_component("CST (5\%)", 5.625)
+
+    def search_vpnos(self, ident):
+        return [ident], 'CUSTOM'
+
+    def get_optimal_pricing(self, ident, rqty):
+        # return super(VendorCSIL, self).get_optimal_pricing(ident, rqty)
+        candidate_names = self.get_vpnos(ident)
+        candidates = [self.get_vpart(x) for x in candidate_names]
+
+        if len(candidates) == 0:
+            return self, None, None, None, None, None
+
+        candidate = candidates[0]
+        if len(candidate._prices) == 0:
+            return self, None, None, None, None, None
+        ubprice, nbprice, urationale, olduprice = candidate.get_price(rqty)
+        oqty = ubprice.moq
+        effprice = self.get_effective_price(ubprice)
+        return self, candidate.vpno, oqty, nbprice, \
+            ubprice, effprice, urationale, olduprice
+
+    def _generate_purchase_order(self, path):
+        stagebase = super(VendorCSIL, self)._generate_purchase_order(path)
+        if stagebase is not None:
+            stagebase = {}
+        for line in self._order.lines:
+            stage = stagebase
+            stage['intref'] = self._order.orderref
+            stage['username'] = user
+            stage['name'] = line[2]
+            stage['qty'] = line[3]
+            stage['unitp'] = line[5].unit_price.source_value
+            totalv = line[5].extended_price(line[3]).source_value
+            stage['totalp'] = totalv
+            addl_costs = self.get_additional_costs(line[5].extended_price(line[3]))  # noqa
+            stage['addl_costs'] = [{'desc': x[0], 'cost': x[1]}
+                                   for x in addl_costs]
+            for desc, cost in addl_costs:
+                totalv += cost
+            stage['total'] = totalv
+            vpart = self.get_vpart(line[2])
+            stage['description'] = "\\\\".join(vpart.descriptors)
+            purchaseorder.render_po(
+                stage, self._name,
+                os.path.join(path, self._name + '-PO-' + line[2] + '.pdf')
+            )
 
 
 def flush_pcb_pricing(projfolder):

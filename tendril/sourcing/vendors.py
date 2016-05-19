@@ -22,6 +22,7 @@ Vendors module documentation (:mod:`sourcing.vendors`)
 import os
 import csv
 import time
+from collections import namedtuple
 
 from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
@@ -31,6 +32,9 @@ from db import controller
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
+
+
+SearchResult = namedtuple('SearchResult', 'success parts strategy')
 
 
 class VendorMapFileDB(MapFileBase):

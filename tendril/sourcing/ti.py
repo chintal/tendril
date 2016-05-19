@@ -41,6 +41,125 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 html_parser = HTMLParser.HTMLParser()
 
 
+class TIElnPart(vendors.VendorElnPartBase):
+    def __init__(self, tipartno, ident=None, vendor=None):
+        if vendor is None:
+            vendor = VendorTI('ti', 'transient', 'electronics',
+                              currency_code='USD', currency_symbol='US$')
+        super(TIElnPart, self).__init__(tipartno, ident, vendor)
+        self.url_base = vendor.url_base
+        if not self._vpno:
+            logger.error("Not enough information to create a TI Part")
+        self._get_data()
+
+    def _get_data(self):
+        soup = self._get_product_soup()
+        for price in self._get_prices(soup):
+            self.add_price(price)
+        try:
+            self.mpartno = self._get_mpartno()
+            self.manufacturer = self._get_manufacturer()
+            self.datasheet = self._get_datasheet_link()
+            self.vpartdesc = self._get_description(soup)
+            self.package = self._get_package(soup)
+        except AttributeError:
+            logger.error("Failed to acquire part information : " + self.vpno)
+            # TODO raise AttributeError
+
+    def _get_product_soup(self):
+        start_url = urlparse.urljoin(
+            self.url_base,
+            "Search.aspx?k={0}&pt=-1".format(urllib.quote_plus(self.vpno))
+        )
+        soup = www.get_soup(start_url)
+        ptable = soup.find('table',
+                           id=re.compile(r'ctl00_ProductList'))
+        if ptable is None:
+            raise ValueError("No result list founds for " + self.vpno)
+        rows = ptable.find_all('td', class_=re.compile(r'tableNode'))
+        if not rows:
+            raise ValueError("No results founds for " + self.vpno)
+
+        product_url = None
+        for row in rows:
+            product_link = row.find('a', class_='highlight')
+            pno = product_link.text.strip()
+            if pno.strip() == self.vpno.strip():
+                product_url = urlparse.urljoin(self.url_base,
+                                               product_link.attrs['href'])
+                break
+
+        if not product_url:
+            raise ValueError("Exact match not found for " + self.vpno)
+
+        soup = www.get_soup(product_url)
+        if soup is None:
+            logger.error("Unable to open TI product page : " + self.vpno)
+            return
+        return soup
+
+    rex_price = re.compile(ur'^((?P<start>\d+)-)?(?P<end>\d+)$')
+
+    def _get_prices(self, soup):
+        ptable = soup.find('div',
+                           id='ctl00_ctl00_NestedMaster_PageContent'
+                              '_ctl00_BuyProductDialog1_tierPricing')
+        prices = []
+        rows = ptable.find_all('div', class_=re.compile(r'pMoreLine'))
+        availq = None
+        for row in rows:
+            price_text = row.find(
+                'span', id=re.compile(r'lblTier(\d+)ListPrice')
+            ).text.strip()
+            price = locale.atof(price_text.replace('$', ''))
+            qty_text = row.find('span', class_='qty').text.strip()
+            m = self.rex_price.match(qty_text)
+            if not m:
+                raise ValueError(
+                    "Didn't get a qty from " + qty_text + " for " + self.vpno
+                )
+            try:
+                moq = locale.atoi(m.group('start'))
+            except AttributeError:
+                moq = locale.atoi(m.group('end'))
+            maxq = locale.atoi(m.group('end'))
+            if not availq or maxq > availq:
+                availq = maxq
+            price_obj = vendors.VendorPrice(moq,
+                                            price,
+                                            self._vendor.currency,
+                                            oqmultiple=1)
+            prices.append(price_obj)
+        self.vqtyavail = availq
+        return prices
+
+    def _get_mpartno(self):
+        return self.vpno
+
+    @staticmethod
+    def _get_manufacturer():
+        return 'Texas Instruments'
+
+    @staticmethod
+    def _get_package(soup):
+        pack = soup.find('span', id=re.compile('ctl00_Package')).text.strip()
+        pin = soup.find('span', id=re.compile('ctl00_PIN')).text.strip()
+        package = '-'.join([pack, pin])
+        return package
+
+    @staticmethod
+    def _get_datasheet_link():
+        return None
+
+    @staticmethod
+    def _get_description(soup):
+        desc_cell = soup.find('tr', id=re.compile('trSku'))
+        strings = []
+        for string in desc_cell.stripped_strings:
+            strings.append(string)
+        return www.strencode(strings[1])
+
+
 class VendorTI(vendors.VendorBase):
     _partclass = TIElnPart
 
@@ -279,122 +398,3 @@ class VendorTI(vendors.VendorBase):
             pnos = list(set(pnos))
             pnos = map(lambda x: html_parser.unescape(x), pnos)
         return pnos, ':'.join([strategy, lstrategy])
-
-
-class TIElnPart(vendors.VendorElnPartBase):
-    def __init__(self, tipartno, ident=None, vendor=None):
-        if vendor is None:
-            vendor = VendorTI('ti', 'transient', 'electronics',
-                              currency_code='USD', currency_symbol='US$')
-        super(TIElnPart, self).__init__(tipartno, ident, vendor)
-        self.url_base = vendor.url_base
-        if not self._vpno:
-            logger.error("Not enough information to create a TI Part")
-        self._get_data()
-
-    def _get_data(self):
-        soup = self._get_product_soup()
-        for price in self._get_prices(soup):
-            self.add_price(price)
-        try:
-            self.mpartno = self._get_mpartno()
-            self.manufacturer = self._get_manufacturer()
-            self.datasheet = self._get_datasheet_link()
-            self.vpartdesc = self._get_description(soup)
-            self.package = self._get_package(soup)
-        except AttributeError:
-            logger.error("Failed to acquire part information : " + self.vpno)
-            # TODO raise AttributeError
-
-    def _get_product_soup(self):
-        start_url = urlparse.urljoin(
-            self.url_base,
-            "Search.aspx?k={0}&pt=-1".format(urllib.quote_plus(self.vpno))
-        )
-        soup = www.get_soup(start_url)
-        ptable = soup.find('table',
-                           id=re.compile(r'ctl00_ProductList'))
-        if ptable is None:
-            raise ValueError("No result list founds for " + self.vpno)
-        rows = ptable.find_all('td', class_=re.compile(r'tableNode'))
-        if not rows:
-            raise ValueError("No results founds for " + self.vpno)
-
-        product_url = None
-        for row in rows:
-            product_link = row.find('a', class_='highlight')
-            pno = product_link.text.strip()
-            if pno.strip() == self.vpno.strip():
-                product_url = urlparse.urljoin(self.url_base,
-                                               product_link.attrs['href'])
-                break
-
-        if not product_url:
-            raise ValueError("Exact match not found for " + self.vpno)
-
-        soup = www.get_soup(product_url)
-        if soup is None:
-            logger.error("Unable to open TI product page : " + self.vpno)
-            return
-        return soup
-
-    rex_price = re.compile(ur'^((?P<start>\d+)-)?(?P<end>\d+)$')
-
-    def _get_prices(self, soup):
-        ptable = soup.find('div',
-                           id='ctl00_ctl00_NestedMaster_PageContent'
-                              '_ctl00_BuyProductDialog1_tierPricing')
-        prices = []
-        rows = ptable.find_all('div', class_=re.compile(r'pMoreLine'))
-        availq = None
-        for row in rows:
-            price_text = row.find(
-                'span', id=re.compile(r'lblTier(\d+)ListPrice')
-            ).text.strip()
-            price = locale.atof(price_text.replace('$', ''))
-            qty_text = row.find('span', class_='qty').text.strip()
-            m = self.rex_price.match(qty_text)
-            if not m:
-                raise ValueError(
-                    "Didn't get a qty from " + qty_text + " for " + self.vpno
-                )
-            try:
-                moq = locale.atoi(m.group('start'))
-            except AttributeError:
-                moq = locale.atoi(m.group('end'))
-            maxq = locale.atoi(m.group('end'))
-            if not availq or maxq > availq:
-                availq = maxq
-            price_obj = vendors.VendorPrice(moq,
-                                            price,
-                                            self._vendor.currency,
-                                            oqmultiple=1)
-            prices.append(price_obj)
-        self.vqtyavail = availq
-        return prices
-
-    def _get_mpartno(self):
-        return self.vpno
-
-    @staticmethod
-    def _get_manufacturer():
-        return 'Texas Instruments'
-
-    @staticmethod
-    def _get_package(soup):
-        pack = soup.find('span', id=re.compile('ctl00_Package')).text.strip()
-        pin = soup.find('span', id=re.compile('ctl00_PIN')).text.strip()
-        package = '-'.join([pack, pin])
-        return package
-
-    @staticmethod
-    def _get_datasheet_link():
-        return None
-
-    @staticmethod
-    def _get_description(soup):
-        desc_cell = soup.find('tr', id=re.compile('trSku'))
-        strings = []
-        for string in desc_cell.stripped_strings:
-            strings.append(string)
-        return www.strencode(strings[1])

@@ -110,13 +110,19 @@ import locale
 import re
 import os
 import urllib
+import urlparse
 from decimal import Decimal
 import traceback
 import csv
 import codecs
+from collections import namedtuple
 
-from . import vendors
+from .vendors import SearchResult
+from .vendors import VendorElnPartBase
+from .vendors import VendorPrice
+from .vendors import VendorBase
 from . import customs
+
 from tendril.utils import www
 from tendril.utils.types import currency
 
@@ -132,18 +138,17 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+SearchPart = namedtuple('Part', 'pno, mfgpno, package, ns, unitp,  minqty')
 
 
-class DigiKeyElnPart(vendors.VendorElnPartBase):
+class DigiKeyElnPart(VendorElnPartBase):
     def __init__(self, dkpartno, ident=None, vendor=None):
         """
 
         :type vendor: VendorDigiKey
         """
         if vendor is None:
-            vendor = VendorDigiKey('digikey', 'Digi-Key Corporation',
-                                   'electronics', mappath=None,
-                                   currency_code='USD', currency_symbol='US$')
+            vendor = dvobj
         super(DigiKeyElnPart, self).__init__(dkpartno, ident, vendor)
         if not self._vpno:
             logger.error("Not enough information to create a Digikey Part")
@@ -194,9 +199,9 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
                             cells[1] + " found while acquiring price for " +
                             self.vpno
                         )
-                    prices.append(vendors.VendorPrice(moq,
-                                                      price,
-                                                      self._vendor.currency))
+                    prices.append(
+                        VendorPrice(moq, price, self._vendor.currency)
+                    )
         except AttributeError:
             logger.error(
                 "Pricing table not found or other error for " + self.vpno
@@ -204,29 +209,25 @@ class DigiKeyElnPart(vendors.VendorElnPartBase):
         return prices
 
     @staticmethod
-    def _get_overview_table(soup):
-        table = soup.find('table', {'id': 'product-details'})
+    def _get_table(table):
         rows = table.findAll('tr')
         parsed_rows = {}
         for row in rows:
             try:
                 head = row.find('th').text.strip().encode('ascii', 'replace')
                 data = row.find('td')
+                parsed_rows[head] = data
             except AttributeError:
                 continue
-            parsed_rows[head] = data
         return parsed_rows
 
-    @staticmethod
-    def _get_attributes_table(soup):
+    def _get_overview_table(self, soup):
+        table = soup.find('table', {'id': 'product-details'})
+        return self._get_table(table)
+
+    def _get_attributes_table(self, soup):
         table = soup.find('table', {'class': 'attributes-table-main'})
-        rows = table.findAll('tr')
-        parsed_rows = {}
-        for row in rows:
-            head = row.find('th').text.strip().encode('ascii', 'replace')
-            data = row.find('td')
-            parsed_rows[head] = data
-        return parsed_rows
+        return self._get_table(table)
 
     def _get_mpartno(self):
         cell = self.overview_table['Manufacturer Part Number']
@@ -320,7 +321,7 @@ class DigiKeyInvoice(customs.CustomsInvoice):
                     self._lines.append(lineobj)
 
 
-class VendorDigiKey(vendors.VendorBase):
+class VendorDigiKey(VendorBase):
     _partclass = DigiKeyElnPart
     _invoiceclass = DigiKeyInvoice
 
@@ -332,11 +333,11 @@ class VendorDigiKey(vendors.VendorBase):
                          'FERRITE BEAD SMD',
                          'TRANSISTOR THRU',
                          'TRANSISTOR SMD',
-                         'CONN DF13',
-                         'CONN DF13 HOUS',
-                         'CONN DF13 WIRE',
-                         'CONN DF13 CRIMP',
-                         'CONN MODULAR',
+                         #'CONN DF13',
+                         #'CONN DF13 HOUS',
+                         #'CONN DF13 WIRE',
+                         #'CONN DF13 CRIMP',
+                         #'CONN MODULAR',
                          'DIODE SMD',
                          'DIODE THRU',
                          'VARISTOR',
@@ -345,7 +346,7 @@ class VendorDigiKey(vendors.VendorBase):
                          'RES THRU',
                          'CAP CER SMD',
                          'CAP TANT SMD',
-                         'TRANSFORMER SMD',
+                         #'TRANSFORMER SMD',
                          'INDUCTOR SMD',
                          'CRYSTAL AT'
                          ]
@@ -368,6 +369,7 @@ class VendorDigiKey(vendors.VendorBase):
                 if check_for_std_val(ident) is False:
                     return self._get_search_vpnos(device, value, footprint)
                 try:
+                    return None, 'NODEVICE'
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
                     logger.warning(ident + ' :: DK Search for ' + device +
@@ -392,122 +394,181 @@ class VendorDigiKey(vendors.VendorBase):
 
     @staticmethod
     def _process_product_page(soup):
-        beablock = soup.find('td', 'beablock-notice')
+        beablock = soup.find('div', {'class': 'product-details-feedback'})
         if beablock is not None:
             if beablock.text == u'\nObsolete item; call Digi-Key for more information.\n':  # noqa
-                return False, None, 'OBSOLETE_NOTAVAIL'
-        pdtable = soup.find('table', attrs={'class': 'product-details'})
+                return SearchResult(False, None, 'OBSOLETE_NOTAVAIL')
+        pdtable = soup.find('table', {'id': 'product-details'})
         if pdtable is not None:
-            pno_cell = pdtable.find('td', id='reportpartnumber')
-            if pno_cell is None:
-                return False, None, 'NO_PNO_CELL'
-            pmeta = pno_cell.find('meta')
-            pno = pmeta.attrs['content'].split(':')[1].encode('ascii',
-                                                              'replace')
-            return True, [pno], 'EXACT_MATCH'
+            pno_meta = pdtable.find('meta', {'itemprop': 'productID'})
+            if pno_meta is None:
+                return SearchResult(False, None, 'NO_PNO_CELL')
+            pno_text = pno_meta.attrs['content']
+            pno = pno_text.split(':')[1].encode('ascii', 'replace')
+
+            mpno_meta = pdtable.find('meta', {'itemprop': 'name'})
+            mpno_text = mpno_meta.attrs['content']
+            mpno = mpno_text.encode('ascii', 'replace')
+
+            # TODO
+            # The current approach of handling catergories and subcategories
+            # can result in these seemingly 'exact match' results to be put
+            # into a comparison. If that were to happen, the Package/Case,
+            # Unit Price, and MOQ are all necessary pieces of information to
+            # determine inclusion. These should be handled here, and
+            # preferably without instantiating a full digikey part instance.
+            part = {'Digi-Key Part Number': pno,
+                    'Manufacturer Part Number': mpno,
+                    'Package / Case': 'Dummy',
+                    'Unit Price (USD)': '100',
+                    'Minimum Quantity': '1'}
+            return SearchResult(True, [part], 'EXACT_MATCH')
         else:
-            return False, None, 'NO_PDTABLE'
+            return SearchResult(False, None, 'NO_PDTABLE')
 
     @staticmethod
     def _get_device_catstrings(device):
         if device.startswith('IC'):
             catstrings = ['Integrated Circuits (ICs)',
                           'Isolators']
-            subcatstrings = ['Interface - Controllers']
         elif device.startswith('DIODE'):
             catstrings = ['Discrete Semiconductor Products']
-            subcatstrings = ['Diodes, Rectifiers - Single']
         elif device.startswith('TRANSISTOR'):
             catstrings = ['Discrete Semiconductor Products']
-            subcatstrings = ['FETs - Single',
-                             'FETs - Arrays',
-                             'Transistors (BJT) - Single']
         elif device.startswith('BRIDGE RECTIFIER'):
             catstrings = ['Discrete Semiconductor Products']
+        else:
+            return False, None
+        return True, catstrings
+
+    @staticmethod
+    def _get_device_subcatstrings(device):
+        if device.startswith('IC'):
+            subcatstrings = ['Interface - Controllers']
+        elif device.startswith('DIODE'):
+            subcatstrings = ['Diodes, Rectifiers - Single']
+        elif device.startswith('TRANSISTOR'):
+            subcatstrings = ['FETs - Single']
+        elif device.startswith('BRIDGE RECTIFIER'):
             subcatstrings = ['Bridge Rectifiers']
         else:
-            return False, None, None
-        return True, catstrings, subcatstrings
+            return False, None
+        return True, subcatstrings
+
+    def _process_secondary_index_page(self, soup, device):
+        result, subcatstrings = self._get_device_subcatstrings(device)
+        if subcatstrings is None or len(subcatstrings) == 0:
+            return SearchResult(False, None, 'SUBCATEGORY_UNKNOWN')
+
+        cathead = soup.find('h1', {'class': 'catfiltertopitem'})
+
+        if cathead is None:
+            return SearchResult(False, None, 'SECONDARY_INDEX_NOT_FOUND')
+
+        subcatcontainer = soup.find('ul', {'id': 'catfiltersubid'})
+        subcat_elems = subcatcontainer.findAll('a')
+        subcats = {}
+
+        for elem in subcat_elems:
+            subcat_name = elem.text.strip().encode('ascii', 'replace')
+            subcat_url_part = elem.attrs['href'].strip()
+            subcats[subcat_name] = subcat_url_part
+
+        new_url_parts = []
+        for subcat_name in subcats.keys():
+            if subcat_name in subcatstrings:
+                new_url_parts.append(subcats[subcat_name])
+
+        if len(new_url_parts) == 0:
+            return SearchResult(False, None, 'SUBCATEGORY_NOT_FOUND')
+
+        results = []
+        for url_part in new_url_parts:
+            new_url = urlparse.urljoin('http://www.digikey.com', url_part)
+            soup = www.get_soup(new_url)
+            if soup is not None:
+                try:
+                    results.extend(self._get_resultpage_table(soup))
+                except ValueError:
+                    # Must be a product page
+                    sr = self._process_product_page(soup)
+                    if sr.success is True:
+                        results.extend(sr.parts)
+        if len(results):
+            return SearchResult(True, results, '')
+        else:
+            return SearchResult(False, [], 'SECONDARY_INDEX_TRAVERSAL')
 
     def _process_index_page(self, soup, device):
-        idxlist = soup.find('ul', id='productIndexList')
+        idxlist = soup.find('div', id='productIndexList')
         if idxlist is None:
-            return False, None, 'NO_RESULTS:0'
+            return SearchResult(False, None, 'INDEX_NOT_FOUND')
         # Handling categories needs to be much better
-        indexes = idxlist.findAll('li', attrs={'class': 'catfilteritem'})
-        result, catstrings, subcatstrings = self._get_device_catstrings(device)  # noqa
+        catheads = idxlist.findAll('h2', attrs={'class': 'catfiltertopitem'})
+        cats = {}
+        for cat in catheads:
+            cat_elem = cat.find('a')
+            cat_name = cat_elem.text.strip().encode('ascii', 'replace')
+            cat_url_part = cat_elem.attrs['href'].strip()
+            cats[cat_name] = cat_url_part
+
+        result, catstrings = self._get_device_catstrings(device)
         if result is False:
-            return False, None, 'CATEGORY UNKNOWN'
-        newurlpart = None
-        if subcatstrings is not None:
-            for index in indexes:
-                subcats = index.findAll('li')
-                for subcat in subcats:
-                    if subcat.find('a').text in subcatstrings:
-                        newurlpart = subcat.find('a').attrs['href']
-        if newurlpart is None:
-            for index in indexes:
-                catname = index.findAll('a')[0].text
-                if catname in catstrings:
-                    newurlpart = index.find('a').attrs['href']
+            return SearchResult(False, None, 'CATEGORY_UNKNOWN')
 
-        if newurlpart is None:
-            return False, None, 'CATEGORY NOT FOUND'
+        new_url_parts = []
+        for cat_name in cats.keys():
+            if cat_name in catstrings:
+                new_url_parts.append(cats[cat_name])
+
+        if len(new_url_parts) == 0:
+            return SearchResult(False, None, 'CATEGORY_NOT_FOUND')
+
+        results = []
+        for url_part in new_url_parts:
+            new_url = urlparse.urljoin('http://www.digikey.com', url_part)
+            soup = www.get_soup(new_url)
+            if soup is not None:
+                try:
+                    results.extend(self._get_resultpage_table(soup))
+                except ValueError:
+                    # Either an exact match or a secondary index
+                    sr = self._process_product_page(soup)
+                    if sr.success is True:
+                        results.extend(sr.parts)
+                        continue
+                    if sr.strategy == 'NO_PDTABLE':
+                        sr = self._process_secondary_index_page(soup, device)
+                        if sr.success is True:
+                            results.extend(sr.parts)
+        if len(results):
+            return SearchResult(True, results, '')
         else:
-            return True, newurlpart, ''
+            return SearchResult(False, [], 'INDEX_TRAVERSAL')
 
     @staticmethod
-    def _get_resultpage_row_pno(row):
-        pno_cell = row.find('td', attrs={'class': "digikey-partnumber"})
-        try:
-            pmeta = pno_cell.find('meta')
-        except AttributeError:
-            return None
-        pno = pmeta.attrs['content'].split(':')[1].encode('ascii', 'replace')
-        return pno
+    def _process_resultpage_row(row):
+        """
+        Given a 'row' from a CSV file obtained from Digi-Key's search
+        interface and read in using ``csv.DictReader``, convert it into
+        a ``SearchPart`` instance.
 
-    @staticmethod
-    def _get_resultpage_row_unitp(row):
-        unitp_cell = row.find('td', attrs={'class': "unitprice"})
+        If the unit price for the row is not readily parseable into a
+        float, or if the minqty field includes a Non-Stock note, the
+        returned SearchPart has it's `ns` attribute set to True.
+
+        :type row: dict
+        :rtype: ``SearchPart``
+        """
+        pno = row['Digi-Key Part Number'].strip()
+        package = row['Package / Case'].strip()
+        minqty = row['Minimum Quantity'].strip()
+        mfgpno = row['Manufacturer Part Number'].strip()
+        unitp = row['Unit Price (USD)'].strip()
         try:
-            unitp_string = unitp_cell.text.strip().encode('ascii', 'replace')
-        except AttributeError:
-            return None
-        unitp = None
-        try:
-            unitp = locale.atof(unitp_string)
+            unitp = locale.atof(unitp)
         except ValueError:
-            pass
-        return unitp
-
-    @staticmethod
-    def _get_resultpage_row_package(row):
-        try:
-            package = row.find('td', attrs={'class': 'CLS 16'}).text
-        except (TypeError, AttributeError):
-            package = None
-        return package
-
-    @staticmethod
-    def _get_resultpage_row_minqty(row):
-        try:
-            return row.find('td', attrs={'class': 'minQty'}).text
-        except AttributeError:
-            return None
-
-    @staticmethod
-    def _get_resultpage_row_mfgpno(row):
-        try:
-            return row.find('td', attrs={'class': 'mfg-partnumber'}).text
-        except AttributeError:
-            return None
-
-    def _process_resultpage_row(self, row):
-        pno = self._get_resultpage_row_pno(row)
-        unitp = self._get_resultpage_row_unitp(row)
-        package = self._get_resultpage_row_package(row)
-        minqty = self._get_resultpage_row_minqty(row)
-        mfgpno = self._get_resultpage_row_mfgpno(row)
+            unitp = None
         if pno is not None:
             if 'Non-Stock' in minqty or unitp is None:
                 ns = True
@@ -515,123 +576,227 @@ class VendorDigiKey(vendors.VendorBase):
                 ns = False
         else:
             ns = True
-        return pno, mfgpno, package, ns
+        part = SearchPart(pno=pno, mfgpno=mfgpno, package=package,
+                          ns=ns, unitp=unitp,  minqty=minqty)
+        return part
 
-    def _get_resultpage_parts(self, soup):
-        ptable = soup.find('table', id='productTable')
-        if ptable is None:
-            return False, None, 'NO_RESULTS:3'
-        trs = ptable.find_all('tr')
-        if trs is None:
-            return False, None, 'NO_RESULTS:1'
-        rows = trs[2:]
+    def _get_resultpage_parts(self, rows):
         parts = []
         for row in rows:
             part = self._process_resultpage_row(row)
-            if part[-1] is not None and part[0] is not None:
-                parts.append(part)
-        return True, parts, ''
-
-    @staticmethod
-    def _find_exact_match_package(parts, value):
-        for pno, mfgpno, package, ns in parts:
-            if mfgpno == value:
-                return True, package, 'EXACT_MATCH_FFP'
-        return False, None, None
-
-    @staticmethod
-    def _find_consensus_package(parts):
-        cpackage = parts[0][2]
-        for pno, mfgpno, package, ns in parts:
-            if package != cpackage:
-                cpackage = None
-        if cpackage is not None:
-            return True, cpackage, 'CONSENSUS_FP_MATCH'
-        return False, None, None
+            parts.append(part)
+        return SearchResult(True, parts, '')
 
     @staticmethod
     def _filter_results_unfiltered(parts):
+        """
+        Given a list of ``SearchPart`` instances, returns a ``SearchResult``
+        instance, whose 'parts' attribute includes a list of part numbers.
+
+        If any of the part numbers are not listed as Non-Stocked, then only
+        the Stocked results are returned along with the strategy 'UNFILTERED'.
+
+        If all of the part numbers are listed as Non-Stocked, then all the
+        part numbers are returned with the strategy 'UNFILTERED_ALLOW_NS'.
+
+        :type parts: ``list`` of ``SearchPart``
+        :rtype: ``SearchResult``
+        """
         pnos = []
         strategy = 'UNFILTERED'
-        for pno, mfgpno, package, ns in parts:
-            if not ns:
-                pnos.append(pno)
+        for part in parts:
+            if not part.ns:
+                pnos.append(part.pno)
         if len(pnos) == 0:
             strategy += '_ALLOW_NS'
-            for pno, mfgpno, package, ns in parts:
-                pnos.append(pno)
-        return True, pnos, strategy
+            for part in parts:
+                pnos.append(part.pno)
+        return SearchResult(True, pnos, strategy)
+
+    @staticmethod
+    def _find_exact_match_package(parts, value):
+        """
+        Given a list of ``SearchPart`` instances and a known value, returns
+        a ``SearchResult`` instance, whose 'parts' attribute includes only
+        the package of the part whose manufacturer part number (mfgpno)
+        exactly matches the given value, if such an exact match can be found.
+
+        The ``SearchResult`` returned on success has it's strategy attribute
+        set to `EXACT_MATCH_FFP`.
+
+        :type parts: ``list`` of ``SearchPart``
+        :type value: str
+        :rtype: ``SearchResult``
+        """
+        for part in parts:
+            if part.mfgpno == value:
+                return SearchResult(True, part.package, 'EXACT_MATCH_FFP')
+        return SearchResult(False, None, None)
+
+    @staticmethod
+    def _find_consensus_package(parts):
+        """
+        Given a list of ``SearchPart`` instances, returns a ``SearchResult``
+        instance, whose 'parts' attribute includes only the consensus package
+        of all the parts in the provided list, if such a consensus can be
+        reached.
+
+        The ``SearchResult`` returned on success has it's strategy attribute
+        set to `CONSENSUS_FP_MATCH`.
+
+        :type parts: ``list`` of ``SearchPart``
+        :rtype: ``SearchResult``
+        """
+        cpackage = parts[0].package
+        for part in parts:
+            if part.package != cpackage:
+                cpackage = None
+        if cpackage is not None:
+            return SearchResult(True, cpackage, 'CONSENSUS_FP_MATCH')
+        return SearchResult(False, None, None)
 
     @staticmethod
     def _filter_results_byfootprint(parts, footprint):
+        """
+        Given a list of ``SearchPart`` instances and the target footprint,
+        returns a ``SearchResult`` instance, whose 'parts' attribute
+        includes part numbers for all parts in the provided list whose
+        package attribute contains the provided footprint.
+
+        This is a last ditch effort. Due to the diversity in package
+        nomenclature, this has a very low likelihood of success
+        without an exceptionally well curated symbol library. The
+        ``SearchResult`` returned on success has it's strategy attribute
+        set to `HAIL_MARY` or `HAIL_MARY_ALLOW_NS`.
+
+        :type parts: ``list`` of ``SearchPart``
+        :type footprint: str
+        :rtype: ``SearchResult``
+        """
         pnos = []
         strategy = 'HAIL MARY'
-        for pno, mfgpno, package, ns in parts:
-            if footprint in package:
-                if not ns:
-                    pnos.append(pno)
+        for part in parts:
+            if footprint in part.package:
+                if not part.ns:
+                    pnos.append(part.pno)
         if len(pnos) == 0:
             strategy += ' ALLOW NS'
-            for pno, mfgpno, package, ns in parts:
-                if footprint in package:
-
-                    pnos.append(pno)
-        return True, pnos, strategy
+            for part in parts:
+                if footprint in part.package:
+                    pnos.append(part.pno)
+        return SearchResult(True, pnos, strategy)
 
     @staticmethod
     def _filter_results_bycpackage(parts, cpackage, strategy):
+        """
+        Given a list of ``SearchPart`` instances, and a consensus package
+        string, returns a ``SearchResult`` instance, whose 'parts' attribute
+        includes the part numbers of all the parts in the provided list whose
+        package attribute matches the consensus package.
+
+        When used in the correct context, this function uses cpackage instead
+        of the original footprint. cpackage is itself extracted from the
+        result table, and therefore greatly decreases (though not eliminates)
+        the odds of false negatives.
+
+        A strategy is accepted as the third argument to this function, and is
+        returned within the ``SearchResult``, with modification to append
+        `_ALLOW_NS` if necessary.
+
+        :type parts: ``list`` of ``SearchPart``
+        :param cpackage: A consensus or exact match package.
+        :type cpackage: str
+        :type strategy: str
+        :rtype: ``SearchResult``
+        """
         pnos = []
-        for pno, mfgpno, package, ns in parts:
-            if package == cpackage:
-                if not ns:
-                    pnos.append(pno)
+        for part in parts:
+            if part.package == cpackage:
+                if not part.ns:
+                    pnos.append(part.pno)
         if len(pnos) == 0:
             strategy += '_ALLOW_NS'
-            for pno, mfgpno, package, ns in parts:
-                if package == cpackage:
-                    pnos.append(pno)
-        return True, pnos, strategy
+            for part in parts:
+                if part.package == cpackage:
+                    pnos.append(part.pno)
+        return SearchResult(True, pnos, strategy)
 
     def _filter_results(self, parts, value, footprint):
-        if parts[0][2] is None or footprint is None:
+        if parts[0].package is None or footprint is None:
             # No package, so no basis to filter
-            result, pnos, strategy = self._filter_results_unfiltered(parts)
-            return True, pnos, strategy
+            sr = self._filter_results_unfiltered(parts)
+            return True, sr.parts, sr.strategy
 
         # Find Exact Match Package
-        result, cpackage, strategy = self._find_exact_match_package(parts,
-                                                                    value)
-        if result is False:
+        sr = self._find_exact_match_package(parts, value)
+        cpackage = sr.parts
+        strategy = sr.strategy
+        if sr.success is False:
             # Did not find an exact match package.
             # Check for consensus package instead.
-            result, cpackage, strategy = self._find_consensus_package(parts)
-            if result is False:
+            sr = self._find_consensus_package(parts)
+            cpackage = sr.parts
+            strategy = sr.strategy
+            if sr.success is False:
                 # No exact match, no consensus on package
-                result, pnos, strategy = self._filter_results_byfootprint(
-                    parts, footprint
-                )
-                return True, pnos, strategy
+                sr = self._filter_results_byfootprint(parts, footprint)
+                return SearchResult(True, sr.parts, sr.strategy)
 
         # cpackage exists
-        result, pnos, strategy = self._filter_results_bycpackage(
-            parts, cpackage, strategy
-        )
+        sr = self._filter_results_bycpackage(parts, cpackage, strategy)
 
-        if len(pnos) == 0:
+        if len(sr.parts) == 0:
             pnos = None
+        else:
+            pnos = sr.parts
 
-        return True, pnos, strategy
+        return SearchResult(True, pnos, strategy)
 
-    def _process_results_page(self, soup, value, footprint):
-        result, parts, strategy = self._get_resultpage_parts(soup)
-        if result is False:
-            return False, None, strategy
-        if parts is None:
-            raise Exception
-        if len(parts) == 0:
-            return False, None, 'NO_RESULTS:2'
-        result, pnos, strategy = self._filter_results(parts, value, footprint)
-        return result, pnos, strategy
+    @staticmethod
+    def _remove_duplicates(parts):
+        vpnos = []
+        for part in parts:
+            if part.pno in vpnos:
+                parts.pop(part)
+            else:
+                vpnos.append(part.pno)
+        return parts
+
+    def _process_results(self, parts, value, footprint):
+        parts = self._remove_duplicates(parts)
+        return self._filter_results(parts, value, footprint)
+
+    @staticmethod
+    def _get_resultpage_table(soup):
+        form = soup.find('form', {'name': 'downloadform'})
+        if form is None:
+            raise ValueError
+        params = []
+        parts = form.findAll('input')
+        for part in parts:
+            params.append((part.attrs['name'], part.attrs['value']))
+
+        url_base = 'http://www.digikey.com/'
+        target = urlparse.urljoin(url_base, form.attrs['action'])
+        url_dl = target + '?' + urllib.urlencode(params)
+
+        # TODO
+        # Trying to do this normaly, with returned data, results in
+        # horribly convoluted encoding errors. A great deal of streamlining
+        # of encoding across the stack may be necessary to make this work
+        # reliably. For now, we reopen the cache file which seems to have a
+        # stable encoding, though an encoding which is different from or
+        # incorrectly marked when compared to that provided by the stream.
+        table_csv_path = www.cached_fetcher.fetch(url_dl, getcpath=True)
+        with codecs.open(table_csv_path, 'r', encoding='utf-8') as f:
+            table_csv = f.read()
+        table_csv = table_csv.encode('utf-8')
+
+        if table_csv.startswith(codecs.BOM_UTF8):
+            table_csv = table_csv[len(codecs.BOM_UTF8):]
+
+        lines = csv.DictReader(table_csv.splitlines())
+        return lines
 
     def _get_search_vpnos(self, device, value, footprint):
         if value.strip() == '':
@@ -646,28 +811,48 @@ class VendorDigiKey(vendors.VendorBase):
         if soup is None:
             return None, 'URL_FAIL'
         ptable = soup.find('table', id='productTable')
+        index_results = None
         if ptable is None:
             # check for single product page
-            result, pnos, strategy = self._process_product_page(soup)
-            if result is True:
-                return pnos, strategy
+            sr = self._process_product_page(soup)
+            if sr.success is True:
+                # Sent directly to an exact match. Just send it back.
+                return [sr.parts[0]['Digi-Key Part Number']], sr.strategy
 
-            # check for index page and get a new soup
-            result, newurlpart, strategy = self._process_index_page(soup,
-                                                                    device)
-            if result is False:
-                return None, strategy
+            # check for secondary index page and get full parts listing
+            # thereof
+            sr = self._process_secondary_index_page(soup, device)
+            if sr.success is True:
+                index_results = sr.parts
+            elif sr.strategy == 'SECONDARY_INDEX_NOT_FOUND':
+                # No secondary index there
+                # check for index page and get full parts listing thereof
+                sr = self._process_index_page(soup, device)
+                if sr.success is False:
+                    # No luck with the index
+                    return None, sr.strategy
+                index_results = sr.parts
             else:
-                newurl = 'http://www.digikey.com' + newurlpart
-                soup = www.get_soup(newurl)
-                if soup is None:
-                    return None, 'NEWURL_FAIL'
+                return None, sr.strategy
 
-        result, pnos, strategy = self._process_results_page(soup,
-                                                            value, footprint)
-        if result is False:
-            return None, strategy
-        return pnos, strategy
+        if index_results is None:
+            table = self._get_resultpage_table(soup)
+        else:
+            table = index_results
+
+        sr = self._get_resultpage_parts(table)
+        if sr.success is False:
+            return SearchResult(False, None, sr.strategy)
+        if sr.parts is None:
+            raise Exception
+        if len(sr.parts) == 0:
+            return SearchResult(False, None, 'NO_RESULTS:2')
+
+        results = sr.parts
+        sr = self._process_results(results, value, footprint)
+        if sr.success is False:
+            return None, sr.strategy
+        return sr.parts, sr.strategy
 
     @staticmethod
     def _tf_resistance_to_canonical(rstr):
@@ -1004,3 +1189,8 @@ class VendorDigiKey(vendors.VendorBase):
         if result is False:
             return None, strategy
         return pnos, strategy
+
+
+dvobj = VendorDigiKey('digikey', 'Digi-Key Corporation',
+                      'electronics', mappath=None,
+                      currency_code='USD', currency_symbol='US$')

@@ -409,12 +409,19 @@ class WWWCachedFetcher:
     The cache is stored in the ``cache_fs`` filesystem, with
     a filename constructed from the md5 sum of the url (encoded as
     ``utf-8`` if necessary).
+
+    If the fetcher's ``fetch`` function is called with the ``getcpath``
+    attribute set to True, the fetcher will simply return the path
+    to a (valid) file in the cache filesystem, and opening and reading
+    the file is left to the called. This hook is provided to help deal
+    with file encoding on a somewhat case-by-case basis, until the
+    overall encoding problems can be ironed out.
     """
 
     def __init__(self, cache_dir=WWW_CACHE):
         self.cache_fs = fsopendir(cache_dir)
 
-    def fetch(self, url, max_age=500000):
+    def fetch(self, url, max_age=500000, getcpath=False):
         # Use MD5 hash of the URL as the filename
         if six.PY3 or (six.PY2 and isinstance(url, unicode)):
             filepath = md5(url.encode('utf-8')).hexdigest()
@@ -423,7 +430,10 @@ class WWWCachedFetcher:
         if self.cache_fs.exists(filepath):
             # TODO This seriously needs cleaning up.
             if int(time.time()) - int(time.mktime(self.cache_fs.getinfo(filepath)['modified_time'].timetuple())) < max_age:  # noqa
-                return self.cache_fs.open(filepath).read()
+                if getcpath is False:
+                    return self.cache_fs.open(filepath).read()
+                else:
+                    return self.cache_fs.getsyspath(filepath)
         # Retrieve over HTTP and cache, using rename to avoid collisions
         data = urlopen(url).read()
         fd, temppath = tempfile.mkstemp()
@@ -435,7 +445,11 @@ class WWWCachedFetcher:
         # itself
         movefile(temp_fs, temp_fs.unsyspath(temppath),
                  self.cache_fs, filepath)
-        return data
+        if getcpath is False:
+            return data
+        else:
+            return self.cache_fs.getsyspath(filepath)
+
 
 #: The module's :class:`WWWCachedFetcher` instance which should be
 #: used whenever cached results are desired.

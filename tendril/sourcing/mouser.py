@@ -41,6 +41,180 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 html_parser = HTMLParser.HTMLParser()
 
 
+class MouserElnPart(vendors.VendorElnPartBase):
+    def __init__(self, mouserpartno, ident=None, vendor=None):
+        if vendor is None:
+            vendor = VendorMouser('mouser', 'transient', 'electronics',
+                                  currency_code='USD', currency_symbol='US$')
+        super(MouserElnPart, self).__init__(mouserpartno, ident, vendor)
+        self.url_base = vendor.url_base
+        if not self._vpno:
+            logger.error("Not enough information to create a Mouser Part")
+        self._get_data()
+
+    def _get_data(self):
+        soup, href = self._get_product_soup()
+        for price in self._get_prices(soup):
+            self.add_price(price)
+        try:
+            self.mpartno = self._get_mpartno(soup)
+            self.manufacturer = self._get_manufacturer(soup)
+            self.datasheet = self._get_datasheet_link(soup)
+            self.vpartdesc = self._get_description(soup)
+            self.vqtyavail = self._get_avail_qty(soup)
+            self.package = self._get_package(soup)
+        except (AttributeError, IndexError):
+            logger.error("Failed to acquire part information : " + self.vpno)
+            logger.error(href)
+            raise
+            # TODO raise AttributeError
+
+    def _get_product_soup(self):
+        start_url = urlparse.urljoin(
+            self.url_base,
+            '/Search/Refine.aspx?Keyword={0}&FS=True'.format(
+                urllib.quote_plus(self.vpno)
+            )
+        )
+        soup = www.get_soup(start_url)
+        url = www.get_actual_url(start_url)
+        # TODO start_url may not be the actual URL.
+        # Handle this or remove the redirect handler.
+        if soup is None:
+            logger.error(
+                "Unable to open Mouser product start page : " + self.vpno
+            )
+            return None, None
+        if soup.find('div', id='productdetail-box1'):
+            return soup, url
+        else:
+            stable = soup.find(
+                'table',
+                id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid')
+            )
+            srow = stable.find('tr', {'data-partnumber': self.vpno},
+                               class_=re.compile(r'SearchResultsRow'))
+            link = srow.find('a', id=re.compile(r'lnkMouserPartNumber'))
+            href = urlparse.urljoin(url, link.attrs['href'])
+            soup = www.get_soup(href)
+            return soup, href
+
+    def _get_prices(self, soup):
+        ptable = soup.find(id='ctl00_ContentMain_divPricing')
+        prices = []
+        rows = [x.find_parent('div').find_parent('div')
+                for x in ptable.find_all('span', id=re.compile(r'ctl00_ContentMain_ucP_rptrPriceBreaks_ctl(\d+)_lblPrice'))  # noqa
+                ]
+        for row in rows:
+            moq_text = row.find(id=re.compile('lnkQuantity')).text
+            rex_qtyrange = re.compile(ur'SelectMiniReelQuantity\(((?P<minq>\d+),(?P<maxq>\d+))\)')  # noqa
+            rex_qty = re.compile(ur'SelectQuantity\((?P<minq>\d+)\)')
+            try:
+                m = rex_qty.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])  # noqa
+            except KeyError:
+                # TODO make sure this holds
+                continue
+            maxq = None
+            if m is None:
+                m = rex_qtyrange.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])  # noqa
+                if m is None:
+                    raise ValueError(
+                        "Error parsing qty range while acquiring moq for " +
+                        self.vpno
+                    )
+                maxq = locale.atoi(m.group('maxq'))
+            minq = locale.atoi(m.group('minq'))
+            price_text = row.find(id=re.compile('lblPrice')).text
+            try:
+                moq = locale.atoi(moq_text)
+                if moq != minq:
+                    raise ValueError(
+                        "minq {0} does not match moq {1} for {2}".format(
+                            str(minq), str(moq), self.vpno
+                        )
+                    )
+                if not maxq or minq != maxq:
+                    oqmultiple = 1
+                else:
+                    oqmultiple = minq
+            except ValueError:
+                raise ValueError(
+                    moq_text + " found while acquiring moq for " + self.vpno
+                )
+            try:
+                price = locale.atof(price_text.replace('$', ''))
+            except ValueError:
+                if price_text.strip() == 'Quote':
+                    # TODO handle this somehow?
+                    continue
+                else:
+                    raise ValueError(
+                        price_text + " found while acquiring price for " +
+                        self.vpno
+                    )
+            price_obj = vendors.VendorPrice(moq,
+                                            price,
+                                            self._vendor.currency,
+                                            oqmultiple=oqmultiple)
+            prices.append(price_obj)
+        return prices
+
+    @staticmethod
+    def _get_mpartno(soup):
+        mpart = soup.find('div', id='divManufacturerPartNum')
+        return mpart.text.strip().encode('ascii', 'replace')
+
+    @staticmethod
+    def _get_manufacturer(soup):
+        mfrer_div = soup.find('h2', attrs={'itemprop': "manufacturer"})
+        mfrer = mfrer_div.find('a')
+        return mfrer.text.strip().encode('ascii', 'replace')
+
+    @staticmethod
+    def _get_package(soup):
+        n = soup.find('span', text=re.compile('Package / Case'))
+        if not n:
+            return ''
+        try:
+            package_cell = n.parent.find_next_sibling()
+            package = package_cell.text.strip().encode('ascii', 'replace')
+        except IndexError:
+            package = ''
+        return package
+
+    @staticmethod
+    def _get_datasheet_link(soup):
+        datasheet_div = soup.find('div', id=re.compile('divCatalogDataSheet'))
+        if not datasheet_div:
+            return
+        datasheet_link = datasheet_div.find_all(
+            'a', text=re.compile(r'Data\s?sheet', re.IGNORECASE)
+        )[0].attrs['href']
+        return datasheet_link.strip().encode('ascii', 'replace')
+
+    @staticmethod
+    def _get_avail_qty(soup):
+        n = soup.find('div', id='availability')
+        n = n.findChild(text=re.compile('Stock')).parent.parent.find_next_sibling()  # noqa
+        qtytext = n.text.strip().encode('ascii', 'replace')
+        rex = re.compile(r'^(?P<qty>[\d,]+)')
+        qtytext = rex.search(qtytext).groupdict()['qty'].replace(',', '')
+        return int(qtytext)
+        # except:
+        #     rex2 = re.compile(r'^Value Added Item')
+        #     if rex2.match(n.text.strip().encode('ascii', 'replace')):
+        #         return -2
+        #     return -1
+
+    @staticmethod
+    def _get_description(soup):
+        try:
+            desc_cell = soup.find('span', attrs={'itemprop': 'description'})
+            return desc_cell.text.strip().encode('ascii', 'replace')
+        except:
+            return ''
+
+
 class VendorMouser(vendors.VendorBase):
     _partclass = MouserElnPart
 
@@ -561,177 +735,3 @@ class VendorMouser(vendors.VendorBase):
 
     def _get_pas_vpnos(self, device, value, footprint):
         raise NotImplementedError
-
-
-class MouserElnPart(vendors.VendorElnPartBase):
-    def __init__(self, mouserpartno, ident=None, vendor=None):
-        if vendor is None:
-            vendor = VendorMouser('mouser', 'transient', 'electronics',
-                                  currency_code='USD', currency_symbol='US$')
-        super(MouserElnPart, self).__init__(mouserpartno, ident, vendor)
-        self.url_base = vendor.url_base
-        if not self._vpno:
-            logger.error("Not enough information to create a Mouser Part")
-        self._get_data()
-
-    def _get_data(self):
-        soup, href = self._get_product_soup()
-        for price in self._get_prices(soup):
-            self.add_price(price)
-        try:
-            self.mpartno = self._get_mpartno(soup)
-            self.manufacturer = self._get_manufacturer(soup)
-            self.datasheet = self._get_datasheet_link(soup)
-            self.vpartdesc = self._get_description(soup)
-            self.vqtyavail = self._get_avail_qty(soup)
-            self.package = self._get_package(soup)
-        except (AttributeError, IndexError):
-            logger.error("Failed to acquire part information : " + self.vpno)
-            logger.error(href)
-            raise
-            # TODO raise AttributeError
-
-    def _get_product_soup(self):
-        start_url = urlparse.urljoin(
-            self.url_base,
-            '/Search/Refine.aspx?Keyword={0}&FS=True'.format(
-                urllib.quote_plus(self.vpno)
-            )
-        )
-        soup = www.get_soup(start_url)
-        url = www.get_actual_url(start_url)
-        # TODO start_url may not be the actual URL.
-        # Handle this or remove the redirect handler.
-        if soup is None:
-            logger.error(
-                "Unable to open Mouser product start page : " + self.vpno
-            )
-            return None, None
-        if soup.find('div', id='productdetail-box1'):
-            return soup, url
-        else:
-            stable = soup.find(
-                'table',
-                id=re.compile(r'ctl00_ContentMain_SearchResultsGrid_grid')
-            )
-            srow = stable.find('tr', {'data-partnumber': self.vpno},
-                               class_=re.compile(r'SearchResultsRow'))
-            link = srow.find('a', id=re.compile(r'lnkMouserPartNumber'))
-            href = urlparse.urljoin(url, link.attrs['href'])
-            soup = www.get_soup(href)
-            return soup, href
-
-    def _get_prices(self, soup):
-        ptable = soup.find(id='ctl00_ContentMain_divPricing')
-        prices = []
-        rows = [x.find_parent('div').find_parent('div')
-                for x in ptable.find_all('span', id=re.compile(r'ctl00_ContentMain_ucP_rptrPriceBreaks_ctl(\d+)_lblPrice'))  # noqa
-                ]
-        for row in rows:
-            moq_text = row.find(id=re.compile('lnkQuantity')).text
-            rex_qtyrange = re.compile(ur'SelectMiniReelQuantity\(((?P<minq>\d+),(?P<maxq>\d+))\)')  # noqa
-            rex_qty = re.compile(ur'SelectQuantity\((?P<minq>\d+)\)')
-            try:
-                m = rex_qty.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])  # noqa
-            except KeyError:
-                # TODO make sure this holds
-                continue
-            maxq = None
-            if m is None:
-                m = rex_qtyrange.search(row.find('a', id=re.compile('lnkQuantity')).attrs['href'])  # noqa
-                if m is None:
-                    raise ValueError(
-                        "Error parsing qty range while acquiring moq for " +
-                        self.vpno
-                    )
-                maxq = locale.atoi(m.group('maxq'))
-            minq = locale.atoi(m.group('minq'))
-            price_text = row.find(id=re.compile('lblPrice')).text
-            try:
-                moq = locale.atoi(moq_text)
-                if moq != minq:
-                    raise ValueError(
-                        "minq {0} does not match moq {1} for {2}".format(
-                            str(minq), str(moq), self.vpno
-                        )
-                    )
-                if not maxq or minq != maxq:
-                    oqmultiple = 1
-                else:
-                    oqmultiple = minq
-            except ValueError:
-                raise ValueError(
-                    moq_text + " found while acquiring moq for " + self.vpno
-                )
-            try:
-                price = locale.atof(price_text.replace('$', ''))
-            except ValueError:
-                if price_text.strip() == 'Quote':
-                    # TODO handle this somehow?
-                    continue
-                else:
-                    raise ValueError(
-                        price_text + " found while acquiring price for " +
-                        self.vpno
-                    )
-            price_obj = vendors.VendorPrice(moq,
-                                            price,
-                                            self._vendor.currency,
-                                            oqmultiple=oqmultiple)
-            prices.append(price_obj)
-        return prices
-
-    @staticmethod
-    def _get_mpartno(soup):
-        mpart = soup.find('div', id='divManufacturerPartNum')
-        return mpart.text.strip().encode('ascii', 'replace')
-
-    @staticmethod
-    def _get_manufacturer(soup):
-        mfrer_div = soup.find('h2', attrs={'itemprop': "manufacturer"})
-        mfrer = mfrer_div.find('a')
-        return mfrer.text.strip().encode('ascii', 'replace')
-
-    @staticmethod
-    def _get_package(soup):
-        n = soup.find('span', text=re.compile('Package / Case'))
-        if not n:
-            return ''
-        try:
-            package_cell = n.parent.find_next_sibling()
-            package = package_cell.text.strip().encode('ascii', 'replace')
-        except IndexError:
-            package = ''
-        return package
-
-    @staticmethod
-    def _get_datasheet_link(soup):
-        datasheet_div = soup.find('div', id=re.compile('divCatalogDataSheet'))
-        if not datasheet_div:
-            return
-        datasheet_link = datasheet_div.find_all(
-            'a', text=re.compile(r'Data\s?sheet', re.IGNORECASE)
-        )[0].attrs['href']
-        return datasheet_link.strip().encode('ascii', 'replace')
-
-    @staticmethod
-    def _get_avail_qty(soup):
-        n = soup.find('div', id='availability')
-        n = n.findChild(text=re.compile('Stock')).parent.parent.find_next_sibling()  # noqa
-        qtytext = n.text.strip().encode('ascii', 'replace')
-        rex = re.compile(r'^(?P<qty>[\d,]+)')
-        qtytext = rex.search(qtytext).groupdict()['qty'].replace(',', '')
-        return int(qtytext)
-        # except:
-        #     rex2 = re.compile(r'^Value Added Item')
-        #     if rex2.match(n.text.strip().encode('ascii', 'replace')):
-        #         return -2
-        #     return -1
-
-    @staticmethod
-    def _get_description(soup):
-        try:
-            desc_cell = soup.find('span', attrs={'itemprop': 'description'})
-            return desc_cell.text.strip().encode('ascii', 'replace')
-        except:
-            return ''
