@@ -42,6 +42,8 @@ html_parser = HTMLParser.HTMLParser()
 
 
 class VendorMouser(vendors.VendorBase):
+    _partclass = MouserElnPart
+
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=None, currency_symbol=None):
         self.url_base = 'http://www.mouser.in/'
@@ -78,12 +80,6 @@ class VendorMouser(vendors.VendorBase):
         self._vpart_class = MouserElnPart
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)
-
-    def get_vpart(self, vpartno, ident=None):
-        if issubclass(MouserElnPart, vendors.VendorElnPartBase):
-            return MouserElnPart(vpartno, ident, self)
-        else:
-            raise TypeError
 
     def search_vpnos(self, ident):
         device, value, footprint = electronics.parse_ident(ident)

@@ -168,6 +168,10 @@ class CurrencyDefinition(object):
             return False
         return True
 
+    def __repr__(self):
+        return "<CurrencyDefinition {0} {1} {2}>" \
+               "".format(self.code, self.symbol, self.exchval)
+
 #: The native currency definition used by the module
 #:
 #: This definition uses the code contained in

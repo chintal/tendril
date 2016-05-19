@@ -172,219 +172,6 @@ class VendorOrder(object):
         return self._orderref
 
 
-class VendorBase(object):
-    def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code=config.BASE_CURRENCY,
-                 currency_symbol=config.BASE_CURRENCY_SYMBOL):
-        self._name = name
-        self._dname = dname
-        self._currency = currency.CurrencyDefinition(currency_code,
-                                                     currency_symbol)
-        self._pclass = pclass
-        self._order = None
-        self._orderbasecosts = []
-        self._orderadditionalcosts = []
-        self._vpart_class = VendorPartBase
-        self._mappath = mappath
-        self._map = VendorMapFileDB(self)
-
-    @property
-    def name(self):
-        return self._dname
-
-    @property
-    def pclass(self):
-        return self._pclass
-
-    @property
-    def mappath(self):
-        return self._mappath
-
-    @property
-    def map(self):
-        return self._map
-
-    @property
-    def currency(self):
-        return self._currency
-
-    @currency.setter
-    def currency(self, currency_def):
-        """
-
-        :type currency_def: utils.currency.CurrencyDefinition
-        """
-        self._currency = currency_def
-
-    def get_idents(self):
-        for ident in self._map.get_idents():
-            yield ident
-
-    def get_all_vpnos(self):
-        for ident in self.get_idents():
-            for vpno in self._map.get_all_partnos(ident):
-                yield ident, vpno
-
-    def get_all_vparts(self):
-        for ident, vpno in self.get_all_vpnos():
-            yield self.get_vpart(vpartno=vpno, ident=ident)
-
-    def get_vpnos(self, ident):
-        return self._map.get_partnos(ident)
-
-    def search_vpnos(self, ident):
-        raise NotImplementedError
-
-    def get_vpart(self, vpartno, ident=None):
-        raise NotImplementedError
-
-    def get_optimal_pricing(self, ident, rqty):
-        candidate_names = self.get_vpnos(ident)
-
-        candidates = [self.get_vpart(x) for x in candidate_names]
-
-        candidates = [x for x in candidates if x.abs_moq <= rqty]
-        candidates = [x for x in candidates
-                      if x.vqtyavail is None or
-                      x.vqtyavail > rqty or
-                      x.vqtyavail == -2]
-
-        oqty = rqty
-
-        # vobj, vpno, oqty, nbprice, ubprice, effprice
-        if len(candidates) == 0:
-            return self, None, None, None, None, None
-
-        selcandidate = candidates[0]
-        tcost = self.get_effective_price(
-            selcandidate.get_price(rqty)[0]
-        ).extended_price(rqty).native_value
-
-        for candidate in candidates:
-            ubprice, nbprice = candidate.get_price(oqty)
-            effprice = self.get_effective_price(ubprice)
-            ntcost = effprice.extended_price(oqty).native_value
-            if ntcost < tcost:
-                tcost = ntcost
-                selcandidate = candidate
-
-        if selcandidate.vqtyavail == -2:
-            logger.warning(
-                "Vendor available quantity could not be confirmed. "
-                "Verify manually : " + self.name + " " + selcandidate.vpno +
-                os.linesep + os.linesep + os.linesep
-            )
-
-        ubprice, nbprice = selcandidate.get_price(oqty)
-        effprice = self.get_effective_price(ubprice)
-        urationale = None
-        olduprice = None
-        if nbprice is not None:
-            nubprice, nnbprice = selcandidate.get_price(nbprice.moq)
-            neffprice = self.get_effective_price(nubprice)
-            ntcost = neffprice.extended_price(nbprice.moq).native_value
-            # bump_excess_qty = nubprice.moq - rqty
-
-            if ntcost < tcost * 1.4:
-                urationale = "TC Increase < 40%"
-                oqty = nbprice.moq
-                olduprice = ubprice
-                ubprice = nubprice
-                nbprice = nnbprice
-                effprice = neffprice
-            elif nubprice.unit_price.native_value < \
-                    ubprice.unit_price.native_value * 0.5:
-                urationale = "UP Decrease > 40%"
-                olduprice = ubprice
-                oqty = nbprice.moq
-                ubprice = nubprice
-                nbprice = nnbprice
-                effprice = neffprice
-        return self, selcandidate.vpno, oqty, nbprice, \
-            ubprice, effprice, urationale, olduprice
-
-    def add_order_additional_cost_component(self, desc, percent):
-        self._orderadditionalcosts.append((desc, percent))
-
-    def get_effective_price(self, price):
-        effective_unitp = price.unit_price.source_value
-        for additional_cost in self._orderadditionalcosts:
-            effective_unitp += price.unit_price.source_value * float(additional_cost[1]) / 100  # noqa
-        return VendorPrice(
-            price.moq, effective_unitp, self.currency, price.oqmultiple
-        )
-
-    def get_additional_costs(self, price):
-        rval = []
-        for desc, percent in self._orderadditionalcosts:
-            rval.append((desc, price.source_value * percent / 100))
-        return rval
-
-    @property
-    def order_baseprice(self):
-        t = 0
-        for price in self._orderbasecosts:
-            t += price[1].native_value
-        return currency.CurrencyValue(t, currency.native_currency_defn)
-
-    def add_order_baseprice_component(self, desc, value):
-        if isinstance(value, currency.CurrencyValue):
-            self._orderbasecosts.append((desc, value))
-        else:
-            self._orderbasecosts.append(
-                (desc, currency.CurrencyValue(value, self.currency))
-            )
-
-    def add_to_order(self, line, orderref=None):
-        if self._order is None:
-            self._order = VendorOrder(self, orderref)
-        logger.info("Adding to " + self._name + " order : " +
-                    line[0] + " : " + str(line[3])
-                    )
-        self._order.add(line)
-
-    def _dump_open_order(self, path):
-        orderfile = os.path.join(path, self._name + '-order.csv')
-        with open(orderfile, 'w') as orderf:
-            w = csv.writer(orderf)
-            w.writerow(
-                [self._dname + " Order", None, None,
-                 None, None, time.strftime("%c")]
-            )
-            w.writerow(
-                ["Ident", "Vendor Part No", "Quantity",
-                 "Unit Price (" + self._currency.symbol + ")",
-                 "Extended Price (" + self._currency.symbol + ")",
-                 "Effective Price (" + currency.native_currency_defn.symbol +
-                 ")"
-                 ]
-            )
-            for line in self._order.lines:
-                w.writerow([line[0], line[2], line[3],
-                            line[5].unit_price.source_value,
-                            line[5].extended_price(line[3]).source_value,
-                            line[6].extended_price(line[3]).native_value])
-            for basecost in self._orderbasecosts:
-                w.writerow(
-                    [None, basecost[0], None, None, basecost[1].source_value,
-                     basecost[1].native_value]
-                )
-
-    def _generate_purchase_order(self, path):
-        stagebase = {}
-        return stagebase
-
-    def finalize_order(self, path):
-        if self._order is None or len(self._order) == 0:
-            logger.debug("Nothing in the order, "
-                         "not generating order file : " + self._name)
-            return
-        logger.info("Writing " + self._dname + " order to Folder : " + path)
-        self._dump_open_order(path)
-        self._generate_purchase_order(path)
-        self._order = None
-
-
 class VendorPrice(object):
     def __init__(self, moq, price, currency_def, oqmultiple=1):
         self._moq = moq
@@ -538,3 +325,222 @@ class VendorElnPartBase(VendorPartBase):
     @datasheet.setter
     def datasheet(self, value):
         self._datasheet = value
+
+
+class VendorBase(object):
+    _partclass = VendorPartBase
+    _invoiceclass = VendorInvoice
+
+    def __init__(self, name, dname, pclass, mappath=None,
+                 currency_code=config.BASE_CURRENCY,
+                 currency_symbol=config.BASE_CURRENCY_SYMBOL):
+        self._name = name
+        self._dname = dname
+        self._currency = currency.CurrencyDefinition(currency_code,
+                                                     currency_symbol)
+        self._pclass = pclass
+        self._order = None
+        self._orderbasecosts = []
+        self._orderadditionalcosts = []
+        self._vpart_class = VendorPartBase
+        if mappath is not None:
+            self._mappath = mappath
+        else:
+            self._mappath = self._name + '-' + self._pclass + '.csv'
+        self._map = VendorMapFileDB(self)
+
+    @property
+    def name(self):
+        return self._dname
+
+    @property
+    def pclass(self):
+        return self._pclass
+
+    @property
+    def mappath(self):
+        return self._mappath
+
+    @property
+    def map(self):
+        return self._map
+
+    @property
+    def currency(self):
+        return self._currency
+
+    @currency.setter
+    def currency(self, currency_def):
+        """
+
+        :type currency_def: utils.currency.CurrencyDefinition
+        """
+        self._currency = currency_def
+
+    def get_idents(self):
+        for ident in self._map.get_idents():
+            yield ident
+
+    def get_all_vpnos(self):
+        for ident in self.get_idents():
+            for vpno in self._map.get_all_partnos(ident):
+                yield ident, vpno
+
+    def get_all_vparts(self):
+        for ident, vpno in self.get_all_vpnos():
+            yield self.get_vpart(vpartno=vpno, ident=ident)
+
+    def get_vpnos(self, ident):
+        return self._map.get_partnos(ident)
+
+    def search_vpnos(self, ident):
+        raise NotImplementedError
+
+    def get_vpart(self, vpartno, ident=None):
+        return self._partclass(vpartno, ident, self)
+
+    def get_optimal_pricing(self, ident, rqty):
+        candidate_names = self.get_vpnos(ident)
+
+        candidates = [self.get_vpart(x) for x in candidate_names]
+
+        candidates = [x for x in candidates if x.abs_moq <= rqty]
+        candidates = [x for x in candidates
+                      if x.vqtyavail is None or
+                      x.vqtyavail > rqty or
+                      x.vqtyavail == -2]
+
+        oqty = rqty
+
+        # vobj, vpno, oqty, nbprice, ubprice, effprice
+        if len(candidates) == 0:
+            return self, None, None, None, None, None
+
+        selcandidate = candidates[0]
+        tcost = self.get_effective_price(
+            selcandidate.get_price(rqty)[0]
+        ).extended_price(rqty).native_value
+
+        for candidate in candidates:
+            ubprice, nbprice = candidate.get_price(oqty)
+            effprice = self.get_effective_price(ubprice)
+            ntcost = effprice.extended_price(oqty).native_value
+            if ntcost < tcost:
+                tcost = ntcost
+                selcandidate = candidate
+
+        if selcandidate.vqtyavail == -2:
+            logger.warning(
+                "Vendor available quantity could not be confirmed. "
+                "Verify manually : " + self.name + " " + selcandidate.vpno +
+                os.linesep + os.linesep + os.linesep
+            )
+
+        ubprice, nbprice = selcandidate.get_price(oqty)
+        effprice = self.get_effective_price(ubprice)
+        urationale = None
+        olduprice = None
+        if nbprice is not None:
+            nubprice, nnbprice = selcandidate.get_price(nbprice.moq)
+            neffprice = self.get_effective_price(nubprice)
+            ntcost = neffprice.extended_price(nbprice.moq).native_value
+            # bump_excess_qty = nubprice.moq - rqty
+
+            if ntcost < tcost * 1.4:
+                urationale = "TC Increase < 40%"
+                oqty = nbprice.moq
+                olduprice = ubprice
+                ubprice = nubprice
+                nbprice = nnbprice
+                effprice = neffprice
+            elif nubprice.unit_price.native_value < \
+                    ubprice.unit_price.native_value * 0.5:
+                urationale = "UP Decrease > 40%"
+                olduprice = ubprice
+                oqty = nbprice.moq
+                ubprice = nubprice
+                nbprice = nnbprice
+                effprice = neffprice
+        return self, selcandidate.vpno, oqty, nbprice, \
+            ubprice, effprice, urationale, olduprice
+
+    def add_order_additional_cost_component(self, desc, percent):
+        self._orderadditionalcosts.append((desc, percent))
+
+    def get_effective_price(self, price):
+        effective_unitp = price.unit_price.source_value
+        for additional_cost in self._orderadditionalcosts:
+            effective_unitp += price.unit_price.source_value * float(additional_cost[1]) / 100  # noqa
+        return VendorPrice(
+            price.moq, effective_unitp, self.currency, price.oqmultiple
+        )
+
+    def get_additional_costs(self, price):
+        rval = []
+        for desc, percent in self._orderadditionalcosts:
+            rval.append((desc, price.source_value * percent / 100))
+        return rval
+
+    @property
+    def order_baseprice(self):
+        t = 0
+        for price in self._orderbasecosts:
+            t += price[1].native_value
+        return currency.CurrencyValue(t, currency.native_currency_defn)
+
+    def add_order_baseprice_component(self, desc, value):
+        if isinstance(value, currency.CurrencyValue):
+            self._orderbasecosts.append((desc, value))
+        else:
+            self._orderbasecosts.append(
+                (desc, currency.CurrencyValue(value, self.currency))
+            )
+
+    def add_to_order(self, line, orderref=None):
+        if self._order is None:
+            self._order = VendorOrder(self, orderref)
+        logger.info("Adding to " + self._name + " order : " +
+                    line[0] + " : " + str(line[3])
+                    )
+        self._order.add(line)
+
+    def _dump_open_order(self, path):
+        orderfile = os.path.join(path, self._name + '-order.csv')
+        with open(orderfile, 'w') as orderf:
+            w = csv.writer(orderf)
+            w.writerow(
+                [self._dname + " Order", None, None,
+                 None, None, time.strftime("%c")]
+            )
+            w.writerow(
+                ["Ident", "Vendor Part No", "Quantity",
+                 "Unit Price (" + self._currency.symbol + ")",
+                 "Extended Price (" + self._currency.symbol + ")",
+                 "Effective Price (" + currency.native_currency_defn.symbol +
+                 ")"
+                 ]
+            )
+            for line in self._order.lines:
+                w.writerow([line[0], line[2], line[3],
+                            line[5].unit_price.source_value,
+                            line[5].extended_price(line[3]).source_value,
+                            line[6].extended_price(line[3]).native_value])
+            for basecost in self._orderbasecosts:
+                w.writerow(
+                    [None, basecost[0], None, None, basecost[1].source_value,
+                     basecost[1].native_value]
+                )
+
+    def _generate_purchase_order(self, path):
+        stagebase = {}
+        return stagebase
+
+    def finalize_order(self, path):
+        if self._order is None or len(self._order) == 0:
+            logger.debug("Nothing in the order, "
+                         "not generating order file : " + self._name)
+            return
+        logger.info("Writing " + self._dname + " order to Folder : " + path)
+        self._dump_open_order(path)
+        self._generate_purchase_order(path)
+        self._order = None

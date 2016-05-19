@@ -42,6 +42,8 @@ html_parser = HTMLParser.HTMLParser()
 
 
 class VendorTI(vendors.VendorBase):
+    _partclass = TIElnPart
+
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=None, currency_symbol=None):
         self.url_base = 'https://store.ti.com'
@@ -60,12 +62,6 @@ class VendorTI(vendors.VendorBase):
         self._vpart_class = TIElnPart
         self.add_order_baseprice_component("Shipping Cost", 7)
         self.add_order_additional_cost_component("Customs", 12.85)
-
-    def get_vpart(self, vpartno, ident=None):
-        if issubclass(TIElnPart, vendors.VendorElnPartBase):
-            return TIElnPart(vpartno, ident, self)
-        else:
-            raise TypeError
 
     def search_vpnos(self, ident):
         device, value, footprint = electronics.parse_ident(ident)

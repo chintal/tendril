@@ -261,6 +261,8 @@ def get_csil_prices(params=exparams, rval=None):
 
 
 class VendorCSIL(vendors.VendorBase):
+    _partclass = CSILPart
+
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=None, currency_symbol=None,
                  username=None, password=None):
@@ -276,9 +278,6 @@ class VendorCSIL(vendors.VendorBase):
 
     def search_vpnos(self, ident):
         return [ident], 'CUSTOM'
-
-    def get_vpart(self, vpartno, ident=None):
-        return CSILPart(vpartno, ident, self)
 
     def get_optimal_pricing(self, ident, rqty):
         # return super(VendorCSIL, self).get_optimal_pricing(ident, rqty)

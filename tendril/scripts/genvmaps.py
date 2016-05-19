@@ -67,6 +67,8 @@ def run(vobj=None):
     if not vobj:
         for v in vendor_list:
             gen_vendor_mapfile(v)
+    else:
+        gen_vendor_mapfile(vobj)
 
 
 def main():

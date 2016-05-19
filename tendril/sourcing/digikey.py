@@ -17,6 +17,93 @@
 """
 Digi-Key Sourcing Module documentation (:mod:`sourcing.digikey`)
 ================================================================
+
+'Standalone' Usage
+------------------
+
+This module can be imported by itself to provide limited but
+potentially useful functionality.
+
+>>> from tendril.sourcing import digikey
+
+Obtain information for a given Digi-Key part number :
+
+>>> p = digikey.DigiKeyElnPart('800-2146-ND')
+>>> p.manufacturer
+'IDT, Integrated Device Technology Inc'
+>>> p.mpartno
+'72V2113L10PFI'
+>>> p.vqtyavail
+185
+>>> p.datasheet
+'http://www.idt.com/document/72v2103-72v2113-datasheet'
+>>> p.package
+'80-LQFP'
+>>> p.vpartdesc
+'IC FIFO SUPERSYNCII 10NS 80TQFP'
+
+The pricing information is also populated by this time, and
+can be accessed though the part object using the interfaces
+defined in those class definitions.
+
+>>> for b in p._prices:
+...     print b
+...
+<VendorPrice INR 7,610.18 @1(1)>
+<VendorPrice INR 6,801.37 @25(1)>
+<VendorPrice INR 6,420.86 @100(1)>
+<VendorPrice INR 6,183.05 @250(1)>
+<VendorPrice INR 6,087.93 @500(1)>
+<VendorPrice INR 5,802.56 @1000(1)>
+<VendorPrice INR 5,707.43 @2500(1)>
+
+Additionally, the contents of the Overview and Attributes
+tables are available, though not parsed, in the form of BS4
+trees. Note, however, that these contents are only available
+when part details are obtained from the soup itself, and not
+when reconstructed from the Tendril database.
+
+>>> for k in p.attributes_table.keys():
+...     print k
+...
+Category
+Operating Temperature
+Memory Size
+Package / Case
+Function
+Product Photos
+Datasheets
+Current - Supply (Max)
+Data Rate
+Programmable Flags Support
+FWFT Support
+Standard Package
+Bus Directional
+Access Time
+Online Catalog
+Expansion Type
+Family
+Mounting Type
+Series
+Supplier Device Package
+Packaging
+Voltage - Supply
+Other Names
+Retransmit Capability
+
+>>> for k in p.overview_table.keys():
+...     print k
+...
+Description
+Digi-Key Part Number
+Manufacturer Part Number
+Moisture Sensitivity Level (MSL)
+Lead Free Status / RoHS Status
+Quantity Available
+Manufacturer
+Price Break
+
+
 """
 
 import locale
@@ -28,10 +115,11 @@ import traceback
 import csv
 import codecs
 
-import vendors
-import customs
+from . import vendors
+from . import customs
 from tendril.utils import www
 from tendril.utils.types import currency
+
 from tendril.conventions.electronics import parse_ident
 from tendril.conventions.electronics import parse_resistor
 from tendril.conventions.electronics import parse_capacitor
@@ -46,9 +134,198 @@ logger = log.get_logger(__name__, log.DEFAULT)
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 
+class DigiKeyElnPart(vendors.VendorElnPartBase):
+    def __init__(self, dkpartno, ident=None, vendor=None):
+        """
+
+        :type vendor: VendorDigiKey
+        """
+        if vendor is None:
+            vendor = VendorDigiKey('digikey', 'Digi-Key Corporation',
+                                   'electronics', mappath=None,
+                                   currency_code='USD', currency_symbol='US$')
+        super(DigiKeyElnPart, self).__init__(dkpartno, ident, vendor)
+        if not self._vpno:
+            logger.error("Not enough information to create a Digikey Part")
+        self._get_data()
+
+    def _get_data(self):
+        url = ('http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail?name=' +  # noqa
+               urllib.quote_plus(self.vpno))
+        soup = www.get_soup(url)
+        if soup is None:
+            logger.error("Unable to open DigiKey product page : " + self.vpno)
+            return
+
+        for price in self._get_prices(soup):
+            self.add_price(price)
+
+        self.overview_table = self._get_overview_table(soup)
+        self.attributes_table = self._get_attributes_table(soup)
+
+        self.manufacturer = self._get_manufacturer()
+        self.mpartno = self._get_mpartno()
+        self.datasheet = self._get_datasheet()
+        self.package = self._get_package()
+        self.vqtyavail = self._get_vqtyavail()
+        self.vpartdesc = self._get_vpartdesc()
+
+    def _get_prices(self, soup):
+        pricingtable = soup.find('table', id='product-dollars')
+        prices = []
+        try:
+            for row in pricingtable.findAll('tr'):
+                cells = row.findAll('td')
+                if len(cells) == 3:
+                    cells = [cell.text.strip() for cell in cells]
+                    try:
+                        moq = locale.atoi(cells[0])
+                    except ValueError:
+                        moq = 0
+                        logger.error(
+                            cells[0] + " found while acquiring moq for " +
+                            self.vpno
+                        )
+                    try:
+                        price = locale.atof(cells[1])
+                    except ValueError:
+                        price = 0
+                        logger.error(
+                            cells[1] + " found while acquiring price for " +
+                            self.vpno
+                        )
+                    prices.append(vendors.VendorPrice(moq,
+                                                      price,
+                                                      self._vendor.currency))
+        except AttributeError:
+            logger.error(
+                "Pricing table not found or other error for " + self.vpno
+            )
+        return prices
+
+    @staticmethod
+    def _get_overview_table(soup):
+        table = soup.find('table', {'id': 'product-details'})
+        rows = table.findAll('tr')
+        parsed_rows = {}
+        for row in rows:
+            try:
+                head = row.find('th').text.strip().encode('ascii', 'replace')
+                data = row.find('td')
+            except AttributeError:
+                continue
+            parsed_rows[head] = data
+        return parsed_rows
+
+    @staticmethod
+    def _get_attributes_table(soup):
+        table = soup.find('table', {'class': 'attributes-table-main'})
+        rows = table.findAll('tr')
+        parsed_rows = {}
+        for row in rows:
+            head = row.find('th').text.strip().encode('ascii', 'replace')
+            data = row.find('td')
+            parsed_rows[head] = data
+        return parsed_rows
+
+    def _get_mpartno(self):
+        cell = self.overview_table['Manufacturer Part Number']
+        return cell.text.strip().encode('ascii', 'replace')
+
+    def _get_manufacturer(self):
+        cell = self.overview_table['Manufacturer']
+        return cell.text.strip().encode('ascii', 'replace')
+
+    def _get_package(self):
+        cell = self.attributes_table['Package / Case']
+        return cell.text.strip().encode('ascii', 'replace')
+
+    def _get_datasheet(self):
+        cell = self.attributes_table['Datasheets']
+        datasheet_link = cell.findAll('a')[0].attrs['href']
+        return datasheet_link.strip()
+
+    _regex_vqtyavail = re.compile(r'^Digi-Key Stock: (?P<qty>\d+(,*\d+)*)')
+    _regex_vqty_vai = re.compile(r'^Value Added Item')
+
+    def _get_vqtyavail(self):
+        cell = self.overview_table['Quantity Available']
+        text = cell.text.strip().encode('ascii', 'replace')
+        try:
+            m = self._regex_vqtyavail.search(text)
+            qtytext = m.groupdict()['qty'].replace(',', '')
+            return int(qtytext)
+        except:
+            if self._regex_vqty_vai.match(text):
+                return -2
+            return -1
+
+    def _get_vpartdesc(self):
+        cell = self.overview_table['Description']
+        return cell.text.strip().encode('ascii', 'replace')
+
+
+class DigiKeyInvoice(customs.CustomsInvoice):
+    def __init__(self, vendor=None, inv_yaml=None, working_folder=None):
+        if vendor is None:
+            vendor = VendorDigiKey('digikey', 'Digi-Key Corporation',
+                                   'electronics',
+                                   currency_code='USD', currency_symbol='US$')
+        if inv_yaml is None:
+            inv_yaml = os.path.join(INSTANCE_ROOT, 'scratch', 'customs',
+                                    'inv_data.yaml')
+
+        super(DigiKeyInvoice, self).__init__(vendor, inv_yaml, working_folder)
+
+    def _acquire_lines(self):
+        logger.info("Acquiring Lines")
+        invoice_file = os.path.join(self._source_folder,
+                                    self._data['invoice_file'])
+        with open(invoice_file) as f:
+            reader = csv.reader(f)
+            header = None
+            for line in reader:
+                if line[0].startswith(codecs.BOM_UTF8):
+                    line[0] = line[0][3:]
+                if line[0] == 'Index':
+                    header = line
+                    break
+            if header is None:
+                raise ValueError
+            for line in reader:
+                if line[0] != '':
+                    idx = line[header.index('Index')].strip()
+                    qty = int(line[header.index('Quantity')].strip())
+                    vpno = line[header.index('Part Number')].strip()
+                    desc = line[header.index('Description')].strip()
+                    ident = line[header.index('Customer Reference')].strip()
+                    boqty = line[header.index('Backorder')].strip()
+                    try:
+                        if int(boqty) > 0:
+                            logger.warning(
+                                "Apparant backorder. Crosscheck customs treatment for: " +  # noqa
+                                idx + ' ' + ident
+                            )
+                    except ValueError:
+                        print line
+
+                    unitp_str = line[header.index('Unit Price')].strip()
+
+                    unitp = currency.CurrencyValue(
+                        float(unitp_str), self._vendor.currency
+                    )
+                    lineobj = customs.CustomsInvoiceLine(
+                        self, ident, vpno, unitp, qty, idx=idx, desc=desc
+                    )
+                    self._lines.append(lineobj)
+
+
 class VendorDigiKey(vendors.VendorBase):
-    def __init__(self, name, dname, pclass, mappath=None, currency_code=None,
-                 currency_symbol=None):
+    _partclass = DigiKeyElnPart
+    _invoiceclass = DigiKeyInvoice
+
+    def __init__(self, name, dname, pclass, mappath=None,
+                 currency_code=None, currency_symbol=None):
         self._devices = ['IC SMD',
                          'IC THRU',
                          'IC PLCC',
@@ -81,12 +358,6 @@ class VendorDigiKey(vendors.VendorBase):
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)
 
-    def get_vpart(self, vpartno, ident=None):
-        if issubclass(DigiKeyElnPart, vendors.VendorElnPartBase):
-            return DigiKeyElnPart(vpartno, ident, self)
-        else:
-            raise TypeError
-
     def search_vpnos(self, ident):
         device, value, footprint = parse_ident(ident)
         if device not in self._devices:
@@ -113,7 +384,6 @@ class VendorDigiKey(vendors.VendorBase):
 
     @staticmethod
     def _search_preprocess(device, value, footprint):
-        # Hail Mary
         if footprint == 'TO220':
             footprint = 'TO-220'
         if footprint == 'TO92':
@@ -129,12 +399,14 @@ class VendorDigiKey(vendors.VendorBase):
         pdtable = soup.find('table', attrs={'class': 'product-details'})
         if pdtable is not None:
             pno_cell = pdtable.find('td', id='reportpartnumber')
+            if pno_cell is None:
+                return False, None, 'NO_PNO_CELL'
             pmeta = pno_cell.find('meta')
             pno = pmeta.attrs['content'].split(':')[1].encode('ascii',
                                                               'replace')
             return True, [pno], 'EXACT_MATCH'
         else:
-            return False, None, ''
+            return False, None, 'NO_PDTABLE'
 
     @staticmethod
     def _get_device_catstrings(device):
@@ -187,14 +459,20 @@ class VendorDigiKey(vendors.VendorBase):
     @staticmethod
     def _get_resultpage_row_pno(row):
         pno_cell = row.find('td', attrs={'class': "digikey-partnumber"})
-        pmeta = pno_cell.find('meta')
+        try:
+            pmeta = pno_cell.find('meta')
+        except AttributeError:
+            return None
         pno = pmeta.attrs['content'].split(':')[1].encode('ascii', 'replace')
         return pno
 
     @staticmethod
     def _get_resultpage_row_unitp(row):
         unitp_cell = row.find('td', attrs={'class': "unitprice"})
-        unitp_string = unitp_cell.text.strip().encode('ascii', 'replace')
+        try:
+            unitp_string = unitp_cell.text.strip().encode('ascii', 'replace')
+        except AttributeError:
+            return None
         unitp = None
         try:
             unitp = locale.atof(unitp_string)
@@ -212,11 +490,17 @@ class VendorDigiKey(vendors.VendorBase):
 
     @staticmethod
     def _get_resultpage_row_minqty(row):
-        return row.find('td', attrs={'class': 'minQty'}).text
+        try:
+            return row.find('td', attrs={'class': 'minQty'}).text
+        except AttributeError:
+            return None
 
     @staticmethod
     def _get_resultpage_row_mfgpno(row):
-        return row.find('td', attrs={'class': 'mfg-partnumber'}).text
+        try:
+            return row.find('td', attrs={'class': 'mfg-partnumber'}).text
+        except AttributeError:
+            return None
 
     def _process_resultpage_row(self, row):
         pno = self._get_resultpage_row_pno(row)
@@ -224,10 +508,13 @@ class VendorDigiKey(vendors.VendorBase):
         package = self._get_resultpage_row_package(row)
         minqty = self._get_resultpage_row_minqty(row)
         mfgpno = self._get_resultpage_row_mfgpno(row)
-        if 'Non-Stock' in minqty or unitp is None:
-            ns = True
+        if pno is not None:
+            if 'Non-Stock' in minqty or unitp is None:
+                ns = True
+            else:
+                ns = False
         else:
-            ns = False
+            ns = True
         return pno, mfgpno, package, ns
 
     def _get_resultpage_parts(self, soup):
@@ -241,7 +528,7 @@ class VendorDigiKey(vendors.VendorBase):
         parts = []
         for row in rows:
             part = self._process_resultpage_row(row)
-            if part[-1] is not None:
+            if part[-1] is not None and part[0] is not None:
                 parts.append(part)
         return True, parts, ''
 
@@ -717,182 +1004,3 @@ class VendorDigiKey(vendors.VendorBase):
         if result is False:
             return None, strategy
         return pnos, strategy
-
-
-class DigiKeyElnPart(vendors.VendorElnPartBase):
-    def __init__(self, dkpartno, ident=None, vendor=None):
-        """
-
-        :type vendor: VendorDigiKey
-        """
-        if vendor is None:
-            vendor = VendorDigiKey('digikey', 'transient', 'electronics')
-            vendor.currency = currency.CurrencyDefinition('USD', 'US$')
-        super(DigiKeyElnPart, self).__init__(dkpartno, ident, vendor)
-        if not self._vpno:
-            logger.error("Not enough information to create a Digikey Part")
-        self._get_data()
-
-    def _get_data(self):
-        url = ('http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail?name=' +  # noqa
-               urllib.quote_plus(self.vpno))
-        soup = www.get_soup(url)
-        if soup is None:
-            logger.error("Unable to open DigiKey product page : " + self.vpno)
-            return
-
-        for price in self._get_prices(soup):
-            self.add_price(price)
-        try:
-            self.mpartno = self._get_mpartno(soup)
-            self.manufacturer = self._get_manufacturer(soup)
-            self.package = self._get_package(soup)
-            self.datasheet = self._get_datasheet_link(soup)
-            self.vqtyavail = self._get_avail_qty(soup)
-            self.vpartdesc = self._get_description(soup)
-        except AttributeError:
-            logger.error("Failed to acquire part information : " +
-                         self.vpno + url)
-            # TODO raise AttributeError
-
-    def _get_prices(self, soup):
-        pricingtable = soup.find('table', id='pricing')
-        prices = []
-        try:
-            for row in pricingtable.findAll('tr'):
-                cells = row.findAll('td')
-                if len(cells) == 3:
-                    cells = [cell.text.strip() for cell in cells]
-                    try:
-                        moq = locale.atoi(cells[0])
-                    except ValueError:
-                        moq = 0
-                        logger.error(
-                            cells[0] + " found while acquiring moq for " +
-                            self.vpno
-                        )
-                    try:
-                        price = locale.atof(cells[1])
-                    except ValueError:
-                        price = 0
-                        logger.error(
-                            cells[1] + " found while acquiring price for " +
-                            self.vpno
-                        )
-                    prices.append(vendors.VendorPrice(moq,
-                                                      price,
-                                                      self._vendor.currency))
-        except AttributeError:
-            logger.error(
-                "Pricing table not found or other error for " + self.vpno
-            )
-        return prices
-
-    @staticmethod
-    def _get_mpartno(soup):
-        mpart = soup.find('h1', attrs={'class': "seohtag",
-                                       'itemprop': "model"})
-        return mpart.text.strip().encode('ascii', 'replace')
-
-    @staticmethod
-    def _get_manufacturer(soup):
-        mfrer = soup.find('h2', attrs={'class': "seohtag",
-                                       'itemprop': "manufacturer"})
-        return mfrer.text.strip().encode('ascii', 'replace')
-
-    @staticmethod
-    def _get_package(soup):
-        n = soup.findAll('th', text=re.compile('Package / Case'))
-        try:
-            package_cell = n[0].find_next_sibling()
-            package = package_cell.text.strip().encode('ascii', 'replace')
-        except IndexError:
-            package = ''
-        return package
-
-    @staticmethod
-    def _get_datasheet_link(soup):
-        n = soup.findAll('th', text=re.compile('Datasheets'))
-        try:
-            datasheet_cell = n[0].find_next_sibling()
-        except IndexError:
-            return None
-        datasheet_link = datasheet_cell.find_all('a')[0].attrs['href']
-        return datasheet_link.strip().encode('ascii', 'replace')
-
-    @staticmethod
-    def _get_avail_qty(soup):
-        n = soup.find('td', id='quantityavailable')
-        try:
-            qtytext = n.text.strip().encode('ascii', 'replace')
-            rex = re.compile(r'^Digi-Key Stock: (?P<qty>\d+(,*\d+)*)')
-            qtytext = rex.search(qtytext).groupdict()['qty'].replace(',', '')
-            return int(qtytext)
-        except:
-            rex2 = re.compile(r'^Value Added Item')
-            if rex2.match(n.text.strip().encode('ascii', 'replace')):
-                return -2
-            return -1
-
-    @staticmethod
-    def _get_description(soup):
-        try:
-            desc_cell = soup.find('td', attrs={'itemprop': 'description'})
-            return desc_cell.text.strip().encode('ascii', 'replace')
-        except:
-            return ''
-
-
-class DigiKeyInvoice(customs.CustomsInvoice):
-    def __init__(self, vendor=None, inv_yaml=None, working_folder=None):
-        if vendor is None:
-            vendor = VendorDigiKey('digikey', 'Digi-Key Corporation',
-                                   'electronics',
-                                   currency_code='USD', currency_symbol='US$')
-        if inv_yaml is None:
-            inv_yaml = os.path.join(INSTANCE_ROOT, 'scratch', 'customs',
-                                    'inv_data.yaml')
-
-        super(DigiKeyInvoice, self).__init__(vendor, inv_yaml, working_folder)
-
-    def _acquire_lines(self):
-        logger.info("Acquiring Lines")
-        invoice_file = os.path.join(self._source_folder,
-                                    self._data['invoice_file'])
-        with open(invoice_file) as f:
-            reader = csv.reader(f)
-            header = None
-            for line in reader:
-                if line[0].startswith(codecs.BOM_UTF8):
-                    line[0] = line[0][3:]
-                if line[0] == 'Index':
-                    header = line
-                    break
-            if header is None:
-                raise ValueError
-            for line in reader:
-                if line[0] != '':
-                    idx = line[header.index('Index')].strip()
-                    qty = int(line[header.index('Quantity')].strip())
-                    vpno = line[header.index('Part Number')].strip()
-                    desc = line[header.index('Description')].strip()
-                    ident = line[header.index('Customer Reference')].strip()
-                    boqty = line[header.index('Backorder')].strip()
-                    try:
-                        if int(boqty) > 0:
-                            logger.warning(
-                                "Apparant backorder. Crosscheck customs treatment for: " +  # noqa
-                                idx + ' ' + ident
-                            )
-                    except ValueError:
-                        print line
-
-                    unitp_str = line[header.index('Unit Price')].strip()
-
-                    unitp = currency.CurrencyValue(
-                        float(unitp_str), self._vendor.currency
-                    )
-                    lineobj = customs.CustomsInvoiceLine(
-                        self, ident, vpno, unitp, qty, idx=idx, desc=desc
-                    )
-                    self._lines.append(lineobj)

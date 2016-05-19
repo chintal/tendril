@@ -52,6 +52,7 @@ def gen_mapfile(vendor, idents):
         pb.next(note=ident)
         vpnos, strategy = vendor.search_vpnos(ident)
         if vpnos is not None:
+            pb.writeln("Found: {0}".format(ident))
             avpnos = vpnos
         else:
             if strategy not in ['NODEVICE', 'NOVALUE',
@@ -80,11 +81,10 @@ def gen_vendor_mapfile(vendor_obj):
         symlib.sort(key=lambda x: x.ident)
 
         idents = []
-        for status in ['Active', 'Experimental',
-                       'Deprecated', 'Virtual', 'Generator']:
-            for symbol in symlib:
-                if symbol.status == status and symbol.ident.strip() != "":
-                    idents.append(symbol.ident)
+
+        for symbol in symlib:
+            if symbol.ident.strip() != "":
+                idents.append(symbol.ident)
 
         gen_mapfile(vendor_obj, idents)
         logger.info("Done Generating Electronics Vendor Map : " +
@@ -112,24 +112,21 @@ def init_vendors():
         logger.debug("Adding Vendor : " + vendor['name'])
         if 'electronics' in vendor['pclass']:
             vendor_obj = None
-            mappath = vendor['name'] + '-electronics.csv'
             # TODO Fix This.
             if vendor['name'] == 'digikey':
                 vendor_obj = digikey.VendorDigiKey(vendor['name'],
                                                    vendor['dname'],
                                                    'electronics',
-                                                   mappath,
-                                                   'USD',
-                                                   'US$'
+                                                   currency_code='USD',
+                                                   currency_symbol='US$'
                                                    )
                 logger.info("Created DK Vendor Object : " + vendor['dname'])
             if vendor['name'] == 'mouser':
                 vendor_obj = mouser.VendorMouser(vendor['name'],
                                                  vendor['dname'],
                                                  'electronics',
-                                                 mappath,
-                                                 'USD',
-                                                 'US$'
+                                                 currency_code='USD',
+                                                 currency_symbol='US$'
                                                  )
                 logger.info("Created Mouser Vendor Object : " +
                             vendor['dname'])
@@ -137,16 +134,14 @@ def init_vendors():
                 vendor_obj = ti.VendorTI(vendor['name'],
                                          vendor['dname'],
                                          'electronics',
-                                         mappath,
-                                         'USD',
-                                         'US$'
+                                         currency_code='USD',
+                                         currency_symbol='US$'
                                          )
                 logger.info("Created TI Vendor Object : " + vendor['dname'])
             if vendor['type'] == 'pricelist':
                 vendor_obj = pricelist.VendorPricelist(vendor['name'],
                                                        vendor['dname'],
-                                                       'electronics',
-                                                       mappath)
+                                                       'electronics')
                 logger.info("Created Pricelist Vendor Object : " +
                             vendor['dname'])
             if vendor_obj:
@@ -156,13 +151,11 @@ def init_vendors():
                              vendor['name'])
         if 'electronics_pcb' in vendor['pclass']:
             vendor_obj = None
-            mappath = vendor['name'] + '-electronics-pcb.csv'
             if vendor['name'] == 'csil':
                 vendor_obj = csil.VendorCSIL(vendor['name'],
                                              vendor['dname'],
                                              'electronics_pcb',
-                                             mappath,
-                                             'INR',
+                                             currency_code='INR',
                                              username=vendor['user'],
                                              password=vendor['pw']
                                              )
