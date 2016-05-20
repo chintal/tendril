@@ -183,6 +183,8 @@ class DigiKeyElnPart(VendorElnPartBase):
                 cells = row.findAll('td')
                 if len(cells) == 3:
                     cells = [cell.text.strip() for cell in cells]
+                    if cells[0] == 'Call' and cells[1] == 'Call':
+                        continue
                     try:
                         moq = locale.atoi(cells[0])
                     except ValueError:
@@ -238,11 +240,17 @@ class DigiKeyElnPart(VendorElnPartBase):
         return cell.text.strip().encode('ascii', 'replace')
 
     def _get_package(self):
-        cell = self.attributes_table['Package / Case']
+        try:
+            cell = self.attributes_table['Package / Case']
+        except KeyError:
+            return None
         return cell.text.strip().encode('ascii', 'replace')
 
     def _get_datasheet(self):
-        cell = self.attributes_table['Datasheets']
+        try:
+            cell = self.attributes_table['Datasheets']
+        except KeyError:
+            return None
         datasheet_link = cell.findAll('a')[0].attrs['href']
         return datasheet_link.strip()
 
@@ -369,7 +377,6 @@ class VendorDigiKey(VendorBase):
                 if check_for_std_val(ident) is False:
                     return self._get_search_vpnos(device, value, footprint)
                 try:
-                    return None, 'NODEVICE'
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
                     logger.warning(ident + ' :: DK Search for ' + device +
@@ -750,7 +757,7 @@ class VendorDigiKey(VendorBase):
         else:
             pnos = sr.parts
 
-        return SearchResult(True, pnos, strategy)
+        return SearchResult(True, pnos, sr.strategy)
 
     @staticmethod
     def _remove_duplicates(parts):

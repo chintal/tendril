@@ -46,7 +46,7 @@ class MapFileBase(object):
             outw.writerow(
                 [ident, (self.get_strategy(ident) or '')] +
                 self.get_upartnos(ident) +
-                ['@AG' + x for x in self.get_apartnos(ident)]
+                ['@AG@' + x for x in self.get_apartnos(ident)]
             )
         outf.close()
         logger.info("Dumped {0} Vendor Map to File : {1}"

@@ -57,7 +57,7 @@ def gen_mapfile(vendor, idents):
         else:
             if strategy not in ['NODEVICE', 'NOVALUE',
                                 'NOT_IMPL']:
-                pb.writeln("Not Found: {0}::{1}\n".format(ident, strategy))
+                pb.writeln("Not Found: {0:40}::{1}\n".format(ident, strategy))
             avpnos = []
         with get_session() as session:
             # pb.writeln("{0:25} {1}\n".format(ident, avpnos))

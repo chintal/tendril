@@ -21,6 +21,18 @@
 """
 Mouser Sourcing Module documentation (:mod:`sourcing.mouser`)
 =============================================================
+
+This module is currently non-functional. Mouser now returns HTTP 405
+for automated data collection requests, and needs JS/captcha to be
+available to continue.
+
+Since Mouser feels strongly enough about this to not allow automated
+access, I'm not going to try to workaround this issue.
+
+A potential rewrite using the Mouser API will be considered at some
+point in the future, if a reasonable means to tolerate the rate limit
+on it can be implemented.
+
 """
 
 import locale

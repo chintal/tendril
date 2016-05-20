@@ -30,6 +30,8 @@ def run(vobj=None):
     if not vobj:
         for v in vendor_list:
             export_vendor_map_audit(v)
+    else:
+        export_vendor_map_audit(vobj)
 
 
 def main():

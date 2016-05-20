@@ -388,14 +388,14 @@ def urlopen(url):
                 pass
             return page
         except HTTPError as e:
-            logger.error("HTTP Error : " + str(e.code) + str(url))
+            logger.error("HTTP Error : {0} {1}".format(e.code, url))
             if e.code == 500:
                 time.sleep(0.5)
                 retries -= 1
             else:
                 raise
         except URLError as e:
-            logger.error("URL Error : " + str(e.errno) + " " + str(e.reason))
+            logger.error("URL Error : {0} {1}".format(e.errno, e.reason))
             raise
     return None
 
