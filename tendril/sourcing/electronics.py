@@ -19,16 +19,14 @@ Electronics Sourcing module documentation (:mod:`sourcing.electronics`)
 =======================================================================
 """
 
-import vendors
-import orders
+import os
+import csv
+import importlib
 
-import digikey
-import mouser
-import ti
-import csil
-import pricelist
+from . import vendors
+from . import orders
 
-from db import controller
+from .db import controller
 
 from tendril.entityhub import projects
 from tendril.gedaif import gsymlib
@@ -37,9 +35,6 @@ from tendril.utils.db import get_session
 from tendril.utils import fsutils
 from tendril.utils import config
 from tendril.utils.terminal import TendrilProgressBar
-
-import os
-import csv
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
@@ -111,62 +106,18 @@ vendor_list = []
 def init_vendors():
     global vendor_list
     for vendor in config.VENDORS_DATA:
-        logger.debug("Adding Vendor : " + vendor['name'])
-        if 'electronics' in vendor['pclass']:
-            vendor_obj = None
-            # TODO Fix This.
-            if vendor['name'] == 'digikey':
-                vendor_obj = digikey.VendorDigiKey(vendor['name'],
-                                                   vendor['dname'],
-                                                   'electronics',
-                                                   currency_code='USD',
-                                                   currency_symbol='US$'
-                                                   )
-                logger.info("Created DK Vendor Object : " + vendor['dname'])
-            if vendor['name'] == 'mouser':
-                vendor_obj = mouser.VendorMouser(vendor['name'],
-                                                 vendor['dname'],
-                                                 'electronics',
-                                                 currency_code='USD',
-                                                 currency_symbol='US$'
-                                                 )
-                logger.info("Created Mouser Vendor Object : " +
-                            vendor['dname'])
-            if vendor['name'] == 'ti':
-                vendor_obj = ti.VendorTI(vendor['name'],
-                                         vendor['dname'],
-                                         'electronics',
-                                         currency_code='USD',
-                                         currency_symbol='US$'
-                                         )
-                logger.info("Created TI Vendor Object : " + vendor['dname'])
-            if vendor['type'] == 'pricelist':
-                vendor_obj = pricelist.VendorPricelist(vendor['name'],
-                                                       vendor['dname'],
-                                                       'electronics')
-                logger.info("Created Pricelist Vendor Object : " +
-                            vendor['dname'])
-            if vendor_obj:
-                vendor_list.append(vendor_obj)
-            else:
-                logger.error('Vendor Handlers not found for vendor : ' +
-                             vendor['name'])
-        if 'electronics_pcb' in vendor['pclass']:
-            vendor_obj = None
-            if vendor['name'] == 'csil':
-                vendor_obj = csil.VendorCSIL(vendor['name'],
-                                             vendor['dname'],
-                                             'electronics_pcb',
-                                             currency_code='INR',
-                                             username=vendor['user'],
-                                             password=vendor['pw']
-                                             )
-                logger.info("Created CSIL Vendor Object : " + vendor['dname'])
-            if vendor_obj:
-                vendor_list.append(vendor_obj)
-            else:
-                logger.error('Vendor Handlers not found for vendor : ' +
-                             vendor['name'])
+        vtype = vendor.pop('type')
+        module_name = '.{0}'.format(vtype.lower())
+        module = importlib.import_module(module_name, __package__)
+        class_name = 'Vendor{0}'.format(vtype)
+        cls = getattr(module, class_name)
+        logger.info("Adding Vendor : {0}".format(vendor['dname']))
+        vendor_obj = cls(**vendor)
+        if vendor_obj:
+            vendor_list.append(vendor_obj)
+        else:
+            logger.error('Vendor Handlers not found for vendor : ' +
+                         vendor['name'])
 
 
 def export_vendor_map_audit(vendor_obj):

@@ -164,7 +164,7 @@ class VendorTI(vendors.VendorBase):
     _partclass = TIElnPart
 
     def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code=None, currency_symbol=None):
+                 currency_code='USD', currency_symbol='US$'):
         self.url_base = 'https://store.ti.com'
         self._devices = ['IC SMD',
                          'IC THRU',

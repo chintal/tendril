@@ -46,17 +46,17 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 LOGGER.setLevel(log.WARNING)
 
-user = None
-pw = None
+username = None
+password = None
 
 
 def get_credentials():
-    global user
-    global pw
+    global username
+    global password
     for vendor in VENDORS_DATA:
         if vendor['name'] == 'csil':
-            user = vendor['user']
-            pw = vendor['pw']
+            username = vendor['username']
+            password = vendor['password']
 
 get_credentials()
 
@@ -101,8 +101,8 @@ def get_csil_prices(params=exparams, rval=None):
     url = 'http://www.pcbpower.com:8080'
     browser.visit(url)
     values = {
-        'ctl00$ContentPlaceHolder1$txtUserName': user,
-        'ctl00$ContentPlaceHolder1$txtPassword': pw
+        'ctl00$ContentPlaceHolder1$txtUserName': dvobj.username,
+        'ctl00$ContentPlaceHolder1$txtPassword': dvobj.password
     }
     browser.fill_form(values)
     button = browser.find_by_name('ctl00$ContentPlaceHolder1$btnlogin')
@@ -372,7 +372,7 @@ class VendorCSIL(vendors.VendorBase):
     _partclass = CSILPart
 
     def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code=None, currency_symbol=None,
+                 currency_code='INR', currency_symbol=None,
                  username=None, password=None):
         self._username = username
         self._password = password
@@ -383,6 +383,14 @@ class VendorCSIL(vendors.VendorBase):
         self._vpart_class = CSILPart
         self.add_order_additional_cost_component("Excise (12.5\%)", 12.5)
         self.add_order_additional_cost_component("CST (5\%)", 5.625)
+
+    @property
+    def username(self):
+        return self._username
+
+    @property
+    def password(self):
+        return self._password
 
     def search_vpnos(self, ident):
         return [ident], 'CUSTOM'
@@ -491,3 +499,8 @@ def generate_pcb_pricing(projfolder, noregen=True, forceregen=False):
         pricingf.write(yaml.dump(dumpdata))
 
     return pricingfp
+
+
+dvobj = VendorCSIL('csil', 'Circuit Systems India Ltd', 'electronics_pcb',
+                   currency_code='INR', currency_symbol='INR',
+                   username=username, password=password)

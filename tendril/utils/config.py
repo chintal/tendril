@@ -738,6 +738,11 @@ config_options_vendors = [
         "The folder in which vendor maps should be dumped"
     ),
     ConfigOption(
+        'OCTOPART_API_KEY',
+        "None",
+        "The OctoPart API Key to use for vendors based on the OctoPart API."
+    ),
+    ConfigOption(
         'VENDOR_MAP_AUDIT_FOLDER',
         "os.path.join(AUDIT_PATH, 'vendor-maps')",
         "The folder in which the vendor maps audits should be dumped"

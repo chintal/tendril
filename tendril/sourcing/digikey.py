@@ -362,7 +362,7 @@ class VendorDigiKey(VendorBase):
     _invoiceclass = DigiKeyInvoice
 
     def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code=None, currency_symbol=None):
+                 currency_code='USD', currency_symbol='US$'):
         self._devices = ['IC SMD',
                          'IC THRU',
                          'IC PLCC',
