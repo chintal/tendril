@@ -79,7 +79,6 @@ def main():
     .. toctree::
 
         profiling.sourcing.vendors.digikey
-        profiling.sourcing.vendors.mouser
         profiling.sourcing.vendors.ti
         profiling.sourcing.vendors.csil
         profiling.sourcing.vendors.pricelist

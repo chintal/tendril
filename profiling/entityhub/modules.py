@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-gedaif.gsymlib Profiling
-------------------------
+entityhub.modules Profiling
+---------------------------
 
 This file runs profiling on :mod:`tendril.gedaif.gsymlib`.
 """
@@ -41,20 +41,20 @@ def generate_prototypelib():
     """
     Profiles the prototype library generation.
 
-    When the ``gsymlib`` module is loaded, it automatically generates the gEDA symbol
-    library from the library on the filesystem. This function profiles the generation of
-    the symlib.
+    When the ``entityhub.modules`` module is loaded, it automatically generates the
+    prototype library from the projects on the filesystem. This function profiles
+    the generation of the (thin) library.
 
-    :download:`Raw execution profile <../../../profiling/gedaif/gsymlib/gsymlib.profile>`
-    :download:`SVG of execution profile <../../../profiling/gedaif/gsymlib/gsymlib.profile.svg>`
+    :download:`Raw execution profile <../../../profiling/entityhub/modules/modules.profile>`
+    :download:`SVG of execution profile <../../../profiling/entityhub/modules/modules.profile.svg>`
 
     .. rubric:: Execution Profile
 
-    .. image:: ../../../profiling/gedaif/gsymlib/gsymlib.profile.svg
+    .. image:: ../../../profiling/entityhub/modules/modules.profile.svg
 
     .. rubric:: pstats Output
 
-    .. literalinclude:: ../../../profiling/gedaif/gsymlib/gsymlib.profile.stats
+    .. literalinclude:: ../../../profiling/entityhub/modules/modules.profile.stats
 
     """
     return modules.get_prototype_lib(regen=True)
@@ -65,20 +65,28 @@ def generate_thick_prototypelib():
     """
     Profiles the prototype library generation with full object instantiation.
 
-    When the ``gsymlib`` module is loaded, it automatically generates the gEDA symbol
-    library from the library on the filesystem. This function profiles the generation of
-    the symlib.
+    The prototypes created at module load are thin prototypes, with various
+    sections left for on-demand loading by default. This is useful when
+    tendril is used as a script. However, when run as a server, this filling
+    out of each prototype makes the first page load (per daemon) an
+    incredibly slow process.
 
-    :download:`Raw execution profile <../../../profiling/gedaif/gsymlib/gsymlib.profile>`
-    :download:`SVG of execution profile <../../../profiling/gedaif/gsymlib/gsymlib.profile.svg>`
+    This function prototypes the validation of each prototype. The validation
+    process necessarily requires thick prototypes, since much of the data to be
+    validated resides in the information not loaded on object instantiation.
+    Tendril also uses the same validation hook to warm up it's caches when
+    run as a server (as controlled by the WARM_UP_CACHES config option).
+
+    :download:`Raw execution profile <../../../profiling/entityhub/modules/modules_thick.profile>`
+    :download:`SVG of execution profile <../../../profiling/entityhub/modules/modules_thick.profile.svg>`
 
     .. rubric:: Execution Profile
 
-    .. image:: ../../../profiling/gedaif/gsymlib/gsymlib.profile.svg
+    .. image:: ../../../profiling/entityhub/modules/modules_thick.profile.svg
 
     .. rubric:: pstats Output
 
-    .. literalinclude:: ../../../profiling/gedaif/gsymlib/gsymlib.profile.stats
+    .. literalinclude:: ../../../profiling/entityhub/modules/modules_thick.profile.stats
 
     """
     pl = modules.get_prototype_lib(regen=False)

@@ -26,6 +26,34 @@ potentially useful functionality.
 
 >>> from tendril.sourcing import digikey
 
+.. rubric:: Search
+
+Search for Digi-Key part numbers given a Tendril-compatible
+ident string :
+
+>>> digikey.dvobj.search_vpnos('IC SMD W5300 LQFP100-14')
+(['1278-1009-ND'], 'EXACT_MATCH_FFP')
+
+Note that only certain types of components are supported by the
+search. The DEVICE component of the ident string is used to
+determine whether or not a search will even be attempted.
+
+Even with supported device types, remember that this search is
+nowhere near bulletproof. The more generic a device and/or it's
+name becomes, the less likely it is to work. The intended use
+for this type of search is in concert with an organization's
+engineering policies and an instance administrator who can make
+the necessary tweaks to the search algortihms and maintain a
+low error rate for component types commonly used within the
+instance.
+
+Tweaks and improvements to the search process are welcome as
+pull requests to the tendril github repository, though their
+inclusion will be predicated on them causing minimal breakage
+to what already exists.
+
+.. rubric:: Retrieve
+
 Obtain information for a given Digi-Key part number :
 
 >>> p = digikey.DigiKeyElnPart('800-2146-ND')
@@ -138,7 +166,7 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-SearchPart = namedtuple('Part', 'pno, mfgpno, package, ns, unitp,  minqty')
+SearchPart = namedtuple('SearchPart', 'pno, mfgpno, package, ns, unitp,  minqty')
 
 
 class DigiKeyElnPart(VendorElnPartBase):
@@ -377,6 +405,7 @@ class VendorDigiKey(VendorBase):
                 if check_for_std_val(ident) is False:
                     return self._get_search_vpnos(device, value, footprint)
                 try:
+                    return None, 'NODEVICE'
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
                     logger.warning(ident + ' :: DK Search for ' + device +
