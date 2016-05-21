@@ -33,13 +33,28 @@ Search for Digi-Key part numbers given a Tendril-compatible ident string :
 >>> digikey.dvobj.search_vpnos('IC SMD W5300 LQFP100-14')
 (['1278-1009-ND'], 'EXACT_MATCH_FFP')
 
-.. seealso::
-    :ref:`symbol-conventions`
-
 Note that only certain types of components are supported by the search. The
 ``device`` component of the ident string is used to determine whether or not
 a search will even be attempted. See :data:`VendorDigiKey._devices` for a
-list of supported device classes.
+list of supported device classes. For all device classes, search is
+supported only for components whose ``value`` is a manufacturer part number,
+or enough of one to sufficiently identify the part in question.
+
+.. seealso::
+    :ref:`symbol-conventions`
+
+For certain (very specific) device classes, the search can be done using
+generic descriptions of the component. These 'jelly bean' components must
+have a correctly formatted ``value``, as per the details listed in the
+:ref:`symbol-conventions`.
+
+>>> digikey.dvobj.search_vpnos('CAP CER SMD 22uF/35V 0805')
+(['445-14428-2-ND', '445-14428-1-ND', '445-11527-2-ND', '445-11527-1-ND'], 'CONSENSUS_FP_MATCH')
+
+
+See the implementation of :func:`VendorDigiKey._get_pas_vpnos` and the
+functions that it uses to perform this search.
+
 
 Even with supported device types, remember that this search is nowhere near
 bulletproof. The more generic a device and/or its name is, the less likely
@@ -47,6 +62,12 @@ it is to work. The intended use for this type of search is in concert with
 an organization's engineering policies and an instance administrator who
 can make the necessary tweaks to the search algortihms and maintain a low
 error rate for component types commonly used within the instance.
+
+.. seealso::
+    :func:`VendorDigiKey._search_preprocess`
+    :func:`VendorDigiKey._get_device_catstrings`
+    :func:`VendorDigiKey._get_device_subcatstrings`
+    :func:`VendorDigiKey._get_device_subcatstrings`
 
 Tweaks and improvements to the search process are welcome as pull requests
 to the tendril github repository, though their inclusion will be predicated
@@ -83,6 +104,11 @@ though the part object using the interfaces defined in those class definitions.
 <VendorPrice INR 6,087.93 @500(1)>
 <VendorPrice INR 5,802.56 @1000(1)>
 <VendorPrice INR 5,707.43 @2500(1)>
+
+.. hint::
+    By default, the :class:`.vendors.VendorPrice` instances are represented
+    by the unit price in the currency defined by the
+    :data:`tendril.utils.types.currency.native_currency_defn`.
 
 Additionally, the contents of the Overview and Attributes tables are
 available, though not parsed, in the form of BS4 trees. Note, however, that
@@ -132,43 +158,37 @@ Price Break
 
 """
 
+import codecs
+import csv
 import locale
-import re
 import os
+import re
+import traceback
 import urllib
 import urlparse
+from copy import copy
 from decimal import Decimal
-import traceback
-import csv
-import codecs
-from collections import namedtuple
 
-from .vendors import SearchResult
-from .vendors import VendorElnPartBase
-from .vendors import VendorPrice
-from .vendors import VendorBase
-from . import customs
-
-from tendril.utils import www
-from tendril.utils.types import currency
-
-from tendril.conventions.electronics import parse_ident
-from tendril.conventions.electronics import parse_resistor
+from tendril.conventions.electronics import check_for_std_val
 from tendril.conventions.electronics import parse_capacitor
 from tendril.conventions.electronics import parse_crystal
-from tendril.conventions.electronics import check_for_std_val
-
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.conventions.electronics import parse_ident
+from tendril.conventions.electronics import parse_resistor
 
 from tendril.utils import log
+from tendril.utils import www
+from tendril.utils.config import INSTANCE_ROOT
+from tendril.utils.types import currency
+
+from . import customs
+from .vendors import SearchPart
+from .vendors import SearchResult
+from .vendors import VendorBase
+from .vendors import VendorElnPartBase
+from .vendors import VendorPrice
+
 logger = log.get_logger(__name__, log.DEFAULT)
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-
-
-#: A :mod:`collections.namedtuple` used internally to pass
-#: around part data conveniently.
-SearchPart = namedtuple('SearchPart',
-                        'pno, mfgpno, package, ns, unitp,  minqty')
 
 
 class DigiKeyElnPart(VendorElnPartBase):
@@ -458,6 +478,15 @@ class VendorDigiKey(VendorBase):
         'TRANSFORMER SMD', 'INDUCTOR SMD', 'CRYSTAL AT'
     ]
 
+    _url_base = 'http://www.digikey.com'
+    _search_url_base = urlparse.urljoin(_url_base, '/product-search/en/')
+    _default_urlparams = [
+        ('stock', '0'), ('mnonly', '0'), ('newproducts', '0'),
+        ('ColumnSort', '0'), ('page', '1'), ('quantity', '0'),
+        ('ptm', '0'), ('fid', '0'), ('pagesize', '500'),
+        ('pbfree', '0'), ('rohs', '0')
+    ]
+
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code='USD', currency_symbol='US$'):
         self._searchpages_filters = {}
@@ -477,7 +506,6 @@ class VendorDigiKey(VendorBase):
                 if check_for_std_val(ident) is False:
                     return self._get_search_vpnos(device, value, footprint)
                 try:
-                    return None, 'NODEVICE'
                     return self._get_pas_vpnos(device, value, footprint)
                 except NotImplementedError:
                     logger.warning(ident + ' :: DK Search for ' + device +
@@ -494,6 +522,20 @@ class VendorDigiKey(VendorBase):
 
     @staticmethod
     def _search_preprocess(device, value, footprint):
+        """
+        Pre-processes and returns the ``(device, value, footprint)`` tuple
+        parsed from the part ident, making tweaks necessary to translate
+        the names into those more likely to be found on Digi-Key.
+
+        .. hint::
+            This function handles instance-specific tweaks, and should be
+            modified to match your instance's nomenclature guidelines.
+
+        .. todo::
+            The content of this function should be moved out of the core and
+            into the instance folder.
+
+        """
         if footprint == 'TO220':
             footprint = 'TO-220'
         if footprint == 'TO92':
@@ -502,6 +544,37 @@ class VendorDigiKey(VendorBase):
 
     @staticmethod
     def _process_product_page(soup):
+        """
+        Given the BS4 parsed soup of a Digi-Key product page, returns a
+        :class:`.vendors.SearchResult` instance, whose ``parts`` variable
+        includes a list of exactly one :class:`.vendors.SearchPart`
+        instance, with relevant data parsed from the page contained
+        within it. The ``strategy`` for the returned result is set to
+        ``EXACT_MATCH``.
+
+        In case any of the following exclusion criteria are met, the
+        part is not returned within the :class:`.vendors.SearchResult`, its
+        ``success`` parameter is set to ``False``, and its ``strategy``
+        parameter is set as listed below :
+
+        +----------------------------------------+-----------------------+
+        | Listed as Obsolete on the Product Page | ``OBSOLETE_NOTAVAIL`` |
+        +----------------------------------------+-----------------------+
+        | No Part Number Found                   | ``NO_PNO_CELL``       |
+        +----------------------------------------+-----------------------+
+        | Product Details Table Not Found        | ``NO_PDTABLE``        |
+        +----------------------------------------+-----------------------+
+
+        .. todo::
+            The current approach of handling catergories and subcategories
+            can result in these seemingly 'exact match' results to be put
+            into a comparison. If that were to happen, the Package/Case,
+            Unit Price, and MOQ are all necessary pieces of information to
+            determine inclusion. These are not currently parsed from the
+            page soup and should be handled here, preferably without
+            instantiating a full digikey part instance.
+
+        """
         beablock = soup.find('div', {'class': 'product-details-feedback'})
         if beablock is not None:
             if beablock.text == u'\nObsolete item; call Digi-Key for more information.\n':  # noqa
@@ -518,13 +591,6 @@ class VendorDigiKey(VendorBase):
             mpno_text = mpno_meta.attrs['content']
             mpno = mpno_text.encode('ascii', 'replace')
 
-            # TODO
-            # The current approach of handling catergories and subcategories
-            # can result in these seemingly 'exact match' results to be put
-            # into a comparison. If that were to happen, the Package/Case,
-            # Unit Price, and MOQ are all necessary pieces of information to
-            # determine inclusion. These should be handled here, and
-            # preferably without instantiating a full digikey part instance.
             part = {'Digi-Key Part Number': pno,
                     'Manufacturer Part Number': mpno,
                     'Package / Case': 'Dummy',
@@ -536,6 +602,25 @@ class VendorDigiKey(VendorBase):
 
     @staticmethod
     def _get_device_catstrings(device):
+        """
+        Given a certain ``device`` string, returns the known Digi-Key
+        categories which should be searched in case the first search attempt
+        returns an Index Page.
+
+        Returns a ``tuple``, the first element being ``success``
+        (``True`` or ``False``) and the second being the list of recognized
+        category strings for the given device string.
+
+        .. hint::
+            This function handles instance-specific tweaks, and should be
+            modified to match your instance's engineering and nomenclature
+            guidelines.
+
+        .. todo::
+            The content of this function should be moved out of the core and
+            into the instance folder.
+
+        """
         if device.startswith('IC'):
             catstrings = ['Integrated Circuits (ICs)',
                           'Isolators']
@@ -551,6 +636,25 @@ class VendorDigiKey(VendorBase):
 
     @staticmethod
     def _get_device_subcatstrings(device):
+        """
+        Given a certain ``device`` string, returns the known Digi-Key
+        sub-categories which should be searched in case the a search attempt
+        returns a Secondary Index Page.
+
+        Returns a ``tuple``, the first element being ``success``
+        (``True`` or ``False``) and the second being the list of recognized
+        sub-category strings for the given device string.
+
+        .. hint::
+            This function handles instance-specific tweaks, and should be
+            modified to match your instance's engineering and nomenclature
+            guidelines.
+
+        .. todo::
+            The content of this function should be moved out of the core and
+            into the instance folder.
+
+        """
         if device.startswith('IC'):
             subcatstrings = ['Interface - Controllers']
         elif device.startswith('DIODE'):
@@ -592,7 +696,7 @@ class VendorDigiKey(VendorBase):
 
         results = []
         for url_part in new_url_parts:
-            new_url = urlparse.urljoin('http://www.digikey.com', url_part)
+            new_url = urlparse.urljoin(self._url_base, url_part)
             soup = www.get_soup(new_url)
             if soup is not None:
                 try:
@@ -634,7 +738,7 @@ class VendorDigiKey(VendorBase):
 
         results = []
         for url_part in new_url_parts:
-            new_url = urlparse.urljoin('http://www.digikey.com', url_part)
+            new_url = urlparse.urljoin(self._url_base, url_part)
             soup = www.get_soup(new_url)
             if soup is not None:
                 try:
@@ -655,50 +759,9 @@ class VendorDigiKey(VendorBase):
             return SearchResult(False, [], 'INDEX_TRAVERSAL')
 
     @staticmethod
-    def _process_resultpage_row(row):
-        """
-        Given a row from a CSV file obtained from Digi-Key's search
-        interface and read in using :class:`csv.DictReader`, convert it into
-        a :class:`SearchPart` instance.
-
-        If the unit price for the row is not readily parseable into a
-        float, or if the minqty field includes a Non-Stock note, the
-        returned SearchPart has it's ``ns`` attribute set to True.
-
-        :type row: dict
-        :rtype: :class:`SearchPart`
-        """
-        pno = row.pop('Digi-Key Part Number', '').strip()
-        package = row.pop('Package / Case', '').strip()
-        minqty = row.pop('Minimum Quantity', '').strip()
-        mfgpno = row.pop('Manufacturer Part Number', '').strip()
-        unitp = row.pop('Unit Price (USD)', '').strip()
-        try:
-            unitp = locale.atof(unitp)
-        except ValueError:
-            unitp = None
-        if pno is not None:
-            if 'Non-Stock' in minqty or unitp is None:
-                ns = True
-            else:
-                ns = False
-        else:
-            ns = True
-        part = SearchPart(pno=pno, mfgpno=mfgpno, package=package,
-                          ns=ns, unitp=unitp,  minqty=minqty)
-        return part
-
-    def _get_resultpage_parts(self, rows):
-        parts = []
-        for row in rows:
-            part = self._process_resultpage_row(row)
-            parts.append(part)
-        return SearchResult(True, parts, '')
-
-    @staticmethod
     def _filter_results_unfiltered(parts):
         """
-        Given a list of :class:`SearchPart` instances, returns a
+        Given a list of :class:`.vendors.SearchPart` instances, returns a
         :class:`.vendors.SearchResult` instance, whose ``parts``
         attribute includes a list of part numbers.
 
@@ -708,7 +771,7 @@ class VendorDigiKey(VendorBase):
         If all of the part numbers are listed as Non-Stocked, then all the
         part numbers are returned with the strategy ``UNFILTERED_ALLOW_NS``.
 
-        :type parts: list of :class:`SearchPart`
+        :type parts: list of :class:`.vendors.SearchPart`
         :rtype: :class:`.vendors.SearchResult`
         """
         pnos = []
@@ -725,7 +788,7 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _find_exact_match_package(parts, value):
         """
-        Given a list of :class:`SearchPart` instances and a known value,
+        Given a list of :class:`.vendors.SearchPart` instances and a known value,
         returns a :class:`.vendors.SearchResult` instance, whose ``parts``
         attribute includes only the package of the part whose manufacturer
         part number (``mfgpno``) exactly matches the given value, if such
@@ -734,7 +797,7 @@ class VendorDigiKey(VendorBase):
         The :class:`.vendors.SearchResult` returned on success has it's
         strategy attribute set to ``EXACT_MATCH_FFP``.
 
-        :type parts: list of :class:`SearchPart`
+        :type parts: list of :class:`.vendors.SearchPart`
         :type value: str
         :rtype: :class:`.vendors.SearchResult`
         """
@@ -746,7 +809,7 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _find_consensus_package(parts):
         """
-        Given a list of :class:`SearchPart` instances, returns a
+        Given a list of :class:`.vendors.SearchPart` instances, returns a
         :class:`.vendors.SearchResult` instance, whose 'parts' attribute
         includes only the consensus package of all the parts in the provided
         list, if such a consensus can be reached.
@@ -754,7 +817,7 @@ class VendorDigiKey(VendorBase):
         The :class:`.vendors.SearchResult` returned on success has it's
         strategy attribute set to ``CONSENSUS_FP_MATCH``.
 
-        :type parts: list of :class:`SearchPart`
+        :type parts: list of :class:`.vendors.SearchPart`
         :rtype: :class:`.vendors.SearchResult`
         """
         cpackage = parts[0].package
@@ -768,7 +831,7 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _filter_results_bycpackage(parts, cpackage, strategy):
         """
-        Given a list of :class:`SearchPart` instances, and a consensus package
+        Given a list of :class:`.vendors.SearchPart` instances, and a consensus package
         string, returns a :class:`.vendors.SearchResult` instance, whose
         ``parts`` attribute includes the part numbers of all the parts in the
         provided list whose package attribute matches the consensus package.
@@ -782,7 +845,7 @@ class VendorDigiKey(VendorBase):
         returned within the :class:`.vendors.SearchResult`, with modification
         to append ``_ALLOW_NS`` if necessary.
 
-        :type parts: list of :class:`SearchPart`
+        :type parts: list of :class:`.vendors.SearchPart`
         :param cpackage: A consensus or exact match package.
         :type cpackage: str
         :type strategy: str
@@ -803,7 +866,7 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _filter_results_byfootprint(parts, footprint):
         """
-        Given a list of :class:`SearchPart` instances and the target
+        Given a list of :class:`.vendors.SearchPart` instances and the target
         footprint, returns a :class:`.vendors.SearchResult` instance, whose
         ``parts`` attribute includes part numbers for all parts in the
         provided list whose package attribute contains the provided footprint.
@@ -812,28 +875,40 @@ class VendorDigiKey(VendorBase):
         nomenclature, this has a very low likelihood of success
         without an exceptionally well curated symbol library. The
         :class:`.vendors.SearchResult` returned on success has it's
-        strategy attribute set to ``HAIL_MARY`` or ``HAIL_MARY_ALLOW_NS``.
+        strategy attribute set to ``NAIVE_FP_MATCH`` or
+        ``NAIVE_FP_MATCH_ALLOW_NS``.
 
-        :type parts: list of :class:`SearchPart`
+        :type parts: list of :class:`.vendors.SearchPart`
         :type footprint: str
         :rtype: :class:`.vendors.SearchResult`
         """
         pnos = []
-        strategy = 'HAIL MARY'
-        for part in parts:
-            if footprint in part.package:
-                if not part.ns:
-                    pnos.append(part.pno)
-        if len(pnos) == 0:
-            strategy += ' ALLOW NS'
+        strategy = 'NAIVE_FP_MATCH'
+        if isinstance(footprint, list):
+            for part in parts:
+                if part.package in footprint:
+                    if not part.ns:
+                        pnos.append(part.pno)
+            if len(pnos) == 0:
+                strategy += ' ALLOW NS'
+                for part in parts:
+                    if part.package in footprint:
+                        pnos.append(part.pno)
+        else:
             for part in parts:
                 if footprint in part.package:
-                    pnos.append(part.pno)
+                    if not part.ns:
+                        pnos.append(part.pno)
+            if len(pnos) == 0:
+                strategy += ' ALLOW NS'
+                for part in parts:
+                    if footprint in part.package:
+                        pnos.append(part.pno)
         return SearchResult(True, pnos, strategy)
 
     def _filter_results(self, parts, value, footprint):
         """
-        Given a list of :class:`SearchPart`, and the target value and
+        Given a list of :class:`.vendors.SearchPart`, and the target value and
         footprint, returns a :class:`.vendors.SearchResult` instance, whose
         ``parts`` attribute includes part numbers for all parts in the
         provided list matching the required value and footprint.
@@ -850,7 +925,7 @@ class VendorDigiKey(VendorBase):
           :func:`_filter_results_bycpackage`.
 
         - If none of the previous conditions were met,
-        :func:`_filter_results_byfootprint` is used.
+          :func:`_filter_results_byfootprint` is used.
 
 
         The returned :class:`.vendors.SearchResult` instance always has its
@@ -891,9 +966,9 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _remove_duplicates(parts):
         """
-        Given a list of :class:`SearchPart` instances, this function removes
+        Given a list of :class:`.vendors.SearchPart` instances, this function removes
         any duplicates that may have crept in. In this case, the necessary and
-        sufficient condition for two :class:`SearchPart` instances to be
+        sufficient condition for two :class:`.vendors.SearchPart` instances to be
         duplicates of each other is that they have the same vendor part number
         (``pno``).
 
@@ -908,7 +983,7 @@ class VendorDigiKey(VendorBase):
 
     def _process_results(self, parts, value, footprint):
         """
-        Processes a list of :class:`SearchPart` instances, using
+        Processes a list of :class:`.vendors.SearchPart` instances, using
         :func:`_remove_duplicates` and :func:`_filter_results`, and
         returns the :class:`.vendors.SearchResult` instance returned
         by :func:`_filter_results`.
@@ -918,7 +993,70 @@ class VendorDigiKey(VendorBase):
         return self._filter_results(parts, value, footprint)
 
     @staticmethod
-    def _get_resultpage_table(soup):
+    def _process_resultpage_row(row):
+        """
+        Given a row from a CSV file obtained from Digi-Key's search
+        interface and read in using :class:`csv.DictReader`, convert it into
+        a :class:`.vendors.SearchPart` instance.
+
+        If the unit price for the row is not readily parseable into a
+        float, or if the minqty field includes a Non-Stock note, the
+        returned SearchPart has it's ``ns`` attribute set to True.
+
+        :type row: dict
+        :rtype: :class:`.vendors.SearchPart`
+        """
+        pno = row.pop('Digi-Key Part Number', '').strip()
+        package = row.pop('Package / Case', '').strip()
+        minqty = row.pop('Minimum Quantity', '').strip()
+        mfgpno = row.pop('Manufacturer Part Number', '').strip()
+        unitp = row.pop('Unit Price (USD)', '').strip()
+        try:
+            unitp = locale.atof(unitp)
+        except ValueError:
+            unitp = None
+        if pno is not None:
+            if 'Non-Stock' in minqty or unitp is None:
+                ns = True
+            else:
+                ns = False
+        else:
+            ns = True
+        part = SearchPart(pno=pno, mfgpno=mfgpno, package=package,
+                          ns=ns, unitp=unitp, minqty=minqty)
+        return part
+
+    def _get_resultpage_parts(self, rows):
+        """
+        Given a list of table rows obtained using a
+        :func:`_get_resultpage_table`, or a combined list from multiple
+        calls thereof with multiple result pages, returns a
+        :class:`.vendors.SearchResult` instance whose ``parts`` variable is a
+        list of all Digi-Key parts found in those result pages, each
+        represented by a :class:`.vendors.SearchPart` instance and generated
+        using :func:`_process_resultpage_row`.
+        """
+        parts = []
+        for row in rows:
+            part = self._process_resultpage_row(row)
+            parts.append(part)
+        return SearchResult(True, parts, '')
+
+    def _get_resultpage_table(self, soup):
+        """
+        Given the BS4 parsed soup of a Digi-Key search page, returns a
+        list of rows in the table.
+
+        This function uses the 'Download table as CSV' feature of Digi-Keys
+        website to obtain the table as CSV, and then uses
+        :class:`csv.DictReader` to parse the CSV file and returns a list
+        of dictionaries - one for each row.
+
+        Each row is intended for later processing into a
+        :class:`.vendors.SearchPart` instance using
+        :func:`_process_resultpage_row`.
+
+        """
         form = soup.find('form', {'name': 'downloadform'})
         if form is None:
             raise ValueError
@@ -927,8 +1065,8 @@ class VendorDigiKey(VendorBase):
         for part in parts:
             params.append((part.attrs['name'], part.attrs['value']))
 
-        url_base = 'http://www.digikey.com/'
-        target = urlparse.urljoin(url_base, form.attrs['action'])
+        target = urlparse.urljoin(self._url_base,
+                                  form.attrs['action'])
         url_dl = target + '?' + urllib.urlencode(params)
 
         # TODO
@@ -955,10 +1093,13 @@ class VendorDigiKey(VendorBase):
         device, value, footprint = self._search_preprocess(
             device, value, footprint
         )
-        url = 'http://www.digikey.com/product-search/en?k=' + \
-              urllib.quote_plus(value) + \
-              '&mnonly=0&newproducts=0&ColumnSort=0&page=1&stock=0&pbfree=0&rohs=0&quantity=&ptm=0&fid=0&pageSize=500'  # noqa
-        soup = www.get_soup(url)
+        params = copy(self._default_urlparams)
+
+        searchurl = self._search_url_base + '?k=' \
+                    + urllib.quote_plus(value) + '&' \
+                    + urllib.urlencode(params)
+
+        soup = www.get_soup(searchurl)
         if soup is None:
             return None, 'URL_FAIL'
         ptable = soup.find('table', id='productTable')
@@ -1007,7 +1148,7 @@ class VendorDigiKey(VendorBase):
 
     @staticmethod
     def _tf_resistance_to_canonical(rstr):
-        rstr = rstr.encode('ascii', 'replace')
+        rstr = rstr.encode('ascii', 'replace').strip()
         rex = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[kKMGT])*$')
         try:
             rparts = rex.search(rstr).groupdict()
@@ -1047,12 +1188,12 @@ class VendorDigiKey(VendorBase):
 
     @staticmethod
     def _tf_tolerance_to_canonical(tstr):
-        tstr = www.strencode(tstr)
+        tstr = www.strencode(tstr).strip()
         return tstr
 
     @staticmethod
     def _tf_capacitance_to_canonical(cstr):
-        cstr = www.strencode(cstr)
+        cstr = www.strencode(cstr).strip()
         if cstr == '-':
             return
         if cstr == '*':
@@ -1120,10 +1261,10 @@ class VendorDigiKey(VendorBase):
             fvalueselects = [cell.find('select') for cell in fvaluecells]
             for idx, header in enumerate(headers):
                 optionsoup = fvalueselects[idx].findAll('option')
-                options = [(www.strencode(o.text).rstrip('\n'),
+                options = [(www.strencode(o.text).rstrip('\n').strip(),
                             o.attrs['value']) for o in optionsoup]
-                fname = fvalueselects[idx].attrs['name'].encode('ascii',
-                                                                'replace')
+                fname = fvalueselects[idx].attrs['name']
+                fname = fname.encode('ascii', 'replace').strip()
                 if header == 'Resistance (Ohms)':
                     options = [(self._tf_resistance_to_canonical(option[0]), option[1]) for option in options]  # noqa
                 elif header == 'Capacitance':
@@ -1137,33 +1278,6 @@ class VendorDigiKey(VendorBase):
             return False, None
         return True, filters
 
-    @staticmethod
-    def _get_default_urlparams():
-        params = [('stock', '0'), ('mnonly', '0'), ('newproducts', '0'),
-                  ('ColumnSort', '0'), ('page', '1'), ('quantity', '0'),
-                  ('ptm', '0'), ('fid', '0'), ('pagesize', '500')]
-        return params
-
-    @staticmethod
-    def _get_searchurl_res_smd():
-        return 'http://www.digikey.com/product-search/en/resistors/chip-resistor-surface-mount/'  # noqa
-
-    @staticmethod
-    def _get_searchurl_res_thru():
-        return 'http://www.digikey.com/product-search/en/resistors/through-hole-resistors/'  # noqa
-
-    @staticmethod
-    def _get_searchurl_cap_cer_smd():
-        return 'http://www.digikey.com/product-search/en/capacitors/ceramic-capacitors/'  # noqa
-
-    @staticmethod
-    def _get_searchurl_cap_tant_smd():
-        return 'http://www.digikey.com/product-search/en/capacitors/tantalum-capacitors/'  # noqa
-
-    @staticmethod
-    def _get_searchurl_crystal():
-        return 'http://www.digikey.com/product-search/en/crystals-and-oscillators/crystals/'  # noqa
-
     def _get_searchurl_filters(self, searchurl):
         if searchurl in self._searchpages_filters.keys():
             return self._searchpages_filters[searchurl]
@@ -1176,21 +1290,35 @@ class VendorDigiKey(VendorBase):
                 raise AttributeError
         return filters
 
-    def _get_pas_vpnos(self, device, value, footprint):
+    def _get_searchurl_res_smd(self):
+        return urlparse.urljoin(self._search_url_base,
+                                'resistors/chip-resistor-surface-mount/')
+
+    def _get_searchurl_res_thru(self):
+        return urlparse.urljoin(self._search_url_base,
+                                'resistors/through-hole-resistors/')
+
+    def _get_searchurl_cap_cer_smd(self):
+        return urlparse.urljoin(self._search_url_base,
+                                'capacitors/ceramic-capacitors/')
+
+    def _get_searchurl_cap_tant_smd(self):
+        return urlparse.urljoin(self._search_url_base,
+                                'capacitors/tantalum-capacitors/')
+
+    def _get_searchurl_crystal(self):
+        return urlparse.urljoin(self._search_url_base,
+                                'crystals-and-oscillators/crystals/')
+
+    def _get_device_searchparams(self, device):
         packagetf = None
         package_header = 'Package / Case'
         package_filter_type = 'contains'
         extraparams = None
         if device == "RES SMD":
-            filters = self._get_searchurl_filters(
-                self._get_searchurl_res_smd()
-            )
             searchurlbase = self._get_searchurl_res_smd()
             devtype = 'resistor'
         elif device == "RES THRU":
-            filters = self._get_searchurl_filters(
-                self._get_searchurl_res_thru()
-            )
             searchurlbase = self._get_searchurl_res_thru()
             extraparams = (('Tolerance', '+/-1%'),)
             package_filter_type = None
@@ -1201,24 +1329,18 @@ class VendorDigiKey(VendorBase):
         elif device == "RES ARRAY THRU":
             devtype = 'resistor'
             raise NotImplementedError
-        elif device == "RES SMD THRU":
+        elif device == "RES ARRAY SMD":
             devtype = 'resistor'
             raise NotImplementedError
         elif device == "POT TRIM":
             devtype = 'resistor'
             raise NotImplementedError
         elif device == "CAP CER SMD":
-            filters = self._get_searchurl_filters(
-                self._get_searchurl_cap_cer_smd()
-            )
             searchurlbase = self._get_searchurl_cap_cer_smd()
             devtype = 'capacitor'
         elif device == "CAP TANT SMD":
-            filters = self._get_searchurl_filters(
-                self._get_searchurl_cap_tant_smd()
-            )
-            packagetf = self._tf_package_tant_smd
             searchurlbase = self._get_searchurl_cap_tant_smd()
+            packagetf = self._tf_package_tant_smd
             package_header = 'Manufacturer Size Code'
             package_filter_type = 'equals'
             devtype = 'capacitor'
@@ -1238,18 +1360,19 @@ class VendorDigiKey(VendorBase):
             devtype = 'capacitor'
             raise NotImplementedError
         elif device == "CRYSTAL AT":
-            filters = self._get_searchurl_filters(
-                self._get_searchurl_crystal()
-            )
+            searchurlbase = self._get_searchurl_crystal()
             packagetf = self._tf_package_crystal_at
             package_filter_type = 'inlist'
-            searchurlbase = self._get_searchurl_crystal()
             extraparams = (('Mounting Type', 'Through Hole'),
                            ('Operating Mode', 'Fundamental'))
             devtype = 'crystal'
         else:
             raise ValueError
+        return (devtype, searchurlbase, packagetf, package_header,
+                package_filter_type, extraparams)
 
+    @staticmethod
+    def _get_value_options(devtype, value):
         if devtype == 'resistor':
             loptions = (('resistance', "Resistance (Ohms)", 'equals'),
                         ('wattage', "Power (Watts)", 'contains'))
@@ -1263,8 +1386,11 @@ class VendorDigiKey(VendorBase):
             lvalues = [parse_crystal(value)]
         else:
             raise ValueError
+        return loptions, lvalues
 
-        params = self._get_default_urlparams()
+    @staticmethod
+    def _process_value_options(filters, loptions, lvalues):
+        lparams = []
 
         for lidx, loption in enumerate(loptions):
             if lvalues[lidx] is None:
@@ -1281,10 +1407,14 @@ class VendorDigiKey(VendorBase):
             dkfiltcode = filters[loption[1]][0]
             if dkopcode is None:
                 raise ValueError(loption[0] + ' ' + lvalues[lidx])
-            params.append((dkfiltcode, dkopcode))
+            lparams.append((dkfiltcode, dkopcode))
 
-        if packagetf is not None:
-            footprint = packagetf(footprint)
+        return lparams
+
+    @staticmethod
+    def _process_package_options(filters, package_header,
+                                 package_filter_type, footprint):
+        lparams = []
         if package_filter_type is not None:
             pkgopcode = None
             for option in filters[package_header][1]:
@@ -1304,10 +1434,14 @@ class VendorDigiKey(VendorBase):
                 raise ValueError(footprint)
             if isinstance(pkgopcode, list):
                 for opt in pkgopcode:
-                    params.append((filters[package_header][0], opt))
+                    lparams.append((filters[package_header][0], opt))
             else:
-                params.append((filters[package_header][0], pkgopcode))
+                lparams.append((filters[package_header][0], pkgopcode))
+        return lparams
 
+    @staticmethod
+    def _process_extraparams(filters, extraparams):
+        lparams = []
         if extraparams is not None:
             for param in extraparams:
                 opcode = None
@@ -1318,7 +1452,27 @@ class VendorDigiKey(VendorBase):
                     for option in filters[param[0]][1]:
                         print option[0].decode('unicode-escape')
                     raise ValueError("Param not valid: " + str(param))
-                params.append((filters[param[0]][0], opcode))
+                lparams.append((filters[param[0]][0], opcode))
+        return lparams
+
+    def _get_pas_vpnos(self, device, value, footprint):
+        devtype, searchurlbase, packagetf, package_header, \
+            package_filter_type, extraparams = \
+            self._get_device_searchparams(device)
+        filters = self._get_searchurl_filters(searchurlbase)
+        params = copy(self._default_urlparams)
+        loptions, lvalues = self._get_value_options(devtype, value)
+
+        params.extend(self._process_value_options(filters, loptions, lvalues))
+
+        if packagetf is not None:
+            footprint = packagetf(footprint)
+
+        params.extend(self._process_package_options(
+            filters, package_header, package_filter_type, footprint
+        ))
+
+        params.extend(self._process_extraparams(filters, extraparams))
 
         searchurl = searchurlbase + '?' + urllib.urlencode(params)
 
@@ -1330,16 +1484,28 @@ class VendorDigiKey(VendorBase):
         ptable = soup.find('table', id='productTable')
         if ptable is None:
             # check for single product page
-            result, pnos, strategy = self._process_product_page(soup)
-            if result is True:
-                return pnos, strategy
-            else:
-                return None, strategy
+            sr = self._process_product_page(soup)
+            if sr.success is True:
+                # Sent directly to an exact match. Just send it back.
+                return [sr.parts[0]['Digi-Key Part Number']], sr.strategy
 
-        result, pnos, strategy = self._process_results_page(soup, None, None)
-        if result is False:
-            return None, strategy
-        return pnos, strategy
+        try:
+            table = self._get_resultpage_table(soup)
+        except ValueError:
+            return None, 'NO_RESULTS:PAS1'
+        sr = self._get_resultpage_parts(table)
+        if sr.success is False:
+            return SearchResult(False, None, sr.strategy)
+        if sr.parts is None:
+            raise Exception
+        if len(sr.parts) == 0:
+            return None, 'NO_RESULTS:PAS2'
+
+        results = sr.parts
+        sr = self._process_results(results, value, footprint)
+        if sr.success is False:
+            return None, sr.strategy
+        return sr.parts, sr.strategy
 
 
 dvobj = VendorDigiKey('digikey', 'Digi-Key Corporation',

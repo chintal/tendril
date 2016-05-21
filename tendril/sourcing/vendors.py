@@ -34,7 +34,14 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 
+#: A :mod:`collections.namedtuple` used internally to pass
+#: around (sub)search results conveniently.
 SearchResult = namedtuple('SearchResult', 'success parts strategy')
+
+#: A :mod:`collections.namedtuple` used internally to pass
+#: around part data conveniently.
+SearchPart = namedtuple('SearchPart',
+                        'pno, mfgpno, package, ns, unitp,  minqty')
 
 
 class VendorMapFileDB(MapFileBase):

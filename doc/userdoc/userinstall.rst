@@ -254,8 +254,8 @@ Installing the Dependencies
            custom script is retained for the moment to maintain a functional base upon
            which additional functionality can be added on as needed. If another solution
            is to be used instead, appropriate changes should be made
-           to :func:`tendril.utils.libreoffice.XLFile._make_csv_files` and
-           :func:`tendril.utils.libreoffice.XLFile._parse_sscout`.
+           to :func:`tendril.utils.files.libreoffice.XLFile._make_csv_files` and
+           :func:`tendril.utils.files.libreoffice.XLFile._parse_sscout`.
 
            1. Install dependencies:
 
