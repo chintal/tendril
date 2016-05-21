@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-TI Sourcing Module documentation (:mod:`sourcing.ti`)
-=====================================================
+TI Vendor Module (:mod:`tendril.sourcing.ti`)
+=============================================
 """
 
 import locale

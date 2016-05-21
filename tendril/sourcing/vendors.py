@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-Vendors module documentation (:mod:`sourcing.vendors`)
-======================================================
+Vendors module documentation (:mod:`tendril.sourcing.vendors`)
+==============================================================
 """
 
 import os
@@ -346,7 +346,6 @@ class VendorBase(object):
         self._order = None
         self._orderbasecosts = []
         self._orderadditionalcosts = []
-        self._vpart_class = VendorPartBase
         if mappath is not None:
             self._mappath = mappath
         else:

@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Mouser Sourcing Module documentation (:mod:`sourcing.mouser`)
-=============================================================
+Mouser Vendor Module (:mod:`tendril.sourcing.mouser`)
+=====================================================
 
 This module is currently non-functional. Mouser now returns HTTP 405
 for automated data collection requests, and needs JS/captcha to be

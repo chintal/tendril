@@ -15,21 +15,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-Digi-Key Sourcing Module documentation (:mod:`tendril.sourcing.digikey`)
-========================================================================
+Digi-Key Vendor Module (:mod:`tendril.sourcing.digikey`)
+========================================================
 
 'Standalone' Usage
 ------------------
 
-This module can be imported by itself to provide limited but
-potentially useful functionality.
+This module can be imported by itself to provide limited but potentially
+useful functionality.
 
 >>> from tendril.sourcing import digikey
 
 .. rubric:: Search
 
-Search for Digi-Key part numbers given a Tendril-compatible
-ident string :
+Search for Digi-Key part numbers given a Tendril-compatible ident string :
 
 >>> digikey.dvobj.search_vpnos('IC SMD W5300 LQFP100-14')
 (['1278-1009-ND'], 'EXACT_MATCH_FFP')
@@ -37,23 +36,21 @@ ident string :
 .. seealso::
     :ref:`symbol-conventions`
 
-Note that only certain types of components are supported by the
-search. The DEVICE component of the ident string is used to
-determine whether or not a search will even be attempted.
+Note that only certain types of components are supported by the search. The
+``device`` component of the ident string is used to determine whether or not
+a search will even be attempted. See :data:`VendorDigiKey._devices` for a
+list of supported device classes.
 
-Even with supported device types, remember that this search is
-nowhere near bulletproof. The more generic a device and/or it's
-name becomes, the less likely it is to work. The intended use
-for this type of search is in concert with an organization's
-engineering policies and an instance administrator who can make
-the necessary tweaks to the search algortihms and maintain a
-low error rate for component types commonly used within the
-instance.
+Even with supported device types, remember that this search is nowhere near
+bulletproof. The more generic a device and/or its name is, the less likely
+it is to work. The intended use for this type of search is in concert with
+an organization's engineering policies and an instance administrator who
+can make the necessary tweaks to the search algortihms and maintain a low
+error rate for component types commonly used within the instance.
 
-Tweaks and improvements to the search process are welcome as
-pull requests to the tendril github repository, though their
-inclusion will be predicated on them causing minimal breakage
-to what already exists.
+Tweaks and improvements to the search process are welcome as pull requests
+to the tendril github repository, though their inclusion will be predicated
+on them causing minimal breakage to what already exists.
 
 .. rubric:: Retrieve
 
@@ -73,9 +70,8 @@ Obtain information for a given Digi-Key part number :
 >>> p.vpartdesc
 'IC FIFO SUPERSYNCII 10NS 80TQFP'
 
-The pricing information is also populated by this time, and
-can be accessed though the part object using the interfaces
-defined in those class definitions.
+The pricing information is also populated by this time, and can be accessed
+though the part object using the interfaces defined in those class definitions.
 
 >>> for b in p._prices:
 ...     print b
@@ -88,11 +84,10 @@ defined in those class definitions.
 <VendorPrice INR 5,802.56 @1000(1)>
 <VendorPrice INR 5,707.43 @2500(1)>
 
-Additionally, the contents of the Overview and Attributes
-tables are available, though not parsed, in the form of BS4
-trees. Note, however, that these contents are only available
-when part details are obtained from the soup itself, and not
-when reconstructed from the Tendril database.
+Additionally, the contents of the Overview and Attributes tables are
+available, though not parsed, in the form of BS4 trees. Note, however, that
+these contents are only available when part details are obtained from the
+soup itself, and not when reconstructed from the Tendril database.
 
 >>> for k in p.attributes_table.keys():
 ...     print k
@@ -179,8 +174,8 @@ SearchPart = namedtuple('SearchPart',
 class DigiKeyElnPart(VendorElnPartBase):
     def __init__(self, dkpartno, ident=None, vendor=None):
         """
-        This class acquires and contains information about a single
-        DigiKey part number, specified by the `dkpartno` parameter.
+        This class acquires and contains information about a single DigiKey
+        part number, specified by the `dkpartno` parameter.
 
         :param dkpartno: The DigiKey part number.
         :type dkpartno: str
@@ -203,6 +198,11 @@ class DigiKeyElnPart(VendorElnPartBase):
         self._get_data()
 
     def _get_data(self):
+        """
+        This function downloads the part page from Digi-Key, scrapes the page,
+        and populates the object with all the necessary information.
+
+        """
         url = ('http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail?name=' +  # noqa
                urllib.quote_plus(self.vpno))
         soup = www.get_soup(url)
@@ -224,6 +224,17 @@ class DigiKeyElnPart(VendorElnPartBase):
         self.vpartdesc = self._get_vpartdesc()
 
     def _get_prices(self, soup):
+        """
+        Given the BS4 parsed soup of the Digi-Key product page, this function
+        extracts the prices and breaks and returns them as a list of
+        :class:`.vendors.VendorPrice` instances.
+
+        Price listings containing only 'Call' are ignored. Any other
+        non-numeric content for the price or break quantity listing results
+        in an error message from the logger and the corresponding price /
+        break quantity is returned as 0.
+
+        """
         pricingtable = soup.find('table', id='product-dollars')
         prices = []
         try:
@@ -260,6 +271,29 @@ class DigiKeyElnPart(VendorElnPartBase):
 
     @staticmethod
     def _get_table(table):
+        """
+        Parses tabular data in the format of Digi-Key's part detail tables,
+        obtained from a BS4 parsed tree.
+
+        The tables parsed are of the format :
+
+        .. code-block:: html
+
+            <table>
+                ...
+                <tr>
+                    <th> [HEAD] </th>
+                    <td> [DATA] </th>
+                </tr>
+                ...
+            </table>
+
+        The parsed table is returned as a dictionary. For each row in the
+        table, the extracted ``[HEAD]`` is stripped, encoded to ascii and
+        used as a key, and value is the corresponding ``[DATA]`` in it's
+        BS4 parsed form.
+
+        """
         rows = table.findAll('tr')
         parsed_rows = {}
         for row in rows:
@@ -272,22 +306,42 @@ class DigiKeyElnPart(VendorElnPartBase):
         return parsed_rows
 
     def _get_overview_table(self, soup):
+        """
+        Given the BS4 parsed soup of the Digi-Key product page, this function
+        extracts and returns the overview / product-detail table using
+        :func:`_get_table`.
+        """
         table = soup.find('table', {'id': 'product-details'})
         return self._get_table(table)
 
     def _get_attributes_table(self, soup):
+        """
+        Given the BS4 parsed soup of the Digi-Key product page, this function
+        extracts and returns the product attributes table using
+        :func:`_get_table`.
+        """
         table = soup.find('table', {'class': 'attributes-table-main'})
         return self._get_table(table)
 
     def _get_mpartno(self):
+        """
+        Extracts the Manufacturer Part Number from the overview table.
+        """
         cell = self.overview_table['Manufacturer Part Number']
         return cell.text.strip().encode('ascii', 'replace')
 
     def _get_manufacturer(self):
+        """
+        Extracts the Manufacturer from the overview table.
+        """
         cell = self.overview_table['Manufacturer']
         return cell.text.strip().encode('ascii', 'replace')
 
     def _get_package(self):
+        """
+        Extracts the Package from the attributes table. If ``Package / Case``
+        is not found in the table, returns None.
+        """
         try:
             cell = self.attributes_table['Package / Case']
         except KeyError:
@@ -295,6 +349,10 @@ class DigiKeyElnPart(VendorElnPartBase):
         return cell.text.strip().encode('ascii', 'replace')
 
     def _get_datasheet(self):
+        """
+        Extracts the first datasheet link from the attributes table.
+        If ``Datasheets`` is not found in the table, returns None.
+        """
         try:
             cell = self.attributes_table['Datasheets']
         except KeyError:
@@ -306,6 +364,12 @@ class DigiKeyElnPart(VendorElnPartBase):
     _regex_vqty_vai = re.compile(r'^Value Added Item')
 
     def _get_vqtyavail(self):
+        """
+        Extracts the Quantity Available from the overview table. If
+        ``Value Added Item`` is found in the available quantity cell,
+        returns -2. If any other non integral value is found in the
+        cell, returns -1.
+        """
         cell = self.overview_table['Quantity Available']
         text = cell.text.strip().encode('ascii', 'replace')
         try:
@@ -318,6 +382,9 @@ class DigiKeyElnPart(VendorElnPartBase):
             return -1
 
     def _get_vpartdesc(self):
+        """
+        Extracts the Description from the overview table.
+        """
         cell = self.overview_table['Description']
         return cell.text.strip().encode('ascii', 'replace')
 
@@ -381,37 +448,22 @@ class VendorDigiKey(VendorBase):
     _partclass = DigiKeyElnPart
     _invoiceclass = DigiKeyInvoice
 
+    #: Supported Device Classes
+    _devices = [
+        'IC SMD', 'IC THRU', 'IC PLCC',
+        'FERRITE BEAD SMD', 'TRANSISTOR THRU', 'TRANSISTOR SMD',
+        'CONN DF13', 'CONN DF13 HOUS', 'CONN DF13 WIRE', 'CONN DF13 CRIMP',
+        'CONN MODULAR', 'DIODE SMD', 'DIODE THRU', 'BRIDGE RECTIFIER',
+        'VARISTOR', 'RES SMD', 'RES THRU', 'CAP CER SMD', 'CAP TANT SMD',
+        'TRANSFORMER SMD', 'INDUCTOR SMD', 'CRYSTAL AT'
+    ]
+
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code='USD', currency_symbol='US$'):
-        self._devices = ['IC SMD',
-                         'IC THRU',
-                         'IC PLCC',
-                         'FERRITE BEAD SMD',
-                         'TRANSISTOR THRU',
-                         'TRANSISTOR SMD',
-                         'CONN DF13',
-                         'CONN DF13 HOUS',
-                         'CONN DF13 WIRE',
-                         'CONN DF13 CRIMP',
-                         'CONN MODULAR',
-                         'DIODE SMD',
-                         'DIODE THRU',
-                         'VARISTOR',
-                         'BRIDGE RECTIFIER',
-                         'RES SMD',
-                         'RES THRU',
-                         'CAP CER SMD',
-                         'CAP TANT SMD',
-                         'TRANSFORMER SMD',
-                         'INDUCTOR SMD',
-                         'CRYSTAL AT'
-                         ]
-        self._ndevices = ['CONN INTERBOARD']
         self._searchpages_filters = {}
         super(VendorDigiKey, self).__init__(
             name, dname, pclass, mappath, currency_code, currency_symbol
         )
-        self._vpart_class = DigiKeyElnPart
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)
 
@@ -605,16 +657,16 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _process_resultpage_row(row):
         """
-        Given a 'row' from a CSV file obtained from Digi-Key's search
-        interface and read in using ``csv.DictReader``, convert it into
-        a ``SearchPart`` instance.
+        Given a row from a CSV file obtained from Digi-Key's search
+        interface and read in using :class:`csv.DictReader`, convert it into
+        a :class:`SearchPart` instance.
 
         If the unit price for the row is not readily parseable into a
         float, or if the minqty field includes a Non-Stock note, the
-        returned SearchPart has it's `ns` attribute set to True.
+        returned SearchPart has it's ``ns`` attribute set to True.
 
         :type row: dict
-        :rtype: ``SearchPart``
+        :rtype: :class:`SearchPart`
         """
         pno = row.pop('Digi-Key Part Number', '').strip()
         package = row.pop('Package / Case', '').strip()
@@ -646,17 +698,18 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _filter_results_unfiltered(parts):
         """
-        Given a list of ``SearchPart`` instances, returns a ``SearchResult``
-        instance, whose 'parts' attribute includes a list of part numbers.
+        Given a list of :class:`SearchPart` instances, returns a
+        :class:`.vendors.SearchResult` instance, whose ``parts``
+        attribute includes a list of part numbers.
 
-        If any of the part numbers are not listed as Non-Stocked, then only
-        the Stocked results are returned along with the strategy 'UNFILTERED'.
+        If any of the part numbers are not listed as Non-Stocked, only the
+        Stocked results are returned along with the strategy ``UNFILTERED``.
 
         If all of the part numbers are listed as Non-Stocked, then all the
-        part numbers are returned with the strategy 'UNFILTERED_ALLOW_NS'.
+        part numbers are returned with the strategy ``UNFILTERED_ALLOW_NS``.
 
-        :type parts: ``list`` of ``SearchPart``
-        :rtype: ``SearchResult``
+        :type parts: list of :class:`SearchPart`
+        :rtype: :class:`.vendors.SearchResult`
         """
         pnos = []
         strategy = 'UNFILTERED'
@@ -672,17 +725,18 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _find_exact_match_package(parts, value):
         """
-        Given a list of ``SearchPart`` instances and a known value, returns
-        a ``SearchResult`` instance, whose 'parts' attribute includes only
-        the package of the part whose manufacturer part number (mfgpno)
-        exactly matches the given value, if such an exact match can be found.
+        Given a list of :class:`SearchPart` instances and a known value,
+        returns a :class:`.vendors.SearchResult` instance, whose ``parts``
+        attribute includes only the package of the part whose manufacturer
+        part number (``mfgpno``) exactly matches the given value, if such
+        an exact match can be found.
 
-        The ``SearchResult`` returned on success has it's strategy attribute
-        set to `EXACT_MATCH_FFP`.
+        The :class:`.vendors.SearchResult` returned on success has it's
+        strategy attribute set to ``EXACT_MATCH_FFP``.
 
-        :type parts: ``list`` of ``SearchPart``
+        :type parts: list of :class:`SearchPart`
         :type value: str
-        :rtype: ``SearchResult``
+        :rtype: :class:`.vendors.SearchResult`
         """
         for part in parts:
             if part.mfgpno == value:
@@ -692,16 +746,16 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _find_consensus_package(parts):
         """
-        Given a list of ``SearchPart`` instances, returns a ``SearchResult``
-        instance, whose 'parts' attribute includes only the consensus package
-        of all the parts in the provided list, if such a consensus can be
-        reached.
+        Given a list of :class:`SearchPart` instances, returns a
+        :class:`.vendors.SearchResult` instance, whose 'parts' attribute
+        includes only the consensus package of all the parts in the provided
+        list, if such a consensus can be reached.
 
-        The ``SearchResult`` returned on success has it's strategy attribute
-        set to `CONSENSUS_FP_MATCH`.
+        The :class:`.vendors.SearchResult` returned on success has it's
+        strategy attribute set to ``CONSENSUS_FP_MATCH``.
 
-        :type parts: ``list`` of ``SearchPart``
-        :rtype: ``SearchResult``
+        :type parts: list of :class:`SearchPart`
+        :rtype: :class:`.vendors.SearchResult`
         """
         cpackage = parts[0].package
         for part in parts:
@@ -712,22 +766,57 @@ class VendorDigiKey(VendorBase):
         return SearchResult(False, None, None)
 
     @staticmethod
+    def _filter_results_bycpackage(parts, cpackage, strategy):
+        """
+        Given a list of :class:`SearchPart` instances, and a consensus package
+        string, returns a :class:`.vendors.SearchResult` instance, whose
+        ``parts`` attribute includes the part numbers of all the parts in the
+        provided list whose package attribute matches the consensus package.
+
+        When used in the correct context, this function uses cpackage instead
+        of the original footprint. cpackage is itself extracted from the
+        result table, and therefore greatly decreases (though not eliminates)
+        the odds of false negatives.
+
+        A strategy is accepted as the third argument to this function, and is
+        returned within the :class:`.vendors.SearchResult`, with modification
+        to append ``_ALLOW_NS`` if necessary.
+
+        :type parts: list of :class:`SearchPart`
+        :param cpackage: A consensus or exact match package.
+        :type cpackage: str
+        :type strategy: str
+        :rtype: :class:`.vendors.SearchResult`
+        """
+        pnos = []
+        for part in parts:
+            if part.package == cpackage:
+                if not part.ns:
+                    pnos.append(part.pno)
+        if len(pnos) == 0:
+            strategy += '_ALLOW_NS'
+            for part in parts:
+                if part.package == cpackage:
+                    pnos.append(part.pno)
+        return SearchResult(True, pnos, strategy)
+
+    @staticmethod
     def _filter_results_byfootprint(parts, footprint):
         """
-        Given a list of ``SearchPart`` instances and the target footprint,
-        returns a ``SearchResult`` instance, whose 'parts' attribute
-        includes part numbers for all parts in the provided list whose
-        package attribute contains the provided footprint.
+        Given a list of :class:`SearchPart` instances and the target
+        footprint, returns a :class:`.vendors.SearchResult` instance, whose
+        ``parts`` attribute includes part numbers for all parts in the
+        provided list whose package attribute contains the provided footprint.
 
         This is a last ditch effort. Due to the diversity in package
         nomenclature, this has a very low likelihood of success
         without an exceptionally well curated symbol library. The
-        ``SearchResult`` returned on success has it's strategy attribute
-        set to `HAIL_MARY` or `HAIL_MARY_ALLOW_NS`.
+        :class:`.vendors.SearchResult` returned on success has it's
+        strategy attribute set to ``HAIL_MARY`` or ``HAIL_MARY_ALLOW_NS``.
 
-        :type parts: ``list`` of ``SearchPart``
+        :type parts: list of :class:`SearchPart`
         :type footprint: str
-        :rtype: ``SearchResult``
+        :rtype: :class:`.vendors.SearchResult`
         """
         pnos = []
         strategy = 'HAIL MARY'
@@ -742,42 +831,33 @@ class VendorDigiKey(VendorBase):
                     pnos.append(part.pno)
         return SearchResult(True, pnos, strategy)
 
-    @staticmethod
-    def _filter_results_bycpackage(parts, cpackage, strategy):
-        """
-        Given a list of ``SearchPart`` instances, and a consensus package
-        string, returns a ``SearchResult`` instance, whose 'parts' attribute
-        includes the part numbers of all the parts in the provided list whose
-        package attribute matches the consensus package.
-
-        When used in the correct context, this function uses cpackage instead
-        of the original footprint. cpackage is itself extracted from the
-        result table, and therefore greatly decreases (though not eliminates)
-        the odds of false negatives.
-
-        A strategy is accepted as the third argument to this function, and is
-        returned within the ``SearchResult``, with modification to append
-        `_ALLOW_NS` if necessary.
-
-        :type parts: ``list`` of ``SearchPart``
-        :param cpackage: A consensus or exact match package.
-        :type cpackage: str
-        :type strategy: str
-        :rtype: ``SearchResult``
-        """
-        pnos = []
-        for part in parts:
-            if part.package == cpackage:
-                if not part.ns:
-                    pnos.append(part.pno)
-        if len(pnos) == 0:
-            strategy += '_ALLOW_NS'
-            for part in parts:
-                if part.package == cpackage:
-                    pnos.append(part.pno)
-        return SearchResult(True, pnos, strategy)
-
     def _filter_results(self, parts, value, footprint):
+        """
+        Given a list of :class:`SearchPart`, and the target value and
+        footprint, returns a :class:`.vendors.SearchResult` instance, whose
+        ``parts`` attribute includes part numbers for all parts in the
+        provided list matching the required value and footprint.
+
+        The filtering is done in the following sequence :
+
+        - If the first part in ``parts`` contains no package information or
+          the provided target ``footprint`` is ``None``, then filtering is
+          done solely using :func:`_filter_results_unfiltered`.
+
+        - If an exact match package (:func:`_find_exact_match_package`) or
+          consensus package (:func:`_find_consensus_package`) is found, it
+          is used as ``cpackage`` and filtered using
+          :func:`_filter_results_bycpackage`.
+
+        - If none of the previous conditions were met,
+        :func:`_filter_results_byfootprint` is used.
+
+
+        The returned :class:`.vendors.SearchResult` instance always has its
+        ``status`` attribute set to ``True``, and the ``strategy`` attribute
+        is passed along unmodified from the inner filter function.
+
+        """
         if parts[0].package is None or footprint is None:
             # No package, so no basis to filter
             sr = self._filter_results_unfiltered(parts)
@@ -810,6 +890,14 @@ class VendorDigiKey(VendorBase):
 
     @staticmethod
     def _remove_duplicates(parts):
+        """
+        Given a list of :class:`SearchPart` instances, this function removes
+        any duplicates that may have crept in. In this case, the necessary and
+        sufficient condition for two :class:`SearchPart` instances to be
+        duplicates of each other is that they have the same vendor part number
+        (``pno``).
+
+        """
         vpnos = []
         for part in parts:
             if part.pno in vpnos:
@@ -819,6 +907,13 @@ class VendorDigiKey(VendorBase):
         return parts
 
     def _process_results(self, parts, value, footprint):
+        """
+        Processes a list of :class:`SearchPart` instances, using
+        :func:`_remove_duplicates` and :func:`_filter_results`, and
+        returns the :class:`.vendors.SearchResult` instance returned
+        by :func:`_filter_results`.
+
+        """
         parts = self._remove_duplicates(parts)
         return self._filter_results(parts, value, footprint)
 

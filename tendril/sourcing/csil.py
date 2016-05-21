@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-CSIL Sourcing Module documentation (:mod:`sourcing.csil`)
-=========================================================
+CSIL Vendor Module (:mod:`tendril.sourcing.csil`)
+=================================================
 """
 
 import time
