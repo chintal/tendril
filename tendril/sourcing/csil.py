@@ -419,7 +419,7 @@ class VendorCSIL(vendors.VendorBase):
         for line in self._order.lines:
             stage = stagebase
             stage['intref'] = self._order.orderref
-            stage['username'] = user
+            stage['username'] = self._username
             stage['name'] = line[2]
             stage['qty'] = line[3]
             stage['unitp'] = line[5].unit_price.source_value

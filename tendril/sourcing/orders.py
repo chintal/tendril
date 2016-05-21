@@ -25,7 +25,6 @@ import os
 
 from tendril.gedaif import gsymlib
 from tendril.inventory import guidelines
-import tendril.sourcing.electronics
 
 
 from tendril.utils import log
@@ -39,8 +38,13 @@ class CompositeOrderElem(object):
         self._rqty = rqty
         self._resqty = rqty - shortage
         self._shortage = shortage
+        # TODO
+        # Have a module level order instance here instead of
+        # leaving it to sourcing.electronics, and creating this
+        # circular import problem.
+        from tendril.sourcing import electronics
         try:
-            self._sources = tendril.sourcing.electronics.get_sourcing_information(  # noqa
+            self._sources = electronics.get_sourcing_information(  # noqa
                 self.ident, self.gl_compl_qty,
                 avendors=self._order._allowed_vendors,
                 allvendors=True
@@ -50,7 +54,7 @@ class CompositeOrderElem(object):
                 if self.get_eff_acq_price(vsinfo) < \
                         self.get_eff_acq_price(self._selsource):
                     self._selsource = vsinfo
-        except tendril.sourcing.electronics.SourcingException:  # noqa
+        except electronics.SourcingException:  # noqa
             self._sources = None
             self._selsource = None
 

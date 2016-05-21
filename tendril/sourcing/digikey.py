@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-Digi-Key Sourcing Module documentation (:mod:`sourcing.digikey`)
-================================================================
+Digi-Key Sourcing Module documentation (:mod:`tendril.sourcing.digikey`)
+========================================================================
 
 'Standalone' Usage
 ------------------
@@ -33,6 +33,9 @@ ident string :
 
 >>> digikey.dvobj.search_vpnos('IC SMD W5300 LQFP100-14')
 (['1278-1009-ND'], 'EXACT_MATCH_FFP')
+
+.. seealso::
+    :ref:`symbol-conventions`
 
 Note that only certain types of components are supported by the
 search. The DEVICE component of the ident string is used to
@@ -164,16 +167,33 @@ from tendril.utils.config import INSTANCE_ROOT
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
-
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-SearchPart = namedtuple('SearchPart', 'pno, mfgpno, package, ns, unitp,  minqty')
+
+
+#: A :mod:`collections.namedtuple` used internally to pass
+#: around part data conveniently.
+SearchPart = namedtuple('SearchPart',
+                        'pno, mfgpno, package, ns, unitp,  minqty')
 
 
 class DigiKeyElnPart(VendorElnPartBase):
     def __init__(self, dkpartno, ident=None, vendor=None):
         """
+        This class acquires and contains information about a single
+        DigiKey part number, specified by the `dkpartno` parameter.
 
-        :type vendor: VendorDigiKey
+        :param dkpartno: The DigiKey part number.
+        :type dkpartno: str
+        :param ident: ``(Optional)`` Allows the caller to include the
+                      canonical representation within Tendril for the
+                      part represented by the object.
+        :type ident: str
+        :param vendor: ``(Optional)`` Allows the caller to 'bind' the part
+                       to the pre-existing vendor objects in Tendril's
+                       sourcing infrastructure. This does not currently
+                       provide anything useful, but that may very well change.
+        :type vendor: :class:`VendorDigiKey`
+
         """
         if vendor is None:
             vendor = dvobj

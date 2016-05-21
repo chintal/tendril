@@ -1,4 +1,5 @@
 
+.. _symbol-conventions:
 
 gEDA Symbol Conventions
 =======================
@@ -175,13 +176,19 @@ Constructors for Connector Idents:
 
 Component Groups
 ****************
-HM
 
+TBD
+
+
+Generators
+**********
+
+TBD
 
 Motifs
 ******
 
-Attribute Syntax Structure : ``[MOTIF_CLASS].[REFDES]-[MOTIF_ELEMENT]``
+Attribute Syntax Structure : ``[MOTIF_CLASS].[REFDES]:[MOTIF_ELEMENT]``
 
 Examples : ``DLPF1.1:R1``, ``DLPF1.1:R2``, ``DLPF1.1:C1``, ``DLPF1.1:C2``, ``DLPF1.1:C3``
 
@@ -193,14 +200,21 @@ attribute should be visible or should be removed, depending on what the status i
 ``STATUS`` is, in some sense, an outer-loop version of gEDA's ``symversion`` attribute.
 
 Allowed Status values:
- :Active: : If the ``STATUS`` attribute is ``Active`` or does not exist, then the scripts treat the symbol as ``Active``. This means the component is acceptable for normal use, and someone in the Company knows the details of procurement and usage of the component.
+ :Active: If the ``STATUS`` attribute is ``Active`` or does not exist, then the scripts treat the symbol as ``Active``. This means the component is acceptable for normal use, and someone in the Company knows the details of procurement and usage of the component.
  :Experimental: If the ``STATUS`` is ``Experimental``, this means that the component is being considered for use. However, care should be taken because the symbol and footprint are likely untested, the component's sourcing details may not be finalized, so on.
- :Deprecated: If the ``STATUS`` is ``Deprecated``, this means a decision has been made to completely phase out use of this component. During redesign of any production PCB, the use of any ``Deprecated`` components should be looked at and removed if possible. Converting a ``Deprecated`` component back into ``Active`` use should involve a specific discussion of the relative merits. Under no circumstances should an Obsolete component be ``Active``.
- :Generator: The ``STATUS`` of ``Generator`` is a special case, indicating that the component represented by the symbol is not necessarily a real component. If such a symbol has a ``VALUE`` attribute, then the ``VALUE`` is the default value for the component and should be valid. The ``VALUE`` attribute of the symbol should be promoted to the schematic and set appropriately (or created if it does not exist in the symbol). Once the ``VALUE`` attribute is set, the ``STATUS=Generator`` attribute should be removed from the component in the schematic. The ``VALUE`` attribute of any symbol whose ``STATUS`` is not ``Generator`` should never be promoted / edited in the schematic under any circumstances.
+ :Deprecated: If the ``STATUS`` is ``Deprecated``, this means a decision has been made to completely phase out use of this component. During redesign of any production PCB, the use of any ``Deprecated`` components should be looked at and removed if possible. Converting a ``Deprecated`` component back into ``Active`` use should involve a specific discussion of the relative merits.
+ :Generator: The ``STATUS`` of ``Generator`` is a special case, indicating that the component represented by the symbol is not necessarily a real component. If such a symbol has a ``VALUE`` attribute, then the ``VALUE`` is the default value for the component and should be valid. The ``VALUE`` attribute of the symbol should be promoted to the schematic and set appropriately (or created if it does not exist in the symbol). Once the ``VALUE`` attribute is set, the ``STATUS=Generator`` attribute should be removed from the component in the schematic.
+
+.. important::
+    Under no circumstances should an Obsolete component be ``Active``.
+
+.. important::
+    The ``VALUE`` attribute of any symbol whose ``STATUS`` is not ``Generator`` should never be promoted / edited in the schematic under any circumstances.
 
 Attribute Promotion
 *******************
-HM
+
+TBD
 
 Script Dependencies
 *******************

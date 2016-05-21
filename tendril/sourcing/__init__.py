@@ -15,6 +15,48 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+The Sourcing Package (:mod:`tendril.sourcing`)
+==============================================
+
+.. automodule:: tendril.sourcing.db
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Core Sourcing Modules
+---------------------
+
+.. toctree::
+
+   tendril.sourcing.customs
+   tendril.sourcing.electronics
+   tendril.sourcing.orders
+   tendril.sourcing.vendors
+
+
+Vendor Support Modules
+----------------------
+
+.. toctree::
+
+   tendril.sourcing.digikey
+   tendril.sourcing.mouser
+   tendril.sourcing.ti
+   tendril.sourcing.csil
+   tendril.sourcing.pricelist
+
+
+Sourcing Inheritance Diagram
+----------------------------
+
+.. inheritance-diagram::
+   tendril.sourcing.vendors
+   tendril.sourcing.orders
+   tendril.sourcing.customs
+   tendril.sourcing.csil
+   tendril.sourcing.digikey
+   tendril.sourcing.mouser
+   tendril.sourcing.ti
+   tendril.sourcing.pricelist
+
 """
