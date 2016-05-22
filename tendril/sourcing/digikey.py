@@ -201,12 +201,13 @@ class DigiKeyElnPart(VendorElnPartBase):
         :type dkpartno: str
         :param ident: ``(Optional)`` Allows the caller to include the
                       canonical representation within Tendril for the
-                      part represented by the object.
+                      part represented by the object. This is required
+                      for use with the Tendril database.
         :type ident: str
         :param vendor: ``(Optional)`` Allows the caller to 'bind' the part
                        to the pre-existing vendor objects in Tendril's
-                       sourcing infrastructure. This does not currently
-                       provide anything useful, but that may very well change.
+                       sourcing infrastructure. This is required
+                      for use with the Tendril database.
         :type vendor: :class:`VendorDigiKey`
 
         """

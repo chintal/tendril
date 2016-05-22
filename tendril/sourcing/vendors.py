@@ -23,10 +23,12 @@ import os
 import csv
 import time
 from collections import namedtuple
+from sqlalchemy.orm.exc import NoResultFound
 
 from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
 from tendril.utils import config
+from tendril.utils.db import get_session
 
 from db import controller
 
@@ -226,6 +228,56 @@ class VendorPartBase(object):
         self._vendor = vendor
         self._pkgqty = 1
 
+    def commit(self, session=None):
+        if session is None:
+            with get_session() as s:
+                self._commit_to_db(session=s)
+        else:
+            self._commit_to_db(session=session)
+
+    def _commit_to_db(self, session):
+        vpno = controller.get_vpno_obj(
+            vendor=self._vendor._name, ident=self._canonical_repr,
+            vpno=self._vpno, session=session
+        )
+        controller.populate_vpart_detail(
+            vpno=vpno, vpart=self, session=session
+        )
+        controller.populate_vpart_prices(
+            vpno=vpno, vpart=self, session=session
+        )
+        return vpno
+
+    def load_from_db(self, session=None):
+        if session is None:
+            with get_session() as s:
+                self._load_from_db(session=s)
+        else:
+            self._load_from_db(session=session)
+
+    def _load_from_db(self, session):
+        try:
+            vpno = controller.get_vpno_obj(
+                vendor=self._vendor._name, ident=self._canonical_repr,
+                vpno=self._vpno, session=session
+            )
+            self._vqtyavail = vpno.detail[0].vqtyavail
+            self._manufacturer = vpno.detail[0].manufacturer
+            self._mpartno = vpno.detail[0].mpartno
+            self._vpartdesc = vpno.detail[0].vpartdesc
+            for price in vpno.prices:
+                self.add_price(
+                    VendorPrice(price.moq, price.price,
+                                self._vendor.currency, price.oqmultiple)
+                )
+            return vpno
+        except NoResultFound:
+            self._get_data()
+            return None
+
+    def _get_data(self):
+        raise NotImplementedError
+
     def add_price(self, price):
         self._prices.append(price)
 
@@ -291,6 +343,10 @@ class VendorPartBase(object):
                 rval = price.moq
         return rval
 
+    @property
+    def prices(self):
+        return self._prices
+
     def get_price(self, qty):
         rprice = None
         rnextprice = None
@@ -320,6 +376,19 @@ class VendorElnPartBase(VendorPartBase):
         super(VendorElnPartBase, self).__init__(vpno, ident, vendor)
         self._package = None
         self._datasheet = None
+
+    def _commit_to_db(self, session):
+        vpno = super(VendorElnPartBase, self)._commit_to_db(session=session)
+        controller.populate_vpart_detail_eln(
+            vpno=vpno, vpart=self, session=session
+        )
+        return vpno
+
+    def _load_from_db(self, session):
+        vpno = super(VendorElnPartBase, self)._load_from_db(session=session)
+        if vpno is not None:
+            self._package = vpno.detail_eln[0].package
+            self._datasheet = vpno.detail_eln[0].datasheet
 
     @property
     def package(self):

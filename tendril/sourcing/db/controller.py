@@ -31,6 +31,9 @@ from tendril.utils.db import get_session
 from model import SourcingVendor
 from model import VendorPartMap
 from model import VendorPartNumber
+from model import VendorPartDetail
+from model import VendorElnPartDetail
+from model import VendorPrice
 
 from tendril.utils.config import VENDORS_DATA
 
@@ -69,17 +72,8 @@ def _get_vpno_obj(vendor=None, ident=None, vpno=None,
 
     if isinstance(vpno, VendorPartNumber):
         return vpno
-
-    vendor = _get_vendor(vendor=vendor, session=session)
-    ident = _get_ident(ident=ident, session=session)
-
-    map_obj = get_map(vendor=vendor, ident=ident, session=session)
-
-    q = session.query(VendorPartNumber)
-    q = q.filter(VendorPartNumber.vpmap_id == map_obj.id)
-    q = q.filter(VendorPartNumber.type == mtype)
-    q = q.filter(VendorPartNumber.vpno == vpno)
-    return q.one()
+    return get_vpno_obj(vendor=vendor, ident=ident,
+                        vpno=vpno, mtype=mtype, session=session)
 
 
 @with_db
@@ -114,6 +108,104 @@ def get_vendor(name=None, create=False, session=None):
             return obj
         else:
             return None
+
+
+@with_db
+def get_vpno_obj(vendor=None, ident=None, vpno=None,
+                 mtype=None, session=None):
+
+    vendor = _get_vendor(vendor=vendor, session=session)
+    ident = _get_ident(ident=ident, session=session)
+
+    map_obj = get_map(vendor=vendor, ident=ident, session=session)
+
+    q = session.query(VendorPartNumber)
+    q = q.filter(VendorPartNumber.vpmap_id == map_obj.id)
+    if mtype is not None:
+        q = q.filter(VendorPartNumber.type == mtype)
+    q = q.filter(VendorPartNumber.vpno == vpno)
+    return q.one()
+
+
+# Vendor Part Setters
+@with_db
+def populate_vpart_detail(vpno=None, vpart=None, session=None):
+    assert isinstance(vpno, VendorPartNumber)
+    from ..vendors import VendorPartBase
+    assert isinstance(vpart, VendorPartBase)
+    if not len(vpno.detail):
+        vpno.detail.append(
+            VendorPartDetail(
+                vqtyavail=vpart.vqtyavail,
+                manufacturer=vpart.manufacturer,
+                mpartno=vpart.mpartno,
+                vpartdesc=vpart.vpartdesc,
+                pkgqty=vpart.pkgqty,
+        ))
+    else:
+        vpno.detail[0].vqtyavail = vpart.vqtyavail
+        vpno.detail[0].manufacturer = vpart.manufacturer
+        vpno.detail[0].mpartno = vpart.mpartno
+        vpno.detail[0].vpartdesc = vpart.vpartdesc
+        vpno.detail[0].pkgqty = vpart.pkgqty
+
+    session.add(vpno)
+    session.flush()
+
+
+@with_db
+def populate_vpart_detail_eln(vpno=None, vpart=None, session=None):
+    assert isinstance(vpno, VendorPartNumber)
+    from ..vendors import VendorElnPartBase
+    assert isinstance(vpart, VendorElnPartBase)
+
+    if not len(vpno.detail_eln):
+        vpno.detail_eln.append(
+            VendorElnPartDetail(
+                package=vpart.package,
+                datasheet=vpart.datasheet,
+        ))
+    else:
+        vpno.detail_eln[0].package = vpart.package
+        vpno.detail_eln[0].datasheet = vpart.datasheet
+
+    session.add(vpno)
+    session.flush()
+
+
+@with_db
+def clear_vpart_prices(vpno=None, session=None):
+    assert isinstance(vpno, VendorPartNumber)
+    vpno.prices = []
+    session.add(vpno)
+    session.flush()
+
+
+@with_db
+def populate_vpart_prices(vpno=None, vpart=None, session=None):
+    assert isinstance(vpno, VendorPartNumber)
+    from ..vendors import VendorPartBase
+    assert isinstance(vpart, VendorPartBase)
+    tprices = [(x.moq, str(x.unit_price.source_value), x.oqmultiple)
+               for x in vpart.prices]
+
+    # TODO Currency types really need to switch to Decimal.
+    for p in vpno.prices:
+        pricetuple = (p.moq, p.price, p.oqmultiple)
+        if pricetuple not in tprices:
+            vpno.prices.remove(pricetuple)
+        else:
+            tprices.remove(pricetuple)
+
+    for price in tprices:
+        vpno.prices.append(
+            VendorPrice(
+                moq=price[0],
+                price=str(price[1]),
+                oqmultiple=price[2],
+        ))
+    session.add(vpno)
+    session.flush()
 
 
 # Vendor Map Getters
@@ -214,7 +306,8 @@ def set_strategy(vendor=None, ident=None, strategy=None, session=None):
 
 
 @with_db
-def add_map_vpno(vendor=None, ident=None, vpno=None, mtype=None, session=None):
+def add_map_vpno(vendor=None, ident=None, vpno=None, mtype=None,
+                 session=None):
     vendor = _get_vendor(vendor=vendor, session=session)
     ident = _get_ident(ident=ident, session=session)
 
@@ -228,7 +321,8 @@ def add_map_vpno(vendor=None, ident=None, vpno=None, mtype=None, session=None):
 
 
 @with_db
-def remove_map_vpno(vendor=None, ident=None, vpno=None, mtype=None, session=None):
+def remove_map_vpno(vendor=None, ident=None, vpno=None,
+                    mtype=None, session=None):
     vendor = _get_vendor(vendor=vendor, session=session)
     ident = _get_ident(ident=ident, session=session)
     vpno_obj = _get_vpno_obj(vendor=vendor, ident=ident, vpno=vpno,
@@ -240,28 +334,36 @@ def remove_map_vpno(vendor=None, ident=None, vpno=None, mtype=None, session=None
 
 @with_db
 def clear_map(vendor=None, ident=None, mtype=None, session=None):
-    vendor = _get_vendor(vendor=vendor, session=session)
-    ident = _get_ident(ident=ident, session=session)
 
-    vpnos = get_map_vpnos(vendor=vendor, ident=ident,
-                          mtype=mtype, session=session)
+    vpmap = get_map(vendor=vendor, ident=ident, session=session)
+    if mtype is None:
+        vpmap.vpnos = []
+    else:
+        vpmap.vpnos = [x for x in vpmap.vpnos if x.type != mtype]
 
-    for vpno in vpnos:
-        remove_map_vpno(vendor=vendor, ident=ident, vpno=vpno,
-                        mtype=mtype, session=session)
+    session.add(vpmap)
+    session.flush()
 
 
 @with_db
 def set_map_vpnos(vendor=None, ident=None, vpnos=None,
                   mtype=None, session=None):
-    vendor = _get_vendor(vendor=vendor, session=session)
-    ident = _get_ident(ident=ident, session=session)
-
-    clear_map(vendor=vendor, ident=ident, mtype=mtype, session=session)
+    vpmap = get_map(vendor=vendor, ident=ident, session=session)
+    for vpno in vpmap.vpnos:
+        if vpno.type == mtype and vpno.vpno in vpnos:
+            vpnos.remove(vpno.vpno)
+        else:
+            vpmap.vpnos.remove(vpno.vpno)
 
     for vpno in vpnos:
-        add_map_vpno(vendor=vendor, ident=ident, vpno=vpno,
-                     mtype=mtype, session=session)
+        vpno_obj = VendorPartNumber(
+            vpno=vpno, type=mtype, vpmap_id=vpmap.id
+        )
+        session.add(vpno_obj)
+
+    vpmap.updated_at = arrow.utcnow()
+    session.add(vpmap)
+    session.flush()
 
 
 @with_db

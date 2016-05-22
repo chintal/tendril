@@ -25,6 +25,7 @@ from sqlalchemy.orm import synonym
 from sqlalchemy import UniqueConstraint
 from sqlalchemy import Integer, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref
 
 from tendril.utils.db import DeclBase
 from tendril.utils.db import BaseMixin
@@ -74,7 +75,10 @@ class SourcingVendorDetail(DeclBase, BaseMixin):
     # Relationships
     vendor_id = Column(Integer, ForeignKey('SourcingVendor.id'),
                        unique=True, nullable=False)
-    vendor = relationship("SourcingVendor", backref='detail')
+    vendor = relationship(
+        "SourcingVendor",
+        backref=backref('detail', cascade='all, delete-orphan')
+    )
 
 
 class VendorPartMap(DeclBase, BaseMixin, TimestampMixin):
@@ -97,7 +101,10 @@ class VendorPartMap(DeclBase, BaseMixin, TimestampMixin):
     # Relationships
     vendor_id = Column(Integer, ForeignKey('SourcingVendor.id'),
                        unique=False, nullable=False)
-    vendor = relationship("SourcingVendor", backref='maps')
+    vendor = relationship(
+        "SourcingVendor",
+        backref=backref('maps', cascade='all, delete-orphan')
+    )
 
     # Constraints
     __table_args__ = (
@@ -117,7 +124,10 @@ class VendorPartNumber(DeclBase, BaseMixin, TimestampMixin):
     # Relationships
     vpmap_id = Column(Integer, ForeignKey('VendorPartMap.id'),
                       unique=False, nullable=False)
-    vpmap = relationship("VendorPartMap", backref='vpnos')
+    vpmap = relationship(
+        "VendorPartMap",
+        backref=backref('vpnos', cascade='all, delete-orphan')
+    )
 
     # Constraints
     __table_args__ = (
@@ -137,18 +147,24 @@ class VendorPartDetail(DeclBase, BaseMixin, TimestampMixin):
     vpno_id = Column(Integer,
                      ForeignKey('VendorPartNumber.id'),
                      unique=True, nullable=False)
-    vpno = relationship("VendorPartNumber", backref='detail')
+    vpno = relationship(
+        "VendorPartNumber",
+        backref=backref('detail', cascade='all, delete-orphan')
+    )
 
 
 class VendorElnPartDetail(DeclBase, BaseMixin):
-    package = Column(String, unique=False, nullable=False)
-    datasheet = Column(String, unique=False, nullable=False)
+    package = Column(String, unique=False, nullable=True)
+    datasheet = Column(String, unique=False, nullable=True)
 
     # Relationships
     vpno_id = Column(Integer,
                      ForeignKey('VendorPartNumber.id'),
                      unique=True, nullable=False)
-    vpno = relationship("VendorPartNumber", backref='detail_eln')
+    vpno = relationship(
+        "VendorPartNumber",
+        backref=backref('detail_eln', cascade='all, delete-orphan')
+    )
 
 
 class VendorPrice(DeclBase, BaseMixin, TimestampMixin):
@@ -159,4 +175,7 @@ class VendorPrice(DeclBase, BaseMixin, TimestampMixin):
     # Relationships
     vpno_id = Column(Integer, ForeignKey('VendorPartNumber.id'),
                      unique=False, nullable=False)
-    vpno = relationship("VendorPartNumber", backref='prices')
+    vpno = relationship(
+        "VendorPartNumber",
+        backref=backref('prices', cascade='all, delete-orphan')
+    )

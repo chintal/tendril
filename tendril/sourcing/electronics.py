@@ -120,7 +120,7 @@ def init_vendors():
                          vendor['name'])
 
 
-def export_vendor_map_audit(vendor_obj):
+def export_vendor_map_audit(vendor_obj, commit=True):
     """
 
     :type vendor_obj: sourcing.vendors.VendorBase
@@ -138,6 +138,8 @@ def export_vendor_map_audit(vendor_obj):
         for vpno in mapobj.get_all_partnos(ident):
             try:
                 vp = vendor_obj.get_vpart(vpno, ident)
+                if commit is True:
+                    vp.commit()
             except:
                 logger.error("Error while getting part {0} from {1}".format(
                     vpno, vendor_obj.name
@@ -194,13 +196,6 @@ def get_sourcing_information(ident, qty, avendors=vendor_list,
         return sources
 
 order = orders.CompositeOrder(vendor_list)
-
-
-# def get_vendor_by_name(name):
-#     for vendor in vendor_list:
-#         if vendor.vendor_name == name:
-#             return vendor
-#     return None
 
 
 def get_vendor_by_name(name):
