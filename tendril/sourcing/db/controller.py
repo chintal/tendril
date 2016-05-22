@@ -146,6 +146,7 @@ def populate_vpart_detail(vpno=None, vpart=None, session=None):
                 pkgqty=vpart.pkgqty,
         )
 
+    vpno.updated_at = arrow.utcnow()
     session.add(vpno)
     session.flush()
 
@@ -203,7 +204,9 @@ def populate_vpart_prices(vpno=None, vpart=None, session=None):
                 moq=price[0],
                 price=str(price[1]),
                 oqmultiple=price[2],
-        ))
+            )
+        )
+
     session.add(vpno)
     session.flush()
 

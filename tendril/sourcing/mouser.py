@@ -54,15 +54,14 @@ html_parser = HTMLParser.HTMLParser()
 
 
 class MouserElnPart(vendors.VendorElnPartBase):
-    def __init__(self, mouserpartno, ident=None, vendor=None):
-        if vendor is None:
-            vendor = VendorMouser('mouser', 'transient', 'electronics',
-                                  currency_code='USD', currency_symbol='US$')
-        super(MouserElnPart, self).__init__(mouserpartno, ident, vendor)
+    def __init__(self, mouserpartno, ident=None, vendor=None, max_age=600000):
         self.url_base = vendor.url_base
-        if not self._vpno:
+        if not mouserpartno:
             logger.error("Not enough information to create a Mouser Part")
-        self._get_data()
+        if vendor is None:
+            vendor = dvobj
+        super(MouserElnPart, self).__init__(mouserpartno, ident,
+                                            vendor, max_age)
 
     def _get_data(self):
         soup, href = self._get_product_soup()
@@ -747,3 +746,7 @@ class VendorMouser(vendors.VendorBase):
 
     def _get_pas_vpnos(self, device, value, footprint):
         raise NotImplementedError
+
+
+dvobj = VendorMouser('mouser', 'transient', 'electronics',
+                     currency_code='USD', currency_symbol='US$')

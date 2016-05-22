@@ -67,17 +67,17 @@ Session.configure(bind=engine)
 
 
 def _format_frame(frame):
-        name = []
-        module = inspect.getmodule(frame)
-        if module:
-            name.append(module.__name__)
-        # detect classname
-        if 'self' in frame.f_locals:
-            name.append(frame.f_locals['self'].__class__.__name__)
-        codename = frame.f_code.co_name
-        if codename != '<module>':
-            name.append(codename)
-        return '.'.join(name)
+    name = []
+    module = inspect.getmodule(frame)
+    if module:
+        name.append(module.__name__)
+    # detect classname
+    if 'self' in frame.f_locals:
+        name.append(frame.f_locals['self'].__class__.__name__)
+    codename = frame.f_code.co_name
+    if codename != '<module>':
+        name.append(codename)
+    return '.'.join(name)
 
 
 def _get_caller(skip=1, get_stack=False):

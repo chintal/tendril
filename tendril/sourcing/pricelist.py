@@ -41,7 +41,60 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
+class PricelistPart(vendors.VendorPartBase):
+    def __init__(self, vpartno, ident, vendor, max_age=600000):
+        self._vendor = vendor
+        super(PricelistPart, self).__init__(
+            vpartno, ident, vendor, max_age
+        )
+
+    def _get_data(self):
+        _vp_dict = self._vendor.get_vpdict(self._vpno)
+        if 'pkgqty' in _vp_dict.keys():
+            self.pkgqty = _vp_dict['pkgqty']
+        if 'availqty' in _vp_dict.keys():
+            self._vqtyavail = _vp_dict['availqty']
+        else:
+            self._vqtyavail = None
+        self._get_prices(_vp_dict)
+
+    def _get_prices(self, vp_dict):
+        rex = re.compile(ur'^unitp@(?P<moq>\d+)$')
+        for k, v in vp_dict.iteritems():
+            try:
+                moq = rex.match(k).group(1)
+                price = vendors.VendorPrice(int(moq), float(v),
+                                            self._vendor.currency,
+                                            vp_dict['oqmultiple'])
+                self._prices.append(price)
+            except AttributeError:
+                pass
+        if len(self._prices) == 0:
+            price = vendors.VendorPrice(vp_dict['moq'],
+                                        vp_dict['unitp'],
+                                        self._vendor.currency,
+                                        vp_dict['oqmultiple'])
+            self.add_price(price)
+
+    def get_price_qty(self, qty):
+        lcost = None
+        lprice = None
+        loqty = None
+        for price in self._prices:
+            tqty = 0
+            while tqty < qty or tqty < price.moq:
+                tqty += price.oqmultiple
+            tcost = price.extended_price(tqty).native_value
+            if lcost is None or tcost < lcost:
+                lcost = tcost
+                lprice = price
+                loqty = tqty
+        return lcost, loqty, lprice
+
+
 class VendorPricelist(vendors.VendorBase):
+    _partclass = PricelistPart
+
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=None, currency_symbol=None,
                  pricelistpath=None):
@@ -188,6 +241,9 @@ class VendorPricelist(vendors.VendorBase):
         else:
             return vplist, 'UNDEF'
 
+    def get_vpdict(self, vpartno):
+        return self._pl_get_vpart_dict(vpartno)
+
     def get_vpart(self, vpartno, ident=None):
         vp_dict = self._pl_get_vpart_dict(vpartno)
         if ident is not None:
@@ -230,54 +286,6 @@ class VendorPricelist(vendors.VendorBase):
         effprice = self.get_effective_price(price)
         return self, selcandidate.vpno, oqty, None, \
             price, effprice, "Vendor MOQ/GL", None
-
-
-class PricelistPart(vendors.VendorPartBase):
-    def __init__(self, vp_dict, ident, vendor):
-        self._vendor = vendor
-        super(PricelistPart, self).__init__(
-            vp_dict['vpno'].strip(), ident, vendor
-        )
-        if 'pkgqty' in vp_dict.keys():
-            self.pkgqty = vp_dict['pkgqty']
-        if 'availqty' in vp_dict.keys():
-            self._vqtyavail = vp_dict['availqty']
-        else:
-            self._vqtyavail = None
-        self._get_prices(vp_dict)
-
-    def _get_prices(self, vp_dict):
-        rex = re.compile(ur'^unitp@(?P<moq>\d+)$')
-        for k, v in vp_dict.iteritems():
-            try:
-                moq = rex.match(k).group(1)
-                price = vendors.VendorPrice(int(moq), float(v),
-                                            self._vendor.currency,
-                                            vp_dict['oqmultiple'])
-                self._prices.append(price)
-            except AttributeError:
-                pass
-        if len(self._prices) == 0:
-            price = vendors.VendorPrice(vp_dict['moq'],
-                                        vp_dict['unitp'],
-                                        self._vendor.currency,
-                                        vp_dict['oqmultiple'])
-            self._prices.append(price)
-
-    def get_price_qty(self, qty):
-        lcost = None
-        lprice = None
-        loqty = None
-        for price in self._prices:
-            tqty = 0
-            while tqty < qty or tqty < price.moq:
-                tqty += price.oqmultiple
-            tcost = price.extended_price(tqty).native_value
-            if lcost is None or tcost < lcost:
-                lcost = tcost
-                lprice = price
-                loqty = tqty
-        return lcost, loqty, lprice
 
 
 class AnalogDevicesInvoice(customs.CustomsInvoice):

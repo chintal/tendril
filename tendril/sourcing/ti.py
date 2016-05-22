@@ -30,9 +30,14 @@ import urlparse
 import HTMLParser
 import traceback
 
-import vendors
+from .vendors import VendorBase
+from .vendors import VendorElnPartBase
+from .vendors import VendorPrice
+from .vendors import SearchResult
+from .vendors import SearchPart
+
 from tendril.utils import www
-from tendril.conventions import electronics
+from tendril.conventions.electronics import parse_ident
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -41,30 +46,25 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 html_parser = HTMLParser.HTMLParser()
 
 
-class TIElnPart(vendors.VendorElnPartBase):
-    def __init__(self, tipartno, ident=None, vendor=None):
-        if vendor is None:
-            vendor = VendorTI('ti', 'transient', 'electronics',
-                              currency_code='USD', currency_symbol='US$')
-        super(TIElnPart, self).__init__(tipartno, ident, vendor)
-        self.url_base = vendor.url_base
-        if not self._vpno:
+class TIElnPart(VendorElnPartBase):
+    def __init__(self, tipartno, ident=None, vendor=None, max_age=600000):
+        if not tipartno:
             logger.error("Not enough information to create a TI Part")
-        self._get_data()
+        if vendor is None:
+            vendor = dvobj
+        self.url_base = vendor.url_base
+        super(TIElnPart, self).__init__(tipartno, ident, vendor, max_age)
 
     def _get_data(self):
         soup = self._get_product_soup()
         for price in self._get_prices(soup):
             self.add_price(price)
-        try:
-            self.mpartno = self._get_mpartno()
-            self.manufacturer = self._get_manufacturer()
-            self.datasheet = self._get_datasheet_link()
-            self.vpartdesc = self._get_description(soup)
-            self.package = self._get_package(soup)
-        except AttributeError:
-            logger.error("Failed to acquire part information : " + self.vpno)
-            # TODO raise AttributeError
+
+        self.mpartno = self._get_mpartno()
+        self.manufacturer = self._get_manufacturer()
+        self.datasheet = self._get_datasheet_link()
+        self.vpartdesc = self._get_description(soup)
+        self.package = self._get_package(soup)
 
     def _get_product_soup(self):
         start_url = urlparse.urljoin(
@@ -98,21 +98,28 @@ class TIElnPart(vendors.VendorElnPartBase):
             return
         return soup
 
-    rex_price = re.compile(ur'^((?P<start>\d+)-)?(?P<end>\d+)$')
+    rex_price = re.compile(ur'^((?P<start>\d+)\s+-\s+)?(?P<end>\d+)$')
 
     def _get_prices(self, soup):
         ptable = soup.find('div',
                            id='ctl00_ctl00_NestedMaster_PageContent'
                               '_ctl00_BuyProductDialog1_tierPricing')
         prices = []
-        rows = ptable.find_all('div', class_=re.compile(r'pMoreLine'))
+        if ptable is None:
+            self.vqtyavail = 0
+            return []
+        rows = ptable.find_all('tr')
         availq = None
         for row in rows:
-            price_text = row.find(
-                'span', id=re.compile(r'lblTier(\d+)ListPrice')
-            ).text.strip()
+            cells = row.findAll('td')
+            if not len(cells):
+                continue
+            price_cell = row.find('span', id=re.compile(r'_Price$'))
+            price_text = price_cell.text.strip()
             price = locale.atof(price_text.replace('$', ''))
-            qty_text = row.find('span', class_='qty').text.strip()
+
+            qty_cell = row.find('span', id=re.compile(r'_Range_From$'))
+            qty_text = qty_cell.text.strip()
             m = self.rex_price.match(qty_text)
             if not m:
                 raise ValueError(
@@ -125,10 +132,8 @@ class TIElnPart(vendors.VendorElnPartBase):
             maxq = locale.atoi(m.group('end'))
             if not availq or maxq > availq:
                 availq = maxq
-            price_obj = vendors.VendorPrice(moq,
-                                            price,
-                                            self._vendor.currency,
-                                            oqmultiple=1)
+            price_obj = VendorPrice(moq, price, self._vendor.currency,
+                                    oqmultiple=1)
             prices.append(price_obj)
         self.vqtyavail = availq
         return prices
@@ -160,30 +165,25 @@ class TIElnPart(vendors.VendorElnPartBase):
         return www.strencode(strings[1])
 
 
-class VendorTI(vendors.VendorBase):
+class VendorTI(VendorBase):
     _partclass = TIElnPart
+    _url_base = 'https://store.ti.com'
+    _devices = ['IC SMD', 'IC THRU', 'IC PLCC',]
 
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code='USD', currency_symbol='US$'):
-        self.url_base = 'https://store.ti.com'
-        self._devices = ['IC SMD',
-                         'IC THRU',
-                         'IC PLCC',
-                         ]
-        self._ndevices = []
         self._searchpages_filters = {}
-        if not currency_code:
-            currency_code = 'USD'
-        if not currency_symbol:
-            currency_symbol = 'US$'
         super(VendorTI, self).__init__(name, dname, pclass, mappath,
                                        currency_code, currency_symbol)
-        self._vpart_class = TIElnPart
         self.add_order_baseprice_component("Shipping Cost", 7)
         self.add_order_additional_cost_component("Customs", 12.85)
 
+    @property
+    def url_base(self):
+        return self._url_base
+
     def search_vpnos(self, ident):
-        device, value, footprint = electronics.parse_ident(ident)
+        device, value, footprint = parse_ident(ident)
         if device not in self._devices:
             return None, 'NODEVICE'
         try:
@@ -201,7 +201,7 @@ class VendorTI(vendors.VendorBase):
             footprint = 'TO-92-3'
         return device, value, footprint
 
-    norms = [
+    _package_norms = [
         # --- Standard Cases --- #
         # TO-220-3 (Normalized)
         # http://www.ti.com/sc/docs/psheets/type/to_220.html
@@ -236,7 +236,7 @@ class VendorTI(vendors.VendorBase):
     ]
 
     def _standardize_package(self, package):
-        for norm in self.norms:
+        for norm in self._package_norms:
             m = norm[0].match(package)
             if m:
                 params = [m.group(var) for var in norm[2]]
@@ -247,121 +247,129 @@ class VendorTI(vendors.VendorBase):
         product_link = row.find('a', class_='highlight')
         pno = product_link.text.strip()
         try:
-            product = TIElnPart(pno)
+            product = TIElnPart(pno, vendor=self)
         except:
-            return None, None, None, None
-        # unitp = product._prices[0]._price
-        ns = False
+            return None
+        if product.vqtyavail > 0:
+            ns = False
+            bprice = product.prices[0]
+            unitp = bprice.unit_price
+            minqty = bprice.moq
+        else:
+            ns = True
+            unitp = None
+            minqty = None
         mfgpno = pno
+        if product.package is None:
+            return None
         package = self._standardize_package(product.package)
-        return pno, mfgpno, package, ns
+        return SearchPart(pno, mfgpno, package, ns, unitp, minqty)
 
     def _process_search_soup(self, soup):
         ptable = soup.find('table',
                            id=re.compile(r'ctl00_ProductList'))
         if ptable is None:
-            return False, None, 'NO_RESULTS:3'
+            return SearchResult(False, None, 'NO_RESULTS:3')
         rows = ptable.find_all('td', class_=re.compile(r'tableNode'))
         if not rows:
-            return False, None, 'NO_RESULTS:1'
+            return SearchResult(False, None, 'NO_RESULTS:1')
         parts = []
         for row in rows:
             part = self._process_resultpage_row(row)
-            if part[-1] is not None:
+            if isinstance(part, SearchPart):
                 parts.append(part)
-        return True, parts, ''
+        return SearchResult(True, parts, '')
 
     @staticmethod
     def _prefilter_parts(parts, value):
-        parts = [part for part in parts if value.upper() in part[1].upper()]
+        parts = [part for part in parts if value.upper() in part.mfgpno]
         return parts
 
     @staticmethod
     def _find_exact_match_package(parts, value):
-        for pno, mfgpno, package, ns in parts:
-            if mfgpno == value:
-                return True, package, 'EXACT_MATCH_FFP'
-        return False, None, None
+        for part in parts:
+            if part.mfgpno == value:
+                return SearchResult(True, part.package, 'EXACT_MATCH_FFP')
+        return SearchResult(False, None, None)
 
     @staticmethod
     def _find_consensus_package(parts):
-        cpackage = parts[0][2]
-        for pno, mfgpno, package, ns in parts:
-            if package != cpackage:
+        cpackage = parts[0].package
+        for part in parts:
+            if part.package != cpackage:
                 cpackage = None
         if cpackage is not None:
-            return True, cpackage, 'CONSENSUS_FP_MATCH'
-        return False, None, None
+            return SearchResult(True, cpackage, 'CONSENSUS_FP_MATCH')
+        return SearchResult(False, None, None)
 
     @staticmethod
     def _filter_results_unfiltered(parts):
         pnos = []
         strategy = 'UNFILTERED'
-        for pno, mfgpno, package, ns in parts:
-            if not ns:
-                pnos.append(pno)
+        for part in parts:
+            if not part.ns:
+                pnos.append(part.pno)
         if len(pnos) == 0:
             strategy += '_ALLOW_NS'
-            for pno, mfgpno, package, ns in parts:
-                pnos.append(pno)
-        return True, pnos, strategy
+            for part in parts:
+                pnos.append(part.pno)
+        return SearchResult(True, pnos, strategy)
 
     @staticmethod
     def _filter_results_byfootprint(parts, footprint):
         pnos = []
-        strategy = 'HAIL MARY'
-        for pno, mfgpno, package, ns in parts:
-            if footprint == package:
-                if not ns:
-                    pnos.append(pno)
+        strategy = 'NAIVE_FP_MATCH'
+        for part in parts:
+            if footprint == part.package:
+                if not part.ns:
+                    pnos.append(part.pno)
         if len(pnos) == 0:
-            strategy += ' ALLOW NS'
-            for pno, mfgpno, package, ns in parts:
-                if footprint == package:
-                    pnos.append(pno)
-        return True, pnos, strategy
+            strategy += '_ALLOW_NS'
+            for part in parts:
+                if footprint == part.package:
+                    pnos.append(part.pno)
+        return SearchResult(True, pnos, strategy)
 
     @staticmethod
     def _filter_results_bycpackage(parts, cpackage, strategy):
         pnos = []
-        for pno, mfgpno, package, ns in parts:
-            if package == cpackage:
-                if not ns:
-                    pnos.append(pno)
+        for part in parts:
+            if part.package == cpackage:
+                if not part.ns:
+                    pnos.append(part.pno)
         if len(pnos) == 0:
             strategy += '_ALLOW_NS'
-            for pno, mfgpno, package, ns in parts:
-                if package == cpackage:
-                    pnos.append(pno)
-        return True, pnos, strategy
+            for part in parts:
+                if part.package == cpackage:
+                    pnos.append(part.pno)
+        return SearchResult(True, pnos, strategy)
 
     def _filter_results(self, parts, value, footprint):
-        if parts[0][2] is None or footprint is None:
+        if parts[0].package is None or footprint is None:
             # No package, so no basis to filter
-            result, pnos, strategy = self._filter_results_unfiltered(parts)
-            return True, pnos, strategy
+            sr = self._filter_results_unfiltered(parts)
+            return SearchResult(True, sr.parts, sr.strategy)
 
         # Find Exact Match Package
-        result, cpackage, strategy = self._find_exact_match_package(parts,
-                                                                    value)
-        if result is False:
+        sr = self._find_exact_match_package(parts, value)
+        if sr.success is False:
             # Did not find an exact match package. Check for consensus
             # package instead.
-            result, cpackage, strategy = self._find_consensus_package(parts)
-            if result is False:
+            sr = self._find_consensus_package(parts)
+            if sr.success is False:
                 # No exact match, no consensus on package
-                result, pnos, strategy = \
-                    self._filter_results_byfootprint(parts, footprint)
-                return True, pnos, strategy
+                sr = self._filter_results_byfootprint(parts, footprint)
+                return SearchResult(True, sr.parts, sr.strategy)
 
         # cpackage exists
-        result, pnos, strategy = \
-            self._filter_results_bycpackage(parts, cpackage, strategy)
+        sr = self._filter_results_bycpackage(parts, sr.parts, sr.strategy)
 
-        if len(pnos) == 0:
+        if len(sr.parts) == 0:
             pnos = None
+        else:
+            pnos = sr.parts
 
-        return True, pnos, strategy
+        return SearchResult(True, pnos, sr.strategy)
 
     @staticmethod
     def _get_search_soups(soup):
@@ -372,29 +380,34 @@ class VendorTI(vendors.VendorBase):
             return None, 'NOVALUE'
         device, value, footprint = \
             self._search_preprocess(device, value, footprint)
-        url = urlparse.urljoin(self.url_base,
-                               "Search.aspx?k={0}&pt=-1".format(
-                                   urllib.quote_plus(value)))
+        url = urlparse.urljoin(
+            self._url_base,
+            "Search.aspx?k={0}&pt=-1".format(urllib.quote_plus(value))
+        )
         soup = www.get_soup(url)
         if soup is None:
             return None, 'URL_FAIL'
         parts = []
         strategy = ''
         for soup in self._get_search_soups(soup):
-            result, lparts, lstrategy = self._process_search_soup(soup)
-            if result:
-                if lparts:
-                    parts.extend(lparts)
-                strategy += ', ' + lstrategy
+            sr = self._process_search_soup(soup)
+            if sr.success is True:
+                if sr.parts:
+                    parts.extend(sr.parts)
+                strategy += ', ' + sr.strategy
             strategy = '.' + strategy
         if not len(parts):
             return None, strategy + ':NO_RESULTS:COLLECTED'
         parts = self._prefilter_parts(parts, value)
         if not len(parts):
             return None, strategy + ':NO_RESULTS:PREFILTER'
-        result, pnos, lstrategy = \
-            self._filter_results(parts, value, footprint)
-        if pnos:
-            pnos = list(set(pnos))
+        sr = self._filter_results(parts, value, footprint)
+        if sr.parts:
+            pnos = list(set(sr.parts))
             pnos = map(lambda x: html_parser.unescape(x), pnos)
-        return pnos, ':'.join([strategy, lstrategy])
+            return pnos, ':'.join([strategy, sr.strategy])
+        return None, strategy + ':NO_RESULTS:POSTFILTER'
+
+
+dvobj = VendorTI('ti', 'transient', 'electronics',
+                 currency_code='USD', currency_symbol='US$')

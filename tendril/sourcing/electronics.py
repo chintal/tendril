@@ -120,11 +120,7 @@ def init_vendors():
                          vendor['name'])
 
 
-def export_vendor_map_audit(vendor_obj, commit=True):
-    """
-
-    :type vendor_obj: sourcing.vendors.VendorBase
-    """
+def export_vendor_map_audit(vendor_obj, max_age=600000):
     if isinstance(vendor_obj, int):
         vendor_obj = vendor_list[vendor_obj]
     mapobj = vendor_obj.map
@@ -137,9 +133,7 @@ def export_vendor_map_audit(vendor_obj, commit=True):
     for ident in mapobj.get_idents():
         for vpno in mapobj.get_all_partnos(ident):
             try:
-                vp = vendor_obj.get_vpart(vpno, ident)
-                if commit is True:
-                    vp.commit()
+                vp = vendor_obj.get_vpart(vpno, ident, max_age)
             except:
                 logger.error("Error while getting part {0} from {1}".format(
                     vpno, vendor_obj.name

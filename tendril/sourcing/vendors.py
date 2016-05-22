@@ -46,6 +46,22 @@ SearchPart = namedtuple('SearchPart',
                         'pno, mfgpno, package, ns, unitp,  minqty')
 
 
+class DBPartDataUnusable(Exception):
+    pass
+
+
+class DBPartDataExpired(DBPartDataUnusable):
+    pass
+
+
+class DBPartDataIncomplete(DBPartDataUnusable):
+    pass
+
+
+class DBPartDataUnavailable(DBPartDataUnusable):
+    pass
+
+
 class VendorMapFileDB(MapFileBase):
     def __init__(self, vendor):
         self._vendor = vendor
@@ -217,7 +233,7 @@ class VendorPrice(object):
 
 
 class VendorPartBase(object):
-    def __init__(self, vpno, ident, vendor):
+    def __init__(self, vpno, ident, vendor, max_age=600000):
         self._vpno = vpno
         self._vqtyavail = None
         self._manufacturer = None
@@ -227,6 +243,24 @@ class VendorPartBase(object):
         self._prices = []
         self._vendor = vendor
         self._pkgqty = 1
+        self._populate(max_age)
+
+    def _populate(self, max_age):
+        if self._vendor is not None and self._canonical_repr is not None:
+            with get_session() as s:
+                if max_age > 0:
+                    try:
+                        self.load_from_db(max_age, s)
+                        return
+                    except DBPartDataUnusable:
+                        pass
+                self._get_data()
+                try:
+                    self.commit(s)
+                except NoResultFound:
+                    pass
+        else:
+            self._get_data()
 
     def commit(self, session=None):
         if session is None:
@@ -248,32 +282,38 @@ class VendorPartBase(object):
         )
         return vpno
 
-    def load_from_db(self, session=None):
+    def load_from_db(self, max_age, session=None):
         if session is None:
             with get_session() as s:
-                self._load_from_db(session=s)
+                self._load_from_db(max_age, session=s)
         else:
-            self._load_from_db(session=session)
+            self._load_from_db(max_age, session=session)
 
-    def _load_from_db(self, session):
+    def _load_from_db(self, max_age, session):
         try:
             vpno = controller.get_vpno_obj(
                 vendor=self._vendor._name, ident=self._canonical_repr,
                 vpno=self._vpno, session=session
             )
+            data_ts = vpno.updated_at.timestamp
+            now = time.time()
+            if now - data_ts > max_age:
+                raise DBPartDataExpired
             self._vqtyavail = vpno.detail.vqtyavail
             self._manufacturer = vpno.detail.manufacturer
             self._mpartno = vpno.detail.mpartno
             self._vpartdesc = vpno.detail.vpartdesc
+            self._pkgqty = vpno.detail.pkgqty
             for price in vpno.prices:
                 self.add_price(
-                    VendorPrice(price.moq, price.price,
-                                self._vendor.currency, price.oqmultiple)
+                    VendorPrice(int(price.moq), float(price.price),
+                                self._vendor.currency, int(price.oqmultiple))
                 )
             return vpno
         except NoResultFound:
-            self._get_data()
-            return None
+            raise DBPartDataUnavailable
+        except AttributeError:
+            raise DBPartDataIncomplete
 
     def _get_data(self):
         raise NotImplementedError
@@ -372,10 +412,10 @@ class VendorPartBase(object):
 
 
 class VendorElnPartBase(VendorPartBase):
-    def __init__(self, vpno, ident, vendor):
-        super(VendorElnPartBase, self).__init__(vpno, ident, vendor)
+    def __init__(self, vpno, ident, vendor, max_age):
         self._package = None
         self._datasheet = None
+        super(VendorElnPartBase, self).__init__(vpno, ident, vendor, max_age)
 
     def _commit_to_db(self, session):
         vpno = super(VendorElnPartBase, self)._commit_to_db(session=session)
@@ -384,8 +424,9 @@ class VendorElnPartBase(VendorPartBase):
         )
         return vpno
 
-    def _load_from_db(self, session):
-        vpno = super(VendorElnPartBase, self)._load_from_db(session=session)
+    def _load_from_db(self, max_age, session):
+        vpno = super(VendorElnPartBase, self)._load_from_db(max_age,
+                                                            session=session)
         if vpno is not None:
             self._package = vpno.detail_eln.package
             self._datasheet = vpno.detail_eln.datasheet
@@ -465,9 +506,9 @@ class VendorBase(object):
             for vpno in self._map.get_all_partnos(ident):
                 yield ident, vpno
 
-    def get_all_vparts(self):
+    def get_all_vparts(self, max_age=600000):
         for ident, vpno in self.get_all_vpnos():
-            yield self.get_vpart(vpartno=vpno, ident=ident)
+            yield self.get_vpart(vpartno=vpno, ident=ident, max_age=max_age)
 
     def get_vpnos(self, ident):
         return self._map.get_partnos(ident)
@@ -475,8 +516,8 @@ class VendorBase(object):
     def search_vpnos(self, ident):
         raise NotImplementedError
 
-    def get_vpart(self, vpartno, ident=None):
-        return self._partclass(vpartno, ident, self)
+    def get_vpart(self, vpartno, ident=None, max_age=600000):
+        return self._partclass(vpartno, ident, self, max_age)
 
     def get_optimal_pricing(self, ident, rqty):
         candidate_names = self.get_vpnos(ident)

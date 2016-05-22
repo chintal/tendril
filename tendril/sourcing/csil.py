@@ -261,26 +261,22 @@ def get_csil_prices(params=exparams, rval=None):
 
 
 class CSILPart(vendors.VendorPartBase):
-    def __init__(self, vpartno, ident, vendor):
+    def __init__(self, vpartno, ident, vendor, max_age=600000):
         if vendor is None:
-            vendor = VendorCSIL('csil', 'transient', 'electronics_pcb')
-            vendor.currency = currency.CurrencyDefinition('INR', 'INR')
-        self._vendor = vendor
+            vendor = dvobj
         if ident is None:
             ident = self._vendor.map.get_canonical(vpartno)
-        super(CSILPart, self).__init__(vpartno, ident, vendor)
-        if vpartno is not None:
-            self.vpno = vpartno
-        else:
-            logger.error("Not enough information to create a CSIL Part")
-        self._pcbname = vpartno
+        self._descriptors = []
+        super(CSILPart, self).__init__(vpartno, ident, vendor, max_age)
+
+    def _get_data(self):
+        self._pcbname = self.vpno
         if self._pcbname not in projects.pcbs.keys():
             raise ValueError("Unrecognized PCB")
         self._projectfolder = projects.pcbs[self._pcbname]
-        self._load_prices()
-        self._descriptors = []
         self._load_descriptors()
         self._manufacturer = self._vendor.name
+        self._load_prices()
         self._vqtyavail = None
 
     def _load_descriptors(self):

@@ -33,6 +33,9 @@ Search for Digi-Key part numbers given a Tendril-compatible ident string :
 >>> digikey.dvobj.search_vpnos('IC SMD W5300 LQFP100-14')
 (['1278-1009-ND'], 'EXACT_MATCH_FFP')
 
+>>> digikey.dvobj.search_vpnos('IC SMD LM311 8-TSSOP')
+(['296-13719-2-ND', '296-13719-1-ND'], 'NAIVE_FP_MATCH')
+
 Note that only certain types of components are supported by the search. The
 ``device`` component of the ident string is used to determine whether or not
 a search will even be attempted. See :data:`VendorDigiKey._devices` for a
@@ -49,12 +52,23 @@ have a correctly formatted ``value``, as per the details listed in the
 :ref:`symbol-conventions`.
 
 >>> digikey.dvobj.search_vpnos('CAP CER SMD 22uF/35V 0805')
-(['445-14428-2-ND', '445-14428-1-ND', '445-11527-2-ND', '445-11527-1-ND'], 'CONSENSUS_FP_MATCH')
+(['445-14428-2-ND', '445-14428-1-ND', '445-11527-2-ND', '445-11527-1-ND'],
+ 'CONSENSUS_FP_MATCH')
+
+>>> digikey.dvobj.search_vpnos('RES SMD 1.15E/0.125W 0805')
+(['311-1.15CRTR-ND', '311-1.15CRCT-ND', '541-1.15CCTR-ND', '541-1.15CCCT-ND'],
+'CONSENSUS_FP_MATCH')
+
+>>> digikey.dvobj.search_vpnos('RES ARRAY SMD 102E/0.0625W 1206-4')
+(['TC164-FR-07102RL-ND', 'AF164-FR-07102RL-ND'], 'NAIVE_FP_MATCH_ALLOW_NS')
+
+>>> digikey.dvobj.search_vpnos('CRYSTAL AT 13MHz HC49')
+(['887-2036-ND'], 'EXACT_MATCH')
 
 
-See the implementation of :func:`VendorDigiKey._get_pas_vpnos` and the
-functions that it uses to perform this search.
-
+.. seealso::
+    Implementation of :func:`VendorDigiKey._get_pas_vpnos` and the
+    functions that it uses to perform this search.
 
 Even with supported device types, remember that this search is nowhere near
 bulletproof. The more generic a device and/or its name is, the less likely
@@ -180,6 +194,12 @@ from tendril.utils import www
 from tendril.utils.config import INSTANCE_ROOT
 from tendril.utils.types import currency
 
+from tendril.utils.types.electromagnetic import Resistance
+from tendril.utils.types.electromagnetic import Capacitance
+from tendril.utils.types.electromagnetic import Voltage
+from tendril.utils.types.thermodynamic import ThermalDissipation
+from tendril.utils.types.time import Frequency
+
 from . import customs
 from .vendors import SearchPart
 from .vendors import SearchResult
@@ -192,7 +212,7 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 
 class DigiKeyElnPart(VendorElnPartBase):
-    def __init__(self, dkpartno, ident=None, vendor=None):
+    def __init__(self, dkpartno, ident=None, vendor=None, max_age=600000):
         """
         This class acquires and contains information about a single DigiKey
         part number, specified by the `dkpartno` parameter.
@@ -213,10 +233,9 @@ class DigiKeyElnPart(VendorElnPartBase):
         """
         if vendor is None:
             vendor = dvobj
-        super(DigiKeyElnPart, self).__init__(dkpartno, ident, vendor)
-        if not self._vpno:
+        if not dkpartno:
             logger.error("Not enough information to create a Digikey Part")
-        self._get_data()
+        super(DigiKeyElnPart, self).__init__(dkpartno, ident, vendor, max_age)
 
     def _get_data(self):
         """
@@ -470,13 +489,20 @@ class VendorDigiKey(VendorBase):
     _invoiceclass = DigiKeyInvoice
 
     #: Supported Device Classes
+    #:
+    #: .. hint::
+    #:      This handles instance-specific tweaks, and should be
+    #:      modified to match your instance's nomenclature guidelines.
+    #:
     _devices = [
         'IC SMD', 'IC THRU', 'IC PLCC',
         'FERRITE BEAD SMD', 'TRANSISTOR THRU', 'TRANSISTOR SMD',
         'CONN DF13', 'CONN DF13 HOUS', 'CONN DF13 WIRE', 'CONN DF13 CRIMP',
         'CONN MODULAR', 'DIODE SMD', 'DIODE THRU', 'BRIDGE RECTIFIER',
-        'VARISTOR', 'RES SMD', 'RES THRU', 'CAP CER SMD', 'CAP TANT SMD',
-        'TRANSFORMER SMD', 'INDUCTOR SMD', 'CRYSTAL AT'
+        'VARISTOR', 'RES SMD', 'RES THRU', 'RES ARRAY SMD',
+        'CAP CER SMD', 'CAP TANT SMD',
+        'TRANSFORMER SMD', 'INDUCTOR SMD',
+        'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO'
     ]
 
     _url_base = 'http://www.digikey.com'
@@ -891,7 +917,7 @@ class VendorDigiKey(VendorBase):
                     if not part.ns:
                         pnos.append(part.pno)
             if len(pnos) == 0:
-                strategy += ' ALLOW NS'
+                strategy += '_ALLOW_NS'
                 for part in parts:
                     if part.package in footprint:
                         pnos.append(part.pno)
@@ -1098,9 +1124,8 @@ class VendorDigiKey(VendorBase):
         )
         params = copy(self._default_urlparams)
 
-        searchurl = self._search_url_base + '?k=' \
-                    + urllib.quote_plus(value) + '&' \
-                    + urllib.urlencode(params)
+        searchurl = self._search_url_base + '?k=' + urllib.quote_plus(value) \
+            + '&' + urllib.urlencode(params)
 
         soup = www.get_soup(searchurl)
         if soup is None:
@@ -1149,12 +1174,19 @@ class VendorDigiKey(VendorBase):
             return None, sr.strategy
         return sr.parts, sr.strategy
 
-    @staticmethod
-    def _tf_resistance_to_canonical(rstr):
+    _regex_fo_res = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[kKMGT])*$')
+
+    def _tf_resistance_to_canonical(self, rstr):
+        # TODO Replace with tendril.utils.type version
         rstr = rstr.encode('ascii', 'replace').strip()
-        rex = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[kKMGT])*$')
+        if rstr == '-':
+            return
+        if rstr == '*':
+            return
+        if ',' in rstr:
+            return
         try:
-            rparts = rex.search(rstr).groupdict()
+            rparts = self._regex_fo_res.search(rstr).groupdict()
         except AttributeError:
             print rstr
             raise AttributeError
@@ -1194,17 +1226,18 @@ class VendorDigiKey(VendorBase):
         tstr = www.strencode(tstr).strip()
         return tstr
 
-    @staticmethod
-    def _tf_capacitance_to_canonical(cstr):
+    _regex_fo_cap = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[pum]F)$')
+
+    def _tf_capacitance_to_canonical(self, cstr):
+        # TODO Replace with tendril.utils.type version
         cstr = www.strencode(cstr).strip()
         if cstr == '-':
             return
         if cstr == '*':
             return
-        rex = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[pum]F)$')
 
         try:
-            cparts = rex.search(cstr).groupdict()
+            cparts = self._regex_fo_cap.search(cstr).groupdict()
         except AttributeError:
             raise AttributeError(cstr)
 
@@ -1237,20 +1270,22 @@ class VendorDigiKey(VendorBase):
         return vfmt(cval) + ostrs[oindex]
 
     @staticmethod
-    def _tf_package_tant_smd(footprint):
-        if footprint == 'TANT-B':
-            footprint = 'B'
-        if footprint == 'TANT-C':
-            footprint = 'C'
-        if footprint == 'TANT-D':
-            footprint = 'D'
-        return footprint
+    def _tf_option_base(ostr):
+        ostr = www.strencode(ostr).strip()
+        if ostr == '-':
+            return
+        if ostr == '*':
+            return
+        return ostr
 
-    @staticmethod
-    def _tf_package_crystal_at(footprint):
-        if footprint == 'HC49':
-            footprint = ['HC-49S', 'HC49/U', 'HC49/US']
-        return footprint
+    @property
+    def _filter_otf(self):
+        return {
+            'Resistance (Ohms)': self._tf_resistance_to_canonical,
+            'Capacitance': self._tf_capacitance_to_canonical,
+            'Tolerance': self._tf_tolerance_to_canonical,
+            'base': self._tf_option_base,
+        }
 
     def _get_searchpage_filters(self, soup):
         filters = {}
@@ -1268,12 +1303,16 @@ class VendorDigiKey(VendorBase):
                             o.attrs['value']) for o in optionsoup]
                 fname = fvalueselects[idx].attrs['name']
                 fname = fname.encode('ascii', 'replace').strip()
-                if header == 'Resistance (Ohms)':
-                    options = [(self._tf_resistance_to_canonical(option[0]), option[1]) for option in options]  # noqa
-                elif header == 'Capacitance':
-                    options = [(self._tf_capacitance_to_canonical(option[0]), option[1]) for option in options]  # noqa
-                elif header == 'Tolerance':
-                    options = [(self._tf_tolerance_to_canonical(option[0]), option[1]) for option in options]  # noqa
+                if header in self._filter_otf.keys():
+                    options = [
+                        (self._filter_otf[header](option[0]), option[1])
+                        for option in options
+                    ]
+                else:
+                    options = [
+                        (self._filter_otf['base'](option[0]), option[1])
+                        for option in options
+                    ]
                 filters[header] = (fname, options)
         except Exception:
             logger.error(traceback.format_exc())
@@ -1293,23 +1332,59 @@ class VendorDigiKey(VendorBase):
                 raise AttributeError
         return filters
 
-    def _get_searchurl_res_smd(self):
+    @staticmethod
+    def _tf_package_tant_smd(footprint):
+        if footprint == 'TANT-B':
+            footprint = 'B'
+        if footprint == 'TANT-C':
+            footprint = 'C'
+        if footprint == 'TANT-D':
+            footprint = 'D'
+        return footprint, None
+
+    @staticmethod
+    def _tf_package_crystal_at(footprint):
+        extraparams_fp = None
+        if footprint == 'HC49':
+            footprint = ['HC-49S', 'HC49/U', 'HC49/US']
+            extraparams_fp = [('Mounting Type', 'Through Hole'),]
+        return footprint, extraparams_fp
+
+    @staticmethod
+    def _tf_package_res_array_smd(footprint):
+        extraparams_fp = None
+        if footprint == '1206-4':
+            footprint = '1206'
+            extraparams_fp = [('Number of Resistors', '4')]
+        return footprint, extraparams_fp
+
+    @property
+    def _searchurl_res_smd(self):
         return urlparse.urljoin(self._search_url_base,
                                 'resistors/chip-resistor-surface-mount/')
 
-    def _get_searchurl_res_thru(self):
+    @property
+    def _searchurl_res_thru(self):
         return urlparse.urljoin(self._search_url_base,
                                 'resistors/through-hole-resistors/')
 
-    def _get_searchurl_cap_cer_smd(self):
+    @property
+    def _searchurl_res_array_smd(self):
+        return urlparse.urljoin(self._search_url_base,
+                                'resistors/resistor-networks-arrays/')
+
+    @property
+    def _searchurl_cap_cer_smd(self):
         return urlparse.urljoin(self._search_url_base,
                                 'capacitors/ceramic-capacitors/')
 
-    def _get_searchurl_cap_tant_smd(self):
+    @property
+    def _searchurl_cap_tant_smd(self):
         return urlparse.urljoin(self._search_url_base,
                                 'capacitors/tantalum-capacitors/')
 
-    def _get_searchurl_crystal(self):
+    @property
+    def _searchurl_crystal(self):
         return urlparse.urljoin(self._search_url_base,
                                 'crystals-and-oscillators/crystals/')
 
@@ -1319,10 +1394,10 @@ class VendorDigiKey(VendorBase):
         package_filter_type = 'contains'
         extraparams = None
         if device == "RES SMD":
-            searchurlbase = self._get_searchurl_res_smd()
+            searchurlbase = self._searchurl_res_smd
             devtype = 'resistor'
         elif device == "RES THRU":
-            searchurlbase = self._get_searchurl_res_thru()
+            searchurlbase = self._searchurl_res_thru
             extraparams = (('Tolerance', '+/-1%'),)
             package_filter_type = None
             devtype = 'resistor'
@@ -1333,24 +1408,23 @@ class VendorDigiKey(VendorBase):
             devtype = 'resistor'
             raise NotImplementedError
         elif device == "RES ARRAY SMD":
-            devtype = 'resistor'
-            raise NotImplementedError
+            searchurlbase = self._searchurl_res_array_smd
+            packagetf = self._tf_package_res_array_smd
+            devtype = 'resistor_array'
+            extraparams = (('Circuit Type', 'Isolated'), )
         elif device == "POT TRIM":
             devtype = 'resistor'
             raise NotImplementedError
         elif device == "CAP CER SMD":
-            searchurlbase = self._get_searchurl_cap_cer_smd()
+            searchurlbase = self._searchurl_cap_cer_smd
             devtype = 'capacitor'
         elif device == "CAP TANT SMD":
-            searchurlbase = self._get_searchurl_cap_tant_smd()
+            searchurlbase = self._searchurl_cap_tant_smd
             packagetf = self._tf_package_tant_smd
             package_header = 'Manufacturer Size Code'
             package_filter_type = 'equals'
             devtype = 'capacitor'
         elif device == "CAP CER THRU":
-            devtype = 'capacitor'
-            raise NotImplementedError
-        elif device == "CAP ELEC THRU":
             devtype = 'capacitor'
             raise NotImplementedError
         elif device == "CAP ELEC THRU":
@@ -1363,29 +1437,40 @@ class VendorDigiKey(VendorBase):
             devtype = 'capacitor'
             raise NotImplementedError
         elif device == "CRYSTAL AT":
-            searchurlbase = self._get_searchurl_crystal()
+            searchurlbase = self._searchurl_crystal
             packagetf = self._tf_package_crystal_at
             package_filter_type = 'inlist'
-            extraparams = (('Mounting Type', 'Through Hole'),
-                           ('Operating Mode', 'Fundamental'))
+            extraparams = (('Operating Mode', 'Fundamental'),)
             devtype = 'crystal'
         else:
-            raise ValueError
+            raise NotImplementedError
         return (devtype, searchurlbase, packagetf, package_header,
                 package_filter_type, extraparams)
 
     @staticmethod
     def _get_value_options(devtype, value):
         if devtype == 'resistor':
-            loptions = (('resistance', "Resistance (Ohms)", 'equals'),
-                        ('wattage', "Power (Watts)", 'contains'))
+            loptions = (
+                ('resistance', "Resistance (Ohms)", 'equals', Resistance),
+                ('wattage', "Power (Watts)", 'contains', ThermalDissipation)
+            )
+            lvalues = parse_resistor(value)
+        elif devtype == 'resistor_array':
+            loptions = (
+                ('resistance', "Resistance (Ohms)", 'equals', Resistance),
+                ('wattage', "Power Per Element", 'tequals', ThermalDissipation)
+            )
             lvalues = parse_resistor(value)
         elif devtype == 'capacitor':
-            loptions = (('capacitance', "Capacitance", 'equals'),
-                        ('voltage', "Voltage - Rated", 'equals'))
+            loptions = (
+                ('capacitance', "Capacitance", 'equals', Capacitance),
+                ('voltage', "Voltage - Rated", 'equals', Voltage)
+            )
             lvalues = parse_capacitor(value)
         elif devtype == 'crystal':
-            loptions = (('frequency', "Frequency", 'equals'),)
+            loptions = (
+                ('frequency', "Frequency", 'equals', Frequency),
+            )
             lvalues = [parse_crystal(value)]
         else:
             raise ValueError
@@ -1405,8 +1490,19 @@ class VendorDigiKey(VendorBase):
                     if option[0] == lvalues[lidx]:
                         dkopcode = option[1]
                 elif loption[2] == 'contains':
-                    if lvalues[lidx] in option[0]:
+                    if option[0] and lvalues[lidx] in option[0]:
                         dkopcode = option[1]
+                elif loption[2] == 'tequals':
+                    t = loption[3]
+                    if not option[0]:
+                        continue
+                    if ',' in option[0]:
+                        val = option[0].split(',')[0]
+                    else:
+                        val = option[0]
+                    if t(val) == t(lvalues[lidx]):
+                        dkopcode = option[1]
+
             dkfiltcode = filters[loption[1]][0]
             if dkopcode is None:
                 raise ValueError(loption[0] + ' ' + lvalues[lidx])
@@ -1421,9 +1517,14 @@ class VendorDigiKey(VendorBase):
         if package_filter_type is not None:
             pkgopcode = None
             for option in filters[package_header][1]:
+                if not option[0]:
+                    continue
                 if package_filter_type == 'contains':
                     if footprint in option[0]:
-                        pkgopcode = option[1]
+                        try:
+                            pkgopcode.append(option[1])
+                        except AttributeError:
+                            pkgopcode = [option[1]]
                 elif package_filter_type == 'equals':
                     if footprint == option[0]:
                         pkgopcode = option[1]
@@ -1452,8 +1553,6 @@ class VendorDigiKey(VendorBase):
                     if option[0] == param[1]:
                         opcode = option[1]
                 if opcode is None:
-                    for option in filters[param[0]][1]:
-                        print option[0].decode('unicode-escape')
                     raise ValueError("Param not valid: " + str(param))
                 lparams.append((filters[param[0]][0], opcode))
         return lparams
@@ -1466,21 +1565,28 @@ class VendorDigiKey(VendorBase):
         params = copy(self._default_urlparams)
         loptions, lvalues = self._get_value_options(devtype, value)
 
-        params.extend(self._process_value_options(filters, loptions, lvalues))
+        params.extend(
+            self._process_value_options(filters, loptions, lvalues)
+        )
 
+        extraparams_fp = None
         if packagetf is not None:
-            footprint = packagetf(footprint)
+            footprint, extraparams_fp = packagetf(footprint)
 
         params.extend(self._process_package_options(
             filters, package_header, package_filter_type, footprint
         ))
 
+        if extraparams_fp is not None:
+            if extraparams is not None:
+                extraparams = list(extraparams) + extraparams_fp
+            else:
+                extraparams = extraparams_fp
         params.extend(self._process_extraparams(filters, extraparams))
 
         searchurl = searchurlbase + '?' + urllib.urlencode(params)
 
         soup = www.get_soup(searchurl)
-        # TODO extract common parts with _get_search_vpnos
         if soup is None:
             return None, 'URL_FAIL'
 
