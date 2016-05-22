@@ -189,13 +189,17 @@ def populate_vpart_prices(vpno=None, vpart=None, session=None):
     tprices = [(x.moq, str(x.unit_price.source_value), x.oqmultiple)
                for x in vpart.prices]
 
+    prices_removal = []
     # TODO Currency types really need to switch to Decimal.
     for p in vpno.prices:
         pricetuple = (p.moq, p.price, p.oqmultiple)
         if pricetuple not in tprices:
-            vpno.prices.remove(pricetuple)
+            prices_removal.append(p)
         else:
             tprices.remove(pricetuple)
+
+    for price in prices_removal:
+        vpno.prices.remove(price)
 
     for price in tprices:
         vpno.prices.append(
@@ -296,9 +300,6 @@ def get_vendor_map_length(vendor=None, session=None):
 # Vendor Map Setters
 @with_db
 def set_strategy(vendor=None, ident=None, strategy=None, session=None):
-    vendor = _get_vendor(vendor=vendor, session=session)
-    ident = _get_ident(ident=ident, session=session)
-
     map_obj = get_map(vendor=vendor, ident=ident, session=session)
     map_obj.strategy = strategy
     map_obj.updated_at = arrow.utcnow()
@@ -308,9 +309,6 @@ def set_strategy(vendor=None, ident=None, strategy=None, session=None):
 @with_db
 def add_map_vpno(vendor=None, ident=None, vpno=None, mtype=None,
                  session=None):
-    vendor = _get_vendor(vendor=vendor, session=session)
-    ident = _get_ident(ident=ident, session=session)
-
     map_obj = get_map(vendor=vendor, ident=ident, session=session)
 
     vpno_obj = VendorPartNumber(vpno=vpno, type=mtype, vpmap_id=map_obj.id)
@@ -349,20 +347,25 @@ def clear_map(vendor=None, ident=None, mtype=None, session=None):
 def set_map_vpnos(vendor=None, ident=None, vpnos=None,
                   mtype=None, session=None):
     vpmap = get_map(vendor=vendor, ident=ident, session=session)
+    session.add(vpmap)
+
+    # TODO Figure out why removal during the first pass breaks.
+    vpnos_removal = []
     for vpno in vpmap.vpnos:
         if vpno.type == mtype and vpno.vpno in vpnos:
             vpnos.remove(vpno.vpno)
         else:
-            vpmap.vpnos.remove(vpno.vpno)
+            vpnos_removal.append(vpno)
+
+    for vpno in vpnos_removal:
+        vpmap.vpnos.remove(vpno)
 
     for vpno in vpnos:
-        vpno_obj = VendorPartNumber(
-            vpno=vpno, type=mtype, vpmap_id=vpmap.id
+        vpmap.vpnos.append(
+            VendorPartNumber(vpno=vpno, type=mtype)
         )
-        session.add(vpno_obj)
 
     vpmap.updated_at = arrow.utcnow()
-    session.add(vpmap)
     session.flush()
 
 

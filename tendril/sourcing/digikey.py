@@ -1012,12 +1012,14 @@ class VendorDigiKey(VendorBase):
         minqty = row.pop('Minimum Quantity', '').strip()
         mfgpno = row.pop('Manufacturer Part Number', '').strip()
         unitp = row.pop('Unit Price (USD)', '').strip()
+        qtyavail = row.pop('Quantity Available', '0').strip()
+        qtyavail = int(qtyavail)
         try:
             unitp = locale.atof(unitp)
         except ValueError:
             unitp = None
         if pno is not None:
-            if 'Non-Stock' in minqty or unitp is None:
+            if qtyavail == 0 or unitp is None:
                 ns = True
             else:
                 ns = False
