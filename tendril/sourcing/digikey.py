@@ -207,7 +207,7 @@ class DigiKeyElnPart(VendorElnPartBase):
         :param vendor: ``(Optional)`` Allows the caller to 'bind' the part
                        to the pre-existing vendor objects in Tendril's
                        sourcing infrastructure. This is required
-                      for use with the Tendril database.
+                       for use with the Tendril database.
         :type vendor: :class:`VendorDigiKey`
 
         """

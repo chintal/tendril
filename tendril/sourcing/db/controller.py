@@ -114,9 +114,6 @@ def get_vendor(name=None, create=False, session=None):
 def get_vpno_obj(vendor=None, ident=None, vpno=None,
                  mtype=None, session=None):
 
-    vendor = _get_vendor(vendor=vendor, session=session)
-    ident = _get_ident(ident=ident, session=session)
-
     map_obj = get_map(vendor=vendor, ident=ident, session=session)
 
     q = session.query(VendorPartNumber)
@@ -133,21 +130,21 @@ def populate_vpart_detail(vpno=None, vpart=None, session=None):
     assert isinstance(vpno, VendorPartNumber)
     from ..vendors import VendorPartBase
     assert isinstance(vpart, VendorPartBase)
-    if not len(vpno.detail):
-        vpno.detail.append(
-            VendorPartDetail(
+
+    try:
+        vpno.detail.vqtyavail = vpart.vqtyavail
+        vpno.detail.manufacturer = vpart.manufacturer
+        vpno.detail.mpartno = vpart.mpartno
+        vpno.detail.vpartdesc = vpart.vpartdesc
+        vpno.detail.pkgqty = vpart.pkgqty
+    except AttributeError:
+        vpno.detail = VendorPartDetail(
                 vqtyavail=vpart.vqtyavail,
                 manufacturer=vpart.manufacturer,
                 mpartno=vpart.mpartno,
                 vpartdesc=vpart.vpartdesc,
                 pkgqty=vpart.pkgqty,
-        ))
-    else:
-        vpno.detail[0].vqtyavail = vpart.vqtyavail
-        vpno.detail[0].manufacturer = vpart.manufacturer
-        vpno.detail[0].mpartno = vpart.mpartno
-        vpno.detail[0].vpartdesc = vpart.vpartdesc
-        vpno.detail[0].pkgqty = vpart.pkgqty
+        )
 
     session.add(vpno)
     session.flush()
@@ -159,15 +156,14 @@ def populate_vpart_detail_eln(vpno=None, vpart=None, session=None):
     from ..vendors import VendorElnPartBase
     assert isinstance(vpart, VendorElnPartBase)
 
-    if not len(vpno.detail_eln):
-        vpno.detail_eln.append(
-            VendorElnPartDetail(
+    try:
+        vpno.detail_eln.package = vpart.package
+        vpno.detail_eln.datasheet = vpart.datasheet
+    except AttributeError:
+        vpno.detail_eln = VendorElnPartDetail(
                 package=vpart.package,
                 datasheet=vpart.datasheet,
-        ))
-    else:
-        vpno.detail_eln[0].package = vpart.package
-        vpno.detail_eln[0].datasheet = vpart.datasheet
+        )
 
     session.add(vpno)
     session.flush()

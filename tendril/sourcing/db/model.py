@@ -149,7 +149,8 @@ class VendorPartDetail(DeclBase, BaseMixin, TimestampMixin):
                      unique=True, nullable=False)
     vpno = relationship(
         "VendorPartNumber",
-        backref=backref('detail', cascade='all, delete-orphan')
+        backref=backref('detail', cascade='all, delete-orphan', uselist=False),
+        lazy='joined'
     )
 
 
@@ -163,7 +164,8 @@ class VendorElnPartDetail(DeclBase, BaseMixin):
                      unique=True, nullable=False)
     vpno = relationship(
         "VendorPartNumber",
-        backref=backref('detail_eln', cascade='all, delete-orphan')
+        backref=backref('detail_eln', cascade='all, delete-orphan', uselist=False),
+        lazy='joined'
     )
 
 
@@ -177,5 +179,6 @@ class VendorPrice(DeclBase, BaseMixin, TimestampMixin):
                      unique=False, nullable=False)
     vpno = relationship(
         "VendorPartNumber",
-        backref=backref('prices', cascade='all, delete-orphan')
+        backref=backref('prices', cascade='all, delete-orphan'),
+        lazy='joined'
     )

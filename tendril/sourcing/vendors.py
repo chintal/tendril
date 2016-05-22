@@ -261,10 +261,10 @@ class VendorPartBase(object):
                 vendor=self._vendor._name, ident=self._canonical_repr,
                 vpno=self._vpno, session=session
             )
-            self._vqtyavail = vpno.detail[0].vqtyavail
-            self._manufacturer = vpno.detail[0].manufacturer
-            self._mpartno = vpno.detail[0].mpartno
-            self._vpartdesc = vpno.detail[0].vpartdesc
+            self._vqtyavail = vpno.detail.vqtyavail
+            self._manufacturer = vpno.detail.manufacturer
+            self._mpartno = vpno.detail.mpartno
+            self._vpartdesc = vpno.detail.vpartdesc
             for price in vpno.prices:
                 self.add_price(
                     VendorPrice(price.moq, price.price,
@@ -387,8 +387,8 @@ class VendorElnPartBase(VendorPartBase):
     def _load_from_db(self, session):
         vpno = super(VendorElnPartBase, self)._load_from_db(session=session)
         if vpno is not None:
-            self._package = vpno.detail_eln[0].package
-            self._datasheet = vpno.detail_eln[0].datasheet
+            self._package = vpno.detail_eln.package
+            self._datasheet = vpno.detail_eln.datasheet
 
     @property
     def package(self):
