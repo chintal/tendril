@@ -64,7 +64,19 @@ def profile_vendor_genvmapaudit(vobj, name):
 def profile_vendor_get_part(vobj, name):
     """
     This function profiles :func:`tendril.sourcing.vendors.VendorBase.get_all_vparts`
-    execution for the given vendor.
+    execution for the given vendor. Uses max_age=0 to avoid using the database cache.
+
+    """
+    for ident in vobj.get_all_vparts(max_age=0):
+        print ident
+
+
+@do_profile(os.path.join(SCRIPT_FOLDER, 'get_part_db'))
+def profile_vendor_get_part_db(vobj, name):
+    """
+    This function profiles :func:`tendril.sourcing.vendors.VendorBase.get_all_vparts`
+    execution for the given vendor. Uses the database cache, which would have been
+    prepared by get_part by this stage.
 
     """
     for ident in vobj.get_all_vparts():
@@ -94,6 +106,7 @@ def main():
     profilers = [profile_vendor_genvmap,
                  profile_vendor_genvmapaudit,
                  profile_vendor_get_part,
+                 profile_vendor_get_part_db,
                  ]
     for vendor in electronics.vendor_list:
         for profiler in profilers:
