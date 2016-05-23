@@ -244,7 +244,7 @@ class VendorPricelist(vendors.VendorBase):
     def get_vpdict(self, vpartno):
         return self._pl_get_vpart_dict(vpartno)
 
-    def get_vpart(self, vpartno, ident=None):
+    def get_vpart(self, vpartno, ident=None, max_age=600000):
         vp_dict = self._pl_get_vpart_dict(vpartno)
         if ident is not None:
             if vp_dict['ident'].strip() != ident:
@@ -252,12 +252,14 @@ class VendorPricelist(vendors.VendorBase):
                     'Specified Ident does not match '
                     'Pricelist Defined Ident : ' + vp_dict['ident'].strip()
                 )
-        return PricelistPart(vp_dict, ident, self)
+        return PricelistPart(vp_dict['vpno'], ident, self, max_age=max_age)
 
     def _pl_get_vpart_dict(self, vpartno):
         for part in self._pricelist["prices"]:
             if part['vpno'].strip() == vpartno:
                 return part
+        raise ValueError("No vpdict found for {0} in vendor {1}."
+                         "".format(vpartno, self._name))
 
     def get_optimal_pricing(self, ident, rqty):
         candidate_names = self.get_vpnos(ident)

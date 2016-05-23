@@ -113,8 +113,8 @@ def get_csil_prices(params=exparams, rval=None):
     values = OrderedDict()
     values['ctl00$ContentPlaceHolder1$txtPCBName'] = params['pcbname']
     values['ctl00$ContentPlaceHolder1$ddlLayers'] = layers_codes[params['layers']]  # noqa
-    values['ctl00$ContentPlaceHolder1$txtDimX'] = params['dX']
-    values['ctl00$ContentPlaceHolder1$txtDimY'] = params['dY']
+    values['ctl00$ContentPlaceHolder1$txtDimX'] = str(params['dX'])
+    values['ctl00$ContentPlaceHolder1$txtDimY'] = str(params['dY'])
     if 'qty' in params.keys():
         values['ctl00$ContentPlaceHolder1$txtQuantity'] = str(params['qty'][1])  # noqa
     else:
@@ -136,8 +136,6 @@ def get_csil_prices(params=exparams, rval=None):
         timeout -= 1
         time.sleep(1)
     time.sleep(5)
-    browser.fill_form(values)
-
     browser.fill_form(values)
 
     try:

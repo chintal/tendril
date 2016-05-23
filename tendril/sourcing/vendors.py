@@ -522,14 +522,12 @@ class VendorBase(object):
     def get_optimal_pricing(self, ident, rqty):
         candidate_names = self.get_vpnos(ident)
 
-        candidates = [self.get_vpart(x) for x in candidate_names]
-
+        candidates = [self.get_vpart(x, ident=ident) for x in candidate_names]
         candidates = [x for x in candidates if x.abs_moq <= rqty]
         candidates = [x for x in candidates
                       if x.vqtyavail is None or
                       x.vqtyavail > rqty or
                       x.vqtyavail == -2]
-
         oqty = rqty
 
         # vobj, vpno, oqty, nbprice, ubprice, effprice
