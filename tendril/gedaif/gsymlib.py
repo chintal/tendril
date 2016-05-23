@@ -35,6 +35,10 @@ from tendril.utils.config import MAKE_GSYMLIB_IMG_CACHE
 
 import tendril.utils.fsutils
 import tendril.conventions.electronics
+from tendril.conventions.electronics import ident_transform
+from tendril.conventions.electronics import fpismodlen
+from tendril.conventions.electronics import fpiswire
+from tendril.conventions.electronics import DEVICE_CLASSES
 
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Capacitance
@@ -46,136 +50,137 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 
-class GedaSymbol(object):
-    def __init__(self, fpath):
-        self.fpath = fpath
-        self.fname = os.path.split(fpath)[1]
-        self.device = ''
-        self.value = ''
-        self.footprint = ''
-        self.description = ''
-        self.status = ''
-        self.package = ''
-        self.source = ''
-        self._is_virtual = ''
-        self._img_repr_path = ''
-        self._img_repr_fname = ''
-        self._sch_img_repr_path = ''
-        self._sch_img_repr_fname = ''
-        self._acq_sym(fpath)
-        self._img_repr()
-        if self.is_subcircuit:
-            self._sch_img_repr()
+class EDASymbolBase(object):
+    def __init__(self):
+        """
+        Base class for EDA symbols. This class should not be used directly,
+        but sub-classed per EDA suite, the sub-classes designed to interface
+        with the way each EDA suite handles symbol libraries.
 
-    def _acq_sym(self, fpath):
-        with open(fpath, 'r') as f:
-            for line in f.readlines():
-                if line.startswith('device='):
-                    self.device = line.split('=')[1].strip()
-                if line.startswith('value='):
-                    self.value = line.split('=')[1].strip()
-                if line.startswith('footprint'):
-                    self.footprint = line.split('=')[1].strip()
-                    if self.footprint[0:3] == 'MY-':
-                        self.footprint = self.footprint[3:]
-                if line.startswith('description'):
-                    self.description = line.split('=')[1].strip()
-                if line.startswith('status'):
-                    self.status = line.split('=')[1].strip()
-                if line.startswith('package'):
-                    self.package = line.split('=')[1].strip()
-                if line.startswith('source'):
-                    self.source = line.split('=')[1].strip()
-            if self.status == '':
-                self.status = 'Active'
+        .. todo::
+            This class is to eventually move into a ``tendril.edaif`` module,
+            which should be used to proxy to the specific implementation for
+            the EDA suite being used.
 
-    def _img_repr(self):
-        outfolder = os.path.join(INSTANCE_CACHE, 'gsymlib')
-        self._img_repr_fname = os.path.splitext(self.fname)[0] + '.png'
-        self._img_repr_path = os.path.join(outfolder, self._img_repr_fname)
-        if not os.path.exists(outfolder):
-            os.makedirs(outfolder)
-        if os.path.exists(self._img_repr_path):
-            if tendril.utils.fsutils.get_file_mtime(self._img_repr_path) > tendril.utils.fsutils.get_file_mtime(self.fpath):  # noqa
-                return
-        if MAKE_GSYMLIB_IMG_CACHE:
-            conv_gsch2png(self.fpath, outfolder)
+        The constructor for this class should be called from it's subclasses
+        after all the necessary implementation-specific variables are created
+        and filled in.
 
-    def _sch_img_repr(self):
-        outfolder = os.path.join(INSTANCE_CACHE, 'gsymlib')
-        self._sch_img_repr_fname = os.path.splitext(self.source)[0] + '.sch.png'
-        self._sch_img_repr_path = os.path.join(outfolder, self._sch_img_repr_fname)
-        if not os.path.exists(outfolder):
-            os.makedirs(outfolder)
-        if os.path.exists(self._sch_img_repr_path):
-            if tendril.utils.fsutils.get_file_mtime(self._sch_img_repr_path) > tendril.utils.fsutils.get_file_mtime(
-                    self.schematic_path):  # noqa
-                return
-        if MAKE_GSYMLIB_IMG_CACHE:
-            conv_gsch2png(self.schematic_path, outfolder, include_extension=True)
+        """
+        self._device = ''
+        self._value = ''
+        self._footprint = ''
+        self._status = None
+        self._description = None
+        self._package = None
+
+        self._img_repr_path = None
+        self._img_repr_fname = None
+
+        self._get_sym()
+        self._generate_img_repr()
+
+    def _get_sym(self):
+        raise NotImplementedError
+
+    def _generate_img_repr(self):
+        raise NotImplementedError
+
+    # Core Properties
+    @property
+    def device(self):
+        return self._device
+
+    @device.setter
+    def device(self, value):
+        self._device = value
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+    @property
+    def footprint(self):
+        return self._footprint
+
+    @footprint.setter
+    def footprint(self, value):
+        self._footprint = value
+
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        self._status = value
+
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, value):
+        self._description = value
+
+    @property
+    def package(self):
+        return self._package
+
+    @package.setter
+    def package(self, value):
+        self._package = value
+
+    # Derived Properties
+    @property
+    def ident(self):
+        return ident_transform(self.device, self.value, self.footprint)
+
+    @property
+    def ident_generic(self):
+        return ident_transform(self.device, self.value, self.footprint,
+                               generic=True)
+
+    @property
+    def is_wire(self):
+        return fpiswire(self.device)
+
+    @property
+    def is_modlen(self):
+        return fpismodlen(self.device)
 
     @property
     def img_repr_fname(self):
         return self._img_repr_fname
 
     @property
-    def sch_img_repr_fname(self):
-        return self._sch_img_repr_fname
-
-    @property
-    def ident(self):
-        return tendril.conventions.electronics.ident_transform(self.device,
-                                                               self.value,
-                                                               self.footprint)
-
-    @property
-    def ident_generic(self):
-        return tendril.conventions.electronics.ident_transform(self.device,
-                                                               self.value,
-                                                               self.footprint,
-                                                               generic=True)
+    def datasheet_url(self):
+        # TODO This can be cached
+        try:
+            from tendril.sourcing.electronics import vendor_list
+            from tendril.inventory.guidelines import electronics_qty
+            dkv = vendor_list[0]
+            vsinfo = dkv.get_optimal_pricing(self.ident, electronics_qty.get_compliant_qty(self.ident, 5))  # noqa
+            dkvpno = vsinfo[1]
+            dkdsurl = dkv.get_vpart(dkvpno).datasheet
+            return dkdsurl
+        except Exception:
+            return None
 
     @property
     def sym_ok(self):
-        if self.is_subcircuit:
-            if self.source.endswith('.sch'):
-                if not os.path.exists(self.schematic_path):
-                    return False
-                return True
-        if self.device not in tendril.conventions.electronics.DEVICE_CLASSES:
+        return self._validate()
+
+    def _validate(self):
+        if self.device not in DEVICE_CLASSES:
             return False
         return True
 
-    @property
-    def is_subcircuit(self):
-        if self.source != '':
-            return True
-        return False
-
-    @property
-    def schematic_path(self):
-        if not self.is_subcircuit:
-            raise AttributeError
-        return os.path.join(GEDA_SUBCIRCUITS_ROOT, self.source)
-
-    @property
-    def schematic_fname(self):
-        if not self.is_subcircuit:
-            raise AttributeError
-        return self.source
-
-    @property
-    def subcircuitident(self):
-        if not self.is_subcircuit:
-            raise AttributeError
-        return os.path.splitext(self.fname)[0]
-
-    @property
-    def is_generator(self):
-        if self.status == 'Generator':
-            return True
-        return False
-
+    # Status
     @property
     def is_virtual(self):
         if self.status == 'Virtual':
@@ -202,27 +207,140 @@ class GedaSymbol(object):
         else:
             raise AttributeError
 
+    def __repr__(self):
+        return '{0:40}'.format(self.ident)
+
+
+class GedaSymbol(EDASymbolBase):
+    def __init__(self, fpath):
+        """
+        gEDA symbols use a symbol file, located within the gEDA component
+        library folders, usually defined within a ``gafrc`` file. Only the
+        symbol filename is important, and not it's location relative to the
+        component library root.
+
+        This class accepts a (full) file path to a gEDA symbol in it's
+        constructor, and loads all the necessary detail abouts the symbol
+        into itself.
+
+        gEDA symbols may also represent a sub-circuit in a hierarchical
+        schematic. Support for handling this type of use is included here.
+
+        .. todo::
+            Generator support is also built into this class for the moment.
+            It should eventually be moved into :class:`EDASymbolBase` or a
+            second base. It currently uses parameters seemingly specific
+            gEDA, i.e., ``fpath`` and ``fname``. Handling single-file
+            libraries such as those used by Eagle may need a more thought
+            through approach.
+
+        :param fpath: os path to the symbol file to be loaded
+        """
+        self.fpath = fpath
+        self.fname = os.path.split(fpath)[1]
+
+        self.source = ''
+        self._sch_img_repr_path = None
+        self._sch_img_repr_fname = None
+
+        super(GedaSymbol, self).__init__()
+
+    def _get_sym(self):
+        self._acq_sym(self.fpath)
+        if self.is_subcircuit:
+            self._sch_img_repr()
+
+    def _acq_sym(self, fpath):
+        with open(fpath, 'r') as f:
+            for line in f.readlines():
+                if line.startswith('device='):
+                    self.device = line.split('=')[1].strip()
+                if line.startswith('value='):
+                    self.value = line.split('=')[1].strip()
+                if line.startswith('footprint'):
+                    self.footprint = line.split('=')[1].strip()
+                    if self.footprint[0:3] == 'MY-':
+                        self.footprint = self.footprint[3:]
+                if line.startswith('description'):
+                    self.description = line.split('=')[1].strip()
+                if line.startswith('status'):
+                    self.status = line.split('=')[1].strip()
+                if line.startswith('package'):
+                    self.package = line.split('=')[1].strip()
+                if line.startswith('source'):
+                    self.source = line.split('=')[1].strip()
+            if self.status == '':
+                self.status = 'Active'
+
+    def _generate_img_repr(self):
+        outfolder = os.path.join(INSTANCE_CACHE, 'gsymlib')
+        self._img_repr_fname = os.path.splitext(self.fname)[0] + '.png'
+        self._img_repr_path = os.path.join(outfolder, self._img_repr_fname)
+        if not os.path.exists(outfolder):
+            os.makedirs(outfolder)
+        if os.path.exists(self._img_repr_path):
+            if tendril.utils.fsutils.get_file_mtime(self._img_repr_path) > tendril.utils.fsutils.get_file_mtime(self.fpath):  # noqa
+                return
+        if MAKE_GSYMLIB_IMG_CACHE:
+            conv_gsch2png(self.fpath, outfolder)
+
+    def _sch_img_repr(self):
+        outfolder = os.path.join(INSTANCE_CACHE, 'gsymlib')
+        self._sch_img_repr_fname = os.path.splitext(self.source)[0] + '.sch.png'
+        self._sch_img_repr_path = os.path.join(outfolder, self._sch_img_repr_fname)
+        if not os.path.exists(outfolder):
+            os.makedirs(outfolder)
+        if os.path.exists(self._sch_img_repr_path):
+            if tendril.utils.fsutils.get_file_mtime(self._sch_img_repr_path) > tendril.utils.fsutils.get_file_mtime(
+                    self.schematic_path):  # noqa
+                return
+        if MAKE_GSYMLIB_IMG_CACHE:
+            conv_gsch2png(self.schematic_path, outfolder, include_extension=True)
+
+    # Validation
+    def _validate(self):
+        if self.is_subcircuit:
+            if not self.source.endswith('.sch'):
+                return False
+            if not os.path.exists(self.schematic_path):
+                return False
+        return super(GedaSymbol, self)._validate()
+
+    # Subcircuits
     @property
-    def is_wire(self):
-        return tendril.conventions.electronics.fpiswire(self.device)
+    def is_subcircuit(self):
+        if self.source != '':
+            return True
+        return False
 
     @property
-    def is_modlen(self):
-        return tendril.conventions.electronics.fpismodlen(self.device)
+    def schematic_path(self):
+        if not self.is_subcircuit:
+            raise AttributeError
+        return os.path.join(GEDA_SUBCIRCUITS_ROOT, self.source)
 
     @property
-    def datasheet_url(self):
-        # TODO This can be cached
-        try:
-            from tendril.sourcing.electronics import vendor_list
-            from tendril.inventory.guidelines import electronics_qty
-            dkv = vendor_list[0]
-            vsinfo = dkv.get_optimal_pricing(self.ident, electronics_qty.get_compliant_qty(self.ident, 5))  # noqa
-            dkvpno = vsinfo[1]
-            dkdsurl = dkv.get_vpart(dkvpno).datasheet
-            return dkdsurl
-        except Exception:
-            return None
+    def schematic_fname(self):
+        if not self.is_subcircuit:
+            raise AttributeError
+        return self.source
+
+    @property
+    def subcircuitident(self):
+        if not self.is_subcircuit:
+            raise AttributeError
+        return os.path.splitext(self.fname)[0]
+
+    @property
+    def sch_img_repr_fname(self):
+        return self._sch_img_repr_fname
+
+    # Generators
+    @property
+    def is_generator(self):
+        if self.status == 'Generator':
+            return True
+        return False
 
     @property
     def genident(self):
@@ -247,11 +365,8 @@ class GedaSymbol(object):
             raise AttributeError
         if not self.generator.values:
             return None
-        return [tendril.conventions.electronics.ident_transform(self.device, v, self.footprint)  # noqa
+        return [ident_transform(self.device, v, self.footprint)
                 for v in self.generator.values]
-
-    def __repr__(self):
-        return '{0:40}'.format(self.ident)
 
 
 class GSymGeneratorFile(object):
