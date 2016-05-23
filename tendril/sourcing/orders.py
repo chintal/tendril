@@ -39,9 +39,8 @@ class CompositeOrderElem(object):
         self._resqty = rqty - shortage
         self._shortage = shortage
         # TODO
-        # Have a module level order instance here instead of
-        # leaving it to sourcing.electronics, and creating this
-        # circular import problem.
+        # Have a module level order instance here instead of leaving it to
+        # sourcing.electronics, and get rid of this circular import problem.
         from tendril.sourcing import electronics
         try:
             self._sources = electronics.get_sourcing_information(  # noqa
@@ -59,8 +58,8 @@ class CompositeOrderElem(object):
             self._selsource = None
 
     def get_eff_acq_price(self, source):
-        return (self._shortage + (source[2] - self._shortage)/2) * \
-            source[5].unit_price.native_value
+        return (self._shortage + (source.oqty - self._shortage)/2) * \
+                source.effprice.unit_price.native_value
 
     @property
     def ident(self):
@@ -98,11 +97,12 @@ class CompositeOrderElem(object):
     def selsource(self):
         return self._selsource
 
+    # vobj, vpart, oqty, nbprice, ubprice, effprice
     @property
     def sorted_other_sources(self):
         return sorted(
             self.other_sources,
-            key=lambda x: x[5].extended_price(x[2]).native_value
+            key=lambda x: x.effprice.extended_price(x.oqty).native_value
         )
 
     @property
@@ -114,8 +114,8 @@ class CompositeOrderElem(object):
             return []
 
     def excess(self, vsinfo):
-        return vsinfo[5].extended_price(vsinfo[2]).native_value - \
-            self._selsource[5].extended_price(self._selsource[2]).native_value
+        return vsinfo.effprice.extended_price(vsinfo.oqty).native_value - \
+            self._selsource.effprice.extended_price(self._selsource.qty).native_value  # noqa
 
     @property
     def is_sourceable(self):

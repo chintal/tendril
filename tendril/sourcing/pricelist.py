@@ -286,7 +286,7 @@ class VendorPricelist(vendors.VendorBase):
                     selcandidate.vqtyavail < oqty:
                 return self, None, None, None, None, None, None, None
         effprice = self.get_effective_price(price)
-        return self, selcandidate.vpno, oqty, None, \
+        return self, selcandidate, oqty, None, \
             price, effprice, "Vendor MOQ/GL", None
 
 

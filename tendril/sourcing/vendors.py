@@ -36,14 +36,20 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 
-#: A :mod:`collections.namedtuple` used internally to pass
+#: A :class:`collections.namedtuple` used internally to pass
 #: around (sub)search results conveniently.
 SearchResult = namedtuple('SearchResult', 'success parts strategy')
 
-#: A :mod:`collections.namedtuple` used internally to pass
+#: A :class:`collections.namedtuple` used internally to pass
 #: around part data conveniently.
 SearchPart = namedtuple('SearchPart',
                         'pno, mfgpno, package, ns, unitp,  minqty')
+
+#: A :class:`collections.namedtuple` used internally to pass
+#: around sourcing information for a single ident from a single
+#: vendor at a specified quantity.
+SourcingInfo = namedtuple('SourcingInfo',
+                          'vobj, vpart, oqty, nbprice, ubprice, effprice')
 
 
 class DBPartDataUnusable(Exception):
@@ -530,7 +536,7 @@ class VendorBase(object):
                       x.vqtyavail == -2]
         oqty = rqty
 
-        # vobj, vpno, oqty, nbprice, ubprice, effprice
+        # vobj, vpart, oqty, nbprice, ubprice, effprice
         if len(candidates) == 0:
             return self, None, None, None, None, None
 
@@ -579,7 +585,7 @@ class VendorBase(object):
                 ubprice = nubprice
                 nbprice = nnbprice
                 effprice = neffprice
-        return self, selcandidate.vpno, oqty, nbprice, \
+        return self, selcandidate, oqty, nbprice, \
             ubprice, effprice, urationale, olduprice
 
     def add_order_additional_cost_component(self, desc, percent):

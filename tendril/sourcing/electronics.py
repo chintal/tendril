@@ -163,8 +163,8 @@ class SourcingException(Exception):
     pass
 
 
-def get_eff_acq_price(vsinfo, qty):
-    return vsinfo[2] * vsinfo[5].unit_price.native_value
+def get_eff_acq_price(vsinfo):
+    return vsinfo.oqty * vsinfo.effprice.unit_price.native_value
 
 
 def get_sourcing_information(ident, qty, avendors=vendor_list,
@@ -174,7 +174,7 @@ def get_sourcing_information(ident, qty, avendors=vendor_list,
     ident = ident.strip()
     for vendor in avendors:
         vsinfo = vendor.get_optimal_pricing(ident, qty)
-        if vsinfo[1] is not None:
+        if vsinfo.vpart is not None:
             sources.append(vsinfo)
 
     if len(sources) == 0:
@@ -183,7 +183,7 @@ def get_sourcing_information(ident, qty, avendors=vendor_list,
     if allvendors is False:
         selsource = sources[0]
         for vsinfo in sources:
-            if get_eff_acq_price(vsinfo, qty) < get_eff_acq_price(selsource, qty):  # noqa
+            if get_eff_acq_price(vsinfo) < get_eff_acq_price(selsource):
                 selsource = vsinfo
         return selsource
     else:

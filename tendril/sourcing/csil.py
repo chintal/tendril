@@ -403,7 +403,7 @@ class VendorCSIL(vendors.VendorBase):
         ubprice, nbprice, urationale, olduprice = candidate.get_price(rqty)
         oqty = ubprice.moq
         effprice = self.get_effective_price(ubprice)
-        return self, candidate.vpno, oqty, nbprice, \
+        return self, candidate, oqty, nbprice, \
             ubprice, effprice, urationale, olduprice
 
     def _generate_purchase_order(self, path):

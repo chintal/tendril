@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-gEDA gsymlib Module documentation (:mod:`gedaif.gsymlib`)
-=========================================================
+gEDA gsymlib Module (:mod:`tendril.gedaif.gsymlib`)
+===================================================
 """
+
 
 import os
 import csv
@@ -33,12 +34,21 @@ from tendril.utils.config import TENDRIL_ROOT
 from tendril.utils.config import INSTANCE_CACHE
 from tendril.utils.config import MAKE_GSYMLIB_IMG_CACHE
 
-import tendril.utils.fsutils
-import tendril.conventions.electronics
+from tendril.utils.fsutils import get_file_mtime
+from tendril.utils.fsutils import VersionedOutputFile
+
 from tendril.conventions.electronics import ident_transform
 from tendril.conventions.electronics import fpismodlen
 from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import DEVICE_CLASSES
+from tendril.conventions.electronics import construct_resistor
+from tendril.conventions.electronics import construct_capacitor
+
+from tendril.conventions.electronics import parse_capacitance
+from tendril.conventions.electronics import parse_capacitor
+from tendril.conventions.electronics import parse_resistance
+from tendril.conventions.electronics import parse_resistor
+from tendril.conventions.electronics import normalize_resistance
 
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Capacitance
@@ -73,6 +83,8 @@ class EDASymbolBase(object):
         self._status = None
         self._description = None
         self._package = None
+        self._datasheet = None
+        self._indicative_sourcing_info = None
 
         self._img_repr_path = None
         self._img_repr_fname = None
@@ -158,18 +170,19 @@ class EDASymbolBase(object):
         return self._img_repr_fname
 
     @property
-    def datasheet_url(self):
-        # TODO This can be cached
-        try:
-            from tendril.sourcing.electronics import vendor_list
+    def indicative_sourcing_info(self):
+        if self._indicative_sourcing_info is None:
+            from tendril.sourcing.electronics import get_sourcing_information
             from tendril.inventory.guidelines import electronics_qty
-            dkv = vendor_list[0]
-            vsinfo = dkv.get_optimal_pricing(self.ident, electronics_qty.get_compliant_qty(self.ident, 5))  # noqa
-            dkvpno = vsinfo[1]
-            dkdsurl = dkv.get_vpart(dkvpno).datasheet
-            return dkdsurl
-        except Exception:
-            return None
+            iqty = electronics_qty.get_compliant_qty(self.ident, 1)
+            vsi = get_sourcing_information(self.ident, iqty, allvendors=True)
+            self._indicative_sourcing_info = vsi
+        return self._indicative_sourcing_info
+
+    @property
+    def datasheet_url(self):
+        if self._datasheet is not None:
+            return self._datasheet
 
     @property
     def sym_ok(self):
@@ -279,23 +292,24 @@ class GedaSymbol(EDASymbolBase):
         if not os.path.exists(outfolder):
             os.makedirs(outfolder)
         if os.path.exists(self._img_repr_path):
-            if tendril.utils.fsutils.get_file_mtime(self._img_repr_path) > tendril.utils.fsutils.get_file_mtime(self.fpath):  # noqa
+            if get_file_mtime(self._img_repr_path) > get_file_mtime(self.fpath):  # noqa
                 return
         if MAKE_GSYMLIB_IMG_CACHE:
             conv_gsch2png(self.fpath, outfolder)
 
     def _sch_img_repr(self):
         outfolder = os.path.join(INSTANCE_CACHE, 'gsymlib')
-        self._sch_img_repr_fname = os.path.splitext(self.source)[0] + '.sch.png'
-        self._sch_img_repr_path = os.path.join(outfolder, self._sch_img_repr_fname)
+        self._sch_img_repr_fname = self.source + '.png'
+        self._sch_img_repr_path = os.path.join(outfolder,
+                                               self._sch_img_repr_fname)
         if not os.path.exists(outfolder):
             os.makedirs(outfolder)
         if os.path.exists(self._sch_img_repr_path):
-            if tendril.utils.fsutils.get_file_mtime(self._sch_img_repr_path) > tendril.utils.fsutils.get_file_mtime(
-                    self.schematic_path):  # noqa
+            if get_file_mtime(self._sch_img_repr_path) > get_file_mtime(self.schematic_path):  # noqa
                 return
         if MAKE_GSYMLIB_IMG_CACHE:
-            conv_gsch2png(self.schematic_path, outfolder, include_extension=True)
+            conv_gsch2png(self.schematic_path, outfolder,
+                          include_extension=True)
 
     # Validation
     def _validate(self):
@@ -432,7 +446,7 @@ class GSymGeneratorFile(object):
                                 start=generator['start'], end=generator['end']
                             )
                             for rvalue in rvalues:
-                                values.append(tendril.conventions.electronics.construct_resistor(rvalue, generator['wattage']))  # noqa
+                                values.append(construct_resistor(rvalue, generator['wattage']))  # noqa
                         else:
                             raise ValueError
                 if 'values' in gendata.keys():
@@ -472,7 +486,7 @@ class GSymGeneratorFile(object):
                                 start=generator['start'], end=generator['end']
                             )
                             for cvalue in cvalues:
-                                values.append(tendril.conventions.electronics.construct_capacitor(cvalue, generator['voltage']))  # noqa
+                                values.append(construct_capacitor(cvalue, generator['voltage']))  # noqa
                         else:
                             raise ValueError
                 if 'values' in gendata.keys():
@@ -687,8 +701,8 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
         footprint = footprint[3:]
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
-            cap, volt = tendril.conventions.electronics.parse_capacitor(symbol.value)  # noqa
-            sym_capacitance = tendril.conventions.electronics.parse_capacitance(cap)  # noqa
+            cap, volt = parse_capacitor(symbol.value)
+            sym_capacitance = parse_capacitance(cap)
             if capacitance == sym_capacitance:
                 return symbol
     raise NoGedaSymbolException
@@ -707,15 +721,16 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
     if footprint[0:3] == "MY-":
         footprint = footprint[3:]
     if device == 'RES THRU':
-        if resistance in [tendril.conventions.electronics.parse_resistance(x)  # noqa
-                          for x in iec60063.gen_vals(iec60063.get_series('E24'), iec60063.res_ostrs)]:  # noqa
-            return tendril.conventions.electronics.construct_resistor(tendril.conventions.electronics.normalize_resistance(resistance), '0.25W')  # noqa
+        resistances = iec60063.gen_vals(iec60063.get_series('E24'),
+                                        iec60063.res_ostrs)
+        if resistance in [parse_resistance(x) for x in resistances]:
+            return construct_resistor(normalize_resistance(resistance), '0.25W')  # noqa
         else:
             raise NoGedaSymbolException(resistance, device)
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
-            res, watt = tendril.conventions.electronics.parse_resistor(symbol.value)  # noqa
-            sym_resistance = tendril.conventions.electronics.parse_resistance(res)  # noqa
+            res, watt = parse_resistor(symbol.value)
+            sym_resistance = parse_resistance(res)
             if resistance == sym_resistance:
                 return symbol.value
     raise NoGedaSymbolException(resistance)
@@ -723,7 +738,7 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
 
 def export_gsymlib_audit():
     auditfname = os.path.join(AUDIT_PATH, 'gsymlib-audit.csv')
-    outf = tendril.utils.fsutils.VersionedOutputFile(auditfname)
+    outf = VersionedOutputFile(auditfname)
     outw = csv.writer(outf)
     outw.writerow(['filename', 'status', 'ident', 'device', 'value',
                    'footprint', 'description', 'path', 'package'])
