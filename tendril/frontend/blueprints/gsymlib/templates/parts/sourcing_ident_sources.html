@@ -23,15 +23,20 @@
             </div>
         </article>
         <article class="sinfo sinfo-detail-manufacturer small-12 large-3 columns" data-equalizer-watch>
-            <div class="sinfo mpartno sinfo-detail-text">
+            <div class="sinfo mpartno autoscale sinfo-detail-text">
                 {{ isinfo.vpart.mpartno or '' }}
             </div>
             <div class="sinfo manufacturer sinfo-detail-text">
                 {{ isinfo.vpart.manufacturer or '' }}
             </div>
+            <div class="small-12 columns">
+                <div class="sinfo last-updated sinfo-detail-text">
+                    Data retrieved {{ isinfo.vpart.last_updated.humanize() or '' }}.
+                </div>
+            </div>
         </article>
         <article class="sinfo sinfo-detail-vendor small-12 large-4 columns" data-equalizer-watch>
-            <div class="sinfo vpno sinfo-detail-text">
+            <div class="sinfo vpno autoscale sinfo-detail-text">
                 {{ isinfo.vpart.vpno  or '' }}
             </div>
             {% if isinfo.vpart.vpartdesc %}
@@ -47,11 +52,6 @@
             <div class="small-6 columns">
                 <div class="sinfo pkgqty sinfo-detail-text">
                     Package Quantity : {{ isinfo.vpart.pkgqty or '' }}
-                </div>
-            </div>
-            <div class="small-12 columns">
-                <div class="sinfo last-updated sinfo-detail-text">
-                    Data retrieved {{ isinfo.vpart.last_updated.humanize() or '' }}.
                 </div>
             </div>
         </article>
