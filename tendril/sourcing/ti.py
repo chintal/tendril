@@ -66,11 +66,15 @@ class TIElnPart(VendorElnPartBase):
         self.vpartdesc = self._get_description(soup)
         self.package = self._get_package(soup)
 
-    def _get_product_soup(self):
-        start_url = urlparse.urljoin(
+    @property
+    def vpart_url(self):
+        return urlparse.urljoin(
             self.url_base,
             "Search.aspx?k={0}&pt=-1".format(urllib.quote_plus(self.vpno))
         )
+
+    def _get_product_soup(self):
+        start_url = self.vpart_url
         soup = www.get_soup(start_url)
         ptable = soup.find('table',
                            id=re.compile(r'ctl00_ProductList'))
@@ -167,6 +171,7 @@ class TIElnPart(VendorElnPartBase):
 
 class VendorTI(VendorBase):
     _partclass = TIElnPart
+    _vendorlogo = '/static/images/vendor-logo-ti.gif'
     _url_base = 'https://store.ti.com'
     _devices = ['IC SMD', 'IC THRU', 'IC PLCC',]
 

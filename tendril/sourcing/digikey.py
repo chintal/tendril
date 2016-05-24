@@ -237,15 +237,18 @@ class DigiKeyElnPart(VendorElnPartBase):
             logger.error("Not enough information to create a Digikey Part")
         super(DigiKeyElnPart, self).__init__(dkpartno, ident, vendor, max_age)
 
+    @property
+    def vpart_url(self):
+        return 'http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail?name=' \
+               + urllib.quote_plus(self.vpno)
+
     def _get_data(self):
         """
         This function downloads the part page from Digi-Key, scrapes the page,
         and populates the object with all the necessary information.
 
         """
-        url = ('http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail?name=' +  # noqa
-               urllib.quote_plus(self.vpno))
-        soup = www.get_soup(url)
+        soup = www.get_soup(self.vpart_url)
         if soup is None:
             logger.error("Unable to open DigiKey product page : " + self.vpno)
             return
@@ -506,6 +509,7 @@ class VendorDigiKey(VendorBase):
     ]
 
     _url_base = 'http://www.digikey.com'
+    _vendorlogo = '/static/images/vendor-logo-digikey.png'
     _search_url_base = urlparse.urljoin(_url_base, '/product-search/en/')
     _default_urlparams = [
         ('stock', '0'), ('mnonly', '0'), ('newproducts', '0'),

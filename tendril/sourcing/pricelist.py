@@ -103,7 +103,8 @@ class VendorPricelist(VendorBase):
 
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=None, currency_symbol=None,
-                 pricelistpath=None):
+                 pricelistpath=None, vendorlogo=None,
+                 sname=None, is_manufacturer=True):
         if pricelistpath is None:
             pricelistpath = os.path.join(PRICELISTVENDORS_FOLDER,
                                          name + '-pricelist.yaml')
@@ -117,7 +118,8 @@ class VendorPricelist(VendorBase):
             currency_code, currency_symbol
         )
         super(VendorPricelist, self).__init__(name, dname, pclass, mappath,
-                                              currency_code, currency_symbol)
+                                              currency_code, currency_symbol,
+                                              vendorlogo, sname, is_manufacturer)
         if 'vendorinfo' in self._pricelist:
             if "effectivefactor" in self._pricelist["vendorinfo"]:
                 self.add_order_additional_cost_component(
@@ -141,6 +143,10 @@ class VendorPricelist(VendorBase):
             self._generate_insert_idents()
         if "pricecsv" in self._pricelist:
             self._load_pricecsv(self._pricelist["pricecsv"])
+
+    @property
+    def logo(self):
+        return self._instance_vendorlogo
 
     def _load_pricecsv(self, fname):
         pricecsvpath = os.path.join(PRICELISTVENDORS_FOLDER, fname)

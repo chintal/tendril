@@ -347,7 +347,10 @@ class VendorPartBase(object):
 
     @property
     def manufacturer(self):
-        return self._manufacturer
+        if self._manufacturer is not None:
+            return self._manufacturer
+        elif self._vendor.is_manufacturer:
+            return self._vendor.name
 
     @manufacturer.setter
     def manufacturer(self, value):
@@ -355,7 +358,10 @@ class VendorPartBase(object):
 
     @property
     def mpartno(self):
-        return self._mpartno
+        if self._mpartno is not None:
+            return self._mpartno
+        elif self._vendor.is_manufacturer:
+            return self._vpno
 
     @mpartno.setter
     def mpartno(self, value):
@@ -392,8 +398,16 @@ class VendorPartBase(object):
         return rval
 
     @property
+    def vpart_url(self):
+        return None
+
+    @property
     def prices(self):
-        return self._prices
+        return sorted(self._prices, key=lambda x: x.moq)
+
+    @property
+    def effective_prices(self):
+        return [self._vendor.get_effective_price(x) for x in self.prices]
 
     def get_price(self, qty):
         rprice = None
@@ -457,14 +471,19 @@ class VendorElnPartBase(VendorPartBase):
 
 
 class VendorBase(object):
+    _vendorlogo = None
     _partclass = VendorPartBase
     _invoiceclass = VendorInvoice
 
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=config.BASE_CURRENCY,
-                 currency_symbol=config.BASE_CURRENCY_SYMBOL):
+                 currency_symbol=config.BASE_CURRENCY_SYMBOL,
+                 vendorlogo=None, sname=None, is_manufacturer=None):
         self._name = name
         self._dname = dname
+        self._sname = sname
+        self._instance_vendorlogo = vendorlogo
+        self._is_manufacturer = is_manufacturer
         self._currency = currency.CurrencyDefinition(currency_code,
                                                      currency_symbol)
         self._pclass = pclass
@@ -479,11 +498,27 @@ class VendorBase(object):
 
     @property
     def name(self):
-        return self._dname
+        if self._dname is not None:
+            return self._dname
+        else:
+            return self._name
+
+    @property
+    def sname(self):
+        if self._sname is not None:
+            return self._sname
+        else:
+            return self._name
 
     @property
     def pclass(self):
         return self._pclass
+
+    @property
+    def is_manufacturer(self):
+        if self._is_manufacturer is None:
+            return False
+        return self._is_manufacturer
 
     @property
     def mappath(self):
@@ -504,6 +539,10 @@ class VendorBase(object):
         :type currency_def: utils.currency.CurrencyDefinition
         """
         self._currency = currency_def
+
+    @property
+    def logo(self):
+        return self._vendorlogo
 
     def get_idents(self):
         for ident in self._map.get_idents():

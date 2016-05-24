@@ -80,13 +80,17 @@ class MouserElnPart(vendors.VendorElnPartBase):
             raise
             # TODO raise AttributeError
 
-    def _get_product_soup(self):
-        start_url = urlparse.urljoin(
+    @property
+    def vpart_url(self):
+        return urlparse.urljoin(
             self.url_base,
             '/Search/Refine.aspx?Keyword={0}&FS=True'.format(
                 urllib.quote_plus(self.vpno)
             )
         )
+
+    def _get_product_soup(self):
+        start_url = self.vpart_url
         soup = www.get_soup(start_url)
         url = www.get_actual_url(start_url)
         # TODO start_url may not be the actual URL.
@@ -228,6 +232,7 @@ class MouserElnPart(vendors.VendorElnPartBase):
 
 class VendorMouser(vendors.VendorBase):
     _partclass = MouserElnPart
+    _vendorlogo = '/static/images/vendor-logo-mouser.gif'
 
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=None, currency_symbol=None):

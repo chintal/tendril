@@ -1,0 +1,71 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% macro render_guideline(guideline) -%}
+<div class="small-12 colums">
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Inventory Guideline</h6>
+        </div>
+        <div class="small-12 medium-4 columns">
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th class="text-center" colspan="2">Order Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="text-center" width="50%">Minimum</td>
+                    <td class="text-center" width="50%">{{ guideline.oqty_min }}</td>
+                </tr>
+                <tr>
+                    <td class="text-center" width="50%">Multiple</td>
+                    <td class="text-center" width="50%">{{ guideline.oqty_multiple }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="small-12 medium-4 columns">
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th class="text-center" colspan="2">Baseline</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="text-center" width="50%">Quantity</td>
+                    <td class="text-center" width="50%">{{ guideline.baseline_qty }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="small-12 medium-4 columns">
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th class="text-center" colspan="2">Excess</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="text-center" width="50%">Minimum (Percentage)</td>
+                    <td class="text-center" width="50%">{{ guideline.excess_min_pc }}</td>
+                </tr>
+                <tr>
+                    <td class="text-center" width="50%">Minimum (Quantity)</td>
+                    <td class="text-center" width="50%">{{ guideline.excess_min_qty }}</td>
+                </tr>
+                <tr>
+                    <td class="text-center" width="50%">Maximum (Quantity)</td>
+                    <td class="text-center" width="50%">{{ guideline.excess_max_qty }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endmacro -%}

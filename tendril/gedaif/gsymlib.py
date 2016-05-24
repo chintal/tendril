@@ -175,8 +175,13 @@ class EDASymbolBase(object):
         if self._indicative_sourcing_info is None:
             from tendril.inventory.guidelines import electronics_qty
             from tendril.sourcing.electronics import get_sourcing_information
+            from tendril.sourcing.electronics import SourcingException
             iqty = electronics_qty.get_compliant_qty(self.ident, 1)
-            vsi = get_sourcing_information(self.ident, iqty, allvendors=True)
+            try:
+                vsi = get_sourcing_information(self.ident, iqty,
+                                               allvendors=True)
+            except SourcingException:
+                vsi = []
             self._indicative_sourcing_info = vsi
         return self._indicative_sourcing_info
 
