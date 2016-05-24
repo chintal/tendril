@@ -61,7 +61,7 @@ def run(vobj=None):
     :param vobj: Vendor to generate the map for, or None for all.
 
     """
-    from tendril.sourcing.electronics import gen_vendor_mapfile
+    from tendril.sourcing.map import gen_vendor_mapfile
     from tendril.sourcing.electronics import vendor_list
 
     if not vobj:

@@ -24,7 +24,7 @@ import argparse
 
 
 def run(vobj=None):
-    from tendril.sourcing.electronics import export_vendor_map_audit
+    from tendril.sourcing.map import export_vendor_map_audit
     from tendril.sourcing.electronics import vendor_list
 
     if not vobj:

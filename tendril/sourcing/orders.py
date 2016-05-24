@@ -399,3 +399,6 @@ class CompositeOrder(object):
 
     def collapse(self):
         pass
+
+
+order = CompositeOrder()

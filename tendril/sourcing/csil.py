@@ -23,14 +23,17 @@ import time
 import locale
 import os
 from collections import OrderedDict
+from future.utils import viewitems
 
 import splinter
 
 import selenium.common.exceptions
-import vendors
+from .vendors import VendorBase
+from .vendors import VendorPrice
+from .vendors import VendorPartBase
+from .vendors import SourcingInfo
 
 from tendril.utils import fsutils
-from tendril.utils.types import currency
 from tendril.utils.terminal import TendrilProgressBar
 
 from tendril.utils.config import VENDORS_DATA
@@ -258,7 +261,7 @@ def get_csil_prices(params=exparams, rval=None):
     return rval
 
 
-class CSILPart(vendors.VendorPartBase):
+class CSILPart(VendorPartBase):
     def __init__(self, vpartno, ident, vendor, max_age=600000):
         if vendor is None:
             vendor = dvobj
@@ -325,14 +328,14 @@ class CSILPart(vendors.VendorPartBase):
             return None
         with open(pricingfp, 'r') as f:
             data = yaml.load(f)
-        for qty, prices in data['pricing'].iteritems():
+        for qty, prices in viewitems(data['pricing']):
             if 10 not in prices.keys():
                 logger.warning(
                     "Default Delivery Time not in prices. Quantity pricing not imported : " +  # noqa
                     str([qty, self._pcbname])
                 )
             else:
-                price = vendors.VendorPrice(
+                price = VendorPrice(
                     qty, prices[10], self._vendor.currency
                 )
                 self._prices.append(price)
@@ -362,7 +365,7 @@ class CSILPart(vendors.VendorPartBase):
             return selprice, super(CSILPart, self).get_price(selprice.moq + 1)[0], rationale, base_price  # noqa
 
 
-class VendorCSIL(vendors.VendorBase):
+class VendorCSIL(VendorBase):
     _partclass = CSILPart
 
     def __init__(self, name, dname, pclass, mappath=None,
@@ -395,16 +398,18 @@ class VendorCSIL(vendors.VendorBase):
         candidates = [self.get_vpart(x) for x in candidate_names]
 
         if len(candidates) == 0:
-            return self, None, None, None, None, None
+            return SourcingInfo(self, None, None, None,
+                                None, None, None, None)
 
         candidate = candidates[0]
-        if len(candidate._prices) == 0:
-            return self, None, None, None, None, None
+        if len(candidate.prices) == 0:
+            return SourcingInfo(self, None, None, None,
+                                None, None, None, None)
         ubprice, nbprice, urationale, olduprice = candidate.get_price(rqty)
         oqty = ubprice.moq
         effprice = self.get_effective_price(ubprice)
-        return self, candidate, oqty, nbprice, \
-            ubprice, effprice, urationale, olduprice
+        return SourcingInfo(self, candidate, oqty, nbprice,
+                            ubprice, effprice, urationale, olduprice)
 
     def _generate_purchase_order(self, path):
         stagebase = super(VendorCSIL, self)._generate_purchase_order(path)

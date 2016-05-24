@@ -23,15 +23,20 @@ import os
 import re
 import csv
 import codecs
+from future.utils import viewitems
 
 import iec60063
-
-import vendors
 import customs
+
+from .vendors import VendorBase
+from .vendors import VendorPartBase
+from .vendors import VendorPrice
+from .vendors import SourcingInfo
 
 from tendril.conventions.electronics import ident_transform
 from tendril.conventions.electronics import construct_resistor
 from tendril.conventions.electronics import construct_capacitor
+
 from tendril.utils.types import currency
 from tendril.utils.config import PRICELISTVENDORS_FOLDER
 from tendril.utils.config import INSTANCE_ROOT
@@ -41,7 +46,7 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
-class PricelistPart(vendors.VendorPartBase):
+class PricelistPart(VendorPartBase):
     def __init__(self, vpartno, ident, vendor, max_age=600000):
         self._vendor = vendor
         super(PricelistPart, self).__init__(
@@ -60,20 +65,21 @@ class PricelistPart(vendors.VendorPartBase):
 
     def _get_prices(self, vp_dict):
         rex = re.compile(ur'^unitp@(?P<moq>\d+)$')
-        for k, v in vp_dict.iteritems():
+        for k, v in viewitems(vp_dict):
             try:
                 moq = rex.match(k).group(1)
-                price = vendors.VendorPrice(int(moq), float(v),
-                                            self._vendor.currency,
-                                            vp_dict['oqmultiple'])
+                price = VendorPrice(
+                    int(moq), float(v),
+                    self._vendor.currency, vp_dict['oqmultiple']
+                )
                 self._prices.append(price)
             except AttributeError:
                 pass
         if len(self._prices) == 0:
-            price = vendors.VendorPrice(vp_dict['moq'],
-                                        vp_dict['unitp'],
-                                        self._vendor.currency,
-                                        vp_dict['oqmultiple'])
+            price = VendorPrice(
+                vp_dict['moq'], vp_dict['unitp'],
+                self._vendor.currency, vp_dict['oqmultiple']
+            )
             self.add_price(price)
 
     def get_price_qty(self, qty):
@@ -92,7 +98,7 @@ class PricelistPart(vendors.VendorPartBase):
         return lcost, loqty, lprice
 
 
-class VendorPricelist(vendors.VendorBase):
+class VendorPricelist(VendorBase):
     _partclass = PricelistPart
 
     def __init__(self, name, dname, pclass, mappath=None,
@@ -178,8 +184,6 @@ class VendorPricelist(vendors.VendorBase):
     def _get_generator_values(pricegen):
         """
         TODO This function should be parcelled out to conventions
-        :param gendata:
-        :return:
         """
         if pricegen['type'] == 'simple':
             return pricegen['values']
@@ -266,7 +270,8 @@ class VendorPricelist(vendors.VendorBase):
 
         candidates = [self.get_vpart(x) for x in candidate_names]
         if len(candidates) == 0:
-            return self, None, None, None, None, None, None, None
+            return SourcingInfo(self, None, None, None,
+                                None, None, None, None)
 
         selcandidate = candidates[0]
         tcost, oqty, price = selcandidate.get_price_qty(rqty)
@@ -284,10 +289,11 @@ class VendorPricelist(vendors.VendorBase):
         else:
             if selcandidate.vqtyavail is not None and \
                     selcandidate.vqtyavail < oqty:
-                return self, None, None, None, None, None, None, None
+                return SourcingInfo(self, None, None, None,
+                                    None, None, None, None)
         effprice = self.get_effective_price(price)
-        return self, selcandidate, oqty, None, \
-            price, effprice, "Vendor MOQ/GL", None
+        return SourcingInfo(self, selcandidate, oqty, None,
+                            price, effprice, "Vendor MOQ/GL", None)
 
 
 class AnalogDevicesInvoice(customs.CustomsInvoice):
@@ -334,7 +340,7 @@ class AnalogDevicesInvoice(customs.CustomsInvoice):
                                 idx + ' ' + ident
                             )
                     except ValueError:
-                        print line
+                        pass
 
                     unitp_str = line[header.index('Unit Price')].strip()
 

@@ -48,8 +48,10 @@ SearchPart = namedtuple('SearchPart',
 #: A :class:`collections.namedtuple` used internally to pass
 #: around sourcing information for a single ident from a single
 #: vendor at a specified quantity.
-SourcingInfo = namedtuple('SourcingInfo',
-                          'vobj, vpart, oqty, nbprice, ubprice, effprice')
+SourcingInfo = namedtuple(
+    'SourcingInfo',
+    'vobj, vpart, oqty, nbprice, ubprice, effprice, urationale, olduprice'
+)
 
 
 class DBPartDataUnusable(Exception):
@@ -538,7 +540,8 @@ class VendorBase(object):
 
         # vobj, vpart, oqty, nbprice, ubprice, effprice
         if len(candidates) == 0:
-            return self, None, None, None, None, None
+            return SourcingInfo(self, None, None, None,
+                                None, None, None, None)
 
         selcandidate = candidates[0]
         tcost = self.get_effective_price(
@@ -585,8 +588,8 @@ class VendorBase(object):
                 ubprice = nubprice
                 nbprice = nnbprice
                 effprice = neffprice
-        return self, selcandidate, oqty, nbprice, \
-            ubprice, effprice, urationale, olduprice
+        return SourcingInfo(self, selcandidate, oqty, nbprice,
+                            ubprice, effprice, urationale, olduprice)
 
     def add_order_additional_cost_component(self, desc, percent):
         self._orderadditionalcosts.append((desc, percent))

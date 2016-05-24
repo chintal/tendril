@@ -30,6 +30,10 @@ logger = log.get_logger(__name__, level=log.DEFAULT)
 def warm_up_caches():
     start_time = timeit.default_timer()
     logger.info("Starting Warmup Cycle")
+    logger.info("Warming up gedaif.gsymlib")
+    from tendril.gedaif import gsymlib
+    logger.info("Warming up sourcing.electronics")
+    from tendril.sourcing import electronics
     logger.info("Warming up entityhub.directory")
     from tendril.entityhub import directory
     logger.info("Warming up entityhub.modules")

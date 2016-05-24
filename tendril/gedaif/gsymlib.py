@@ -22,6 +22,7 @@ gEDA gsymlib Module (:mod:`tendril.gedaif.gsymlib`)
 
 import os
 import csv
+from future.utils import viewitems
 
 import jinja2
 
@@ -172,8 +173,8 @@ class EDASymbolBase(object):
     @property
     def indicative_sourcing_info(self):
         if self._indicative_sourcing_info is None:
-            from tendril.sourcing.electronics import get_sourcing_information
             from tendril.inventory.guidelines import electronics_qty
+            from tendril.sourcing.electronics import get_sourcing_information
             iqty = electronics_qty.get_compliant_qty(self.ident, 1)
             vsi = get_sourcing_information(self.ident, iqty, allvendors=True)
             self._indicative_sourcing_info = vsi
@@ -183,6 +184,9 @@ class EDASymbolBase(object):
     def datasheet_url(self):
         if self._datasheet is not None:
             return self._datasheet
+        for source in self.indicative_sourcing_info:
+            if source.vpart.datasheet is not None:
+                return source.vpart.datasheet
 
     @property
     def sym_ok(self):
@@ -455,7 +459,7 @@ class GSymGeneratorFile(object):
                         self._ivalues.extend(gendata['values'])
                 if 'custom_series' in gendata.keys():
                     from tendril.conventions.series import CustomValueSeries
-                    for name, series in gendata['custom_series'].iteritems():
+                    for name, series in viewitems(gendata['custom_series']):
                         if series['detail'].pop('type') != 'resistor':
                             raise ValueError('Expected a resistor series')
                         vals = series['values']
@@ -463,7 +467,7 @@ class GSymGeneratorFile(object):
                         iseries = CustomValueSeries(name, 'resistor',
                                                     device=tsymbol.device,
                                                     footprint=tsymbol.footprint)
-                        for type_val, val in vals.iteritems():
+                        for type_val, val in viewitems(vals):
                             iseries.add_value(type_val, val)
                         iseries._desc = series['detail'].pop('desc')
                         iseries._aparams = series['detail']
@@ -495,7 +499,7 @@ class GSymGeneratorFile(object):
                         self._ivalues.append(gendata['values'])
                 if 'custom_series' in gendata.keys():
                     from tendril.conventions.series import CustomValueSeries
-                    for name, series in gendata['custom_series'].iteritems():
+                    for name, series in viewitems(gendata['custom_series']):
                         if series['detail'].pop('type') != 'resistor':
                             raise ValueError('Expected a resistor series')
                         vals = series['values']
@@ -503,7 +507,7 @@ class GSymGeneratorFile(object):
                         iseries = CustomValueSeries(name, 'resistor',
                                                     device=tsymbol.device,
                                                     footprint=tsymbol.footprint)
-                        for type_val, val in vals.iteritems():
+                        for type_val, val in viewitems(vals):
                             iseries.add_value(type_val, val)
                         iseries._desc = series['detail'].pop('desc')
                         iseries._aparams = series['detail']

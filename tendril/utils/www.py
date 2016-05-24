@@ -373,7 +373,8 @@ def urlopen(url):
             else:
                 raise
         except URLError as e:
-            logger.error("URL Error : " + str(e.errno) + " " + str(e.reason))
+            logger.error("URL Error : {0} {1} {2}"
+                         "".format(e.errno, e.reason, url))
             raise
 
     while retries > 0:

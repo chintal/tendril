@@ -28,10 +28,11 @@ Core Sourcing Modules
 
 .. toctree::
 
+   tendril.sourcing.vendors
+   tendril.sourcing.orders
    tendril.sourcing.customs
    tendril.sourcing.electronics
-   tendril.sourcing.orders
-   tendril.sourcing.vendors
+   tendril.sourcing.map
 
 
 Vendor Support Modules
