@@ -49,6 +49,11 @@
                     Package Quantity : {{ isinfo.vpart.pkgqty or '' }}
                 </div>
             </div>
+            <div class="small-12 columns">
+                <div class="sinfo last-updated sinfo-detail-text">
+                    Data retrieved {{ isinfo.vpart.last_updated.humanize() or '' }}.
+                </div>
+            </div>
         </article>
         <article class="sinfo sinfo-detail-prices small-12 large-3 columns" data-equalizer-watch>
             <div class="sinfo prices sinfo-detail-text">

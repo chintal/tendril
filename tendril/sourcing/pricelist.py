@@ -23,6 +23,7 @@ import os
 import re
 import csv
 import codecs
+import arrow
 from future.utils import viewitems
 
 import iec60063
@@ -41,6 +42,7 @@ from tendril.utils.types import currency
 from tendril.utils.config import PRICELISTVENDORS_FOLDER
 from tendril.utils.config import INSTANCE_ROOT
 
+from tendril.utils.fsutils import get_file_mtime
 from tendril.utils.files import yml as yaml
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -52,6 +54,10 @@ class PricelistPart(VendorPartBase):
         super(PricelistPart, self).__init__(
             vpartno, ident, vendor, max_age
         )
+
+    @property
+    def last_updated(self):
+        return arrow.get(self._vendor.last_updated)
 
     def _get_data(self):
         _vp_dict = self._vendor.get_vpdict(self._vpno)
@@ -104,12 +110,13 @@ class VendorPricelist(VendorBase):
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=None, currency_symbol=None,
                  pricelistpath=None, vendorlogo=None,
-                 sname=None, is_manufacturer=True):
+                 sname=None, is_manufacturer=False):
         if pricelistpath is None:
             pricelistpath = os.path.join(PRICELISTVENDORS_FOLDER,
                                          name + '-pricelist.yaml')
         with open(pricelistpath, 'r') as f:
             self._pricelist = yaml.load(f)
+        self._last_updated = get_file_mtime(pricelistpath)
         if currency_code is None:
             currency_code = self._pricelist["currency"]["code"].strip()
         if currency_symbol is None:
@@ -145,11 +152,12 @@ class VendorPricelist(VendorBase):
             self._load_pricecsv(self._pricelist["pricecsv"])
 
     @property
-    def logo(self):
-        return self._instance_vendorlogo
+    def last_updated(self):
+        return self._last_updated
 
     def _load_pricecsv(self, fname):
         pricecsvpath = os.path.join(PRICELISTVENDORS_FOLDER, fname)
+        self._last_updated = get_file_mtime(pricecsvpath)
         with open(pricecsvpath, 'r') as f:
             reader = csv.reader(f)
             for line in reader:

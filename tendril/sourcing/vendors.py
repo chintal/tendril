@@ -251,6 +251,7 @@ class VendorPartBase(object):
         self._prices = []
         self._vendor = vendor
         self._pkgqty = 1
+        self._last_updated = None
         self._populate(max_age)
 
     def _populate(self, max_age):
@@ -312,6 +313,7 @@ class VendorPartBase(object):
             self._mpartno = vpno.detail.mpartno
             self._vpartdesc = vpno.detail.vpartdesc
             self._pkgqty = vpno.detail.pkgqty
+            self._last_updated = vpno.updated_at
             for price in vpno.prices:
                 self.add_price(
                     VendorPrice(int(price.moq), float(price.price),
@@ -328,6 +330,10 @@ class VendorPartBase(object):
 
     def add_price(self, price):
         self._prices.append(price)
+
+    @property
+    def last_updated(self):
+        return self._last_updated
 
     @property
     def vpno(self):
@@ -542,6 +548,8 @@ class VendorBase(object):
 
     @property
     def logo(self):
+        if self._instance_vendorlogo is not None:
+            return self._instance_vendorlogo
         return self._vendorlogo
 
     def get_idents(self):
