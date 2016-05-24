@@ -46,7 +46,12 @@ def init_app(app):
 
     # Create Filters
     def unicode_filter(s):
-        return unicode(s, 'utf-8')
+        if not isinstance(s, unicode):
+            try:
+                s = unicode(s, 'utf-8')
+            except UnicodeDecodeError:
+                s = unicode(s, 'latin-1')
+        return s
     app.jinja_env.filters['unicode'] = unicode_filter
 
     def quote_filter(s):

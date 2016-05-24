@@ -58,7 +58,7 @@
                         @{{ price.moq }}
                     </div>
                     <div class="sinfo-price-native small-6 columns">
-                        {{ price.unit_price.native_string  or '' }}
+                        {{ price.unit_price.native_string|unicode  or '' }}
                     </div>
                     <div class="sinfo-price-multiple small-2 columns">
                         {{ price.oqmultiple }}
@@ -78,7 +78,7 @@
     </div>
 
     <div class="small-12 columns">
-        {% if isinfo|length > 0 %}
+        {% if isinfos|length > 0 %}
             {% for isinfo in isinfos %}
                 {{ render_indicative_source_info(isinfo) }}
             {% endfor %}

@@ -243,7 +243,7 @@ class CurrencyValue(TypedComparisonMixin):
         :rtype: str
 
         """
-        return BASE_CURRENCY_SYMBOL + "{0:,.2f}".format(self.native_value)
+        return "{0} {1:,.2f}".format(BASE_CURRENCY_SYMBOL, self.native_value)
 
     @property
     def source_value(self):
@@ -265,7 +265,7 @@ class CurrencyValue(TypedComparisonMixin):
         :rtype: str
 
         """
-        return self._currency_def.symbol + "{0:,.2f}".format(self._val)
+        return "{0} {1:,.2f}".format(self._currency_def.symbol, self._val)
 
     @property
     def source_currency(self):
