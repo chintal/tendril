@@ -348,6 +348,7 @@ class GedaSymbol(EDASymbolBase):
                 return False
             if not os.path.exists(self.schematic_path):
                 return False
+            return True
         return super(GedaSymbol, self)._validate()
 
     # Subcircuits

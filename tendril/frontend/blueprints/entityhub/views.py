@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (C) 2015 Chintalagiri Shashank
 #
 # This file is part of Tendril.
@@ -19,11 +20,11 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+from future.utils import viewitems
 from flask import render_template
 from flask import abort, flash
 from flask import jsonify
 from flask_user import login_required
-from nvd3 import lineChart
 
 from . import entityhub as blueprint
 from .forms import CreateSnoSeriesForm
@@ -45,7 +46,6 @@ from tendril.entityhub.db.controller import SeriesNotFound
 from tendril.dox.gedaproject import get_docs_list
 from tendril.dox.gedaproject import get_img_list
 from tendril.dox.gedaproject import get_pcbpricing_data
-from tendril.gedaif.conffile import ConfigsFile
 
 from tendril.inventory import electronics as invelectronics
 from tendril.utils.fsutils import Crumb
@@ -192,31 +192,19 @@ def get_pcb_costing_chart(projectfolder):
         p = data['pricing'][qty]
         for dterm in p.keys():
             if dterm not in datasets.keys():
-                datasets[dterm] = {}
-            datasets[dterm][qty] = p[dterm]
+                datasets[dterm] = []
+            datasets[dterm].append({'x': qty, 'y': p[dterm]})
 
-    chart = lineChart(name="costingChart", x_is_date=False,
-                      jquery_on_ready=True,
-                      use_interactive_guideline=True,
-                      y_axis_format="function(d) { return '" +
-                                    BASE_CURRENCY_SYMBOL +
-                                    "' + d3.format(',f')(d)}",
-                      y_custom_format=True,
-                      height=300,
-                      )
+    data = []
+    for k, v in viewitems(datasets):
+        data.append({
+                    'values': v,
+                    'key': k,
+                    })
 
-    for dterm in datasets.keys():
-        x_data = sorted(datasets[dterm].keys())
-        y_data = [datasets[dterm][x] for x in x_data]
-        chart.add_serie(y=y_data, x=x_data, name=str(dterm) + ' days')
-
-    x_data = sorted(datasets[10].keys())
-    totals = [(y * x_data[i]) for i, y in
-              enumerate([datasets[10][x] for x in x_data])]
-    chart.add_serie(y=totals, x=x_data, name='Total@10')
-
-    chart.buildcontent()
-    return chart.htmlcontent
+    lstage = {'data': data,
+              'csymbol': BASE_CURRENCY_SYMBOL}
+    return lstage
 
 
 @blueprint.route('/pcbs/<pcbname>')

@@ -33,7 +33,8 @@ install_requirements = [
     'pyyaml',
     'progress',
     'colorama',
-    'python-nvd3',
+    'future',
+    'mistune',
 
     # Flask Dependencies (to be pruned?)
     'jsmin',
