@@ -113,6 +113,7 @@ from bs4 import BeautifulSoup
 
 from six.moves.urllib.request import HTTPRedirectHandler
 from six.moves.urllib.request import ProxyHandler
+from six.moves.urllib.request import HTTPHandler, HTTPSHandler
 from six.moves.urllib.request import HTTPPasswordMgrWithDefaultRealm
 from six.moves.urllib.request import ProxyBasicAuthHandler
 from six.moves.urllib.request import build_opener
@@ -260,22 +261,27 @@ def _create_opener():
 
     if NETWORK_PROXY_TYPE == 'http':
         use_proxy = True
-        proxyurl = 'http://' + NETWORK_PROXY_IP
+        if NETWORK_PROXY_USER is None:
+            proxyurl_http = 'http://' + NETWORK_PROXY_IP
+        else:
+            proxyurl_http = 'http://{0}:{1}@{2}'.format(NETWORK_PROXY_USER,
+                                                        NETWORK_PROXY_PASS,
+                                                        NETWORK_PROXY_IP)
         if NETWORK_PROXY_PORT:
-            proxyurl += ':' + NETWORK_PROXY_PORT
-        proxy_handler = ProxyHandler({'http': proxyurl,
-                                      'https': proxyurl})
+            proxyurl_http += ':' + NETWORK_PROXY_PORT
+        proxy_handler = ProxyHandler({'http': proxyurl_http,
+                                      'https': proxyurl_http})
         if NETWORK_PROXY_USER is not None:
             use_proxy_auth = True
-            password_mgr = HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(
-                None, proxyurl, NETWORK_PROXY_USER, NETWORK_PROXY_PASS
-            )
-            proxy_auth_handler = ProxyBasicAuthHandler(password_mgr)
+            # password_mgr = HTTPPasswordMgrWithDefaultRealm()
+            # password_mgr.add_password(
+            #     None, proxyurl_http, NETWORK_PROXY_USER, NETWORK_PROXY_PASS
+            # )
+            # proxy_auth_handler = ProxyBasicAuthHandler(password_mgr)
     if use_proxy:
         if use_proxy_auth:
             openr = build_opener(
-                proxy_handler, proxy_auth_handler, CachingRedirectHandler
+                HTTPHandler(), HTTPSHandler(), proxy_handler, CachingRedirectHandler
             )
         else:
             openr = build_opener(
