@@ -263,7 +263,8 @@ def _create_opener():
         proxyurl = 'http://' + NETWORK_PROXY_IP
         if NETWORK_PROXY_PORT:
             proxyurl += ':' + NETWORK_PROXY_PORT
-        proxy_handler = ProxyHandler({NETWORK_PROXY_TYPE: proxyurl})
+        proxy_handler = ProxyHandler({'http': proxyurl,
+                                      'https': proxyurl})
         if NETWORK_PROXY_USER is not None:
             use_proxy_auth = True
             password_mgr = HTTPPasswordMgrWithDefaultRealm()

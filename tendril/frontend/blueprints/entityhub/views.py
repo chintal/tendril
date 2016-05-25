@@ -184,7 +184,7 @@ def get_pcb_costing_chart(projectfolder):
     data = get_pcbpricing_data(projectfolder)
     if not data:
         return None
-    # TODO Figure out how to have a second y-axis for the total.
+    # TODO Interactive guideline and legend would be nice to have.
     # Keys : dterm
     datasets = {}
 
