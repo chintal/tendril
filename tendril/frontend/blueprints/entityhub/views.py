@@ -79,7 +79,7 @@ def modules(modulename=None):
 def cables(cblname=None):
     prototypes = get_prototype_lib()
     if cblname is None:
-        stage_cables = [v for k, v in prototypes.iteritems()
+        stage_cables = [v for k, v in viewitems(prototypes)
                         if isinstance(v, CablePrototype)]
         stage_cables.sort(key=lambda x: (x.status, x.ident))
 
@@ -131,7 +131,7 @@ def cables(cblname=None):
 def cards(cardname=None):
     prototypes = get_prototype_lib()
     if cardname is None:
-        stage_cards = [v for k, v in prototypes.iteritems()
+        stage_cards = [v for k, v in viewitems(prototypes)
                        if isinstance(v, CardPrototype)]
         stage_cards.sort(key=lambda x: (x.status, x.ident))
 
@@ -199,8 +199,18 @@ def get_pcb_costing_chart(projectfolder):
     for k, v in viewitems(datasets):
         data.append({
                     'values': v,
-                    'key': k,
+                    'key': "{0} days".format(k),
+                    'type': 'line',
+                    'yAxis': '1',
                     })
+
+    mdata = datasets[10]
+    data.append({
+        'values': [{'x': a['x'], 'y': a['x'] * a['y']} for a in mdata],
+        'key': 'Total @10',
+        'type': 'line',
+        'yAxis': '2',
+    })
 
     lstage = {'data': data,
               'csymbol': BASE_CURRENCY_SYMBOL}
@@ -213,7 +223,7 @@ def get_pcb_costing_chart(projectfolder):
 def pcbs(pcbname=None):
     pcblib = get_pcb_lib()
     if pcbname is None:
-        stage_pcbs = [v for k, v in pcblib.iteritems()]
+        stage_pcbs = [v for k, v in viewitems(pcblib)]
         stage = {'pcbs': sorted([x for x in stage_pcbs], key=lambda y: (y.status, y.ident)),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),

@@ -130,11 +130,12 @@
     <script type="text/javascript">
     $(document).ready( function () {
         nv.addGraph(function() {
-          var chart = nv.models.lineChart()
-                      .margin({left: 70})  //Adjust chart margins to give the x-axis some breathing room.
-                      .useInteractiveGuideline(true)
-                      .showYAxis(true)     //Show the y-axis
-                      .showXAxis(true)     //Show the x-axis
+          var chart = nv.models.multiChart()
+                      .margin({left: 70, right: 60})  //Adjust chart margins to give the x-axis some breathing room.
+                      //.useInteractiveGuideline(true)
+                      //.showYAxis(true)     //Show the y-axis
+                      //.showXAxis(true)     //Show the x-axis
+                      .showLegend(false)
           ;
 
           chart.xAxis
@@ -142,12 +143,17 @@
             .tickFormat(d3.format(',d'))
             ;
 
-          chart.yAxis
-            .axisLabel('Cost')
+          chart.yAxis1
+            .axisLabel('Unit Price')
             .tickFormat(function (d) {
                return  '{{ stage.costing.csymbol|unicode }}' + d;
             });
 
+          chart.yAxis2
+            .axisLabel('Total Price')
+            .tickFormat(function (d) {
+               return  '{{ stage.costing.csymbol|unicode }}' + d;
+            });
 
           d3.select('#pcb-pricing-chart svg')
             .datum({{ stage.costing.data|safe }})
