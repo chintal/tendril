@@ -23,16 +23,29 @@
             </div>
         </article>
         <article class="sinfo sinfo-detail-manufacturer small-12 large-3 columns" data-equalizer-watch>
+            <div class="row">
             <div class="sinfo mpartno autoscale sinfo-detail-text">
                 {{ isinfo.vpart.mpartno or '' }}
             </div>
-            <div class="sinfo manufacturer sinfo-detail-text">
-                {{ isinfo.vpart.manufacturer or '' }}
             </div>
-            <div class="small-12 columns">
-                <div class="sinfo last-updated sinfo-detail-text">
-                    Data retrieved {{ isinfo.vpart.last_updated.humanize() or '' }}.
+            <div class='row'>
+                <div class="small-9 columns">
+                    <div class="sinfo manufacturer sinfo-detail-text">
+                        {{ isinfo.vpart.manufacturer or '' }}
+                    </div>
+                    {% if isinfo.vpart.last_updated %}
+                    <div class="sinfo last-updated sinfo-detail-text">
+                        Data retrieved {{ isinfo.vpart.last_updated.humanize() or '' }}.
+                    </div>
+                    {% endif %}
                 </div>
+                {% if isinfo.vpart.datasheet %}
+                <div class="small-3 columns text-right">
+                    <a target="_blank" href="{{ isinfo.vpart.datasheet }}">
+                        <img src="/static/images/pdf.png">
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </article>
         <article class="sinfo sinfo-detail-vendor small-12 large-4 columns" data-equalizer-watch>

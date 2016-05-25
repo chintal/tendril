@@ -1,0 +1,59 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% macro render_symbol(symbol, show_images, mtime) -%}
+<ul class="pricing-table active-tb shadow mrgn-20-top" data-equalizer-watch="symbol">
+    {% if symbol.is_subcircuit %}
+    <a href = "/gsymlib/detail/{{symbol.subcircuitident|quote}}.sc">
+    <li class="price autoscale"><span>{{symbol.subcircuitident}}</span></li>
+    {% elif symbol.generator %}
+    <a href = " /gsymlib/detail/{{symbol.genident|quote}} ">
+    <li class="price autoscale"><span>{{symbol.genident}}</span></li>
+    {% else %}
+    <a href = " {% if symbol.ident|strip %} /gsymlib/detail/{{symbol.ident|quote}} {% endif %}">
+    <li class="price autoscale"><span>{{symbol.value}}</span></li>
+    {% endif %}
+
+    <li class="title">{{symbol.ident}}</li>
+    {% if symbol.footprint %}
+    <li class="bullet-item">{{symbol.footprint}}</li>
+    {% endif %}
+    {% if show_images %}
+    <li class="description"><img src="/gsymlib/gsymlib/{{symbol.img_repr_fname}}"></li>
+    {% endif %}
+    <li class="description">{{symbol.fname}}</li>
+    {% if symbol.description %}
+    <li class="description">{{symbol.description|unicode}}</li>
+    </a>
+    {% endif %}
+    {% if not symbol.sym_ok %}
+      <span class="right label radius alert">Bad Symbol</span>
+    {% endif %}
+    {% if symbol.is_subcircuit %}
+      <span class="right label radius">Subcircuit</span>
+    {% endif %}
+    {% if symbol.is_generator %}
+      <span class="right label radius warning">Generator</span>
+    {% endif %}
+    {% if symbol.is_virtual %}
+      <span class="right label radius success">Virtual</span>
+    {% endif %}
+    {% if symbol.is_deprecated %}
+      <span class="right label radius alert">Deprecated</span>
+    {% endif %}
+    {% if symbol.is_experimental %}
+      <span class="right label radius warning">Experimental</span>
+    {% endif %}
+    {% if symbol.is_wire %}
+      <span class="right label radius info">Wire</span>
+    {% endif %}
+    {% if symbol.is_modlen %}
+      <span class="right label radius info">Modlen</span>
+    {% endif %}
+    {% if mtime %}
+      <span class="left label radius">{{ symbol.last_updated.humanize() }}</span>
+    {% endif %}
+</ul>
+{% endmacro %}

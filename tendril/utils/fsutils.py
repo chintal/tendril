@@ -128,13 +128,15 @@ def zipdir(path, zfpath):
 Crumb = namedtuple('Crumb', 'name path')
 
 
-def get_path_breadcrumbs(path, base=None, rootst='Root'):
+def get_path_breadcrumbs(path, base=None, rootst='Root', prefix=None):
     """
     Given a certain filesystem ``path`` and an optional ``base``, this
     function returns a list of :class:`Crumb` objects, forming the breadcrumbs
     to that path from the base. The value of ``rootst`` is prepended to the
     list, providing a means to insert a title indicating the base of the
-    breadcrumb list.
+    breadcrumb list. An optional ``prefix`` can be provided, which is prepended
+    to the path (as opposed to the ``rootst`` breadcrumb, which does not
+    effect the path).
 
     :param path: The path to the target, compatible with :mod:`os.path`
     :type path: str
@@ -143,12 +145,16 @@ def get_path_breadcrumbs(path, base=None, rootst='Root'):
     :type base: str
     :param rootst: The string for the root breadcrumb.
     :type rootst: str
+    :param prefix: The string for the prefix breadcrumb.
+    :type prefix: str
     :return: The breadcrumbs.
     :rtype: :class:`list` of :class:`Crumb`
 
     """
     if base is not None:
         path = os.path.relpath(path, base)
+    if prefix is not None:
+        path = os.path.join(prefix, path)
     crumbs = []
     while True:
         head, tail = os.path.split(path)

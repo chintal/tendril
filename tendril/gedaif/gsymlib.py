@@ -22,6 +22,7 @@ gEDA gsymlib Module (:mod:`tendril.gedaif.gsymlib`)
 
 import os
 import csv
+import arrow
 from future.utils import viewitems
 
 import jinja2
@@ -86,6 +87,7 @@ class EDASymbolBase(object):
         self._package = None
         self._datasheet = None
         self._indicative_sourcing_info = None
+        self._last_updated = None
 
         self._img_repr_path = None
         self._img_repr_fname = None
@@ -147,6 +149,14 @@ class EDASymbolBase(object):
     @package.setter
     def package(self, value):
         self._package = value
+
+    @property
+    def last_updated(self):
+        return self._last_updated
+
+    @last_updated.setter
+    def last_updated(self, value):
+        self._last_updated = arrow.get(value)
 
     # Derived Properties
     @property
@@ -273,6 +283,7 @@ class GedaSymbol(EDASymbolBase):
             self._sch_img_repr()
 
     def _acq_sym(self, fpath):
+        _last_updated = get_file_mtime(fpath)
         with open(fpath, 'r') as f:
             for line in f.readlines():
                 if line.startswith('device='):
@@ -293,6 +304,16 @@ class GedaSymbol(EDASymbolBase):
                     self.source = line.split('=')[1].strip()
             if self.status == '':
                 self.status = 'Active'
+
+        if self.is_generator:
+            _genftime = get_file_mtime(self.genpath)
+            if _genftime > _last_updated:
+                _last_updated = _genftime
+        if self.is_subcircuit:
+            _schftime = get_file_mtime(self.schematic_path)
+            if _schftime > _last_updated:
+                _last_updated = _schftime
+        self.last_updated = _last_updated
 
     def _generate_img_repr(self):
         outfolder = os.path.join(INSTANCE_CACHE, 'gsymlib')
@@ -696,6 +717,15 @@ def get_symbol_folder(ident, case_insensitive=False):
     sympath = symobj.fpath
     symfolder = os.path.split(sympath)[0]
     return os.path.relpath(symfolder, GEDA_SYMLIB_ROOT)
+
+
+def get_latest_symbols(n=10, include_virtual=False):
+    if include_virtual is False:
+        tlib = [x for x in gsymlib if x.is_virtual is False]
+    else:
+        tlib = gsymlib
+    slib = sorted(tlib, key=lambda y: y.last_updated, reverse=True)
+    return slib[:n]
 
 
 def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):

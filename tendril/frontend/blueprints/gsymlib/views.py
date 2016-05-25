@@ -25,6 +25,7 @@ from urllib2 import unquote
 from collections import namedtuple
 
 from flask import render_template, abort, request
+from flask import redirect, url_for
 from flask import jsonify
 from flask_user import login_required
 
@@ -107,9 +108,13 @@ def get_geda_browser_context(path):
                          'resolveGenerators': resolve_generators_st,
                          'flattenFolders': flatten_folders_st})
 
+    breadcrumbs = get_path_breadcrumbs(path, GEDA_SYMLIB_ROOT,
+                                       rootst="gEDA Symbol Library",
+                                       prefix='browse')
+
     context = {'path': os.path.relpath(path, GEDA_SYMLIB_ROOT),
                'subfolders': sorted(subfolders, key=lambda y: y.name),
-               'breadcrumbs': get_path_breadcrumbs(path, GEDA_SYMLIB_ROOT, rootst="gEDA Symbol Library"),  # noqa
+               'breadcrumbs': breadcrumbs,
                'symbols': sorted(symbols, key=lambda y: y.ident),
                'show_images': show_images,
                'resolve_generators': resolve_generators,
@@ -125,6 +130,7 @@ def get_geda_symbol_context(ident):
     symbol = [x for x in symbol if x.status != 'Generator']
 
     navpath = os.path.relpath(symbol[0].fpath, GEDA_SYMLIB_ROOT)
+    navpath = os.path.join('browse', navpath)
     breadcrumbs = get_path_breadcrumbs(navpath, rootst="gEDA Symbol Library")
     if symbol[0].is_virtual:
         breadcrumbs.insert(-1, Crumb(name=os.path.splitext(symbol[0].fname)[0] + '.gen',  # noqa
@@ -182,6 +188,7 @@ def get_geda_generator_context(gen):
     generator = tendril.gedaif.gsymlib.get_generator(gen)
     navpath = os.path.relpath(generator.fpath, GEDA_SYMLIB_ROOT)
     navpath = os.path.splitext(navpath)[0] + '.gen'
+    navpath = os.path.join('browse', navpath)
     genobj = tendril.gedaif.gsymlib.GSymGeneratorFile(generator.fpath)
 
     return {'genname': gen,
@@ -196,6 +203,7 @@ def get_geda_subcircuit_context(sc):
     subcircuit = tendril.gedaif.gsymlib.get_subcircuit(sc)
     navpath = os.path.relpath(subcircuit.fpath, GEDA_SYMLIB_ROOT)
     navpath = os.path.splitext(navpath)[0] + '.sc'
+    navpath = os.path.join('browse', navpath)
     return {'ident': subcircuit.subcircuitident,
             'symbol': subcircuit,
             'breadcrumbs': get_path_breadcrumbs(navpath, rootst="gEDA Symbol Library"),  # noqa
@@ -204,38 +212,10 @@ def get_geda_subcircuit_context(sc):
            }
 
 
-
-@blueprint.route('/')
 @blueprint.route('/detail/<path:sc>.sc')
-@blueprint.route('/detail/<path:gen>.gen')
-@blueprint.route('/detail/<path:ident>')
-@blueprint.route('/<path:path>')
 @login_required
-def main(path=None, ident=None, gen=None, sc=None):
+def view_subcircuit(sc=None):
     stage = {'crumbroot': "/gsymlib"}
-    if path == 'idents.json':
-        return jsonify(idents=tendril.gedaif.gsymlib.gsymlib_idents)
-    if path is None and ident is None and gen is None and sc is None:
-        stage.update(get_geda_browser_context(None))
-        return render_template('gsymlib_browse.html', stage=stage,
-                               pagetitle='gEDA Library Browser')
-    if path is not None and is_geda_folder(path):
-        stage.update(get_geda_browser_context(path))
-        return render_template('gsymlib_browse.html', stage=stage,
-                               pagetitle='gEDA Library Browser')
-    if ident is not None:
-        ident = unquote(ident)
-        if ident in tendril.gedaif.gsymlib.gsymlib_idents:
-            stage.update(get_geda_symbol_context(ident))
-            return render_template('gsymlib_symbol.html', stage=stage,
-                                   pagetitle='gEDA Symbol Detail ' + ident)
-    if gen is not None:
-        gen += '.gen'
-        gen = unquote(gen)
-        if gen in tendril.gedaif.gsymlib.generator_names:
-            stage.update(get_geda_generator_context(gen))
-            return render_template('gsymlib_generator.html', stage=stage,
-                                   pagetitle='gEDA Generator Detail')
     if sc is not None:
         sc = unquote(sc)
         if sc in tendril.gedaif.gsymlib.subcircuit_names:
@@ -243,3 +223,73 @@ def main(path=None, ident=None, gen=None, sc=None):
             return render_template('gsymlib_subcircuit.html', stage=stage,
                                    pagetitle='gEDA Subcircuit Detail')
     abort(404)
+
+
+@blueprint.route('/detail/<path:gen>.gen')
+@login_required
+def view_generator(gen=None):
+    stage = {'crumbroot': "/gsymlib"}
+    if gen is not None:
+        gen += '.gen'
+        gen = unquote(gen)
+        if gen in tendril.gedaif.gsymlib.generator_names:
+            stage.update(get_geda_generator_context(gen))
+            return render_template('gsymlib_generator.html', stage=stage,
+                                   pagetitle='gEDA Generator Detail')
+    abort(404)
+
+
+@blueprint.route('/detail/<path:ident>')
+@login_required
+def view_symbol(ident=None):
+    stage = {'crumbroot': "/gsymlib"}
+    if ident is not None:
+        ident = unquote(ident)
+        if ident in tendril.gedaif.gsymlib.gsymlib_idents:
+            stage.update(get_geda_symbol_context(ident))
+            return render_template('gsymlib_symbol.html', stage=stage,
+                                   pagetitle='gEDA Symbol Detail ' + ident)
+    abort(404)
+
+
+@blueprint.route('/browse/')
+@blueprint.route('/browse/<path:path>')
+@login_required
+def view_browse(path=None):
+    stage = {'crumbroot': "/gsymlib"}
+
+    if path is None:
+        stage.update(get_geda_browser_context(None))
+        return render_template('gsymlib_browse.html', stage=stage,
+                               pagetitle='gEDA Library Browser')
+
+    if path is not None and is_geda_folder(path):
+        stage.update(get_geda_browser_context(path))
+        return render_template('gsymlib_browse.html', stage=stage,
+                               pagetitle='gEDA Library Browser')
+
+    abort(404)
+
+
+@blueprint.route('/idents.json')
+@login_required
+def json_idents():
+    lidents = list(tendril.gedaif.gsymlib.gsymlib_idents)
+    lidents = sorted(lidents)
+    return jsonify(idents=lidents)
+
+
+@blueprint.route('/', methods=['GET', 'POST'])
+@login_required
+def view_main():
+    ferror = False
+    if request.method == 'POST':
+        ident = request.form['ident']
+        if tendril.gedaif.gsymlib.is_recognized(ident):
+            return redirect(url_for('.view_symbol', ident=ident))
+        ferror = True
+    stage = {'ferror': ferror,
+             'crumbroot': "/gsymlib",
+             'recent_symbols': tendril.gedaif.gsymlib.get_latest_symbols()}
+    return render_template('gsymlib_main.html', stage=stage,
+                           pagetitle='gEDA Symbol Library')

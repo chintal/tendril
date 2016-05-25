@@ -4,9 +4,9 @@
 #}
 
 {% extends "base_templates/base.html" %}
+{% import "parts/gsymlib_symbol.html" as gsymlib_symbol %}
 
 {% block main %}
-
 <div class="row">
     <form action=" {{ request.path }} " method="GET">
         <fieldset>
@@ -45,7 +45,7 @@
     <ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-6" data-equalizer="folder">
         {% for folder in stage.subfolders %}
         <li>
-            <a href=" /gsymlib/{{folder.path}}?{{ stage.query_string }}" class="button square radius expand bg-t5" data-equalizer-watch="folder">
+            <a href=" /gsymlib/browse/{{folder.path}}?{{ stage.query_string }}" class="button square radius expand bg-t5" data-equalizer-watch="folder">
                 {{folder.name}}
             </a>
         </li>
@@ -58,55 +58,7 @@
     <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4" data-equalizer="symbol">
         {% for symbol in stage.symbols %}
         <li>
-            <ul class="pricing-table active-tb shadow mrgn-20-top" data-equalizer-watch="symbol">
-                {% if symbol.is_subcircuit %}
-                <a href = "/gsymlib/detail/{{symbol.subcircuitident|quote}}.sc">
-                <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.subcircuitident}}</span></li>
-                {% elif symbol.generator %}
-                <a href = " /gsymlib/detail/{{symbol.genident|quote}} ">
-                <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.genident}}</span></li>
-                {% else %}
-                <a href = " {% if symbol.ident|strip %} /gsymlib/detail/{{symbol.ident|quote}} {% endif %}">
-                <li class="price {% if stage.symbols|length < 40 %} autoscale {% endif %}"><span>{{symbol.value}}</span></li>
-                {% endif %}
-
-                <li class="title">{{symbol.ident}}</li>
-                {% if symbol.footprint %}
-                <li class="bullet-item">{{symbol.footprint}}</li>
-                {% endif %}
-                {% if stage.show_images %}
-                <li class="description"><img src="/gsymlib/gsymlib/{{symbol.img_repr_fname}}"></li>
-                {% endif %}
-                <li class="description">{{symbol.fname}}</li>
-                {% if symbol.description %}
-                <li class="description">{{symbol.description|unicode}}</li>
-                </a>
-                {% endif %}
-                {% if not symbol.sym_ok %}
-                  <span class="right label radius alert">Bad Symbol</span>
-                {% endif %}
-                {% if symbol.is_subcircuit %}
-                  <span class="right label radius">Subcircuit</span>
-                {% endif %}
-                {% if symbol.is_generator %}
-                  <span class="right label radius warning">Generator</span>
-                {% endif %}
-                {% if symbol.is_virtual %}
-                  <span class="right label radius success">Virtual</span>
-                {% endif %}
-                {% if symbol.is_deprecated %}
-                  <span class="right label radius alert">Deprecated</span>
-                {% endif %}
-                {% if symbol.is_experimental %}
-                  <span class="right label radius warning">Experimental</span>
-                {% endif %}
-                {% if symbol.is_wire %}
-                  <span class="right label radius info">Wire</span>
-                {% endif %}
-                {% if symbol.is_modlen %}
-                  <span class="right label radius info">Modlen</span>
-                {% endif %}
-            </ul>
+            {{ gsymlib_symbol.render_symbol(symbol, stage.show_images) }}
         </li>
         {% endfor %}
     </ul>
