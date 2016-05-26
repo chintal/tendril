@@ -24,6 +24,7 @@ import csv
 
 from tendril.utils.config import VENDOR_MAP_FOLDER
 from tendril.utils.fsutils import VersionedOutputFile
+from tendril.utils.fsutils import get_file_mtime
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
@@ -53,6 +54,9 @@ class MapFileBase(object):
                     "".format(self._name, outpath))
 
     def get_idents(self):
+        raise NotImplementedError
+
+    def get_map_time(self, canonical):
         raise NotImplementedError
 
     def get_upartnos(self, canonical):
@@ -121,6 +125,9 @@ class MapFile(MapFileBase):
         for key in sorted(self._map.keys()):
             if len(self._map[key]) or len(self._umap[key]):
                 yield key
+
+    def get_map_time(self, canonical):
+        return get_file_mtime(self._mappath)
 
     def get_upartnos(self, canonical):
         return self._umap[canonical]

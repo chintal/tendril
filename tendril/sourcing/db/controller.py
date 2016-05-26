@@ -86,7 +86,6 @@ def _create_map(vendor=None, ident=None, strategy=None, session=None):
                          strategy=strategy)
     session.add(mobj)
     session.flush()
-
     return mobj
 
 
@@ -233,19 +232,21 @@ def get_map(vendor=None, ident=None, session=None):
 
 @with_db
 def get_strategy(vendor=None, ident=None,  session=None):
-    vendor = _get_vendor(vendor=vendor, session=session)
-    ident = _get_ident(ident=ident, session=session)
-
     map_obj = get_map(vendor=vendor, ident=ident, session=session)
-
     return map_obj.strategy
 
 
 @with_db
-def get_map_vpnos(vendor=None, ident=None, mtype=None, session=None):
-    vendor = _get_vendor(vendor=vendor, session=session)
-    ident = _get_ident(ident=ident, session=session)
+def get_time(vendor=None, ident=None,  session=None):
+    map_obj = get_map(vendor=vendor, ident=ident, session=session)
+    if map_obj.updated_at:
+        return map_obj.updated_at
+    else:
+        return map_obj.created_at
 
+
+@with_db
+def get_map_vpnos(vendor=None, ident=None, mtype=None, session=None):
     map_obj = get_map(vendor=vendor, ident=ident, session=session)
 
     q = session.query(VendorPartNumber)
@@ -313,7 +314,6 @@ def add_map_vpno(vendor=None, ident=None, vpno=None, mtype=None,
     vpno_obj = VendorPartNumber(vpno=vpno, type=mtype, vpmap_id=map_obj.id)
     session.add(vpno_obj)
     session.flush()
-
     return vpno_obj
 
 
@@ -324,7 +324,6 @@ def remove_map_vpno(vendor=None, ident=None, vpno=None,
     ident = _get_ident(ident=ident, session=session)
     vpno_obj = _get_vpno_obj(vendor=vendor, ident=ident, vpno=vpno,
                              mtype=mtype, session=session)
-
     session.delete(vpno_obj)
     session.flush()
 

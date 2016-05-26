@@ -40,7 +40,7 @@
                             <legend>
                                 Vendors
                             </legend>
-                            {% for field in form.vendors %}
+                            {% for vendor in form.vendors %}
                                 {{ forms.render_checkbox_button(vendor) }}
                             {% endfor %}
                         </fieldset>

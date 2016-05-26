@@ -24,6 +24,7 @@ import csv
 import time
 from collections import namedtuple
 from sqlalchemy.orm.exc import NoResultFound
+from six.moves.urllib.error import HTTPError, URLError
 
 from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
@@ -85,6 +86,9 @@ class VendorMapFileDB(MapFileBase):
     def get_idents(self):
         return [x.ident for x in
                 controller.get_vendor_idents(vendor=self._vendor_name)]
+
+    def get_map_time(self, canonical):
+        return controller.get_time(vendor=self._vendor_name, ident=canonical)
 
     def get_canonical(self, partno):
         return controller.get_ident(vendor=self._vendor_name, vpno=partno)
@@ -578,7 +582,19 @@ class VendorBase(object):
         for ident, vpno in self.get_all_vpnos():
             yield self.get_vpart(vpartno=vpno, ident=ident, max_age=max_age)
 
-    def get_vpnos(self, ident):
+    def get_vpnos(self, ident, max_age=600000):
+        mtime = self._map.get_map_time(canonical=ident).timestamp
+        now = time.time()
+        if now - mtime > max_age:
+            try:
+                vpnos, strategy = self.search_vpnos(ident)
+                with get_session() as session:
+                    controller.set_strategy(vendor=self, ident=ident,
+                                            strategy=strategy, session=session)
+                    controller.set_amap_vpnos(vendor=self, ident=ident,
+                                              vpnos=vpnos, session=session)
+            except (NotImplementedError, URLError, HTTPError):
+                pass
         return self._map.get_partnos(ident)
 
     def search_vpnos(self, ident):
