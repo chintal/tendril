@@ -1,4 +1,5 @@
 /doc/_static/test-coverage
+/doc/_static/tendril.utils.db.metadata.png
 /tests/.coverage
 /tests/coverage
 /.cache
