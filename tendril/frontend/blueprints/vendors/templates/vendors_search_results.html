@@ -1,0 +1,26 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+{% import "parts/forms.html" as forms %}
+
+{% block main %}
+{% import "parts/sourcing_search_form.html" as sourcing_search_form %}
+{% import "parts/sourcing_ident_sources.html" as sourcing_ident_sources %}
+
+<h2>Sourcing Search Results</h2>
+
+<div class="row">
+    {{ sourcing_search_form.render_search_form(form) }}
+</div>
+
+<div class="row">
+    {{ sourcing_ident_sources.render_indicative_sources(
+           'SEARCH RESULTS', stage.isinfos, stage.ident) }}
+</div>
+
+<datalist id="json-identlist"></datalist>
+
+{% endblock %}

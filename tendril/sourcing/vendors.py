@@ -587,48 +587,19 @@ class VendorBase(object):
     def get_vpart(self, vpartno, ident=None, max_age=600000):
         return self._partclass(vpartno, ident, self, max_age)
 
-    def get_optimal_pricing(self, ident, rqty):
-        candidate_names = self.get_vpnos(ident)
+    def _get_candidate_tcost(self, candidate, oqty):
+        ubprice, nbprice = candidate.get_price(oqty)
+        effprice = self.get_effective_price(ubprice)
+        return effprice.extended_price(oqty).native_value
 
-        candidates = [self.get_vpart(x, ident=ident) for x in candidate_names]
-        candidates = [x for x in candidates if x.abs_moq <= rqty]
-        candidates = [x for x in candidates
-                      if x.vqtyavail is None or
-                      x.vqtyavail > rqty or
-                      x.vqtyavail == -2]
-        oqty = rqty
-
-        # vobj, vpart, oqty, nbprice, ubprice, effprice
-        if len(candidates) == 0:
-            return SourcingInfo(self, None, None, None,
-                                None, None, None, None)
-
-        selcandidate = candidates[0]
-        tcost = self.get_effective_price(
-            selcandidate.get_price(rqty)[0]
-        ).extended_price(rqty).native_value
-
-        for candidate in candidates:
-            ubprice, nbprice = candidate.get_price(oqty)
-            effprice = self.get_effective_price(ubprice)
-            ntcost = effprice.extended_price(oqty).native_value
-            if ntcost < tcost:
-                tcost = ntcost
-                selcandidate = candidate
-
-        if selcandidate.vqtyavail == -2:
-            logger.warning(
-                "Vendor available quantity could not be confirmed. "
-                "Verify manually : " + self.name + " " + selcandidate.vpno +
-                os.linesep + os.linesep + os.linesep
-            )
-
-        ubprice, nbprice = selcandidate.get_price(oqty)
+    def _get_candidate_isinfo(self, candidate, oqty):
+        tcost = self._get_candidate_tcost(candidate, oqty)
+        ubprice, nbprice = candidate.get_price(oqty)
         effprice = self.get_effective_price(ubprice)
         urationale = None
         olduprice = None
         if nbprice is not None:
-            nubprice, nnbprice = selcandidate.get_price(nbprice.moq)
+            nubprice, nnbprice = candidate.get_price(nbprice.moq)
             neffprice = self.get_effective_price(nubprice)
             ntcost = neffprice.extended_price(nbprice.moq).native_value
             # bump_excess_qty = nubprice.moq - rqty
@@ -648,13 +619,55 @@ class VendorBase(object):
                 ubprice = nubprice
                 nbprice = nnbprice
                 effprice = neffprice
-        return SourcingInfo(self, selcandidate, oqty, nbprice,
+        return SourcingInfo(self, candidate, oqty, nbprice,
                             ubprice, effprice, urationale, olduprice)
+
+    def get_optimal_pricing(self, ident, rqty, get_all=False):
+        candidate_names = self.get_vpnos(ident)
+
+        candidates = [self.get_vpart(x, ident=ident) for x in candidate_names]
+        candidates = [x for x in candidates if x.abs_moq <= rqty]
+        candidates = [x for x in candidates
+                      if x.vqtyavail is None or
+                      x.vqtyavail > rqty or
+                      x.vqtyavail == -2]
+        oqty = rqty
+
+        if len(candidates) == 0:
+            if not get_all:
+                return SourcingInfo(self, None, None, None,
+                                    None, None, None, None)
+            else:
+                return []
+
+        if get_all:
+            return [self._get_candidate_isinfo(x, oqty) for x in candidates]
+
+        selcandidate = candidates[0]
+        tcost = self.get_effective_price(
+            selcandidate.get_price(rqty)[0]
+        ).extended_price(rqty).native_value
+
+        for candidate in candidates:
+            ntcost = self._get_candidate_tcost(candidate, oqty)
+            if ntcost < tcost:
+                tcost = ntcost
+                selcandidate = candidate
+
+        if selcandidate.vqtyavail == -2:
+            logger.warning(
+                "Vendor available quantity could not be confirmed. "
+                "Verify manually : " + self.name + " " + selcandidate.vpno +
+                os.linesep + os.linesep + os.linesep
+            )
+
+        return self._get_candidate_isinfo(selcandidate, oqty)
 
     def add_order_additional_cost_component(self, desc, percent):
         self._orderadditionalcosts.append((desc, percent))
 
     def get_effective_price(self, price):
+        # TODO This needs to move into the VendorPart instead
         effective_unitp = price.unit_price.source_value
         for additional_cost in self._orderadditionalcosts:
             effective_unitp += price.unit_price.source_value * float(additional_cost[1]) / 100  # noqa

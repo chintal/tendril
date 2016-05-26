@@ -29,9 +29,26 @@
 {% endmacro %}
 
 {% macro render_switch(field) -%}
+    <div class="small-3 columns switch radius">
+        {{ field(**kwargs) }}
+        <label for="{{ field.id }}"></label>
+    </div>
+    <div class="small-9 columns"><label>{{ field.label.text|safe }}</label></div>
+{% endmacro %}
+
+{% macro render_compact_switch(field) -%}
     <label class="small-12 columns text-center">{{ field.label.text|safe }}</label>
     <div class="small-12 columns switch radius small">
         {{ field(**kwargs) }}
         <label for="{{ field.id }}"></label>
+    </div>
+{% endmacro %}
+
+{% macro render_checkbox_button(field) -%}
+    <div class="checkbox-button">
+        <label>
+            {{ field(hidden=True) }}
+            <span>{{ field.label.text|upper }}</span>
+        </label>
     </div>
 {% endmacro %}

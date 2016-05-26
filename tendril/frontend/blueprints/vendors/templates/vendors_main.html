@@ -4,6 +4,7 @@
 #}
 
 {% extends "base_templates/base.html" %}
+{% import "parts/sourcing_search_form.html" as sourcing_search_form %}
 
 {% macro render_vendor(vendor) %}
     <ul class="pricing-table active-tb shadow mrgn-20-top" data-equalizer-watch="vendor">
@@ -28,6 +29,10 @@
 <h2>Vendors</h2>
 
 <div class="row">
+    {{ sourcing_search_form.render_search_form(form) }}
+</div>
+
+<div class="row">
     <div class="small-12 columns panel header radius">
         <div class="sign small-9 medium-6 small-centered columns autoscale">
             <h6>Configured Vendors</h6>
@@ -44,6 +49,6 @@
     </div>
 </div>
 
-
+<datalist id="json-identlist"></datalist>
 
 {% endblock %}

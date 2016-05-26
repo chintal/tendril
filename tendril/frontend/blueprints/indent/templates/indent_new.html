@@ -36,7 +36,7 @@
                 <div class="row">
                     {{ form.indent_sno.hidden_tag() }}
                     <div class="small-4 columns text-center">
-                        {{ forms.render_switch(form.indent_sno.sno_generate, checked=True) }}
+                        {{ forms.render_compact_switch(form.indent_sno.sno_generate, checked=True) }}
                     </div>
                     <div class="small-8 columns">
                         {{ forms.render_field(form.indent_sno.sno, autocomplete="off", readonly=True) }}

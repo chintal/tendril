@@ -1,0 +1,93 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% import "parts/forms.html" as forms %}
+
+{% macro render_search_form(form) %}
+    <form method="POST" action="{{ url_for('.render_search_results') }}">
+    {{ form.hidden_tag() }}
+        <div class="small-12 columns">
+        <fieldset>
+            <legend> Get Sourcing Information for Ident </legend>
+            <div class="small-12 columns">
+                <div class="row {% if form.error %} error {% endif %}">
+                    <div class="small-9 columns">
+                        {{ forms.render_clean_field(form.ident, list="json-identlist", autocomplete="off") }}
+                    </div>
+                    <div class="small-3 columns">
+                        {{ forms.render_clean_field(form.qty, autocomplete="off") }}
+                    </div>
+                </div>
+                <div class="row">
+
+                    <div class="small-12 medium-4 columns">
+                        <fieldset>
+                            <legend>
+                                Options
+                            </legend>
+                            <div class="small-12 columns">
+                                {{ forms.render_switch(form.get_all) }}
+                            </div>
+                            <div class="small-12 columns">
+                                {{ forms.render_switch(form.allow_urident) }}
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="small-12 medium-8 columns">
+                        <fieldset>
+                            <legend>
+                                Vendors
+                            </legend>
+                            {% for field in form.vendors %}
+                                {{ forms.render_checkbox_button(vendor) }}
+                            {% endfor %}
+                        </fieldset>
+                        <div class="small-12 medium-6 large-4 columns right end">
+                            <button type="submit" class="button postfix">Go</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </fieldset>
+        </div>
+    </form>
+    <script>
+    $(document).ready( function () {
+
+        <!-- Ident List Starts -->
+
+        // Load in the library information
+        var dataList = document.getElementById('json-identlist');
+        var request = new XMLHttpRequest();
+
+        // Handle state changes for the request.
+        request.onreadystatechange = function(response) {
+          if (request.readyState === 4) {
+            if (request.status === 200) {
+              // Parse the JSON
+              var jsonOptions = JSON.parse(request.responseText);
+
+              // Loop over the JSON array.
+              jsonOptions.idents.forEach(function(item) {
+                // Create a new <option> element.
+                var option = document.createElement('option');
+                // Set the value using the item in the JSON array.
+                option.value = item;
+                // Add the <option> element to the <datalist>.
+                dataList.appendChild(option);
+              });
+            }
+          }
+        };
+
+        request.open('GET', '/gsymlib/idents.json', true);
+        request.send();
+
+        <!-- Ident List Ends -->
+    });
+    </script>
+{% endmacro %}

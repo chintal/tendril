@@ -394,22 +394,29 @@ class VendorCSIL(VendorBase):
     def search_vpnos(self, ident):
         return [ident], 'CUSTOM'
 
-    def get_optimal_pricing(self, ident, rqty):
+    def get_optimal_pricing(self, ident, rqty, get_all=False):
         # return super(VendorCSIL, self).get_optimal_pricing(ident, rqty)
         candidate_names = self.get_vpnos(ident)
         candidates = [self.get_vpart(x) for x in candidate_names]
 
         if len(candidates) == 0:
+            if get_all:
+                return []
             return SourcingInfo(self, None, None, None,
                                 None, None, None, None)
 
         candidate = candidates[0]
         if len(candidate.prices) == 0:
+            if get_all:
+                return []
             return SourcingInfo(self, None, None, None,
                                 None, None, None, None)
         ubprice, nbprice, urationale, olduprice = candidate.get_price(rqty)
         oqty = ubprice.moq
         effprice = self.get_effective_price(ubprice)
+        if get_all:
+            return [SourcingInfo(self, candidate, oqty, nbprice,
+                                 ubprice, effprice, urationale, olduprice)]
         return SourcingInfo(self, candidate, oqty, nbprice,
                             ubprice, effprice, urationale, olduprice)
 

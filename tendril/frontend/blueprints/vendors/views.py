@@ -23,21 +23,76 @@ Docstring for views
 """
 
 from flask import render_template
+from flask import redirect
+from flask import url_for
 from flask_user import login_required
 
 from . import vendors as blueprint
+from .forms import SourcingIdentSearch
 
 from tendril.utils.fsutils import Crumb
 from tendril.sourcing.electronics import vendor_list
+from tendril.sourcing.electronics import get_vendor_by_name
+from tendril.sourcing.electronics import get_sourcing_information
+from tendril.sourcing.electronics import SourcingException
+from tendril.inventory.guidelines import electronics_qty
+from tendril.utils.types.lengths import Length
 
 
-@blueprint.route('/')
+@blueprint.route('/results', methods=['POST'])
+@login_required
+def render_search_results():
+    form = SourcingIdentSearch()
+    if form.validate_on_submit():
+        ident = form.ident.data
+        qty = form.qty.data
+
+        if not qty:
+            qty = electronics_qty.get_compliant_qty(ident, 1)
+            form.qty.data = qty
+        try:
+            qty = int(qty)
+        except ValueError:
+            qty = Length(qty)
+
+        vl = []
+        for vname in form.vendors.data:
+            v = get_vendor_by_name(vname)
+            if not v:
+                raise ValueError
+            vl.append(v)
+
+        try:
+            vsi = get_sourcing_information(
+                ident, qty, avendors=vl, allvendors=True,
+                get_all=form.get_all.data
+            )
+        except SourcingException:
+            vsi = []
+
+        stage = {'crumbroot': '/sourcing',
+                 'breadcrumbs': [
+                     Crumb(name="Sourcing", path=""),
+                     Crumb(name="Vendors", path="vendors/"),
+                     Crumb(name="Search Results", path="vendors/results")],
+                 'isinfos': vsi,
+                 'ident': ident,
+                 }
+
+        return render_template('vendors_search_results.html', stage=stage,
+                               form=form, pagetitle='Sourcing Search Results')
+    else:
+        return redirect(url_for('.main'))
+
+
+@blueprint.route('/', methods=['GET'])
 @login_required
 def main():
+    form = SourcingIdentSearch()
     stage = {'vendors': vendor_list,
              'crumbroot': '/sourcing',
-             'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
+             'breadcrumbs': [Crumb(name="Sourcing", path=""),
                              Crumb(name="Vendors", path="vendors/")],
              }
-    return render_template('vendors_main.html', stage=stage,
+    return render_template('vendors_main.html', stage=stage, form=form,
                            pagetitle='Vendors')

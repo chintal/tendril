@@ -56,26 +56,27 @@ def get_eff_acq_price(vsinfo):
 
 
 def get_sourcing_information(ident, qty, avendors=vendor_list,
-                             allvendors=False):
-    # vobj, vpno, oqty, nbprice, ubprice, effprice
+                             allvendors=False, get_all=False):
     sources = []
     ident = ident.strip()
     for vendor in avendors:
-        vsinfo = vendor.get_optimal_pricing(ident, qty)
-        if vsinfo.vpart is not None:
-            sources.append(vsinfo)
+        vsinfo = vendor.get_optimal_pricing(ident, qty, get_all=get_all)
+        if not get_all:
+            if vsinfo.vpart is not None:
+                sources.append(vsinfo)
+        else:
+            sources.extend(vsinfo)
 
     if len(sources) == 0:
         raise SourcingException
-
-    if allvendors is False:
+    if get_all is False and allvendors is False:
         selsource = sources[0]
         for vsinfo in sources:
             if get_eff_acq_price(vsinfo) < get_eff_acq_price(selsource):
                 selsource = vsinfo
         return selsource
     else:
-        return sources
+        return sorted(sources, key=lambda x: get_eff_acq_price(x))
 
 
 def get_vendor_by_name(name):

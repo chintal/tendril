@@ -50,7 +50,6 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 class PricelistPart(VendorPartBase):
     def __init__(self, vpartno, ident, vendor, max_age=600000):
-        self._vendor = vendor
         super(PricelistPart, self).__init__(
             vpartno, ident, vendor, max_age
         )
@@ -279,11 +278,13 @@ class VendorPricelist(VendorBase):
         raise ValueError("No vpdict found for {0} in vendor {1}."
                          "".format(vpartno, self._name))
 
-    def get_optimal_pricing(self, ident, rqty):
+    def get_optimal_pricing(self, ident, rqty, get_all=False):
         candidate_names = self.get_vpnos(ident)
 
         candidates = [self.get_vpart(x) for x in candidate_names]
         if len(candidates) == 0:
+            if get_all:
+                return []
             return SourcingInfo(self, None, None, None,
                                 None, None, None, None)
 
@@ -303,9 +304,14 @@ class VendorPricelist(VendorBase):
         else:
             if selcandidate.vqtyavail is not None and \
                     selcandidate.vqtyavail < oqty:
+                if get_all:
+                    return []
                 return SourcingInfo(self, None, None, None,
                                     None, None, None, None)
         effprice = self.get_effective_price(price)
+        if get_all:
+            return [SourcingInfo(self, selcandidate, oqty, None,
+                                 price, effprice, "Vendor MOQ/GL", None)]
         return SourcingInfo(self, selcandidate, oqty, None,
                             price, effprice, "Vendor MOQ/GL", None)
 

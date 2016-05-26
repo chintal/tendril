@@ -28,6 +28,8 @@ from idstring import IDstring
 from flask_wtf import Form
 from wtforms.fields import StringField
 from wtforms.fields import BooleanField
+from wtforms.fields import SelectMultipleField
+from wtforms import widgets
 from wtforms.validators import ValidationError
 from wtforms.validators import StopValidation
 
@@ -196,3 +198,14 @@ class DateInputField(StringField):
 
     def get_date_default(self):
         return arrow.utcnow().isoformat()
+
+
+class MultiCheckboxField(SelectMultipleField):
+    """
+    A multiple-select, except displays a list of checkboxes.
+
+    Iterating the field will produce subfields, allowing custom rendering of
+    the enclosed checkbox fields.
+    """
+    widget = widgets.ListWidget(prefix_label=False)
+    option_widget = widgets.CheckboxInput()
