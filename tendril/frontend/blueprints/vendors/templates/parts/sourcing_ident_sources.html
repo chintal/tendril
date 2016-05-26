@@ -70,15 +70,27 @@
         </article>
         <article class="sinfo sinfo-detail-prices small-12 large-3 columns" data-equalizer-watch>
             <div class="sinfo prices sinfo-detail-text">
+                {% set not_yet_found = True %}
+                {% set selrow = [] %}
+                {% for price in isinfo.vpart.effective_prices %}
+                    {% if not_yet_found %}
+                        {% if isinfo.oqty < price.moq %}
+                            {% set not_yet_found = False %}
+                            {% set _ = selrow.append(loop.index - 1) %}
+                        {% elif loop.last %}
+                            {% set _ = selrow.append(loop.index) %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
                 {% for price in isinfo.vpart.effective_prices %}
                 <div class="price row">
-                    <div class="sinfo-price-break small-4 columns">
+                    <div class="sinfo-price-break {% if loop.index == selrow[0] %}chosen-price{% endif %} small-4 columns">
                         @{{ price.moq }}
                     </div>
-                    <div class="sinfo-price-native small-6 columns">
+                    <div class="sinfo-price-native {% if loop.index == selrow[0] %}chosen-price{% endif %} small-6 columns">
                         {{ price.unit_price.native_string|unicode  or '' }}
                     </div>
-                    <div class="sinfo-price-multiple small-2 columns">
+                    <div class="sinfo-price-multiple {% if loop.index == selrow[0] %}chosen-price{% endif %} small-2 columns">
                         {{ price.oqmultiple }}
                     </div>
                 </div>
