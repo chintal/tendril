@@ -5,11 +5,45 @@
 
 {% extends "base_templates/base.html" %}
 
+{% macro render_vendor(vendor) %}
+    <ul class="pricing-table active-tb shadow mrgn-20-top" data-equalizer-watch="vendor">
+        <li class="price autoscale"><span>{{ vendor.sname|upper }}</span></li>
+        <li class="title"><span>{{ vendor.name }}</span></li>
+        {% if vendor.logo %}
+        <li class="description">
+            {% if vendor.url_base %}<a href="{{ vendor.url_base }}" target="_blank">{% endif %}
+            <img style="width: 100%;" src="{{ vendor.logo }}">{% if vendor.url_base %}</a>{% endif %}
+        </li>
+        {% endif %}
+        <li class="description">{{ vendor.type }}</li>
+        <li class="description">
+            {{ vendor.pclass|upper|replace('_', ' ') }}
+            {% if vendor.is_manufacturer %} MANUFACTURER {% endif %}
+        </li>
+    </ul>
+{% endmacro %}
+
 {% block main %}
 
-<p></p>
-
 <h2>Vendors</h2>
+
+<div class="row">
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Configured Vendors</h6>
+        </div>
+        <div class="small-12 columns">
+            <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4" data-equalizer="vendor    ">
+            {% for vendor in stage.vendors %}
+                <li>
+                {{ render_vendor(vendor) }}
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
 
 
 {% endblock %}

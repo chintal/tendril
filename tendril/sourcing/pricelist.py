@@ -106,11 +106,11 @@ class PricelistPart(VendorPartBase):
 
 class VendorPricelist(VendorBase):
     _partclass = PricelistPart
+    _type = 'PRICELIST'
 
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=None, currency_symbol=None,
-                 pricelistpath=None, vendorlogo=None,
-                 sname=None, is_manufacturer=False):
+                 pricelistpath=None, **kwargs):
         if pricelistpath is None:
             pricelistpath = os.path.join(PRICELISTVENDORS_FOLDER,
                                          name + '-pricelist.yaml')
@@ -126,7 +126,7 @@ class VendorPricelist(VendorBase):
         )
         super(VendorPricelist, self).__init__(name, dname, pclass, mappath,
                                               currency_code, currency_symbol,
-                                              vendorlogo, sname, is_manufacturer)
+                                              **kwargs)
         if 'vendorinfo' in self._pricelist:
             if "effectivefactor" in self._pricelist["vendorinfo"]:
                 self.add_order_additional_cost_component(

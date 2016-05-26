@@ -232,7 +232,8 @@ class MouserElnPart(vendors.VendorElnPartBase):
 
 class VendorMouser(vendors.VendorBase):
     _partclass = MouserElnPart
-    _vendorlogo = '/static/images/vendor-logo-mouser.gif'
+    _vendorlogo = '/static/images/vendor-logo-mouser.png'
+    _type = 'Mouser'
 
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=None, currency_symbol=None):

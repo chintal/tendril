@@ -480,6 +480,8 @@ class VendorBase(object):
     _vendorlogo = None
     _partclass = VendorPartBase
     _invoiceclass = VendorInvoice
+    _type = 'BASE'
+    _url_base = None
 
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=config.BASE_CURRENCY,
@@ -521,6 +523,10 @@ class VendorBase(object):
         return self._pclass
 
     @property
+    def type(self):
+        return self._type
+
+    @property
     def is_manufacturer(self):
         if self._is_manufacturer is None:
             return False
@@ -551,6 +557,13 @@ class VendorBase(object):
         if self._instance_vendorlogo is not None:
             return self._instance_vendorlogo
         return self._vendorlogo
+
+    @property
+    def url_base(self):
+        try:
+            return self._url_base
+        except AttributeError:
+            return None
 
     def get_idents(self):
         for ident in self._map.get_idents():

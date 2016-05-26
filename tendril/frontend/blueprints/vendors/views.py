@@ -28,12 +28,14 @@ from flask_user import login_required
 from . import vendors as blueprint
 
 from tendril.utils.fsutils import Crumb
+from tendril.sourcing.electronics import vendor_list
 
 
 @blueprint.route('/')
 @login_required
 def main():
-    stage = {'crumbroot': '/sourcing',
+    stage = {'vendors': vendor_list,
+             'crumbroot': '/sourcing',
              'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
                              Crumb(name="Vendors", path="vendors/")],
              }

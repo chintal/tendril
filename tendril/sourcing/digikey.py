@@ -518,11 +518,14 @@ class VendorDigiKey(VendorBase):
         ('pbfree', '0'), ('rohs', '0')
     ]
 
+    _type = 'DIGIKEY'
+
     def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code='USD', currency_symbol='US$'):
+                 currency_code='USD', currency_symbol='US$', **kwargs):
         self._searchpages_filters = {}
         super(VendorDigiKey, self).__init__(
-            name, dname, pclass, mappath, currency_code, currency_symbol
+            name, dname, pclass, mappath,
+            currency_code, currency_symbol, **kwargs
         )
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)

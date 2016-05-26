@@ -367,15 +367,17 @@ class CSILPart(VendorPartBase):
 
 class VendorCSIL(VendorBase):
     _partclass = CSILPart
+    _type = 'CSIL'
 
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code='INR', currency_symbol=None,
-                 username=None, password=None):
+                 username=None, password=None, **kwargs):
         self._username = username
         self._password = password
         self._devices = ['PCB']
         super(VendorCSIL, self).__init__(
-            name, dname, pclass, mappath, currency_code, currency_symbol
+            name, dname, pclass, mappath,
+            currency_code, currency_symbol, **kwargs
         )
         self._vpart_class = CSILPart
         self.add_order_additional_cost_component("Excise (12.5\%)", 12.5)

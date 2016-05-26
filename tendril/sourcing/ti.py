@@ -171,21 +171,19 @@ class TIElnPart(VendorElnPartBase):
 
 class VendorTI(VendorBase):
     _partclass = TIElnPart
-    _vendorlogo = '/static/images/vendor-logo-ti.gif'
+    _vendorlogo = '/static/images/vendor-logo-ti.png'
     _url_base = 'https://store.ti.com'
     _devices = ['IC SMD', 'IC THRU', 'IC PLCC',]
+    _type = 'TI'
 
     def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code='USD', currency_symbol='US$'):
+                 currency_code='USD', currency_symbol='US$', **kwargs):
         self._searchpages_filters = {}
         super(VendorTI, self).__init__(name, dname, pclass, mappath,
-                                       currency_code, currency_symbol)
+                                       currency_code, currency_symbol,
+                                       **kwargs)
         self.add_order_baseprice_component("Shipping Cost", 7)
         self.add_order_additional_cost_component("Customs", 12.85)
-
-    @property
-    def url_base(self):
-        return self._url_base
 
     def search_vpnos(self, ident):
         device, value, footprint = parse_ident(ident)
