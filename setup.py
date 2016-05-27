@@ -36,6 +36,8 @@ install_requirements = [
     'future',
     'mistune',
     'zeep',
+    'cachecontrol',
+    'requests',
 
     # Flask Dependencies (to be pruned?)
     'jsmin',

@@ -402,11 +402,6 @@ config_options_network_caching = [
         "Whether or not to cache 301 and 302 redirects."
     ),
     ConfigOption(
-        'TRY_REPLICATOR_CACHE_FIRST',
-        "False",
-        "Whether or not to use the replicator cache"
-    ),
-    ConfigOption(
         'FIREFOX_PROFILE_PATH',
         "None",
         "Path to the firefox profile to use for splinter."
@@ -446,38 +441,6 @@ config_options_proxy = [
 ]
 
 load_config(config_options_proxy)
-
-
-config_options_repl_proxy = [
-    ConfigOption(
-        'REPLICATOR_PROXY_TYPE',
-        "'http'",
-        "The type of replicator proxy to use. 'http' for http-replicator, "
-        "'None' for none. No other proxy types presently supported."
-    ),
-    ConfigOption(
-        'REPLICATOR_PROXY_IP',
-        "'localhost'",
-        "The replicator proxy server IP address."
-    ),
-    ConfigOption(
-        'REPLICATOR_PROXY_PORT',
-        "'8080'",
-        "The replicator proxy server port."
-    ),
-    ConfigOption(
-        'REPLICATOR_PROXY_USER',
-        "None",
-        "The username to authenticate with the replicator proxy server."
-    ),
-    ConfigOption(
-        'REPLICATOR_PROXY_PASS',
-        "None",
-        "The password to authenticate with the replicator proxy server."
-    ),
-]
-
-load_config(config_options_repl_proxy)
 
 
 config_options_db = [
@@ -813,8 +776,6 @@ all_config_option_groups = [
      "Options to configure network caching behavior"],
     [doc_render(config_options_proxy),
      "Options to configure a network proxy"],
-    [doc_render(config_options_repl_proxy),
-     "Options to configure a replicator proxy"],
     [doc_render(config_options_db),
      "Options to configure the instance database"],
     [doc_render(config_options_frontend),

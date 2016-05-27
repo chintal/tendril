@@ -1,3 +1,5 @@
+requests
+cachecontrol
 zeep
 mistune
 future

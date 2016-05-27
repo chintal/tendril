@@ -88,6 +88,13 @@ Overall, caching should look something like this :
 - http-replicator provides an underlying caching layer which
   is HTTP1.1 compliant.
 
+.. todo::
+    Consider replacing uses of urllib/urllib2 backend with
+    :mod:`requests` and simplify this module. Proxy support,
+    redirect caching, and response caching are the most
+    significant customizations provided by this module,
+    and should be reconsidered or reimplemented for requests.
+
 """
 
 from __future__ import print_function
@@ -99,14 +106,6 @@ from .config import NETWORK_PROXY_USER
 from .config import NETWORK_PROXY_PASS
 
 from .config import ENABLE_REDIRECT_CACHING
-
-from .config import TRY_REPLICATOR_CACHE_FIRST
-from .config import REPLICATOR_PROXY_TYPE
-from .config import REPLICATOR_PROXY_IP
-from .config import REPLICATOR_PROXY_PORT
-from .config import REPLICATOR_PROXY_USER
-from .config import REPLICATOR_PROXY_PASS
-
 from .config import INSTANCE_CACHE
 
 from bs4 import BeautifulSoup
@@ -114,8 +113,6 @@ from bs4 import BeautifulSoup
 from six.moves.urllib.request import HTTPRedirectHandler
 from six.moves.urllib.request import ProxyHandler
 from six.moves.urllib.request import HTTPHandler, HTTPSHandler
-from six.moves.urllib.request import HTTPPasswordMgrWithDefaultRealm
-from six.moves.urllib.request import ProxyBasicAuthHandler
 from six.moves.urllib.request import build_opener
 from six.moves.urllib.error import HTTPError, URLError
 
@@ -126,6 +123,7 @@ import pickle
 import atexit
 import tempfile
 import codecs
+import requests
 from hashlib import md5
 
 from fs.opener import fsopendir
@@ -147,6 +145,10 @@ def strencode(string):
 
     :param string: unicode string to be encoded.
     :return: ASCII version of the string.
+
+    .. info::
+        This function is marked for deprecation by the general (but gradual)
+        move towards ``unicode`` across tendril.
 
     """
     nstring = ''
@@ -241,6 +243,28 @@ def _test_opener(openr):
         return False
 
 
+def _get_http_proxy_url():
+    """
+    Constructs the proxy URL for HTTP proxies from relevant
+    :mod:`tendril.utils.config` Config options, and returns the URL string
+    in the form:
+
+        'http://[NP_USER:NP_PASS@]NP_IP[:NP_PORT]'
+
+    where NP_xxx is obtained from the :mod:`tendril.utils.config` ConfigOption
+    NETWORK_PROXY_xxx.
+    """
+    if NETWORK_PROXY_USER is None:
+        proxyurl_http = 'http://' + NETWORK_PROXY_IP
+    else:
+        proxyurl_http = 'http://{0}:{1}@{2}'.format(NETWORK_PROXY_USER,
+                                                    NETWORK_PROXY_PASS,
+                                                    NETWORK_PROXY_IP)
+    if NETWORK_PROXY_PORT:
+        proxyurl_http += ':' + NETWORK_PROXY_PORT
+    return proxyurl_http
+
+
 def _create_opener():
     """
     Creates an opener for the internet.
@@ -256,40 +280,19 @@ def _create_opener():
     and is returned instead.
     """
     use_proxy = False
-    use_proxy_auth = False
     proxy_handler = None
-    proxy_auth_handler = None
 
     if NETWORK_PROXY_TYPE == 'http':
         use_proxy = True
-        if NETWORK_PROXY_USER is None:
-            proxyurl_http = 'http://' + NETWORK_PROXY_IP
-        else:
-            proxyurl_http = 'http://{0}:{1}@{2}'.format(NETWORK_PROXY_USER,
-                                                        NETWORK_PROXY_PASS,
-                                                        NETWORK_PROXY_IP)
-        if NETWORK_PROXY_PORT:
-            proxyurl_http += ':' + NETWORK_PROXY_PORT
-        proxy_handler = ProxyHandler({'http': proxyurl_http,
-                                      'https': proxyurl_http})
-        if NETWORK_PROXY_USER is not None:
-            use_proxy_auth = True
-            # password_mgr = HTTPPasswordMgrWithDefaultRealm()
-            # password_mgr.add_password(
-            #     None, proxyurl_http, NETWORK_PROXY_USER, NETWORK_PROXY_PASS
-            # )
-            # proxy_auth_handler = ProxyBasicAuthHandler(password_mgr)
+        proxyurl = _get_http_proxy_url()
+        proxy_handler = ProxyHandler({'http': proxyurl,
+                                      'https': proxyurl})
     if use_proxy:
-        if use_proxy_auth:
-            openr = build_opener(
-                HTTPHandler(), HTTPSHandler(), proxy_handler, CachingRedirectHandler
-            )
-        else:
-            openr = build_opener(
-                proxy_handler, CachingRedirectHandler
-            )
+        openr = build_opener(HTTPHandler(), HTTPSHandler(),
+                             proxy_handler, CachingRedirectHandler)
     else:
-        openr = build_opener(CachingRedirectHandler)
+        openr = build_opener(HTTPSHandler(), HTTPSHandler(),
+                             CachingRedirectHandler)
     openr.addheaders = [('User-agent', 'Mozilla/5.0')]
     if _test_opener(openr) is True:
         return openr
@@ -300,91 +303,17 @@ def _create_opener():
 opener = _create_opener()
 
 
-def _create_replicator_opener():
-    """
-    Creates an opener for the replicator.
-
-    It also attaches the :class:`CachingRedirectHandler` to the opener and
-    sets its User-agent to ``Mozilla/5.0``.
-
-    If the Network Proxy settings are set and recognized, it creates the
-    opener and attaches the proxy_handler to it, and is returned.
-    """
-
-    use_proxy = False
-    use_proxy_auth = False
-    proxy_handler = None
-    proxy_auth_handler = None
-
-    if REPLICATOR_PROXY_TYPE == 'http':
-        use_proxy = True
-        proxyurl = 'http://' + REPLICATOR_PROXY_IP
-        if REPLICATOR_PROXY_PORT:
-            proxyurl += ':' + REPLICATOR_PROXY_PORT
-        proxy_handler = ProxyHandler(
-            {REPLICATOR_PROXY_TYPE: proxyurl}
-        )
-        if REPLICATOR_PROXY_USER is not None:
-            use_proxy_auth = True
-            password_mgr = HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(
-                None, proxyurl, REPLICATOR_PROXY_USER, REPLICATOR_PROXY_PASS
-            )
-            proxy_auth_handler = ProxyBasicAuthHandler(password_mgr)
-    if use_proxy:
-        if use_proxy_auth:
-            openr = build_opener(
-                proxy_handler, proxy_auth_handler, CachingRedirectHandler
-            )
-        else:
-            openr = build_opener(
-                proxy_handler, CachingRedirectHandler
-            )
-    else:
-        openr = build_opener(CachingRedirectHandler)
-    openr.addheaders = [('User-agent', 'Mozilla/5.0')]
-    return openr
-
-
-if TRY_REPLICATOR_CACHE_FIRST is True:
-    replicator_opener = _create_replicator_opener()
-
-
 def urlopen(url):
     """
     Opens a url specified by the ``url`` parameter.
 
     This function handles :
         - Redirect caching, if enabled.
-        - Trying the replicator first, if enabled.
         - Retries upto 5 times if it encounters a http ``500`` error.
 
     """
     retries = 5
     url = get_actual_url(url)
-    if TRY_REPLICATOR_CACHE_FIRST is True:
-        try:
-            page = replicator_opener.open(url)
-            try:
-                if ENABLE_REDIRECT_CACHING is True and page.status == 301:
-                    logger.debug('Detected New Permanent Redirect:\n' +
-                                 url + '\n' + page.url)
-                    redirect_cache[url] = page.url
-            except AttributeError:
-                pass
-            return page
-        except HTTPError as e:
-            logger.error("HTTP Error : " + str(e.code) + str(url))
-            if e.code == 500:
-                time.sleep(0.5)
-                retries -= 1
-            else:
-                raise
-        except URLError as e:
-            logger.error("URL Error : {0} {1} {2}"
-                         "".format(e.errno, e.reason, url))
-            raise
-
     while retries > 0:
         try:
             page = opener.open(url)
