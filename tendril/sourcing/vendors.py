@@ -22,6 +22,7 @@ Vendors module documentation (:mod:`tendril.sourcing.vendors`)
 import os
 import csv
 import time
+import warnings
 from collections import namedtuple
 from sqlalchemy.orm.exc import NoResultFound
 from six.moves.urllib.error import HTTPError, URLError
@@ -239,6 +240,14 @@ class VendorPrice(object):
         return currency.CurrencyValue(self.unit_price._val * qty,
                                       self.unit_price._currency_def)
 
+    @property
+    def exch_rate(self):
+        return self.unit_price.exch_rate
+
+    @property
+    def is_foreign(self):
+        return self.unit_price.is_foreign
+
     def __repr__(self):
         return '<VendorPrice {2} @{0}({1})>'.format(
             self.moq, self.oqmultiple, self.unit_price)
@@ -415,9 +424,43 @@ class VendorPartBase(object):
     def prices(self):
         return sorted(self._prices, key=lambda x: x.moq)
 
+    def _get_additional_rates(self):
+        rval = []
+        for additional_cost in self._vendor.additional_costs:
+            if additional_cost[0] == 'Customs':
+                from .customs import hs_classifier
+                hs = hs_classifier.hs_from_ident(self._canonical_repr)
+                if hs:
+                    rval.append(('Customs', hs.effective_rate))
+                else:
+                    rval.append(additional_cost)
+            else:
+                rval.append(additional_cost)
+        return rval
+
+    def _get_additional_price_components(self, price):
+        ars = self._get_additional_rates()
+        return [(x[0], x[1], price.unit_price * (float(x[1]) / 100))
+                for x in ars]
+
+    def _get_effective_price(self, price):
+        effective_unitp = price.unit_price
+        aps = self._get_additional_price_components(price)
+        for component in aps:
+            effective_unitp += component[2]
+        return VendorPrice(
+            price.moq, effective_unitp.source_value,
+            self._vendor.currency, price.oqmultiple
+        )
+
     @property
     def effective_prices(self):
-        return [self._vendor.get_effective_price(x) for x in self.prices]
+        return [self._get_effective_price(x) for x in self.prices]
+
+    @property
+    def detailed_prices(self):
+        return [(x, self._get_additional_price_components(x),
+                 self._get_effective_price(x)) for x in self.prices]
 
     def get_price(self, qty):
         rprice = None
@@ -557,6 +600,10 @@ class VendorBase(object):
         self._currency = currency_def
 
     @property
+    def additional_costs(self):
+        return self._orderadditionalcosts
+
+    @property
     def logo(self):
         if self._instance_vendorlogo is not None:
             return self._instance_vendorlogo
@@ -684,6 +731,9 @@ class VendorBase(object):
 
     def get_effective_price(self, price):
         # TODO This needs to move into the VendorPart instead
+        warnings.warn("Deprecated access of VendorBase.get_effective_price. "
+                      "Use VendorPartBase.get_effective_price instead.",
+                      DeprecationWarning)
         effective_unitp = price.unit_price.source_value
         for additional_cost in self._orderadditionalcosts:
             effective_unitp += price.unit_price.source_value * float(additional_cost[1]) / 100  # noqa

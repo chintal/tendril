@@ -59,6 +59,7 @@ def get_sourcing_information(ident, qty, avendors=vendor_list,
                              allvendors=False, get_all=False):
     sources = []
     ident = ident.strip()
+
     for vendor in avendors:
         vsinfo = vendor.get_optimal_pricing(ident, qty, get_all=get_all)
         if not get_all:

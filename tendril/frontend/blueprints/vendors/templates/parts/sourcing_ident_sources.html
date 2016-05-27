@@ -82,16 +82,30 @@
                         {% endif %}
                     {% endif %}
                 {% endfor %}
-                {% for price in isinfo.vpart.effective_prices %}
+                {% for up, ap, ep in isinfo.vpart.detailed_prices %}
                 <div class="price row">
                     <div class="sinfo-price-break {% if loop.index == selrow[0] %}chosen-price{% endif %} small-4 columns">
-                        @{{ price.moq }}
+                        @{{ ep.moq }}
                     </div>
                     <div class="sinfo-price-native {% if loop.index == selrow[0] %}chosen-price{% endif %} small-6 columns">
-                        {{ price.unit_price.native_string|unicode  or '' }}
+                        <span data-tooltip aria-haspopup="true"
+                              class="has-tip {% if loop.index == selrow[0] %}chosen-price{% endif %}"
+                              title="<table>
+                              <tr><td>Vendor Price</td><td>{{ up.unit_price.source_string|unicode }}</td></tr>
+                              {% if up.is_foreign %}
+                              <tr><td>Exchange Rate</td><td>{{ up.exch_rate|unicode }}</td></tr>
+                              {% endif %}
+                              {% if ap %}
+                              {% for apc in ap %}
+                              <tr><td>{{apc.0}} ({{apc.1}}%)</td><td>{{ apc.2.native_string|unicode }}</td></tr>
+                              {% endfor %}
+                              {% endif %}
+                              </table>">
+                            {{ ep.unit_price.native_string|unicode  or '' }}
+                        </span>
                     </div>
                     <div class="sinfo-price-multiple {% if loop.index == selrow[0] %}chosen-price{% endif %} small-2 columns">
-                        {{ price.oqmultiple }}
+                        {{ ep.oqmultiple }}
                     </div>
                 </div>
                 {% endfor %}
@@ -125,7 +139,30 @@
             </div>
         {% endif %}
     </div>
-
+</div>
+<div class="small-12 columns fine-print">
+    <h6>Notes</h6>
+    <ul>
+        <li>
+            Pricing and availability information provided here is obtained
+            and cached without human intervention and is not necessarily
+            verified. Cross-check when making actual purchases.
+        </li>
+        <li>
+            Vendors are not searched for parts for device classes not
+            listed as supported for each respective vendor. Expect to see many
+            false negatives.
+        </li>
+        <li>
+            Additional costs listed here are calculated based on guidelines
+            included in vendor support and associated implementations and
+            sources. They should be used for approximate calculations only.
+        </li>
+        <li>
+            All logos, trademarks, datasheets, and pricing information
+            belong to their respective owners.
+        </li>
+    </ul>
 </div>
 {% endmacro %}
 

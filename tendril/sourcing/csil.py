@@ -266,7 +266,7 @@ class CSILPart(VendorPartBase):
         if vendor is None:
             vendor = dvobj
         if ident is None:
-            ident = self._vendor.map.get_canonical(vpartno)
+            ident = vendor.map.get_canonical(vpartno)
         self._descriptors = []
         super(CSILPart, self).__init__(vpartno, ident, vendor, max_age)
 
@@ -392,10 +392,20 @@ class VendorCSIL(VendorBase):
         return self._password
 
     def search_vpnos(self, ident):
+        if ident not in projects.pcblib:
+            return [], 'PCB_NOT_KNOWN'
         return [ident], 'CUSTOM'
 
     def get_optimal_pricing(self, ident, rqty, get_all=False):
         # return super(VendorCSIL, self).get_optimal_pricing(ident, rqty)
+
+        # TODO Fix this structure
+        if ident not in projects.pcblib:
+            if get_all:
+                return []
+            return SourcingInfo(self, None, None, None,
+                                None, None, None, None)
+
         candidate_names = self.get_vpnos(ident)
         candidates = [self.get_vpart(x) for x in candidate_names]
 

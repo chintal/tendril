@@ -125,6 +125,10 @@ class CurrencyDefinition(object):
         """
         return self._exchval
 
+    @property
+    def exch_rate(self):
+        return "{0}1/{1}{2:,.2f}".format(self.symbol, BASE_CURRENCY_SYMBOL, self.exchval)
+
     @staticmethod
     def _get_exchval(code):
         """
@@ -277,6 +281,17 @@ class CurrencyValue(TypedComparisonMixin):
 
         """
         return self._currency_def
+
+    @property
+    def exch_rate(self):
+        return self._currency_def.exch_rate
+
+    @property
+    def is_foreign(self):
+        if self._currency_def.code != BASE_CURRENCY:
+            return True
+        else:
+            return False
 
     def __repr__(self):
         return self.native_string

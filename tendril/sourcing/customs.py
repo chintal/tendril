@@ -104,6 +104,18 @@ class CustomsSection(object):
     def folders(self):
         return self._folders
 
+    @property
+    def effective_rate(self):
+        u = 100
+        bcd = u * self.bcd / 100
+        cvd = (u + bcd) * self.cvd / 100
+        cvdec = cvd * self.cvdec / 100
+        cvdshec = cvd * self.cvdshec / 100
+        cshec = (bcd + cvd + cvdec + cvdshec) * self.cshec / 100
+        cec = (bcd + cvd + cvdec + cvdshec) * self.cec / 100
+        acvd = (u + bcd + cvd + cec + cshec + cvdec + cvdshec) * self.acvd / 100
+        return bcd + cvd + cvdec + cvdshec + cshec + cec + acvd
+
     def __repr__(self):
         return "{0:<15} {1}".format(self._code, self.name)
 
