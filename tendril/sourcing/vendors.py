@@ -583,15 +583,15 @@ class VendorBase(object):
             yield self.get_vpart(vpartno=vpno, ident=ident, max_age=max_age)
 
     def get_vpnos(self, ident, max_age=600000):
-        mtime = self._map.get_map_time(canonical=ident).timestamp
+        mtime = self._map.get_map_time(canonical=ident)
         now = time.time()
-        if now - mtime > max_age:
+        if not mtime or now - mtime > max_age:
             try:
                 vpnos, strategy = self.search_vpnos(ident)
                 with get_session() as session:
-                    controller.set_strategy(vendor=self, ident=ident,
+                    controller.set_strategy(vendor=self._name, ident=ident,
                                             strategy=strategy, session=session)
-                    controller.set_amap_vpnos(vendor=self, ident=ident,
+                    controller.set_amap_vpnos(vendor=self._name, ident=ident,
                                               vpnos=vpnos, session=session)
             except (NotImplementedError, URLError, HTTPError):
                 pass

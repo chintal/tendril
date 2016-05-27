@@ -212,7 +212,7 @@ def populate_vpart_prices(vpno=None, vpart=None, session=None):
 
 # Vendor Map Getters
 @with_db
-def get_map(vendor=None, ident=None, session=None):
+def get_map(vendor=None, ident=None, create=True, session=None):
     vendor = _get_vendor(vendor=vendor, session=session)
     ident = _get_ident(ident=ident, session=session)
 
@@ -223,7 +223,10 @@ def get_map(vendor=None, ident=None, session=None):
         q = q.filter(VendorPartMap.vendor == vendor).one()
         return q
     except NoResultFound:
-        return _create_map(vendor=vendor, ident=ident, session=session)
+        if create:
+            return _create_map(vendor=vendor, ident=ident, session=session)
+        else:
+            raise
     except MultipleResultsFound:
         logger.error("Found multiple maps for {0} on {1}"
                      "".format(ident, vendor))
@@ -238,11 +241,15 @@ def get_strategy(vendor=None, ident=None,  session=None):
 
 @with_db
 def get_time(vendor=None, ident=None,  session=None):
-    map_obj = get_map(vendor=vendor, ident=ident, session=session)
+    try:
+        map_obj = get_map(vendor=vendor, ident=ident,
+                          create=False, session=session)
+    except NoResultFound:
+        return None
     if map_obj.updated_at:
-        return map_obj.updated_at
+        return map_obj.updated_at.timestamp
     else:
-        return map_obj.created_at
+        return map_obj.created_at.timestamp
 
 
 @with_db
