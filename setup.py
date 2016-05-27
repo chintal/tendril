@@ -35,6 +35,7 @@ install_requirements = [
     'colorama',
     'future',
     'mistune',
+    'zeep',
 
     # Flask Dependencies (to be pruned?)
     'jsmin',

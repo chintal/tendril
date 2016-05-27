@@ -1,3 +1,4 @@
+zeep
 mistune
 future
 colorama
