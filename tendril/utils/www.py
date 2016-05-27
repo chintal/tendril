@@ -125,6 +125,7 @@ import time
 import pickle
 import atexit
 import tempfile
+import codecs
 from hashlib import md5
 
 from fs.opener import fsopendir
@@ -439,7 +440,13 @@ class WWWCachedFetcher:
             # TODO This seriously needs cleaning up.
             if int(time.time()) - int(time.mktime(self.cache_fs.getinfo(filepath)['modified_time'].timetuple())) < max_age:  # noqa
                 if getcpath is False:
-                    return self.cache_fs.open(filepath).read()
+                    try:
+                        return self.cache_fs.open(filepath).read()
+                    except UnicodeDecodeError:
+                        # TODO This requires the cache_fs to be a local filesystem. This may not
+                        # be very nice. A way to hook codes upto to pyfilesystems would be better
+                        with codecs.open(self.cache_fs.getsyspath(filepath), encoding='utf-8') as f:
+                            return f.read()
                 else:
                     return self.cache_fs.getsyspath(filepath)
         # Retrieve over HTTP and cache, using rename to avoid collisions

@@ -271,7 +271,10 @@ class CSILPart(VendorPartBase):
         super(CSILPart, self).__init__(vpartno, ident, vendor, max_age)
 
     def _get_data(self):
-        self._pcbname = self.vpno
+        if self.vpno.startswith('PCB'):
+            self._pcbname = self.vpno[4:]
+        else:
+            self._pcbname = self.vpno
         if self._pcbname not in projects.pcbs.keys():
             raise ValueError("Unrecognized PCB")
         self._projectfolder = projects.pcbs[self._pcbname]
@@ -380,8 +383,8 @@ class VendorCSIL(VendorBase):
             currency_code, currency_symbol, **kwargs
         )
         self._vpart_class = CSILPart
-        self.add_order_additional_cost_component("Excise (12.5\%)", 12.5)
-        self.add_order_additional_cost_component("CST (5\%)", 5.625)
+        self.add_order_additional_cost_component("Excise", 12.5)
+        self.add_order_additional_cost_component("CST", 5.625)
 
     @property
     def username(self):

@@ -60,14 +60,19 @@ def get_sourcing_information(ident, qty, avendors=vendor_list,
     sources = []
     ident = ident.strip()
 
-    for vendor in avendors:
-        vsinfo = vendor.get_optimal_pricing(ident, qty, get_all=get_all)
-        if not get_all:
-            if vsinfo.vpart is not None:
-                sources.append(vsinfo)
-        else:
-            sources.extend(vsinfo)
+    if ident.startswith('PCB'):
+        pclass = 'electronics_pcb'
+    else:
+        pclass = 'electronics'
 
+    for vendor in avendors:
+        if vendor.pclass == pclass:
+            vsinfo = vendor.get_optimal_pricing(ident, qty, get_all=get_all)
+            if not get_all:
+                if vsinfo.vpart is not None:
+                    sources.append(vsinfo)
+            else:
+                sources.extend(vsinfo)
     if len(sources) == 0:
         raise SourcingException
     if get_all is False and allvendors is False:

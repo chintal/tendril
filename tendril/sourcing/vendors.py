@@ -635,6 +635,8 @@ class VendorBase(object):
         if not mtime or now - mtime > max_age:
             try:
                 vpnos, strategy = self.search_vpnos(ident)
+                if not vpnos:
+                    vpnos = []
                 with get_session() as session:
                     controller.set_strategy(vendor=self._name, ident=ident,
                                             strategy=strategy, session=session)
