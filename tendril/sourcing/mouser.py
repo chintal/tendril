@@ -234,38 +234,19 @@ class VendorMouser(vendors.VendorBase):
     _partclass = MouserElnPart
     _vendorlogo = '/static/images/vendor-logo-mouser.png'
     _type = 'Mouser'
+    _url_base = 'http://www.mouser.in/'
+    _devices = ['IC SMD', 'IC THRU', 'IC PLCC', 'FERRITE BEAD SMD',
+                'TRANSISTOR THRU', 'TRANSISTOR SMD',
+                'CONN DF13', 'CONN DF13 HOUS', 'CONN DF13 CRIMP',
+                'DIODE SMD', 'DIODE THRU', 'VARISTOR', 'BRIDGE RECTIFIER',
+                'RES SMD', 'RES THRU', 'CAP CER SMD', 'CAP TANT SMD',
+                'TRANSFORMER SMD', 'INDUCTOR SMD', 'CRYSTAL AT'
+                 ]
+    _ndevices = []
 
     def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code=None, currency_symbol=None):
-        self.url_base = 'http://www.mouser.in/'
-        self._devices = ['IC SMD',
-                         'IC THRU',
-                         'IC PLCC',
-                         'FERRITE BEAD SMD',
-                         'TRANSISTOR THRU',
-                         'TRANSISTOR SMD',
-                         'CONN DF13',
-                         'CONN DF13 HOUS',
-                         # 'CONN DF13 WIRE',
-                         'CONN DF13 CRIMP',
-                         'DIODE SMD',
-                         'DIODE THRU',
-                         'VARISTOR',
-                         'BRIDGE RECTIFIER',
-                         'RES SMD',
-                         'RES THRU',
-                         'CAP CER SMD',
-                         'CAP TANT SMD',
-                         'TRANSFORMER SMD',
-                         'INDUCTOR SMD',
-                         'CRYSTAL AT'
-                         ]
-        self._ndevices = []
+                 currency_code='USD', currency_symbol='US$'):
         self._searchpages_filters = {}
-        if not currency_code:
-            currency_code = 'USD'
-        if not currency_symbol:
-            currency_symbol = 'US$'
         super(VendorMouser, self).__init__(name, dname, pclass, mappath,
                                            currency_code, currency_symbol)
         self._vpart_class = MouserElnPart
