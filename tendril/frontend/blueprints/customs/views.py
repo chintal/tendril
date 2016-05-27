@@ -41,7 +41,7 @@ def invoices(invoice_sno=None):
         snos = dxcustoms.get_all_customs_invoice_serialnos()
         stage = {'snos': snos,
                  'crumbroot': '/sourcing',
-                 'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
+                 'breadcrumbs': [Crumb(name="Sourcing", path=""),
                                  Crumb(name="Customs", path="customs/"),
                                  Crumb(name="Invoices", path="customs/inv/")],
                  }
@@ -55,7 +55,7 @@ def invoices(invoice_sno=None):
                  'docs': docs,
                  'invoice': invoice,
                  'crumbroot': '/sourcing',
-                 'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
+                 'breadcrumbs': [Crumb(name="Sourcing", path=""),
                                  Crumb(name="Customs", path="customs/"),
                                  Crumb(name="Invoices", path="customs/invoice/"),  # noqa
                                  Crumb(name=invoice_sno, path="customs/invoice/" + invoice_sno)],  # noqa
@@ -72,7 +72,7 @@ def main():
     latest = dxcustoms.get_all_customs_invoice_serialnos(limit=5)
     stage = {'latest': latest,
              'crumbroot': '/sourcing',
-             'breadcrumbs': [Crumb(name="Sourcing", path="main.html"),
+             'breadcrumbs': [Crumb(name="Sourcing", path=""),
                              Crumb(name="Customs", path="customs/")],
              }
     return render_template('customs_main.html', stage=stage,
