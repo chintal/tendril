@@ -56,12 +56,14 @@ if INCLUDE_GA:
 
 intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
                        'driver2200087': ('http://driver2200087.readthedocs.org/en/latest', None),
-                       'dataset': ('https://dataset.readthedocs.org/en/latest', None),
                        'bs4': ('http://www.crummy.com/software/BeautifulSoup/bs4/doc/', None),
                        'sqlalchemy': ('http://docs.sqlalchemy.org/en/rel_1_0/', None),
                        'jinja2': ('http://jinja.pocoo.org/docs/dev/', None),
                        'matplotlib': ('http://matplotlib.org', None),
-                       'fs': ('http://docs.pyfilesystem.org/en/latest', None)
+                       'fs': ('http://docs.pyfilesystem.org/en/latest', None),
+                       'requests': ('http://docs.python-requests.org/en/master/', None),
+                       'cachecontrol': ('http://cachecontrol.readthedocs.io/en/latest/', None),
+                       'mistune': ('http://mistune.readthedocs.io/en/latest/', None),
                        }
 
 linkcheck_ignore = [r'https://landscape.io/']

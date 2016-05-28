@@ -32,7 +32,8 @@ import inspect
 
 from ..profiler import do_profile
 
-from tendril.sourcing import electronics
+from tendril.sourcing.electronics import vendor_list
+from tendril.sourcing import map
 
 SCRIPT_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 SCRIPT_FOLDER = os.path.normpath(os.path.join(SCRIPT_PATH, os.pardir))
@@ -46,7 +47,7 @@ def profile_vendor_genvmap(vobj, name):
     the vendor.
 
     """
-    electronics.gen_vendor_mapfile(vobj)
+    map.gen_vendor_mapfile(vobj)
 
 
 @do_profile(os.path.join(SCRIPT_FOLDER, 'genvmapaudit'))
@@ -57,7 +58,7 @@ def profile_vendor_genvmapaudit(vobj, name):
     vendor.
 
     """
-    electronics.export_vendor_map_audit(vobj)
+    map.export_vendor_map_audit(vobj)
 
 
 @do_profile(os.path.join(SCRIPT_FOLDER, 'get_part'))
@@ -108,7 +109,7 @@ def main():
                  profile_vendor_get_part,
                  profile_vendor_get_part_db,
                  ]
-    for vendor in electronics.vendor_list:
+    for vendor in vendor_list:
         for profiler in profilers:
             profiler(vendor, vendor._name)
 

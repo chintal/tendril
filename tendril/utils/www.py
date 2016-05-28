@@ -141,7 +141,7 @@ def strencode(string):
     :param string: unicode string to be encoded.
     :return: ASCII version of the string.
 
-    .. info::
+    .. warning::
         This function is marked for deprecation by the general (but gradual)
         move towards ``unicode`` across tendril.
 

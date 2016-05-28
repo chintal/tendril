@@ -19,6 +19,7 @@ Electronics Sourcing module documentation (:mod:`sourcing.electronics`)
 =======================================================================
 """
 
+import copy
 import importlib
 
 from tendril.utils import config
@@ -28,7 +29,8 @@ logger = log.get_logger(__name__, log.INFO)
 
 def init_vendors():
     vlist = []
-    for vendor in config.VENDORS_DATA:
+    vdatalist = copy.copy(config.VENDORS_DATA)
+    for vendor in vdatalist:
         vtype = vendor.pop('type')
         module_name = '.{0}'.format(vtype.lower())
         module = importlib.import_module(module_name, __package__)

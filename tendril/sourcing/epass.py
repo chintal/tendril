@@ -32,6 +32,8 @@ this seems to include a number of `Premier Farnell brands
 
 """
 
+import urlparse
+
 from tendril.utils import www
 from tendril.utils import log
 
@@ -50,9 +52,40 @@ class EPassElnPart(VendorElnPartBase):
 
 
 class VendorEPass(VendorBase):
-    def __init__(self, **kwargs):
-        self._session = www.get_session(target='https://api.element14.com')
+    _partclass = EPassElnPart
+
+    #: Supported Device Classes
+    #:
+    #: .. hint::
+    #:      This handles instance-specific tweaks, and should be
+    #:      modified to match your instance's nomenclature guidelines.
+    #:
+    _devices = [
+        'IC SMD', 'IC THRU', 'IC PLCC',
+        # 'FERRITE BEAD SMD', 'TRANSISTOR THRU', 'TRANSISTOR SMD',
+        # 'CONN DF13', 'CONN DF13 HOUS', 'CONN DF13 WIRE', 'CONN DF13 CRIMP',
+        # 'CONN MODULAR', 'DIODE SMD', 'DIODE THRU', 'BRIDGE RECTIFIER',
+        # 'VARISTOR', 'RES SMD', 'RES THRU', 'RES ARRAY SMD',
+        # 'CAP CER SMD', 'CAP TANT SMD', 'CAP AL SMD', 'CAP MICA SMD',
+        # 'TRANSFORMER SMD', 'INDUCTOR SMD',
+        # 'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO'
+    ]
+
+    _type = 'ePass'
+
+    # TODO This is vendor specific
+    _url_base = 'https://api.element14.com'
+    _vendorlogo = '/static/images/vendor-logo-e14.png'
+    _search_url_base = urlparse.urljoin(_url_base, '/catalog/products')
+
+    def __init__(self, apikey=None, **kwargs):
+        self._apikey = apikey
+        self._session = www.get_session(target=self._url_base)
         super(VendorEPass, self).__init__(**kwargs)
+
+    @property
+    def apikey(self):
+        return self._apikey
 
     @property
     def session(self):
