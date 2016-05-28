@@ -1,6 +1,6 @@
 appenlight-client
 requests
-cachecontrol
+cachecontrol[filecache]
 zeep
 mistune
 future

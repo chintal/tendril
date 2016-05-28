@@ -343,14 +343,29 @@ config_options_resources = [
         "Name of the printer to use for printing. "
         "Tendril will use 'lp -d PRINTER_NAME to print."
     )
-    ConfigOption(
-        "APPENLIGHT_API_KEY",
-        "{}",
-        "API key to use with appenlight, if any."
-    )
 ]
 
 load_config(config_options_resources)
+
+config_options_appenlight = [
+    ConfigOption(
+        "APPENLIGHT_PRIVATE_API_KEY",
+        "{}",
+        "Private API key to use with appenlight, if any."
+    ),
+    ConfigOption(
+        "APPENLIGHT_PUBLIC_API_KEY",
+        "{}",
+        "Public API key to use with appenlight, if any."
+    ),
+    ConfigOption(
+        "ENABLE_APPENLIGHT",
+        "False",
+        "Whether to use AppEnlight to monitor application."
+    ),
+]
+
+load_config(config_options_appenlight)
 
 
 config_options_geda = [
@@ -775,6 +790,8 @@ all_config_option_groups = [
      "Options to configure the 'filesystems' containing instance resources"],
     [doc_render(config_options_resources),
      "Options to configure details of various instance resources"],
+    [doc_render(config_options_appenlight),
+     "Options to configure appenlight integration"],
     [doc_render(config_options_geda),
      "Options to configure the gEDA installation and related resources"],
     [doc_render(config_options_network_caching),

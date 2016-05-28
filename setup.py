@@ -36,7 +36,7 @@ install_requirements = [
     'future',
     'mistune',
     'zeep',
-    'cachecontrol',
+    'cachecontrol[filecache]',
     'requests',
     'appenlight-client'
 

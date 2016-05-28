@@ -33,11 +33,13 @@ warm_up_caches()
 app = Flask(__name__)
 
 try:
-    from tendril.utils.config import APPENLIGHT_API_KEY
-    import appenlight_client.ext.flask as appenlight
-    app = appenlight.add_appenlight(
-        app, {'appenlight.api_key': APPENLIGHT_API_KEY}
-    )
+    from tendril.utils.config import ENABLE_APPENLIGHT
+    if ENABLE_APPENLIGHT is True:
+        from tendril.utils.config import APPENLIGHT_PRIVATE_API_KEY
+        import appenlight_client.ext.flask as appenlight
+        app = appenlight.add_appenlight(
+            app, {'appenlight.api_key': APPENLIGHT_PRIVATE_API_KEY}
+        )
 except ImportError:
     APPENLIGHT_API_KEY = None
     appenlight = None

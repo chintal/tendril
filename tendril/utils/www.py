@@ -107,8 +107,13 @@ import pickle
 import atexit
 import tempfile
 import codecs
-import requests
 from hashlib import md5
+
+import logging
+import requests
+from cachecontrol import CacheControlAdapter
+from cachecontrol.caches import FileCache
+from cachecontrol.heuristics import ExpiresAfter
 
 from fs.opener import fsopendir
 from fs.utils import movefile
@@ -116,7 +121,13 @@ from tendril.utils.fsutils import temp_fs
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
+logging.getLogger('cachecontrol.controller').setLevel(logging.INFO)
+logging.getLogger('requests.packages.urllib3.connectionpool').\
+    setLevel(logging.INFO)
+
+
 WWW_CACHE = os.path.join(INSTANCE_CACHE, 'soupcache')
+REQUESTS_CACHE = os.path.join(INSTANCE_CACHE, 'requestscache')
 
 
 def strencode(string):
@@ -346,9 +357,12 @@ class WWWCachedFetcher:
                     try:
                         return self.cache_fs.open(filepath).read()
                     except UnicodeDecodeError:
-                        # TODO This requires the cache_fs to be a local filesystem. This may not
-                        # be very nice. A way to hook codes upto to pyfilesystems would be better
-                        with codecs.open(self.cache_fs.getsyspath(filepath), encoding='utf-8') as f:
+                        # TODO This requires the cache_fs to be a local
+                        # filesystem. This may not be very nice. A way
+                        # to hook codecs upto to pyfilesystems would be better
+                        with codecs.open(
+                                self.cache_fs.getsyspath(filepath),
+                                encoding='utf-8') as f:
                             return f.read()
                 else:
                     return self.cache_fs.getsyspath(filepath)
@@ -382,6 +396,9 @@ def get_soup(url):
     This function uses the :mod:`cached_fetcher` and its simple filesystem
     caching.
 
+    .. todo::
+        Consider switching to use a requests session.
+
     """
     page = cached_fetcher.fetch(url)
     if page is None:
@@ -390,3 +407,62 @@ def get_soup(url):
     return soup
 
 
+def _get_proxy_dict():
+    """
+    Construct a dict containing the proxy settings in a format compatible
+    with the :class:`requests.Session`. This function is used to construct
+    the :data:`_proxy_dict`.
+
+    """
+    if NETWORK_PROXY_TYPE == 'http':
+        proxyurl = _get_http_proxy_url()
+        return {'http': proxyurl,
+                'https': proxyurl}
+    else:
+        return None
+
+#: A dict containing the proxy settings in a format compatible
+#: with the :class:`requests.Session`.
+_proxy_dict = _get_proxy_dict()
+
+
+def _get_requests_cache_adapter(heuristic):
+    return CacheControlAdapter(cache=FileCache(REQUESTS_CACHE),
+                               heuristic=heuristic)
+
+
+def get_session(target='http://', heuristic=None):
+    """
+    Gets a pre-configured :mod:`requests` session.
+
+    This function configures the following behavior into the session :
+
+    - Proxy settings are added to the session.
+    - It is configured to use the instance's :mod:`CacheControl` cache.
+    - Permanent redirect caching is handled by :mod:`CacheControl`.
+    - Temporary redirect caching is not supported.
+
+    Each module / class instance which uses this should subsequently
+    maintain it's own session with whatever modifications it requires
+    within a scope which makes sense for the use case (and probably close
+    it when it's done).
+
+    The session returned from here uses the instance's REQUESTS_CACHE with
+    a single - though configurable - heuristic. If additional caches or
+    heuristics need to be added, it's the caller's problem to set them up.
+
+    :param target: Defaults to ``http://``. A string representing the targets
+                   that should be cached. Use this to setup site-specific
+                   heuristics.
+    :param heuristic: The heuristic to use for the cache adapter.
+    :rtype: :class:`requests.Session`
+
+    """
+
+    s = requests.session()
+    if _proxy_dict is not None:
+        s.proxies.update(_proxy_dict)
+    if heuristic is None:
+        heuristic = ExpiresAfter(days=5)
+    s.mount(target, _get_requests_cache_adapter(heuristic))
+    return s
