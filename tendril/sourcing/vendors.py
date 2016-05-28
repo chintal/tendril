@@ -506,6 +506,9 @@ class VendorElnPartBase(VendorPartBase):
             self._package = vpno.detail_eln.package
             self._datasheet = vpno.detail_eln.datasheet
 
+    def _get_data(self):
+        raise NotImplementedError
+
     @property
     def package(self):
         return self._package
@@ -650,22 +653,24 @@ class VendorBase(object):
         raise NotImplementedError
 
     def get_vpart(self, vpartno, ident=None, max_age=600000):
-        return self._partclass(vpartno, ident, self, max_age)
+        return self._partclass(vpartno, ident=ident,
+                               vendor=self, max_age=max_age)
 
-    def _get_candidate_tcost(self, candidate, oqty):
+    @staticmethod
+    def _get_candidate_tcost(candidate, oqty):
         ubprice, nbprice = candidate.get_price(oqty)
-        effprice = self.get_effective_price(ubprice)
+        effprice = candidate.get_effective_price(ubprice)
         return effprice.extended_price(oqty).native_value
 
     def _get_candidate_isinfo(self, candidate, oqty):
         tcost = self._get_candidate_tcost(candidate, oqty)
         ubprice, nbprice = candidate.get_price(oqty)
-        effprice = self.get_effective_price(ubprice)
+        effprice = candidate.get_effective_price(ubprice)
         urationale = None
         olduprice = None
         if nbprice is not None:
             nubprice, nnbprice = candidate.get_price(nbprice.moq)
-            neffprice = self.get_effective_price(nubprice)
+            neffprice = candidate.get_effective_price(nubprice)
             ntcost = neffprice.extended_price(nbprice.moq).native_value
             # bump_excess_qty = nubprice.moq - rqty
 

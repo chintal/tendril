@@ -28,11 +28,12 @@ this seems to include a number of `Premier Farnell brands
 <http://www.premierfarnell.com/our-company/our-brands>`_.
 
 .. info::
-    Developed and tested against element14 (Asia Pacific, IN) only.
+    Deferred due to lack of API key validation.
+
+.. info::
+    To be developed and tested against element14 (Asia Pacific, IN) only.
 
 """
-
-import urlparse
 
 from tendril.utils import www
 from tendril.utils import log
@@ -48,6 +49,11 @@ class EPassElnPart(VendorElnPartBase):
         super(EPassElnPart, self).__init__(vpno, **kwargs)
 
     def _get_data(self):
+        s = self._vendor.session
+        params = self._vendor.api_base_params
+        params.append(('term', 'id:{0}'.format(self.vpno)))
+        params.append(('resultsSettings.responseGroup', 'large'))
+        r = s.get(self._vendor.api_endpoint, params=params)
         pass
 
 
@@ -73,23 +79,34 @@ class VendorEPass(VendorBase):
 
     _type = 'ePass'
 
-    # TODO This is vendor specific
-    _url_base = 'https://api.element14.com'
-    _vendorlogo = '/static/images/vendor-logo-e14.png'
-    _search_url_base = urlparse.urljoin(_url_base, '/catalog/products')
+    # TODO This is vendor specific, and should probably come from the config
+    _url_base = 'http://in.element14.com'
+    _search_url_base = 'https://api.element14.com/catalog/products'
 
     def __init__(self, apikey=None, **kwargs):
-        self._apikey = apikey
-        self._session = www.get_session(target=self._url_base)
+        self._api_key = apikey
+        self._session = www.get_session(target=self._search_url_base)
         super(VendorEPass, self).__init__(**kwargs)
 
     @property
-    def apikey(self):
-        return self._apikey
+    def api_endpoint(self):
+        return self._search_url_base
+
+    @property
+    def api_key(self):
+        return self._api_key
+
+    @property
+    def api_base_params(self):
+        return [
+            ('callInfo.responseDataFormat', 'JSON'),
+            ('storeInfo.id', 'in.element14.co'),
+            ('callInfo.apiKey', self._api_key),
+        ]
 
     @property
     def session(self):
         return self._session
 
     def search_vpnos(self, ident):
-        pass
+        return None, 'NOAPIKEY'
