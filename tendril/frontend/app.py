@@ -22,7 +22,6 @@ See the COPYING, README, and INSTALL files for more information
 
 from flask import Flask
 
-from tendril.utils.config import WARM_UP_CACHES
 from tendril.frontend.startup.warmup import warm_up_caches
 
 
@@ -32,3 +31,13 @@ warm_up_caches()
 
 # This is the WSGI compliant web application object
 app = Flask(__name__)
+
+try:
+    from tendril.utils.config import APPENLIGHT_API_KEY
+    import appenlight_client.ext.flask as appenlight
+    app = appenlight.add_appenlight(
+        app, {'appenlight.api_key': APPENLIGHT_API_KEY}
+    )
+except ImportError:
+    APPENLIGHT_API_KEY = None
+    appenlight = None

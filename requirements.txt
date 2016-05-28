@@ -1,3 +1,4 @@
+appenlight-client
 requests
 cachecontrol
 zeep

@@ -343,6 +343,11 @@ config_options_resources = [
         "Name of the printer to use for printing. "
         "Tendril will use 'lp -d PRINTER_NAME to print."
     )
+    ConfigOption(
+        "APPENLIGHT_API_KEY",
+        "{}",
+        "API key to use with appenlight, if any."
+    )
 ]
 
 load_config(config_options_resources)

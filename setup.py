@@ -38,6 +38,7 @@ install_requirements = [
     'zeep',
     'cachecontrol',
     'requests',
+    'appenlight-client'
 
     # Flask Dependencies (to be pruned?)
     'jsmin',

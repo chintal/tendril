@@ -22,30 +22,16 @@ This module provides utilities to deal with the internet. All application code
 should access the internet through this module, since this where support for
 proxies and caching is implemented.
 
-.. rubric:: Main Provided Methods
+.. rubric:: Main Provided Elements
 
 .. autosummary::
 
-    strencode
     urlopen
     get_soup
-
+    cached_fetcher
 
 This module uses the following configuration values from
 :mod:`tendril.utils.config`:
-
-.. rubric:: Basic Settings
-
-- :data:`tendril.utils.config.ENABLE_REDIRECT_CACHING`
-  Whether or not redirect caching should be used.
-- :data:`tendril.utils.config.TRY_REPLICATOR_CACHE_FIRST`
-  Whether or not a replicator cache should be used.
-
-Redirect caching speeds up network accesses by saving ``301`` and ``302``
-redirects, and not needing to get the correct URL on a second access. This
-redirect cache is stored as a pickled object in the ``INSTANCE_CACHE``
-folder. The effect of this caching is far more apparent when a replicator
-cache is also used.
 
 .. rubric:: Network Proxy Settings
 
@@ -55,28 +41,29 @@ cache is also used.
 - :data:`tendril.utils.config.NETWORK_PROXY_USER`
 - :data:`tendril.utils.config.NETWORK_PROXY_PASS`
 
-.. rubric:: Replicator Cache Settings
+.. rubric:: Caching
 
-The replicator cache is intended to be a ``http-replicator`` instance, to be
-used to cache the web pages that are accessed locally. If
-``TRY_REPLICATOR_CACHE_FIRST`` is False, the replicator isn't actually going
-to be hit.
+- :data:`tendril.utils.config.ENABLE_REDIRECT_CACHING`
+  Whether or not redirect caching should be used.
 
-- :data:`tendril.utils.config.REPLICATOR_PROXY_TYPE`
-- :data:`tendril.utils.config.REPLICATOR_PROXY_IP`
-- :data:`tendril.utils.config.REPLICATOR_PROXY_PORT`
-- :data:`tendril.utils.config.REPLICATOR_PROXY_USER`
-- :data:`tendril.utils.config.REPLICATOR_PROXY_PASS`
+Redirect caching speeds up network accesses by saving ``301`` and ``302``
+redirects, and not needing to get the correct URL on a second access. This
+redirect cache is stored as a pickled object in the ``INSTANCE_CACHE``
+folder. The effect of this caching is far more apparent when a replicator
+cache is also used.
 
 This module also provides the :class:`WWWCachedFetcher` class,
 an instance of which is available in :data:`cached_fetcher`, which
 is subsequently used by :func:`get_soup` and any application code
-that want's cached results.
+that wants cached results.
 
 Overall, caching should look something like this :
 
 - WWWCacheFetcher provides short term (~5 days)
-  caching, aggressively expriring whatever is here.
+  caching, aggressively caching whatever goes through it. This
+  caching is NOT HTTP1.1 compliant. In case HTTP1.1 compliant
+  caching is desired, use the requests based implementation
+  instead or use an external http-replicator like caching proxy.
 
 - RedirectCacheHandler is something of a special case, handling
   redirects which otherwise would be incredibly expensive.
@@ -84,9 +71,6 @@ Overall, caching should look something like this :
   does not expire anything, ever. To 'invalidate' something in
   this cache, the entire cache needs to be nuked. It may be
   worthwhile to consider moving this to redis instead.
-
-- http-replicator provides an underlying caching layer which
-  is HTTP1.1 compliant.
 
 .. todo::
     Consider replacing uses of urllib/urllib2 backend with
@@ -307,35 +291,25 @@ def urlopen(url):
     """
     Opens a url specified by the ``url`` parameter.
 
-    This function handles :
-        - Redirect caching, if enabled.
-        - Retries upto 5 times if it encounters a http ``500`` error.
-
+    This function handles redirect caching, if enabled.
     """
-    retries = 5
     url = get_actual_url(url)
-    while retries > 0:
+    try:
+        page = opener.open(url)
         try:
-            page = opener.open(url)
-            try:
-                if ENABLE_REDIRECT_CACHING is True and page.status == 301:
-                    logger.debug('Detected New Permanent Redirect:\n' +
-                                 url + '\n' + page.url)
-                    redirect_cache[url] = page.url
-            except AttributeError:
-                pass
-            return page
-        except HTTPError as e:
-            logger.error("HTTP Error : {0} {1}".format(e.code, url))
-            if e.code == 500:
-                time.sleep(0.5)
-                retries -= 1
-            else:
-                raise
-        except URLError as e:
-            logger.error("URL Error : {0} {1}".format(e.errno, e.reason))
-            raise
-    return None
+            if ENABLE_REDIRECT_CACHING is True and page.status == 301:
+                logger.debug('Detected New Permanent Redirect:\n' +
+                             url + '\n' + page.url)
+                redirect_cache[url] = page.url
+        except AttributeError:
+            pass
+        return page
+    except HTTPError as e:
+        logger.error("HTTP Error : {0} {1}".format(e.code, url))
+        raise
+    except URLError as e:
+        logger.error("URL Error : {0} {1}".format(e.errno, e.reason))
+        raise
 
 
 class WWWCachedFetcher:
@@ -405,12 +379,14 @@ def get_soup(url):
     Gets a :mod:`bs4` parsed soup for the ``url`` specified by the parameter.
     The :mod:`lxml` parser is used.
 
-    This function returns a soup constructed of the cached page if one
-    exists and is valid, or obtains one and dumps it into the cache if it
-    doesn't.
+    This function uses the :mod:`cached_fetcher` and its simple filesystem
+    caching.
+
     """
     page = cached_fetcher.fetch(url)
     if page is None:
         return None
     soup = BeautifulSoup(page, 'lxml')
     return soup
+
+
