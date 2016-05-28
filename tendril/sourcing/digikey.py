@@ -245,7 +245,7 @@ class DigiKeyElnPart(VendorElnPartBase):
         and populates the object with all the necessary information.
 
         """
-        soup = www.get_soup(self.vpart_url)
+        soup = www.get_soup(self.vpart_url, session=self._vendor.session)
         if soup is None:
             logger.error("Unable to open DigiKey product page : " + self.vpno)
             return
@@ -520,12 +520,17 @@ class VendorDigiKey(VendorBase):
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code='USD', currency_symbol='US$', **kwargs):
         self._searchpages_filters = {}
+        self._session = www.get_session(target=self._url_base)
         super(VendorDigiKey, self).__init__(
             name, dname, pclass, mappath,
             currency_code, currency_symbol, **kwargs
         )
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)
+
+    @property
+    def session(self):
+        return self._session
 
     def search_vpnos(self, ident):
         device, value, footprint = parse_ident(ident)
@@ -728,7 +733,7 @@ class VendorDigiKey(VendorBase):
         results = []
         for url_part in new_url_parts:
             new_url = urlparse.urljoin(self._url_base, url_part)
-            soup = www.get_soup(new_url)
+            soup = www.get_soup(new_url, session=self._session)
             if soup is not None:
                 try:
                     results.extend(self._get_resultpage_table(soup))
@@ -770,7 +775,7 @@ class VendorDigiKey(VendorBase):
         results = []
         for url_part in new_url_parts:
             new_url = urlparse.urljoin(self._url_base, url_part)
-            soup = www.get_soup(new_url)
+            soup = www.get_soup(new_url, session=self._session)
             if soup is not None:
                 try:
                     results.extend(self._get_resultpage_table(soup))
@@ -868,21 +873,10 @@ class VendorDigiKey(VendorBase):
                                   form.attrs['action'])
         url_dl = target + '?' + urllib.urlencode(params)
 
-        # TODO
-        # Trying to do this normaly, with returned data, results in
-        # horribly convoluted encoding errors. A great deal of streamlining
-        # of encoding across the stack may be necessary to make this work
-        # reliably. For now, we reopen the cache file which seems to have a
-        # stable encoding, though an encoding which is different from or
-        # incorrectly marked when compared to that provided by the stream.
-        table_csv_path = www.cached_fetcher.fetch(url_dl, getcpath=True)
-        with codecs.open(table_csv_path, 'r', encoding='utf-8') as f:
-            table_csv = f.read()
-        table_csv = table_csv.encode('utf-8')
-
+        r = self._session.get(url_dl)
+        table_csv = r.text.encode(r.encoding)
         if table_csv.startswith(codecs.BOM_UTF8):
             table_csv = table_csv[len(codecs.BOM_UTF8):]
-
         lines = csv.DictReader(table_csv.splitlines())
         return lines
 
@@ -897,7 +891,7 @@ class VendorDigiKey(VendorBase):
         searchurl = self._search_url_base + '?k=' + urllib.quote_plus(value) \
             + '&' + urllib.urlencode(params)
 
-        soup = www.get_soup(searchurl)
+        soup = www.get_soup(searchurl, session=self._session)
         if soup is None:
             return None, 'URL_FAIL'
         ptable = soup.find('table', id='productTable')
@@ -958,8 +952,7 @@ class VendorDigiKey(VendorBase):
         try:
             rparts = self._regex_fo_res.search(rstr).groupdict()
         except AttributeError:
-            print rstr
-            raise AttributeError
+            raise
 
         rval = Decimal(rparts['num'])
         if rparts['order'] is None:
@@ -1059,6 +1052,7 @@ class VendorDigiKey(VendorBase):
 
     def _get_searchpage_filters(self, soup):
         filters = {}
+        idx = 0
         try:
             filtertable = soup.find('table', attrs={'class': 'filters-group'})
             headers = filtertable.find('tr')
@@ -1094,7 +1088,7 @@ class VendorDigiKey(VendorBase):
         if searchurl in self._searchpages_filters.keys():
             return self._searchpages_filters[searchurl]
         else:
-            searchsoup = www.get_soup(searchurl)
+            searchsoup = www.get_soup(searchurl, session=self._session)
             result, filters = self._get_searchpage_filters(searchsoup)
             if result is True:
                 self._searchpages_filters[searchurl] = filters
@@ -1356,7 +1350,7 @@ class VendorDigiKey(VendorBase):
 
         searchurl = searchurlbase + '?' + urllib.urlencode(params)
 
-        soup = www.get_soup(searchurl)
+        soup = www.get_soup(searchurl, session=self._session)
         if soup is None:
             return None, 'URL_FAIL'
 
