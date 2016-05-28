@@ -109,6 +109,7 @@ import tempfile
 import codecs
 from hashlib import md5
 
+import warnings
 import logging
 import requests
 from cachecontrol import CacheControlAdapter
@@ -128,6 +129,28 @@ logging.getLogger('requests.packages.urllib3.connectionpool').\
 
 WWW_CACHE = os.path.join(INSTANCE_CACHE, 'soupcache')
 REQUESTS_CACHE = os.path.join(INSTANCE_CACHE, 'requestscache')
+
+
+def _get_http_proxy_url():
+    """
+    Constructs the proxy URL for HTTP proxies from relevant
+    :mod:`tendril.utils.config` Config options, and returns the URL string
+    in the form:
+
+        ``http://[NP_USER:NP_PASS@]NP_IP[:NP_PORT]``
+
+    where NP_xxx is obtained from the :mod:`tendril.utils.config` ConfigOption
+    NETWORK_PROXY_xxx.
+    """
+    if NETWORK_PROXY_USER is None:
+        proxyurl_http = 'http://' + NETWORK_PROXY_IP
+    else:
+        proxyurl_http = 'http://{0}:{1}@{2}'.format(NETWORK_PROXY_USER,
+                                                    NETWORK_PROXY_PASS,
+                                                    NETWORK_PROXY_IP)
+    if NETWORK_PROXY_PORT:
+        proxyurl_http += ':' + NETWORK_PROXY_PORT
+    return proxyurl_http
 
 
 def strencode(string):
@@ -218,6 +241,8 @@ class CachingRedirectHandler(HTTPRedirectHandler):
 
 
 def get_actual_url(url):
+    warnings.warn("get_actual_url() is a part of Redirect caching and is "
+                  "deprecated.", DeprecationWarning)
     if not ENABLE_REDIRECT_CACHING:
         return url
     else:
@@ -236,28 +261,6 @@ def _test_opener(openr):
         return True
     except URLError:
         return False
-
-
-def _get_http_proxy_url():
-    """
-    Constructs the proxy URL for HTTP proxies from relevant
-    :mod:`tendril.utils.config` Config options, and returns the URL string
-    in the form:
-
-        'http://[NP_USER:NP_PASS@]NP_IP[:NP_PORT]'
-
-    where NP_xxx is obtained from the :mod:`tendril.utils.config` ConfigOption
-    NETWORK_PROXY_xxx.
-    """
-    if NETWORK_PROXY_USER is None:
-        proxyurl_http = 'http://' + NETWORK_PROXY_IP
-    else:
-        proxyurl_http = 'http://{0}:{1}@{2}'.format(NETWORK_PROXY_USER,
-                                                    NETWORK_PROXY_PASS,
-                                                    NETWORK_PROXY_IP)
-    if NETWORK_PROXY_PORT:
-        proxyurl_http += ':' + NETWORK_PROXY_PORT
-    return proxyurl_http
 
 
 def _create_opener():
@@ -304,6 +307,8 @@ def urlopen(url):
 
     This function handles redirect caching, if enabled.
     """
+    warnings.warn("urlopen() is a part of the urllib2 based www "
+                  "implementation and is deprecated.", DeprecationWarning)
     url = get_actual_url(url)
     try:
         page = opener.open(url)
@@ -345,6 +350,8 @@ class WWWCachedFetcher:
         self.cache_fs = fsopendir(cache_dir)
 
     def fetch(self, url, max_age=500000, getcpath=False):
+        warnings.warn("WWWCachedFetcher() is a part of the urllib2 based www "
+                      "implementation and is deprecated.", DeprecationWarning)
         # Use MD5 hash of the URL as the filename
         if six.PY3 or (six.PY2 and isinstance(url, unicode)):
             filepath = md5(url.encode('utf-8')).hexdigest()
@@ -388,25 +395,6 @@ class WWWCachedFetcher:
 cached_fetcher = WWWCachedFetcher()
 
 
-def get_soup(url):
-    """
-    Gets a :mod:`bs4` parsed soup for the ``url`` specified by the parameter.
-    The :mod:`lxml` parser is used.
-
-    This function uses the :mod:`cached_fetcher` and its simple filesystem
-    caching.
-
-    .. todo::
-        Consider switching to use a requests session.
-
-    """
-    page = cached_fetcher.fetch(url)
-    if page is None:
-        return None
-    soup = BeautifulSoup(page, 'lxml')
-    return soup
-
-
 def _get_proxy_dict():
     """
     Construct a dict containing the proxy settings in a format compatible
@@ -427,11 +415,20 @@ _proxy_dict = _get_proxy_dict()
 
 
 def _get_requests_cache_adapter(heuristic):
-    return CacheControlAdapter(cache=FileCache(REQUESTS_CACHE),
-                               heuristic=heuristic)
+    """
+    Given a heuristic, constructs and returns a
+    :class:`cachecontrol.CacheControlAdapter` attached to the instance's
+    :class:`cachecontrol.caches.FileCache`.
+
+    """
+    return CacheControlAdapter(
+        cache=FileCache(REQUESTS_CACHE),
+        heuristic=heuristic,
+        cache_etags=False
+    )
 
 
-def get_session(target='', heuristic=None):
+def get_session(target='http://', heuristic=None):
     """
     Gets a pre-configured :mod:`requests` session.
 
@@ -451,10 +448,15 @@ def get_session(target='', heuristic=None):
     a single - though configurable - heuristic. If additional caches or
     heuristics need to be added, it's the caller's problem to set them up.
 
-    :param target: Defaults to ``''``. A string containing a prefix for
-                   the targets that should be cached. Use this to setup
+    .. note::
+        The caching here seems to be pretty bad, particularly for digikey
+        passive component search. I don't know why.
+
+    :param target: Defaults to ``'http://'``. string containing a prefix
+                   for the targets that should be cached. Use this to setup
                    site-specific heuristics.
     :param heuristic: The heuristic to use for the cache adapter.
+    :type heuristic: :class:`cachecontrol.heuristics.BaseHeuristic`
     :rtype: :class:`requests.Session`
 
     """
@@ -466,3 +468,37 @@ def get_session(target='', heuristic=None):
         heuristic = ExpiresAfter(days=5)
     s.mount(target, _get_requests_cache_adapter(heuristic))
     return s
+
+
+def get_soup(url, session=None):
+    """
+    Gets a :mod:`bs4` parsed soup for the ``url`` specified by the parameter.
+    The :mod:`lxml` parser is used.
+
+    If a ``session`` (previously created from :func:``get_session``) is
+    provided, this session is used left open. If it is not, a new session
+    is created for the request and closed before the soup is returned.
+
+    Using a caller-defined session allows usage of a single session across
+    multiple requests, therefore taking advantage of HTTP keep-alive to
+    speed things up. It also provides a way for the caller to modify the
+    cache heuristic, if needed.
+
+    Any exceptions encountered will be raised, and is left for the caller
+    to handle. The assumption is that a HTTP or URL error is going to make
+    the soup unusable anyway.
+
+    """
+    if session is None:
+        session = get_session()
+        _close_after = True
+    else:
+        _close_after = False
+
+    r = session.get(url)
+    r.raise_for_status()
+    soup = BeautifulSoup(r.content, 'lxml', from_encoding=r.encoding)
+
+    if _close_after is True:
+        session.close()
+    return soup
