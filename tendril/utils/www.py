@@ -431,7 +431,7 @@ def _get_requests_cache_adapter(heuristic):
                                heuristic=heuristic)
 
 
-def get_session(target='http://', heuristic=None):
+def get_session(target='', heuristic=None):
     """
     Gets a pre-configured :mod:`requests` session.
 
@@ -451,9 +451,9 @@ def get_session(target='http://', heuristic=None):
     a single - though configurable - heuristic. If additional caches or
     heuristics need to be added, it's the caller's problem to set them up.
 
-    :param target: Defaults to ``http://``. A string representing the targets
-                   that should be cached. Use this to setup site-specific
-                   heuristics.
+    :param target: Defaults to ``''``. A string containing a prefix for
+                   the targets that should be cached. Use this to setup
+                   site-specific heuristics.
     :param heuristic: The heuristic to use for the cache adapter.
     :rtype: :class:`requests.Session`
 
