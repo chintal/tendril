@@ -110,7 +110,10 @@ class VendorMouser(VendorBase):
         return header
 
     def _build_api_client(self):
-        c = www.get_soap_client(self._api_endpoint)
+        c = www.get_soap_client(self._api_endpoint,
+                                cache_requests=True,
+                                max_age=600000,
+                                minimum_spacing=3)
         header = self._build_mouser_header()
         c.set_options(soapheaders=header)
         c.set_options(prefixes=False)

@@ -145,7 +145,7 @@ logging.getLogger('suds.resolver').setLevel(logging.INFO)
 logging.getLogger('suds.umx.typed').setLevel(logging.INFO)
 logging.getLogger('suds.mx.literal').setLevel(logging.INFO)
 logging.getLogger('suds.mx.core').setLevel(logging.INFO)
-logging.getLogger('suds.transport.http').setLevel(logging.DEBUG)
+logging.getLogger('suds.transport.http').setLevel(logging.INFO)
 
 WWW_CACHE = os.path.join(INSTANCE_CACHE, 'soupcache')
 REQUESTS_CACHE = os.path.join(INSTANCE_CACHE, 'requestscache')
@@ -424,7 +424,7 @@ class WWWCachedFetcher(CacheBase):
     If the fetcher's ``fetch`` function is called with the ``getcpath``
     attribute set to True, the fetcher will simply return the path
     to a (valid) file in the cache filesystem, and opening and reading
-    the file is left to the called. This hook is provided to help deal
+    the file is left to the caller. This hook is provided to help deal
     with file encoding on a somewhat case-by-case basis, until the
     overall encoding problems can be ironed out.
     """
@@ -578,12 +578,30 @@ def get_soup_requests(url, session=None):
     return soup
 
 
-class CachedHttpAuthenticated(HttpAuthenticated, CacheBase):
+class TransportThrottleException(Exception):
+    pass
+
+
+class ThrottledTransport(HttpAuthenticated):
+    def __init__(self, **kwargs):
+        self._minumum_spacing = kwargs.pop('minimum_spacing', 0)
+        self._last_called = int(time.time())
+        HttpTransport.__init__(self, **kwargs)
+
+    def send(self, request):
+        now = int(time.time())
+        tsincelast = now - self._last_called
+        if tsincelast < self._minumum_spacing:
+            time.sleep(self._minumum_spacing - tsincelast)
+        self._last_called = now
+        return HttpAuthenticated.send(self, request)
+
+
+class CachedTransport(CacheBase):
     def __init__(self, **kwargs):
         cache_dir = kwargs.pop('cache_dir')
         self._max_age = kwargs.pop('max_age', 600000)
         CacheBase.__init__(self, cache_dir=cache_dir)
-        HttpTransport.__init__(self, **kwargs)
 
     def _get_filepath(self, request):
         # Use MD5 hash of a combination of the URL and the message
@@ -612,6 +630,28 @@ class CachedHttpAuthenticated(HttpAuthenticated, CacheBase):
         return response
 
 
-def get_soap_client(wsdl):
-    soap_transport = CachedHttpAuthenticated(cache_dir=SOAP_CACHE)
+class CachedThrottledTransport(ThrottledTransport, CachedTransport):
+    def __init__(self, **kwargs):
+        cache_dir = kwargs.pop('cache_dir')
+        max_age = kwargs.pop('max_age', 600000)
+        CachedTransport.__init__(self, cache_dir=cache_dir, max_age=max_age)
+        ThrottledTransport.__init__(self, **kwargs)
+
+    def _get_fresh_content(self, request):
+        response = ThrottledTransport.send(self, request)
+        return response
+
+    def send(self, request):
+        return CachedTransport.send(self, request)
+
+
+def get_soap_client(wsdl, cache_requests=True,
+                    max_age=600000, minimum_spacing=0):
+    if cache_requests is True:
+        soap_transport = CachedThrottledTransport(
+            cache_dir=SOAP_CACHE, max_age=max_age,
+            minimum_spacing=minimum_spacing
+        )
+    else:
+        soap_transport = HttpAuthenticated()
     return Client(wsdl, transport=soap_transport)
