@@ -245,7 +245,7 @@ class DigiKeyElnPart(VendorElnPartBase):
         and populates the object with all the necessary information.
 
         """
-        soup = www.get_soup(self.vpart_url)
+        soup = self._vendor.get_soup(self.vpart_url)
         if soup is None:
             logger.error("Unable to open DigiKey product page : " + self.vpno)
             return
@@ -520,12 +520,33 @@ class VendorDigiKey(VendorBase):
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code='USD', currency_symbol='US$', **kwargs):
         self._searchpages_filters = {}
+        self._session = www.get_session()
         super(VendorDigiKey, self).__init__(
             name, dname, pclass, mappath,
             currency_code, currency_symbol, **kwargs
         )
         self.add_order_baseprice_component("Shipping Cost", 40)
         self.add_order_additional_cost_component("Customs", 12.85)
+
+    @property
+    def session(self):
+        return self._session
+
+    def get_soup(self, url):
+        """
+        Retrieve the soup for a particular url. This function is factored out
+        to allow switching between the :mod:`urllib2` and :mod:`requests`
+        based implementations in :mod:`tendril.utils.www`.
+
+        Currently, the requests based implementation is about two times slower
+        for vendor map generation. The cache provided by :mod:`cachecontrol`
+        in that implementation is not very well suited to this application.
+        Additional changes to the underlying implementation or configuration
+        thereof (perhaps in the heuristic) may change this in the future.
+
+        """
+        # return www.get_soup_requests(url, session=self._session)
+        return www.get_soup(url)
 
     def search_vpnos(self, ident):
         device, value, footprint = parse_ident(ident)
@@ -728,7 +749,7 @@ class VendorDigiKey(VendorBase):
         results = []
         for url_part in new_url_parts:
             new_url = urlparse.urljoin(self._url_base, url_part)
-            soup = www.get_soup(new_url)
+            soup = self.get_soup(new_url)
             if soup is not None:
                 try:
                     results.extend(self._get_resultpage_table(soup))
@@ -770,7 +791,7 @@ class VendorDigiKey(VendorBase):
         results = []
         for url_part in new_url_parts:
             new_url = urlparse.urljoin(self._url_base, url_part)
-            soup = www.get_soup(new_url)
+            soup = self.get_soup(new_url)
             if soup is not None:
                 try:
                     results.extend(self._get_resultpage_table(soup))
@@ -890,7 +911,7 @@ class VendorDigiKey(VendorBase):
         searchurl = self._search_url_base + '?k=' + urllib.quote_plus(value) \
             + '&' + urllib.urlencode(params)
 
-        soup = www.get_soup(searchurl)
+        soup = self.get_soup(searchurl)
         if soup is None:
             return None, 'URL_FAIL'
         ptable = soup.find('table', id='productTable')
@@ -1087,7 +1108,7 @@ class VendorDigiKey(VendorBase):
         if searchurl in self._searchpages_filters.keys():
             return self._searchpages_filters[searchurl]
         else:
-            searchsoup = www.get_soup(searchurl)
+            searchsoup = self.get_soup(searchurl)
             result, filters = self._get_searchpage_filters(searchsoup)
             if result is True:
                 self._searchpages_filters[searchurl] = filters
@@ -1349,7 +1370,7 @@ class VendorDigiKey(VendorBase):
 
         searchurl = searchurlbase + '?' + urllib.urlencode(params)
 
-        soup = www.get_soup(searchurl)
+        soup = self.get_soup(searchurl)
         if soup is None:
             return None, 'URL_FAIL'
 

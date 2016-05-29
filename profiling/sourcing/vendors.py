@@ -53,9 +53,10 @@ def profile_vendor_genvmap(vobj, name):
 @do_profile(os.path.join(SCRIPT_FOLDER, 'genvmapaudit'))
 def profile_vendor_genvmapaudit(vobj, name):
     """
-    This function profiles vendor map audit file generation for the given vendor.
-    This corresponds to the execution profile for retrieving a part from the
-    vendor.
+    This function profiles vendor map audit file generation for the given
+    vendor. This no longer corresponds to the execution profile for
+    retrieving a part from the vendor, since the data may be retrieved from
+    the database.
 
     """
     map.export_vendor_map_audit(vobj)

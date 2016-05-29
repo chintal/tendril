@@ -22,7 +22,7 @@
 Docstring for mouser
 """
 
-
+import re
 from suds.sax.element import Element
 
 from tendril.utils import www
@@ -30,6 +30,7 @@ from tendril.utils import log
 
 from .vendors import VendorBase
 from .vendors import VendorElnPartBase
+from .vendors import VendorPrice
 
 logger = log.get_logger(__name__, log.DEFAULT)
 
@@ -40,10 +41,34 @@ class MouserElnPart(VendorElnPartBase):
 
     def _get_data(self):
         c = self._vendor.api_client
-        pass
+        r = c.service.SearchByPartNumber(mouserPartNumber=self.vpno)
+        if not r.NumberOfResult:
+            raise ValueError(
+                'Could not construct mouser part from part number'
+            )
+
+        part_data = None
+        for part in r.Parts[0]:
+            part_data = part
+            if part.Reeling is False:
+                break
+
+        self.manufacturer = part_data.Manufacturer
+        self.mpartno = part_data.ManufacturerPartNumber
+        self.datasheet = part_data.DataSheetUrl
+        self.package = None
+        self.vqtyavail = int(part_data.Availability.split()[0])
+        self.vpartdesc = part_data.Description
+
+        for price in part_data.PriceBreaks[0]:
+            self.add_price(VendorPrice(
+                price.Quantity,
+                float(re.findall(r'\d+\.*\d*', price.Price)[0]),
+                self._vendor.currency)
+            )
 
 
-class VendorEPass(VendorBase):
+class VendorMouser(VendorBase):
     _partclass = MouserElnPart
 
     #: Supported Device Classes
@@ -72,7 +97,8 @@ class VendorEPass(VendorBase):
     def __init__(self, apikey=None, **kwargs):
         self._api_key = apikey
         self._client = self._build_api_client()
-        super(VendorEPass, self).__init__(**kwargs)
+        super(VendorMouser, self).__init__(**kwargs)
+        self.add_order_additional_cost_component("Customs", 12.85)
 
     def _build_mouser_header(self):
         header_partnerid = Element('PartnerID').setText(self._api_key)
@@ -91,6 +117,7 @@ class VendorEPass(VendorBase):
         c.set_options(service='SearchAPI', port='SearchAPISoap12')
         return c
 
+    @property
     def api_client(self):
         return self._client
 

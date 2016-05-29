@@ -128,6 +128,18 @@ logging.getLogger('cachecontrol.controller').setLevel(logging.INFO)
 logging.getLogger('requests.packages.urllib3.connectionpool').\
     setLevel(logging.INFO)
 
+logging.getLogger('suds.xsd.query').setLevel(logging.INFO)
+logging.getLogger('suds.xsd.sxbasic').setLevel(logging.INFO)
+logging.getLogger('suds.xsd.schema').setLevel(logging.INFO)
+logging.getLogger('suds.xsd.sxbase').setLevel(logging.INFO)
+logging.getLogger('suds.metrics').setLevel(logging.INFO)
+logging.getLogger('suds.wsdl').setLevel(logging.INFO)
+logging.getLogger('suds.client').setLevel(logging.INFO)
+logging.getLogger('suds.resolver').setLevel(logging.INFO)
+logging.getLogger('suds.umx.typed').setLevel(logging.INFO)
+logging.getLogger('suds.mx.literal').setLevel(logging.INFO)
+logging.getLogger('suds.mx.core').setLevel(logging.INFO)
+logging.getLogger('suds.transport.http').setLevel(logging.DEBUG)
 
 WWW_CACHE = os.path.join(INSTANCE_CACHE, 'soupcache')
 REQUESTS_CACHE = os.path.join(INSTANCE_CACHE, 'requestscache')
