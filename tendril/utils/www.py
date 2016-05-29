@@ -395,6 +395,21 @@ class WWWCachedFetcher:
 cached_fetcher = WWWCachedFetcher()
 
 
+def get_soup(url):
+    """
+    Gets a :mod:`bs4` parsed soup for the ``url`` specified by the parameter.
+    The :mod:`lxml` parser is used.
+    This function returns a soup constructed of the cached page if one
+    exists and is valid, or obtains one and dumps it into the cache if it
+    doesn't.
+    """
+    page = cached_fetcher.fetch(url)
+    if page is None:
+        return None
+    soup = BeautifulSoup(page, 'lxml')
+    return soup
+
+
 def _get_proxy_dict():
     """
     Construct a dict containing the proxy settings in a format compatible
@@ -470,7 +485,7 @@ def get_session(target='http://', heuristic=None):
     return s
 
 
-def get_soup(url, session=None):
+def get_soup_requests(url, session=None):
     """
     Gets a :mod:`bs4` parsed soup for the ``url`` specified by the parameter.
     The :mod:`lxml` parser is used.

@@ -35,7 +35,6 @@ install_requirements = [
     'colorama',
     'future',
     'mistune',
-    'zeep',
     'cachecontrol[filecache]',
     'requests',
     'appenlight-client'

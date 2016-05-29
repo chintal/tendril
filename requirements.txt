@@ -1,7 +1,6 @@
 appenlight-client
 requests
 cachecontrol[filecache]
-zeep
 mistune
 future
 colorama
