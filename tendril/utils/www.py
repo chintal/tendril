@@ -103,7 +103,7 @@ from six.moves.urllib.error import HTTPError, URLError
 import os
 import six
 import time
-import pickle
+
 import atexit
 import tempfile
 import codecs
@@ -112,11 +112,17 @@ from hashlib import md5
 import warnings
 import logging
 import requests
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from cachecontrol import CacheControlAdapter
 from cachecontrol.caches import FileCache
 from cachecontrol.heuristics import ExpiresAfter
 
 from suds.client import Client
+from suds.transport.http import HttpAuthenticated
+from suds.transport.http import HttpTransport
 
 from fs.opener import fsopendir
 from fs.utils import movefile
@@ -143,6 +149,7 @@ logging.getLogger('suds.transport.http').setLevel(logging.DEBUG)
 
 WWW_CACHE = os.path.join(INSTANCE_CACHE, 'soupcache')
 REQUESTS_CACHE = os.path.join(INSTANCE_CACHE, 'requestscache')
+SOAP_CACHE = os.path.join(INSTANCE_CACHE, 'soapcache')
 
 
 def _get_http_proxy_url():
@@ -342,56 +349,57 @@ def urlopen(url):
         raise
 
 
-class WWWCachedFetcher:
-    # TODO improve this to use / provide a decent caching layer.
-    """
-    This class implements a simple filesystem cache which
-    can be used to create and obtain from cached www requests.
-
-    The cache is stored in the ``cache_fs`` filesystem, with
-    a filename constructed from the md5 sum of the url (encoded as
-    ``utf-8`` if necessary).
-
-    If the fetcher's ``fetch`` function is called with the ``getcpath``
-    attribute set to True, the fetcher will simply return the path
-    to a (valid) file in the cache filesystem, and opening and reading
-    the file is left to the called. This hook is provided to help deal
-    with file encoding on a somewhat case-by-case basis, until the
-    overall encoding problems can be ironed out.
-    """
-
+class CacheBase(object):
     def __init__(self, cache_dir=WWW_CACHE):
         self.cache_fs = fsopendir(cache_dir)
 
-    def fetch(self, url, max_age=500000, getcpath=False):
-        warnings.warn("WWWCachedFetcher() is a part of the urllib2 based www "
-                      "implementation and is deprecated.", DeprecationWarning)
-        # Use MD5 hash of the URL as the filename
-        if six.PY3 or (six.PY2 and isinstance(url, unicode)):
-            filepath = md5(url.encode('utf-8')).hexdigest()
-        else:
-            filepath = md5(url).hexdigest()
+    def _get_filepath(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def _get_fresh_content(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @staticmethod
+    def _serialize(response):
+        return response
+
+    @staticmethod
+    def _deserialize(filecontent):
+        return filecontent
+
+    def _is_cache_fresh(self, filepath, max_age):
         if self.cache_fs.exists(filepath):
-            # TODO This seriously needs cleaning up.
-            if int(time.time()) - int(time.mktime(self.cache_fs.getinfo(filepath)['modified_time'].timetuple())) < max_age:  # noqa
-                if getcpath is False:
-                    try:
-                        return self.cache_fs.open(filepath).read()
-                    except UnicodeDecodeError:
-                        # TODO This requires the cache_fs to be a local
-                        # filesystem. This may not be very nice. A way
-                        # to hook codecs upto to pyfilesystems would be better
-                        with codecs.open(
-                                self.cache_fs.getsyspath(filepath),
-                                encoding='utf-8') as f:
-                            return f.read()
-                else:
-                    return self.cache_fs.getsyspath(filepath)
-        # Retrieve over HTTP and cache, using rename to avoid collisions
-        data = urlopen(url).read()
+            tn = int(time.time())
+            tc = int(time.mktime(
+                self.cache_fs.getinfo(filepath)['modified_time'].timetuple())
+            )
+            if tn - tc < max_age:
+                return True
+        return False
+
+    def _accessor(self, max_age, getcpath=False, *args, **kwargs):
+        filepath = self._get_filepath(*args, **kwargs)
+        if self._is_cache_fresh(filepath, max_age):
+            if getcpath is False:
+                try:
+                    filecontent = self.cache_fs.open(filepath, 'rb').read()
+                    return self._deserialize(filecontent)
+                except UnicodeDecodeError:
+                    # TODO This requires the cache_fs to be a local
+                    # filesystem. This may not be very nice. A way
+                    # to hook codecs upto to pyfilesystems would be better
+                    with codecs.open(
+                            self.cache_fs.getsyspath(filepath),
+                            encoding='utf-8') as f:
+                        filecontent = f.read()
+                        return self._deserialize(filecontent)
+            else:
+                return self.cache_fs.getsyspath(filepath)
+
+        data = self._get_fresh_content(*args, **kwargs)
         fd, temppath = tempfile.mkstemp()
         fp = os.fdopen(fd, 'wb')
-        fp.write(data)
+        fp.write(self._serialize(data))
         fp.close()
         # This can be pretty expensive if the move is across a real filesystem
         # boundary. We should instead use a temporary file in the cache_fs
@@ -404,9 +412,46 @@ class WWWCachedFetcher:
             return self.cache_fs.getsyspath(filepath)
 
 
+class WWWCachedFetcher(CacheBase):
+    """
+    This class implements a simple filesystem cache which can be used
+    to create and obtain from cached www requests.
+
+    The cache is stored in the ``cache_fs`` filesystem, with a filename
+    constructed from the md5 sum of the url (encoded as ``utf-8`` if
+    necessary).
+
+    If the fetcher's ``fetch`` function is called with the ``getcpath``
+    attribute set to True, the fetcher will simply return the path
+    to a (valid) file in the cache filesystem, and opening and reading
+    the file is left to the called. This hook is provided to help deal
+    with file encoding on a somewhat case-by-case basis, until the
+    overall encoding problems can be ironed out.
+    """
+    def _get_filepath(self, url):
+        # Use MD5 hash of the URL as the filename
+        if six.PY3 or (six.PY2 and isinstance(url, unicode)):
+            filepath = md5(url.encode('utf-8')).hexdigest()
+        else:
+            filepath = md5(url).hexdigest()
+        return filepath
+
+    def _get_fresh_content(self, url):
+        # Retrieve over HTTP and cache, using rename to avoid collisions
+        return urlopen(url).read()
+
+    def fetch(self, url, max_age=500000, getcpath=False):
+        # warnings.warn(
+        #     "WWWCachedFetcher() is a part of the urllib2 based "
+        #     "www implementation and is deprecated.",
+        #     DeprecationWarning
+        # )
+        return self._accessor(max_age, getcpath, url)
+
+
 #: The module's :class:`WWWCachedFetcher` instance which should be
 #: used whenever cached results are desired.
-cached_fetcher = WWWCachedFetcher()
+cached_fetcher = WWWCachedFetcher(cache_dir=WWW_CACHE)
 
 
 def get_soup(url):
@@ -533,5 +578,40 @@ def get_soup_requests(url, session=None):
     return soup
 
 
+class CachedHttpAuthenticated(HttpAuthenticated, CacheBase):
+    def __init__(self, **kwargs):
+        cache_dir = kwargs.pop('cache_dir')
+        self._max_age = kwargs.pop('max_age', 600000)
+        CacheBase.__init__(self, cache_dir=cache_dir)
+        HttpTransport.__init__(self, **kwargs)
+
+    def _get_filepath(self, request):
+        # Use MD5 hash of a combination of the URL and the message
+        # as the filename
+        keystring = request.url + request.message
+        if six.PY3 or (six.PY2 and isinstance(keystring, unicode)):
+            filepath = md5(keystring.encode('utf-8')).hexdigest()
+        else:
+            filepath = md5(keystring).hexdigest()
+        return filepath
+
+    def _get_fresh_content(self, request):
+        response = HttpAuthenticated.send(self, request)
+        return response
+
+    @staticmethod
+    def _serialize(response):
+        return pickle.dumps(response)
+
+    @staticmethod
+    def _deserialize(filecontent):
+        return pickle.loads(filecontent)
+
+    def send(self, request):
+        response = self._accessor(self._max_age, False, request)
+        return response
+
+
 def get_soap_client(wsdl):
-    return Client(wsdl)
+    soap_transport = CachedHttpAuthenticated(cache_dir=SOAP_CACHE)
+    return Client(wsdl, transport=soap_transport)
