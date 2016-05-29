@@ -116,6 +116,8 @@ from cachecontrol import CacheControlAdapter
 from cachecontrol.caches import FileCache
 from cachecontrol.heuristics import ExpiresAfter
 
+from suds.client import Client
+
 from fs.opener import fsopendir
 from fs.utils import movefile
 from tendril.utils.fsutils import temp_fs
@@ -517,3 +519,7 @@ def get_soup_requests(url, session=None):
     if _close_after is True:
         session.close()
     return soup
+
+
+def get_soap_client(wsdl):
+    return Client(wsdl)

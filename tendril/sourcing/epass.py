@@ -77,7 +77,7 @@ class VendorEPass(VendorBase):
         # 'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO'
     ]
 
-    _type = 'ePass'
+    _type = 'ePass REST API'
 
     # TODO This is vendor specific, and should probably come from the config
     _url_base = 'http://in.element14.com'
