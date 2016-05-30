@@ -37,7 +37,8 @@ install_requirements = [
     'mistune',
     'cachecontrol[filecache]',
     'requests',
-    'appenlight-client'
+    'appenlight-client',
+    'suds',
 
     # Flask Dependencies (to be pruned?)
     'jsmin',
