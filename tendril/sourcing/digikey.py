@@ -505,7 +505,7 @@ class VendorDigiKey(VendorBase):
         'VARISTOR', 'RES SMD', 'RES THRU', 'RES ARRAY SMD',
         'CAP CER SMD', 'CAP TANT SMD', 'CAP AL SMD', 'CAP MICA SMD',
         'TRANSFORMER SMD', 'INDUCTOR SMD', 'RELAY',
-        'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO'
+        'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO', 'ZENER SMD'
     ]
 
     _url_base = 'http://www.digikey.com'

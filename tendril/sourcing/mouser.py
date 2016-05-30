@@ -97,7 +97,7 @@ class VendorMouser(VendorBase):
         'VARISTOR', 'RES SMD', 'RES THRU',  # 'RES ARRAY SMD',
         'CAP CER SMD', 'CAP AL SMD', 'CAP MICA SMD',  # 'CAP TANT SMD',
         'TRANSFORMER SMD', 'INDUCTOR SMD', 'RELAY',
-        'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO'
+        'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO', 'ZENER SMD'
     ]
 
     _type = 'Mouser SOAP API'
