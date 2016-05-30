@@ -264,8 +264,8 @@ class CachingRedirectHandler(HTTPRedirectHandler):
 
 
 def get_actual_url(url):
-    warnings.warn("get_actual_url() is a part of Redirect caching and is "
-                  "deprecated.", DeprecationWarning)
+    # warnings.warn("get_actual_url() is a part of Redirect caching and is "
+    #               "deprecated.", DeprecationWarning)
     if not ENABLE_REDIRECT_CACHING:
         return url
     else:
@@ -330,8 +330,8 @@ def urlopen(url):
 
     This function handles redirect caching, if enabled.
     """
-    warnings.warn("urlopen() is a part of the urllib2 based www "
-                  "implementation and is deprecated.", DeprecationWarning)
+    # warnings.warn("urlopen() is a part of the urllib2 based www "
+    #               "implementation and is deprecated.", DeprecationWarning)
     url = get_actual_url(url)
     try:
         page = opener.open(url)

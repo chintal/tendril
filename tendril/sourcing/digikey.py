@@ -235,9 +235,12 @@ class DigiKeyElnPart(VendorElnPartBase):
         super(DigiKeyElnPart, self).__init__(dkpartno, ident, vendor, max_age)
 
     @property
-    def vpart_url(self):
-        return 'http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail?name=' \
-               + urllib.quote_plus(self.vpno)
+    def vparturl(self):
+        if self._vparturl:
+            return self._vparturl
+        else:
+            return 'http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail?name=' \
+                    + urllib.quote_plus(self.vpno)
 
     def _get_data(self):
         """
@@ -245,7 +248,7 @@ class DigiKeyElnPart(VendorElnPartBase):
         and populates the object with all the necessary information.
 
         """
-        soup = self._vendor.get_soup(self.vpart_url)
+        soup = self._vendor.get_soup(self.vparturl)
         if soup is None:
             logger.error("Unable to open DigiKey product page : " + self.vpno)
             return
@@ -501,7 +504,7 @@ class VendorDigiKey(VendorBase):
         'CONN MODULAR', 'DIODE SMD', 'DIODE THRU', 'BRIDGE RECTIFIER',
         'VARISTOR', 'RES SMD', 'RES THRU', 'RES ARRAY SMD',
         'CAP CER SMD', 'CAP TANT SMD', 'CAP AL SMD', 'CAP MICA SMD',
-        'TRANSFORMER SMD', 'INDUCTOR SMD',
+        'TRANSFORMER SMD', 'INDUCTOR SMD', 'RELAY',
         'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO'
     ]
 

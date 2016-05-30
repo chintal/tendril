@@ -46,6 +46,11 @@ def profile_vendor_genvmap(vobj, name):
     This corresponds to the execution profile for searching for a part from
     the vendor.
 
+    .. warning::
+        Make sure that your cache already includes all the necessary files
+        by first running the ``tendril-genvmaps`` script before running the
+        profiler.
+
     """
     map.gen_vendor_mapfile(vobj)
 
@@ -58,6 +63,11 @@ def profile_vendor_genvmapaudit(vobj, name):
     retrieving a part from the vendor, since the data may be retrieved from
     the database.
 
+    .. warning::
+        Make sure that your cache already includes all the necessary files
+        by first running the ``tendril-genvmapaudits`` script before running
+        the profiler.
+
     """
     map.export_vendor_map_audit(vobj)
 
@@ -67,6 +77,10 @@ def profile_vendor_get_part(vobj, name):
     """
     This function profiles :func:`tendril.sourcing.vendors.VendorBase.get_all_vparts`
     execution for the given vendor. Uses max_age=0 to avoid using the database cache.
+
+    .. todo::
+        Change this to only hit one part or so, to avoid API rate limit related
+        issues.
 
     """
     for ident in vobj.get_all_vparts(max_age=0):
@@ -79,6 +93,10 @@ def profile_vendor_get_part_db(vobj, name):
     This function profiles :func:`tendril.sourcing.vendors.VendorBase.get_all_vparts`
     execution for the given vendor. Uses the database cache, which would have been
     prepared by get_part by this stage.
+
+    .. todo::
+        Change this to only hit one part or so, to avoid API rate limit related
+        issues.
 
     """
     for ident in vobj.get_all_vparts():

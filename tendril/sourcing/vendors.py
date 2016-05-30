@@ -260,6 +260,7 @@ class VendorPartBase(object):
         self._manufacturer = None
         self._mpartno = None
         self._vpartdesc = None
+        self._vparturl = None
         self._canonical_repr = ident
         self._prices = []
         self._vendor = vendor
@@ -327,6 +328,7 @@ class VendorPartBase(object):
             self._vpartdesc = vpno.detail.vpartdesc
             self._pkgqty = vpno.detail.pkgqty
             self._last_updated = vpno.updated_at
+            self._vparturl = vpno.detail.vparturl
             for price in vpno.prices:
                 self.add_price(
                     VendorPrice(int(price.moq), float(price.price),
@@ -363,6 +365,14 @@ class VendorPartBase(object):
     @vqtyavail.setter
     def vqtyavail(self, value):
         self._vqtyavail = value
+
+    @property
+    def vparturl(self):
+        return self._vparturl
+
+    @vparturl.setter
+    def vparturl(self, value):
+        self._vparturl = value
 
     @property
     def manufacturer(self):

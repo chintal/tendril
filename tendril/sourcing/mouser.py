@@ -68,7 +68,7 @@ class MouserElnPart(VendorElnPartBase):
         self.package = None
         self.vqtyavail = int(part_data.Availability.split()[0])
         self.vpartdesc = part_data.Description
-        # self.vpart_url = part_data.ProductDetailUrl
+        self.vparturl = part_data.ProductDetailUrl
 
         for price in part_data.PriceBreaks[0]:
             self.add_price(VendorPrice(
@@ -94,7 +94,7 @@ class VendorMouser(VendorBase):
         'CONN MODULAR', 'DIODE SMD', 'DIODE THRU', 'BRIDGE RECTIFIER',
         'VARISTOR', 'RES SMD', 'RES THRU',  # 'RES ARRAY SMD',
         'CAP CER SMD', 'CAP AL SMD', 'CAP MICA SMD',  # 'CAP TANT SMD',
-        'TRANSFORMER SMD', 'INDUCTOR SMD',
+        'TRANSFORMER SMD', 'INDUCTOR SMD', 'RELAY',
         'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO'
     ]
 

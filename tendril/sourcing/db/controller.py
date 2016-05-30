@@ -135,6 +135,7 @@ def populate_vpart_detail(vpno=None, vpart=None, session=None):
         vpno.detail.manufacturer = vpart.manufacturer
         vpno.detail.mpartno = vpart.mpartno
         vpno.detail.vpartdesc = vpart.vpartdesc
+        vpno.detail.vparturl = vpart.vparturl
         vpno.detail.pkgqty = vpart.pkgqty
     except AttributeError:
         vpno.detail = VendorPartDetail(

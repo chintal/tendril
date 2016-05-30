@@ -142,6 +142,7 @@ class VendorPartDetail(DeclBase, BaseMixin, TimestampMixin):
     mpartno = Column(String, unique=False, nullable=True)
     vpartdesc = Column(String, unique=False, nullable=True)
     pkgqty = Column(Integer, unique=False, nullable=True)
+    vparturl = Column(String, unique=False, nullable=True)
 
     # Relationships
     vpno_id = Column(Integer,
