@@ -453,6 +453,9 @@ class VendorPartBase(object):
             self._vendor.currency, price.oqmultiple
         )
 
+    def get_effective_price(self, price):
+        return self._get_effective_price(price)
+
     @property
     def effective_prices(self):
         return [self._get_effective_price(x) for x in self.prices]

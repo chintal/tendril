@@ -28,7 +28,10 @@ proxies and caching is implemented.
 
     urlopen
     get_soup
+    get_soup_requests
     cached_fetcher
+    get_session
+    get_soap_client
 
 This module uses the following configuration values from
 :mod:`tendril.utils.config`:
@@ -74,10 +77,9 @@ Overall, caching should look something like this :
 
 .. todo::
     Consider replacing uses of urllib/urllib2 backend with
-    :mod:`requests` and simplify this module. Proxy support,
-    redirect caching, and response caching are the most
-    significant customizations provided by this module,
-    and should be reconsidered or reimplemented for requests.
+    :mod:`requests` and simplify this module. Currently, the
+    cache provided with the ``requests`` implementation here
+    is the major bottleneck.
 
 """
 
@@ -380,6 +382,7 @@ class CacheBase(object):
     def _accessor(self, max_age, getcpath=False, *args, **kwargs):
         filepath = self._get_filepath(*args, **kwargs)
         if self._is_cache_fresh(filepath, max_age):
+            logger.debug("Cache HIT")
             if getcpath is False:
                 try:
                     filecontent = self.cache_fs.open(filepath, 'rb').read()
@@ -396,16 +399,23 @@ class CacheBase(object):
             else:
                 return self.cache_fs.getsyspath(filepath)
 
+        logger.debug("Cache MISS")
         data = self._get_fresh_content(*args, **kwargs)
-        fd, temppath = tempfile.mkstemp()
-        fp = os.fdopen(fd, 'wb')
-        fp.write(self._serialize(data))
-        fp.close()
-        # This can be pretty expensive if the move is across a real filesystem
-        # boundary. We should instead use a temporary file in the cache_fs
-        # itself
-        movefile(temp_fs, temp_fs.unsyspath(temppath),
-                 self.cache_fs, filepath)
+        try:
+            sdata = self._serialize(data)
+            fd, temppath = tempfile.mkstemp()
+            fp = os.fdopen(fd, 'wb')
+            fp.write(sdata)
+            fp.close()
+            logger.debug("Creating new cache entry")
+            # This can be pretty expensive if the move is across a real filesystem
+            # boundary. We should instead use a temporary file in the cache_fs
+            # itself
+            movefile(temp_fs, temp_fs.unsyspath(temppath),
+                     self.cache_fs, filepath)
+        except:
+            raise
+
         if getcpath is False:
             return data
         else:
@@ -578,10 +588,6 @@ def get_soup_requests(url, session=None):
     return soup
 
 
-class TransportThrottleException(Exception):
-    pass
-
-
 class ThrottledTransport(HttpAuthenticated):
     def __init__(self, **kwargs):
         self._minumum_spacing = kwargs.pop('minimum_spacing', 0)
@@ -592,7 +598,9 @@ class ThrottledTransport(HttpAuthenticated):
         now = int(time.time())
         tsincelast = now - self._last_called
         if tsincelast < self._minumum_spacing:
-            time.sleep(self._minumum_spacing - tsincelast)
+            tleft = self._minumum_spacing - tsincelast
+            logger.debug("Throttling for {0}".format(tleft))
+            time.sleep(tleft)
         self._last_called = now
         return HttpAuthenticated.send(self, request)
 
@@ -619,6 +627,9 @@ class CachedTransport(CacheBase):
 
     @staticmethod
     def _serialize(response):
+        if response.code != 200:
+            logger.debug("Bad Status {0}".format(response.code))
+            raise ValueError
         return pickle.dumps(response)
 
     @staticmethod
