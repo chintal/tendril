@@ -727,7 +727,7 @@ class VendorBase(object):
             return [self._get_candidate_isinfo(x, oqty) for x in candidates]
 
         selcandidate = candidates[0]
-        tcost = self.get_effective_price(
+        tcost = selcandidate.get_effective_price(
             selcandidate.get_price(rqty)[0]
         ).extended_price(rqty).native_value
 

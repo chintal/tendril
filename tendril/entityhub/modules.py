@@ -84,6 +84,7 @@ class ModulePrototypeBase(object):
         self._changelog = None
         self._validated = False
         self._validation_context = None
+        self._indicative_costing = None
         self._validation_errors = ErrorCollector()
         self.ident = modulename
         self._register_for_changes()
@@ -394,6 +395,10 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
     @property
     def projfolder(self):
         return projects.cards[self.ident]
+
+    @property
+    def indicative_costing(self):
+        raise NotImplementedError
 
     def _validate_obom(self, ec):
         # Final Validation of Output BOMs. This validation is of the
