@@ -127,6 +127,9 @@ class CurrencyDefinition(object):
 
     @property
     def exch_rate(self):
+        """
+        The exchange rate in a human-friendly string.
+        """
         return "{0}1/{1}{2:,.2f}".format(self.symbol, BASE_CURRENCY_SYMBOL, self.exchval)
 
     @staticmethod
@@ -284,10 +287,17 @@ class CurrencyValue(TypedComparisonMixin):
 
     @property
     def exch_rate(self):
+        """
+        The applicable exchange rate in a human-friendly string.
+        """
         return self._currency_def.exch_rate
 
     @property
     def is_foreign(self):
+        """
+        Whether the source currency is Foreign (``True``) or is the native
+        currency (``False``).
+        """
         if self._currency_def.code != BASE_CURRENCY:
             return True
         else:

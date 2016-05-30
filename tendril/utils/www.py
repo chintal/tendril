@@ -81,6 +81,12 @@ Overall, caching should look something like this :
     cache provided with the ``requests`` implementation here
     is the major bottleneck.
 
+
+.. rubric:: Class Inheritance
+
+.. inheritance-diagram::
+   tendril.utils.www
+
 """
 
 from __future__ import print_function
@@ -111,7 +117,7 @@ import tempfile
 import codecs
 from hashlib import md5
 
-import warnings
+# import warnings
 import logging
 import requests
 try:
@@ -353,23 +359,87 @@ def urlopen(url):
 
 class CacheBase(object):
     def __init__(self, cache_dir=WWW_CACHE):
+        """
+        This class implements a simple filesystem cache which can be used
+        to create and obtain from various cached requests from internet
+        resources.
+
+        The cache is stored in the folder defined by ``cache_dir``, with a
+        filename constructed by the :func:`_get_filepath` function.
+
+        If the cache's :func:`_accessor` function is called with the
+        ``getcpath`` attribute set to True, only the path to a (valid) file
+        in the cache filesystem is returned, and opening and reading
+        the file is left to the caller. This hook is provided to help deal
+        with file encoding on a somewhat case-by-case basis, until the
+        overall encoding problems can be ironed out.
+        """
         self.cache_fs = fsopendir(cache_dir)
 
     def _get_filepath(self, *args, **kwargs):
+        """
+        Given the parameters necessary to obtain the resource in normal
+        circumstances, return a hash which is usable as the filename for
+        the resource in the cache.
+
+        The filename must be unique for every resource, and filename
+        generation must be deterministic and repeatable.
+
+        Must be implemented in every subclass.
+        """
         raise NotImplementedError
 
     def _get_fresh_content(self, *args, **kwargs):
+        """
+        Given the parameters necessary to obtain the resource in normal
+        circumstances, obtain the content of the resource from the source.
+
+        Must be implemented in every subclass.
+        """
         raise NotImplementedError
 
     @staticmethod
     def _serialize(response):
+        """
+        Given a response (as returned by :func:`_get_fresh_content`), convert
+        it into a string which can be stored in a file. Use this function to
+        serialize structured responses when needed.
+
+        Unless overridden by the subclass, this function simply returns the
+        response unaltered.
+
+        The actions of this function should be reversed by
+        :func:`_deserialize`.
+        """
         return response
 
     @staticmethod
     def _deserialize(filecontent):
+        """
+        Given the contents of a cache file, reconstruct the original response
+        in the original format (as returned by :func:`_get_fresh_content`).
+        Use this function to deserialize cache files for structured responses
+        when needed.
+
+        Unless overridden by the subclass, this function simply returns the
+        file content unaltered.
+
+        The actions of this function should be reversed by
+        :func:`_serialize`.
+        """
         return filecontent
 
     def _is_cache_fresh(self, filepath, max_age):
+        """
+        Given the path to a file in the cache and the maximum age for the
+        cache content to be considered fresh, returns (boolean) whether or
+        not the cache contains a fresh copy of the response.
+
+        :param filepath: Path to the filename in the cache corresponding to
+                         the request, as returned by :func:`_get_filepath`.
+        :param max_age: Maximum age of fresh content, in seconds.
+
+        """
         if self.cache_fs.exists(filepath):
             tn = int(time.time())
             tc = int(time.mktime(
@@ -380,6 +450,15 @@ class CacheBase(object):
         return False
 
     def _accessor(self, max_age, getcpath=False, *args, **kwargs):
+        """
+        The primary accessor for the cache instance. Each subclass should
+        provide a function which behaves similarly to that of the original,
+        un-cached version of the resource getter. That function should adapt
+        the parameters provided to it into the form needed for this one, and
+        let this function maintain the cached responses and handle retrieval
+        of the response.
+
+        """
         filepath = self._get_filepath(*args, **kwargs)
         if self._is_cache_fresh(filepath, max_age):
             logger.debug("Cache HIT")
@@ -424,21 +503,18 @@ class CacheBase(object):
 
 class WWWCachedFetcher(CacheBase):
     """
-    This class implements a simple filesystem cache which can be used
-    to create and obtain from cached www requests.
-
-    The cache is stored in the ``cache_fs`` filesystem, with a filename
-    constructed from the md5 sum of the url (encoded as ``utf-8`` if
-    necessary).
-
-    If the fetcher's ``fetch`` function is called with the ``getcpath``
-    attribute set to True, the fetcher will simply return the path
-    to a (valid) file in the cache filesystem, and opening and reading
-    the file is left to the caller. This hook is provided to help deal
-    with file encoding on a somewhat case-by-case basis, until the
-    overall encoding problems can be ironed out.
+    Subclass of :class:`CacheBase` to handle catching of url ``fetch``
+    responses.
     """
     def _get_filepath(self, url):
+        """
+        Return a filename constructed from the md5 sum of the url
+        (encoded as ``utf-8`` if necessary).
+
+        :param url: url of the resource to be cached
+        :return: name of the cache file
+
+        """
         # Use MD5 hash of the URL as the filename
         if six.PY3 or (six.PY2 and isinstance(url, unicode)):
             filepath = md5(url.encode('utf-8')).hexdigest()
@@ -447,10 +523,27 @@ class WWWCachedFetcher(CacheBase):
         return filepath
 
     def _get_fresh_content(self, url):
-        # Retrieve over HTTP and cache, using rename to avoid collisions
+        """
+        Retrieve a fresh copy of the resource from the source.
+
+        :param url: url of the resource
+        :return: contents of the resource
+
+        """
         return urlopen(url).read()
 
     def fetch(self, url, max_age=500000, getcpath=False):
+        """
+        Return the content located at the ``url`` provided. If a fresh cached
+        version exists, it is returned. If not, a fresh one is obtained,
+        stored in the cache, and returned.
+
+        :param url: url of the resource to retrieve.
+        :param max_age: maximum age in seconds.
+        :param getcpath: (default False) if True, returns only the path to
+                         the cache file.
+
+        """
         # warnings.warn(
         #     "WWWCachedFetcher() is a part of the urllib2 based "
         #     "www implementation and is deprecated.",
@@ -460,7 +553,8 @@ class WWWCachedFetcher(CacheBase):
 
 
 #: The module's :class:`WWWCachedFetcher` instance which should be
-#: used whenever cached results are desired.
+#: used whenever cached results are desired. The cache is stored in
+#: the directory defined by :data:`tendril.utils.config.WWW_CACHE`.
 cached_fetcher = WWWCachedFetcher(cache_dir=WWW_CACHE)
 
 
@@ -493,20 +587,28 @@ def _get_proxy_dict():
     else:
         return None
 
+
 #: A dict containing the proxy settings in a format compatible
 #: with the :class:`requests.Session`.
 _proxy_dict = _get_proxy_dict()
+
+
+#: The module's :class:`cachecontrol.caches.FileCache` instance which
+#: should be used whenever cached :mod:`requests` responses are desired.
+#: The cache is stored in the directory defined by
+#: :data:`tendril.utils.config.REQUESTS_CACHE`.
+requests_cache = FileCache(REQUESTS_CACHE)
 
 
 def _get_requests_cache_adapter(heuristic):
     """
     Given a heuristic, constructs and returns a
     :class:`cachecontrol.CacheControlAdapter` attached to the instance's
-    :class:`cachecontrol.caches.FileCache`.
+    :data:`requests_cache`.
 
     """
     return CacheControlAdapter(
-        cache=FileCache(REQUESTS_CACHE),
+        cache=requests_cache,
         heuristic=heuristic,
         cache_etags=False
     )
@@ -519,7 +621,7 @@ def get_session(target='http://', heuristic=None):
     This function configures the following behavior into the session :
 
     - Proxy settings are added to the session.
-    - It is configured to use the instance's :mod:`CacheControl` cache.
+    - It is configured to use the instance's :data:`requests_cache`.
     - Permanent redirect caching is handled by :mod:`CacheControl`.
     - Temporary redirect caching is not supported.
 
@@ -559,11 +661,11 @@ def get_soup_requests(url, session=None):
     Gets a :mod:`bs4` parsed soup for the ``url`` specified by the parameter.
     The :mod:`lxml` parser is used.
 
-    If a ``session`` (previously created from :func:``get_session``) is
+    If a ``session`` (previously created from :func:`get_session`) is
     provided, this session is used left open. If it is not, a new session
     is created for the request and closed before the soup is returned.
 
-    Using a caller-defined session allows usage of a single session across
+    Using a caller-defined session allows re-use of a single session across
     multiple requests, therefore taking advantage of HTTP keep-alive to
     speed things up. It also provides a way for the caller to modify the
     cache heuristic, if needed.
@@ -590,11 +692,32 @@ def get_soup_requests(url, session=None):
 
 class ThrottledTransport(HttpAuthenticated):
     def __init__(self, **kwargs):
+        """
+        Provides a throttled HTTP transport for respecting rate limits
+        on rate-restricted SOAP APIs using :mod:`suds`.
+
+        This class is a :class:`suds.transport.Transport` subclass
+        based on the default ``HttpAuthenticated`` transport.
+
+        :param minimum_spacing: Minimum number of seconds between requests.
+                                Default 0.
+        :type minimum_spacing: int
+
+        .. todo::
+            Use redis or so to coordinate between threads to allow a
+            maximum requests per hour/day limit.
+
+        """
         self._minumum_spacing = kwargs.pop('minimum_spacing', 0)
         self._last_called = int(time.time())
         HttpTransport.__init__(self, **kwargs)
 
     def send(self, request):
+        """
+        Send a request and return the response. If the minimum number of
+        seconds between requests have not yet elapsed, then the function
+        sleeps for the remaining period and then passes the request along.
+        """
         now = int(time.time())
         tsincelast = now - self._last_called
         if tsincelast < self._minumum_spacing:
@@ -605,15 +728,35 @@ class ThrottledTransport(HttpAuthenticated):
         return HttpAuthenticated.send(self, request)
 
 
-class CachedTransport(CacheBase):
+class CachedTransport(CacheBase, HttpAuthenticated):
     def __init__(self, **kwargs):
+        """
+        Provides a cached HTTP transport with request-based caching for
+        SOAP APIs using :mod:`suds`.
+
+        This is a subclass of :class:`CacheBase` and the default
+        ``HttpAuthenticated`` transport.
+
+        :param cache_dir: folder where the cache is located.
+        :param max_age: the maximum age in seconds after which a response
+                        is considered stale.
+
+        """
         cache_dir = kwargs.pop('cache_dir')
         self._max_age = kwargs.pop('max_age', 600000)
         CacheBase.__init__(self, cache_dir=cache_dir)
 
     def _get_filepath(self, request):
-        # Use MD5 hash of a combination of the URL and the message
-        # as the filename
+        """
+        Return a filename constructed from the md5 hash of a
+        combination of the request URL and message content
+        (encoded as ``utf-8`` if necessary).
+
+        :param request: the request object for which a cache filename
+                        is needed.
+        :return: name of the cache file.
+
+        """
         keystring = request.url + request.message
         if six.PY3 or (six.PY2 and isinstance(keystring, unicode)):
             filepath = md5(keystring.encode('utf-8')).hexdigest()
@@ -622,11 +765,27 @@ class CachedTransport(CacheBase):
         return filepath
 
     def _get_fresh_content(self, request):
+        """
+        Retrieve a fresh copy of the resource from the source.
+
+        :param request: the request object for which the response
+                        is needed.
+        :return: the response to the request
+
+        """
         response = HttpAuthenticated.send(self, request)
         return response
 
     @staticmethod
     def _serialize(response):
+        """
+        Serializes the suds response object using :mod:`cPickle`.
+
+        If the response has an error status (anything other than
+        200), raises ``ValueError``. This is used to avoid caching
+        errored responses.
+
+        """
         if response.code != 200:
             logger.debug("Bad Status {0}".format(response.code))
             raise ValueError
@@ -634,30 +793,82 @@ class CachedTransport(CacheBase):
 
     @staticmethod
     def _deserialize(filecontent):
+        """
+        De-serializes the cache content into a suds response object
+        using :mod:`cPickle`.
+
+        """
         return pickle.loads(filecontent)
 
     def send(self, request):
+        """
+        Send a request and return the response. If a fresh response to the
+        request is available in the cache, that is returned instead. If it
+        isn't, a fresh response is obtained, cached, and returned.
+
+        """
         response = self._accessor(self._max_age, False, request)
         return response
 
 
 class CachedThrottledTransport(ThrottledTransport, CachedTransport):
     def __init__(self, **kwargs):
+        """
+        A cached HTTP transport with both throttling and request-based
+        caching for SOAP APIs using :mod:`suds`.
+
+        This is a subclass of :class:`CachedTransport` and
+        :class:`ThrottledTransport`.
+
+        Keyword arguments not handled here are passed on via
+        :class:`ThrottledTransport` to :class:`HttpTransport`.
+
+        :param cache_dir: folder where the cache is located.
+        :param max_age: the maximum age in seconds after which a response
+                        is considered stale.
+        :param minimum_spacing: Minimum number of seconds between requests.
+                                Default 0.
+        """
         cache_dir = kwargs.pop('cache_dir')
         max_age = kwargs.pop('max_age', 600000)
         CachedTransport.__init__(self, cache_dir=cache_dir, max_age=max_age)
         ThrottledTransport.__init__(self, **kwargs)
 
     def _get_fresh_content(self, request):
+        """
+        Retrieve a fresh copy of the resource from the source via
+        :func:`ThrottledTransport.send`.
+
+        :param request: the request object for which the response
+                        is needed.
+        :return: the response to the request
+
+        """
         response = ThrottledTransport.send(self, request)
         return response
 
     def send(self, request):
+        """
+        Send a request and return the response, using
+        :func:`CachedTransport.send`.
+
+        """
         return CachedTransport.send(self, request)
 
 
 def get_soap_client(wsdl, cache_requests=True,
                     max_age=600000, minimum_spacing=0):
+    """
+    Creates and returns a suds/SOAP client instance bound to the
+    provided ``WSDL``. If ``cache_requests`` is True, then the
+    client is configured to use a :class:`CachedThrottledTransport`.
+    The transport is constructed to use :data:`SOAP_CACHE` as the
+    cache folder, along with the ``max_age`` and ``minimum_spacing``
+    parameters if provided.
+
+    If ``cache_requests`` is ``False``, the client uses the default
+    :class:`suds.transport.http.HttpAuthenticated` transport.
+    """
     if cache_requests is True:
         soap_transport = CachedThrottledTransport(
             cache_dir=SOAP_CACHE, max_age=max_age,
