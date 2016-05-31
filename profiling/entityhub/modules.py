@@ -91,11 +91,15 @@ def generate_thick_prototypelib():
 
     """
     pl = modules.get_prototype_lib(regen=False)
+    tcount = len(pl.keys())
+    count = 0
     for k, p in pl.iteritems():
+        count += 1
         start_time = timeit.default_timer()
         temp = p.validation_errors
         elapsed = timeit.default_timer() - start_time
-        print "Filled out {0:40} {1}".format(k, elapsed)
+        print "{2:>3}/{3:3} Filled out {0:40} took {1:>6.2f}s" \
+              "".format(k, elapsed, count, tcount)
 
 
 # @do_profile(os.path.join(SCRIPT_FOLDER, 'modules'), 'modules_costing')

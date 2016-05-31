@@ -89,14 +89,20 @@ def _create_map(vendor=None, ident=None, strategy=None, session=None):
     return mobj
 
 
+_vendor_dbobj_cache = {}
+
+
 # Core Sourcing Getters
 @with_db
 def get_vendor(name=None, create=False, session=None):
     if not name:
         raise ValueError("Name can't be none.")
+    if name in _vendor_dbobj_cache.keys():
+        return _vendor_dbobj_cache[name]
     try:
-        return session.query(
-            SourcingVendor).filter_by(name=name).one()
+        vdbobj = session.query(SourcingVendor).filter_by(name=name).one()
+        _vendor_dbobj_cache[name] = vdbobj
+        return vdbobj
     except MultipleResultsFound:
         logger.warning("Found Multiple Objects for Vendor : " +
                        name)
@@ -117,9 +123,9 @@ def get_vpno_obj(vendor=None, ident=None, vpno=None,
 
     q = session.query(VendorPartNumber)
     q = q.filter(VendorPartNumber.vpmap_id == map_obj.id)
+    q = q.filter(VendorPartNumber.vpno == vpno)
     if mtype is not None:
         q = q.filter(VendorPartNumber.type == mtype)
-    q = q.filter(VendorPartNumber.vpno == vpno)
     return q.one()
 
 
@@ -219,10 +225,9 @@ def get_map(vendor=None, ident=None, create=True, session=None):
 
     q = session.query(VendorPartMap)
     q = q.filter(VendorPartMap.ident == ident)
-    q = q.join(SourcingVendor)
+    q = q.filter(VendorPartMap.vendor_id == vendor.id)
     try:
-        q = q.filter(VendorPartMap.vendor == vendor).one()
-        return q
+        return q.one()
     except NoResultFound:
         if create:
             return _create_map(vendor=vendor, ident=ident, session=session)
@@ -257,9 +262,9 @@ def get_time(vendor=None, ident=None,  session=None):
 def get_map_vpnos(vendor=None, ident=None, mtype=None, session=None):
     map_obj = get_map(vendor=vendor, ident=ident, session=session)
 
-    q = session.query(VendorPartNumber)
+    q = session.query(VendorPartNumber.vpno)
+    q = q.filter(VendorPartNumber.vpmap_id == map_obj.id)
     q = q.filter(VendorPartNumber.type == mtype)
-    q = q.join(VendorPartMap).filter(VendorPartMap.id == map_obj.id)
     return [str(x.vpno) for x in q.all()]
 
 

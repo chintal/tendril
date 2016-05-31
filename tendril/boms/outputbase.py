@@ -25,11 +25,10 @@ from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import GenericEntityBase
 from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import parse_ident
+from tendril.gedaif.gsymlib import get_symbol
+from tendril.gedaif.gsymlib import NoGedaSymbolException
 from tendril.utils import log
 from tendril.utils.types.lengths import Length
-from tendril.sourcing.electronics import get_sourcing_information
-from tendril.sourcing.electronics import SourcingException
-from tendril.inventory.guidelines import electronics_qty
 
 from .validate import ValidationContext
 from .validate import ErrorCollector
@@ -73,7 +72,7 @@ class OutputBomLine(object):
             raise Exception
 
     @property
-    def quantity(self):
+    def uquantity(self):
         device, value, footprint = parse_ident(self.ident)
         if device is None:
             logger.warning("Device not identified : " + self.ident)
@@ -84,22 +83,31 @@ class OutputBomLine(object):
                     elen = Length('5mm')
                 elif elen > Length('1inch'):
                     elen = Length('1inch')
-                return len(self.refdeslist) * (Length(footprint) + elen) * \
-                    self.parent.descriptor.multiplier
+                return len(self.refdeslist) * (Length(footprint) + elen)
             except ValueError:
                 logger.error(
                     "Problem parsing length for ident : " + self.ident
                 )
                 raise
-        return len(self.refdeslist) * self.parent.descriptor.multiplier
+        return len(self.refdeslist)
+
+    @property
+    def quantity(self):
+        return self.uquantity * self.parent.descriptor.multiplier
 
     def _get_isinfo(self):
-        qty = electronics_qty.get_compliant_qty(self.ident, self.quantity)
+        # qty = electronics_qty.get_compliant_qty(self.ident, self.quantity)
         try:
-            self._isinfo = get_sourcing_information(self.ident, qty)
-        except SourcingException as e:
+            symbol = get_symbol(self.ident)
+        except NoGedaSymbolException:
             self._isinfo = None
-            self._sourcing_exception = e
+            self._sourcing_exception = 'IDENT_NOT_RECOG'
+            return
+        try:
+            self._isinfo = symbol.indicative_sourcing_info[0]
+        except IndexError:
+            self._isinfo = None
+            self._sourcing_exception = 'NOT_SOURCEABLE'
 
     @property
     def isinfo(self):
@@ -111,7 +119,7 @@ class OutputBomLine(object):
     def indicative_cost(self):
         if self.isinfo is not None:
             return self.isinfo.effprice.extended_price(
-                self.quantity, allow_partial=True)
+                self.uquantity, allow_partial=True)
         else:
             return None
 
@@ -190,7 +198,7 @@ class OutputBom(object):
             for line in self.lines:
                 lcost = line.indicative_cost
                 if lcost is not None:
-                    self._indicative_cost += line.indicative_cost
+                    self._indicative_cost += lcost
         return self._indicative_cost
 
     @property

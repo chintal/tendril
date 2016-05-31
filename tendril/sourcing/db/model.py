@@ -20,6 +20,7 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 from sqlalchemy import Column, String, Enum
+from sqlalchemy import Index
 from sqlalchemy.orm import synonym
 
 from sqlalchemy import UniqueConstraint
@@ -77,7 +78,8 @@ class SourcingVendorDetail(DeclBase, BaseMixin):
                        unique=True, nullable=False)
     vendor = relationship(
         "SourcingVendor",
-        backref=backref('detail', cascade='all, delete-orphan')
+        backref=backref('detail', cascade='all, delete-orphan'),
+        lazy='joined'
     )
 
 
@@ -109,6 +111,7 @@ class VendorPartMap(DeclBase, BaseMixin, TimestampMixin):
     # Constraints
     __table_args__ = (
         UniqueConstraint('vendor_id', 'ident', name="constraint_vmap_ident"),
+        Index('ix_vid_ident', 'vendor_id', 'ident')
     )
 
 
@@ -123,15 +126,16 @@ class VendorPartNumber(DeclBase, BaseMixin, TimestampMixin):
 
     # Relationships
     vpmap_id = Column(Integer, ForeignKey('VendorPartMap.id'),
-                      unique=False, nullable=False)
+                      unique=False, nullable=False, index=True)
     vpmap = relationship(
         "VendorPartMap",
-        backref=backref('vpnos', cascade='all, delete-orphan')
+        backref=backref('vpnos', cascade='all, delete-orphan'),
     )
 
     # Constraints
     __table_args__ = (
         UniqueConstraint('vpmap_id', 'vpno', name="constraint_vmap_vpno"),
+        Index('ix_vpmap_vpno', 'vpmap_id', 'vpno')
     )
     # TODO Add vpno <-> vendor constraint?
 
@@ -147,11 +151,11 @@ class VendorPartDetail(DeclBase, BaseMixin, TimestampMixin):
     # Relationships
     vpno_id = Column(Integer,
                      ForeignKey('VendorPartNumber.id'),
-                     unique=True, nullable=False)
+                     unique=True, nullable=False, index=True)
     vpno = relationship(
         "VendorPartNumber",
         backref=backref('detail', cascade='all, delete-orphan', uselist=False),
-        lazy='joined'
+        lazy='joined',
     )
 
 
@@ -162,11 +166,11 @@ class VendorElnPartDetail(DeclBase, BaseMixin):
     # Relationships
     vpno_id = Column(Integer,
                      ForeignKey('VendorPartNumber.id'),
-                     unique=True, nullable=False)
+                     unique=True, nullable=False, index=True)
     vpno = relationship(
         "VendorPartNumber",
         backref=backref('detail_eln', cascade='all, delete-orphan', uselist=False),
-        lazy='joined'
+        lazy='joined',
     )
 
 
@@ -177,9 +181,9 @@ class VendorPrice(DeclBase, BaseMixin, TimestampMixin):
 
     # Relationships
     vpno_id = Column(Integer, ForeignKey('VendorPartNumber.id'),
-                     unique=False, nullable=False)
+                     unique=False, nullable=False, index=True)
     vpno = relationship(
         "VendorPartNumber",
         backref=backref('prices', cascade='all, delete-orphan'),
-        lazy='joined'
+        lazy='joined',
     )

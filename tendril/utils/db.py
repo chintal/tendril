@@ -123,19 +123,19 @@ def get_session():
     .. seealso:: :func:`with_db`
 
     """
-    logger.debug('Making session: {0}'.format(_get_caller(1)))
+    # logger.debug('Making session: {0}'.format(_get_caller(1)))
     session = Session()
     try:
         yield session
         session.commit()
     except:
-        caller, ancestors = _get_caller(1, get_stack=True)
-        logger.warning(
-            "Rolling back session: {0}".format(str(caller))
-        )
-        logger.debug('ANCESTORS:')
-        for frame in ancestors:
-            logger.debug(_format_frame(frame[0]))
+        # caller, ancestors = _get_caller(1, get_stack=True)
+        # logger.warning(
+        #     "Rolling back session: {0}".format(str(caller))
+        # )
+        # logger.debug('ANCESTORS:')
+        # for frame in ancestors:
+        #     logger.debug(_format_frame(frame[0]))
 
         session.rollback()
         raise

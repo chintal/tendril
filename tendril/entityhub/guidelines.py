@@ -107,8 +107,8 @@ class QtyGuidelines(object):
         else:
             return typeclass(default)
 
-    def _get_full_guideline(self, gldict, device):
-        if fpiswire(device):
+    def _get_full_guideline(self, gldict, device=None):
+        if device and fpiswire(device):
             qty_typeclass = Length
         else:
             qty_typeclass = int

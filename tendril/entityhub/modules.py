@@ -23,6 +23,7 @@ Docstring for modules
 """
 
 import os
+import timeit
 from copy import deepcopy
 from copy import copy
 

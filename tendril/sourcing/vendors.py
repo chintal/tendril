@@ -667,7 +667,7 @@ class VendorBase(object):
     def search_vpnos(self, ident):
         raise NotImplementedError
 
-    def get_vpart(self, vpartno, ident=None, max_age=600000):
+    def get_vpart(self, vpartno, ident=None, max_age=1000000):
         idx = (vpartno, ident)
         if idx not in self._partcache.keys():
             part = self._partclass(vpartno, ident=ident,
