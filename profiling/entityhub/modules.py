@@ -26,6 +26,7 @@ This file runs profiling on :mod:`tendril.gedaif.gsymlib`.
 """
 
 import os
+import timeit
 import inspect
 
 from ..profiler import do_profile
@@ -91,7 +92,17 @@ def generate_thick_prototypelib():
     """
     pl = modules.get_prototype_lib(regen=False)
     for k, p in pl.iteritems():
+        start_time = timeit.default_timer()
         temp = p.validation_errors
+        elapsed = timeit.default_timer() - start_time
+        print "Filled out {0:40} {1}".format(k, elapsed)
+
+
+# @do_profile(os.path.join(SCRIPT_FOLDER, 'modules'), 'modules_costing')
+# def generate_costing():
+#     p = modules.get_module_prototype('QM-DA14-81A-2M2-R1')
+#     obom = p.obom
+#     print obom.indicative_cost
 
 
 def main():
@@ -99,7 +110,7 @@ def main():
     The main function for this profiler module.
     """
     profilers = [generate_prototypelib,
-                 generate_thick_prototypelib]
+                 generate_thick_prototypelib,]
     for profiler in profilers:
         profiler()
 

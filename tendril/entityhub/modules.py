@@ -84,8 +84,9 @@ class ModulePrototypeBase(object):
         self._changelog = None
         self._validated = False
         self._validation_context = None
-        self._indicative_costing = None
         self._validation_errors = ErrorCollector()
+        self._sourcing_errors = None
+        self._indicative_cost = None
         self.ident = modulename
         self._register_for_changes()
 
@@ -397,8 +398,14 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         return projects.cards[self.ident]
 
     @property
-    def indicative_costing(self):
-        raise NotImplementedError
+    def indicative_cost(self):
+        return self.obom.indicative_cost
+
+    @property
+    def sourcing_errors(self):
+        if self._sourcing_errors is None:
+            self._sourcing_errors = self.obom.sourcing_errors
+        return self._sourcing_errors
 
     def _validate_obom(self, ec):
         # Final Validation of Output BOMs. This validation is of the
@@ -443,7 +450,7 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         # Validate all OBOM line idents
         # Validate all OBOM line quantity types
         self._validate_obom(lvalidation_errors)
-
+        self._sourcing_errors = self.obom.sourcing_errors
         # TODO Check for empty groups?
         # TODO Check for unused motifs?
         # TODO Validate all motifs as configured

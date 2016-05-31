@@ -32,14 +32,14 @@ lrex = re.compile(r'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<um>[-+]?\d*\.*\d+)
 
 
 class Length(object):
-    def __init__(self, lstr=None, length=None, defunit='mm'):
+    def __init__(self, lstr=None, length=None, defunit='m'):
         self._lstr = None
         self._olength = None
         self._ounit = None
         if lstr is not None and defunit is not None:
             try:
                 float(lstr)
-                lstr += defunit
+                lstr = str(lstr) + defunit
             except ValueError:
                 pass
             self._lstr = lstr

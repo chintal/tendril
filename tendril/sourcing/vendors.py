@@ -232,11 +232,12 @@ class VendorPrice(object):
     def unit_price(self):
         return self._price
 
-    def extended_price(self, qty):
-        if qty < self.moq:
-            raise ValueError
-        if qty % self.oqmultiple != 0:
-            pass
+    def extended_price(self, qty, allow_partial=False):
+        if not allow_partial:
+            if qty < self.moq:
+                raise ValueError
+            if qty % self.oqmultiple != 0:
+                pass
         return currency.CurrencyValue(self.unit_price._val * qty,
                                       self.unit_price._currency_def)
 
@@ -561,6 +562,7 @@ class VendorBase(object):
         self._order = None
         self._orderbasecosts = []
         self._orderadditionalcosts = []
+        self._partcache = {}
         if mappath is not None:
             self._mappath = mappath
         else:
@@ -666,8 +668,12 @@ class VendorBase(object):
         raise NotImplementedError
 
     def get_vpart(self, vpartno, ident=None, max_age=600000):
-        return self._partclass(vpartno, ident=ident,
-                               vendor=self, max_age=max_age)
+        idx = (vpartno, ident)
+        if idx not in self._partcache.keys():
+            part = self._partclass(vpartno, ident=ident,
+                                   vendor=self, max_age=max_age)
+            self._partcache[idx] = part
+        return self._partcache[idx]
 
     @staticmethod
     def _get_candidate_tcost(candidate, oqty):

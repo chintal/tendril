@@ -27,6 +27,9 @@ from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import parse_ident
 from tendril.utils import log
 from tendril.utils.types.lengths import Length
+from tendril.sourcing.electronics import get_sourcing_information
+from tendril.sourcing.electronics import SourcingException
+from tendril.inventory.guidelines import electronics_qty
 
 from .validate import ValidationContext
 from .validate import ErrorCollector
@@ -47,12 +50,13 @@ class OutputElnBomDescriptor(object):
 
 
 class OutputBomLine(object):
-
     def __init__(self, comp, parent):
         assert isinstance(comp, EntityBase)
         self.ident = comp.ident
         self.refdeslist = []
         self.parent = parent
+        self._isinfo = ''
+        self._sourcing_exception = None
 
     def add(self, comp):
         assert isinstance(comp, EntityBase)
@@ -89,6 +93,34 @@ class OutputBomLine(object):
                 raise
         return len(self.refdeslist) * self.parent.descriptor.multiplier
 
+    def _get_isinfo(self):
+        qty = electronics_qty.get_compliant_qty(self.ident, self.quantity)
+        try:
+            self._isinfo = get_sourcing_information(self.ident, qty)
+        except SourcingException as e:
+            self._isinfo = None
+            self._sourcing_exception = e
+
+    @property
+    def isinfo(self):
+        if self._isinfo == '':
+            self._get_isinfo()
+        return self._isinfo
+
+    @property
+    def indicative_cost(self):
+        if self.isinfo is not None:
+            return self.isinfo.effprice.extended_price(
+                self.quantity, allow_partial=True)
+        else:
+            return None
+
+    @property
+    def sourcing_error(self):
+        if self._isinfo == '':
+            self._get_isinfo()
+        return self._sourcing_exception
+
     def __repr__(self):
         return "{0:<50} {1:<4} {2}".format(
             self.ident, self.quantity, str(self.refdeslist)
@@ -96,7 +128,6 @@ class OutputBomLine(object):
 
 
 class OutputBom(object):
-
     def __init__(self, descriptor):
         """
 
@@ -108,6 +139,8 @@ class OutputBom(object):
             self.descriptor.configname, 'OBOM'
         )
         self.validation_errors = ErrorCollector()
+        self._sourcing_errors = None
+        self._indicative_cost = None
 
     def sort_by_ident(self):
         self.lines.sort(key=lambda x: x.ident, reverse=False)
@@ -149,6 +182,25 @@ class OutputBom(object):
     @property
     def items(self):
         return self._item_gen()
+
+    @property
+    def indicative_cost(self):
+        if self._indicative_cost is None:
+            self._indicative_cost = 0
+            for line in self.lines:
+                lcost = line.indicative_cost
+                if lcost is not None:
+                    self._indicative_cost += line.indicative_cost
+        return self._indicative_cost
+
+    @property
+    def sourcing_errors(self):
+        if self._sourcing_errors is None:
+            self._sourcing_errors = []
+            for line in self.lines:
+                if line.sourcing_error is not None:
+                    self._sourcing_errors.append(line.sourcing_error)
+        return self._sourcing_errors
 
 
 class DeltaOutputBom(object):
@@ -206,7 +258,6 @@ class DeltaOutputBom(object):
 
 
 class CompositeOutputBomLine(object):
-
     def __init__(self, line, colcount):
         self.ident = line.ident
         self.columns = [0] * colcount

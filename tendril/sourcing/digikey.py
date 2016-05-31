@@ -288,7 +288,7 @@ class DigiKeyElnPart(VendorElnPartBase):
                     if cells[0] == 'Call' and cells[1] == 'Call':
                         continue
                     try:
-                        moq = locale.atoi(cells[0])
+                        moq = int(cells[0].replace(',', ''))
                     except ValueError:
                         moq = 0
                         logger.error(
