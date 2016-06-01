@@ -870,11 +870,21 @@ def get_soap_client(wsdl, cache_requests=True,
     :class:`suds.transport.http.HttpAuthenticated` transport.
     """
     if cache_requests is True:
-        soap_transport = CachedThrottledTransport(
-            cache_dir=SOAP_CACHE, max_age=max_age,
-            minimum_spacing=minimum_spacing,
-            # proxy=_proxy_dict,
-        )
+        if _proxy_dict is None:
+            soap_transport = CachedThrottledTransport(
+                cache_dir=SOAP_CACHE, max_age=max_age,
+                minimum_spacing=minimum_spacing,
+                # proxy=_proxy_dict,
+            )
+        else:
+            soap_transport = CachedThrottledTransport(
+                cache_dir=SOAP_CACHE, max_age=max_age,
+                minimum_spacing=minimum_spacing,
+                proxy=_proxy_dict,
+            )
     else:
-        soap_transport = HttpAuthenticated()
+        if _proxy_dict is None:
+            soap_transport = HttpAuthenticated()
+        else:
+            soap_transport = HttpAuthenticated(proxy=_proxy_dict)
     return Client(wsdl, transport=soap_transport)
