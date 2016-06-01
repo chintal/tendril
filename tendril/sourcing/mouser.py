@@ -64,6 +64,9 @@ class MouserElnPart(VendorElnPartBase):
                 'Unable to retrieve part information for part number.'
             )
 
+        self._load_from_response(part_data)
+
+    def _load_from_response(self, part_data):
         self.manufacturer = part_data.Manufacturer
         self.mpartno = part_data.ManufacturerPartNumber
         self.datasheet = part_data.DataSheetUrl
@@ -78,6 +81,9 @@ class MouserElnPart(VendorElnPartBase):
                 float(re.findall(r'\d+\.*\d*', price.Price)[0]),
                 self._vendor.currency)
             )
+
+    def load_from_response(self, response):
+        self._load_from_response(part_data=response)
 
 
 class VendorMouser(VendorBase):
@@ -136,6 +142,21 @@ class VendorMouser(VendorBase):
         return self._client
 
     def search_vpnos(self, ident):
+        parts, strategy = self._search_vpnos(ident)
+        if parts is None:
+            return parts, strategy
+
+        for part in parts:
+            partobj = self._partclass(part.pno, ident=ident,
+                                      vendor=self, max_age=None,
+                                      shell_only=True)
+            partobj.load_from_response(part.raw)
+            partobj.commit()
+
+        pnos = [x.pno for x in parts]
+        return pnos, strategy
+
+    def _search_vpnos(self, ident):
         device, value, footprint = parse_ident(ident)
         if device not in self._devices:
             return None, 'NODEVICE'
@@ -168,7 +189,7 @@ class VendorMouser(VendorBase):
         return SearchPart(pno=rpart.MouserPartNumber,
                           mfgpno=rpart.ManufacturerPartNumber,
                           package=rpart.Category, ns=ns, unitp=None,
-                          minqty=rpart.Min
+                          minqty=rpart.Min, raw=rpart
                           )
 
     @staticmethod
@@ -211,8 +232,8 @@ class VendorMouser(VendorBase):
         parts = [self._process_response_part(x) for x in rparts]
         parts = self._remove_duplicates(parts)
         sr = self._filter_results_by_category(parts, device)
-        pnos = [x.pno for x in sr.parts]
-        return pnos, sr.strategy
+        # pnos = [x.pno for x in sr.parts]
+        return sr.parts, sr.strategy
 
     def _get_pas_vpnos(self, device, value, footprint):
         raise NotImplementedError

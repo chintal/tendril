@@ -827,12 +827,12 @@ class VendorDigiKey(VendorBase):
         :type row: dict
         :rtype: :class:`.vendors.SearchPart`
         """
-        pno = row.pop('Digi-Key Part Number', '').strip()
-        package = row.pop('Package / Case', '').strip()
-        minqty = row.pop('Minimum Quantity', '').strip()
-        mfgpno = row.pop('Manufacturer Part Number', '').strip()
-        unitp = row.pop('Unit Price (USD)', '').strip()
-        qtyavail = row.pop('Quantity Available', '0').strip()
+        pno = row.get('Digi-Key Part Number', '').strip()
+        package = row.get('Package / Case', '').strip()
+        minqty = row.get('Minimum Quantity', '').strip()
+        mfgpno = row.get('Manufacturer Part Number', '').strip()
+        unitp = row.get('Unit Price (USD)', '').strip()
+        qtyavail = row.get('Quantity Available', '0').strip()
         qtyavail = int(qtyavail)
         try:
             unitp = locale.atof(unitp)
@@ -846,7 +846,7 @@ class VendorDigiKey(VendorBase):
         else:
             ns = True
         part = SearchPart(pno=pno, mfgpno=mfgpno, package=package,
-                          ns=ns, unitp=unitp, minqty=minqty)
+                          ns=ns, unitp=unitp, minqty=minqty, raw=row)
         return part
 
     def _get_resultpage_parts(self, rows):

@@ -266,7 +266,7 @@ class VendorTI(VendorBase):
         if product.package is None:
             return None
         package = self._standardize_package(product.package)
-        return SearchPart(pno, mfgpno, package, ns, unitp, minqty)
+        return SearchPart(pno, mfgpno, package, ns, unitp, minqty, row)
 
     def _process_search_soup(self, soup):
         ptable = soup.find('table',

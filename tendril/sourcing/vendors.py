@@ -45,7 +45,7 @@ SearchResult = namedtuple('SearchResult', 'success parts strategy')
 #: A :class:`collections.namedtuple` used internally to pass
 #: around part data conveniently.
 SearchPart = namedtuple('SearchPart',
-                        'pno, mfgpno, package, ns, unitp,  minqty')
+                        'pno, mfgpno, package, ns, unitp,  minqty, raw')
 
 #: A :class:`collections.namedtuple` used internally to pass
 #: around sourcing information for a single ident from a single
@@ -255,7 +255,7 @@ class VendorPrice(object):
 
 
 class VendorPartBase(object):
-    def __init__(self, vpno, ident, vendor, max_age=600000):
+    def __init__(self, vpno, ident, vendor, max_age=600000, shell_only=False):
         self._vpno = vpno
         self._vqtyavail = None
         self._manufacturer = None
@@ -267,7 +267,8 @@ class VendorPartBase(object):
         self._vendor = vendor
         self._pkgqty = 1
         self._last_updated = None
-        self._populate(max_age)
+        if shell_only is True:
+            self._populate(max_age)
 
     def _populate(self, max_age):
         if self._vendor is not None and self._canonical_repr is not None:
@@ -501,10 +502,11 @@ class VendorPartBase(object):
 
 
 class VendorElnPartBase(VendorPartBase):
-    def __init__(self, vpno, ident, vendor, max_age):
+    def __init__(self, vpno, ident, vendor, max_age, shell_only=False):
         self._package = None
         self._datasheet = None
-        super(VendorElnPartBase, self).__init__(vpno, ident, vendor, max_age)
+        super(VendorElnPartBase, self).__init__(vpno, ident, vendor, max_age,
+                                                shell_only=shell_only)
 
     def _commit_to_db(self, session):
         vpno = super(VendorElnPartBase, self)._commit_to_db(session=session)
