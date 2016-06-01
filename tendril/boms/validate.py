@@ -437,7 +437,7 @@ class BomGroupPolicy(ValidationPolicy):
         return self._known_groups
 
 
-class IdentPolicy(ValidationError):
+class IdentPolicy(ValidationPolicy):
     def __init__(self, context, rfunc):
         super(IdentPolicy, self).__init__(context)
         self.is_error = False
@@ -453,7 +453,7 @@ class IdentPolicy(ValidationError):
             raise IdentNotRecognized(self, ident, refdeslist)
 
 
-class IdentQtyPolicy(ValidationError):
+class IdentQtyPolicy(ValidationPolicy):
     def __init__(self, context, is_error):
         super(IdentQtyPolicy, self).__init__(context)
         self.is_error = is_error

@@ -23,7 +23,7 @@ Docstring for modules
 """
 
 import os
-import timeit
+from future.utils import viewitems
 from copy import deepcopy
 from copy import copy
 
@@ -200,6 +200,10 @@ class ModulePrototypeBase(object):
 
 
 class PCBPrototype(ModulePrototypeBase):
+    def __init__(self, modulename):
+        super(PCBPrototype, self).__init__(modulename)
+        self._indicative_sourcing_info = None
+
     @property
     def ident(self):
         return self._modulename
@@ -243,6 +247,22 @@ class PCBPrototype(ModulePrototypeBase):
     @property
     def _changelogpath(self):
         return os.path.join(self.projfolder, 'ChangeLog')
+
+    @property
+    def indicative_sourcing_info(self):
+        if self._indicative_sourcing_info is None:
+            from tendril.inventory.guidelines import electronics_qty
+            from tendril.sourcing.electronics import get_sourcing_information
+            from tendril.sourcing.electronics import SourcingException
+            iqty = electronics_qty.get_compliant_qty(self.ident, 1)
+            try:
+                ident = 'PCB ' + self.ident
+                vsi = get_sourcing_information(ident, iqty,
+                                               allvendors=True)
+            except SourcingException:
+                vsi = []
+            self._indicative_sourcing_info = vsi
+        return self._indicative_sourcing_info
 
     def _validate(self):
         # TODO Verify PCB size, layers
@@ -397,6 +417,10 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
     @property
     def projfolder(self):
         return projects.cards[self.ident]
+
+    @property
+    def indicative_cost_breakup(self):
+        return self.obom.indicative_cost_breakup
 
     @property
     def indicative_cost(self):
@@ -693,14 +717,14 @@ def get_pcb_lib(regen=False):
     if regen is False and pcbs:
         return pcbs
     pcbs = {}
-    for pcbname, folder in projects.pcbs.iteritems():
+    for pcbname, folder in viewitems(projects.pcbs):
         pcbs[pcbname] = PCBPrototype(pcbname)
     return pcbs
 
 
 def fill_prototype_lib():
     logger.debug("Filling out Prototype Library")
-    for k, prototype in get_prototype_lib().iteritems():
+    for k, prototype in viewitems(get_prototype_lib()):
         prototype.validate()
     logger.debug("Prototype Library Filled Out")
 

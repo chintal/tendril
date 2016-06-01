@@ -19,21 +19,117 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+import json
 import csv
+from future.utils import viewitems
 
 from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import GenericEntityBase
 from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import parse_ident
+from tendril.inventory.guidelines import electronics_qty
 from tendril.gedaif.gsymlib import get_symbol
 from tendril.gedaif.gsymlib import NoGedaSymbolException
 from tendril.utils import log
 from tendril.utils.types.lengths import Length
+from tendril.utils.types.currency import native_currency_defn
 
 from .validate import ValidationContext
 from .validate import ErrorCollector
+from .validate import IdentErrorBase
+from .validate import ValidationPolicy
+
 
 logger = log.get_logger(__name__, log.DEFAULT)
+
+
+class SourcingIdentPolicy(ValidationPolicy):
+    def __init__(self, context):
+        super(SourcingIdentPolicy, self).__init__(context)
+        self.is_error = True
+
+
+class SourcingIdentNotRecognized(IdentErrorBase):
+    msg = "Component Not Sourceable"
+
+    def __init__(self, policy, ident, refdeslist):
+        super(SourcingIdentNotRecognized, self).__init__(policy, ident,
+                                                         refdeslist)
+
+    def __repr__(self):
+        return "<SourcingIdentNotRecognized {0} {1}>" \
+               "".format(self.ident, ', '.join(self.refdeslist))
+
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "'{0}' is not a recognized component."
+                        "".format(self.ident),
+            'detail': "This component is not recognized by the library and "
+                      "is therefore not sourceable. Component not included "
+                      "in costing analysis. Used by refdes {0}"
+                      "".format(', '.join(self.refdeslist)),
+        }
+
+
+class SourcingIdentNotSourceable(IdentErrorBase):
+    msg = "Component Not Sourceable"
+
+    def __init__(self, policy, ident, refdeslist):
+        super(SourcingIdentNotSourceable, self).__init__(policy, ident,
+                                                         refdeslist)
+
+    def __repr__(self):
+        return "<SourcingIdentNotSourceable {0} {1}>" \
+               "".format(self.ident, ', '.join(self.refdeslist))
+
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "'{0}' is not sourceable."
+                        "".format(self.ident),
+            'detail': "Viable sources for this component are not known. "
+                      "Component not included in costing analysis. Used by "
+                      "refdes {0}".format(', '.join(self.refdeslist)),
+        }
+
+
+class OBomCostingBreakup(object):
+    def __init__(self, name):
+        self._name = name
+        self._currency_symbol = native_currency_defn.symbol
+        self._devices = {}
+
+    def insert(self, ident, cost):
+        d, v, f = parse_ident(ident)
+        if d not in self._devices.keys():
+            self._devices[d] = []
+        self._devices[d].append(
+            {'name': ident,
+             'size': cost.native_value}
+        )
+
+    def sort(self):
+        for d in self._devices.keys():
+            self._devices[d].sort(key=lambda x: x['size'], reverse=True)
+
+    @property
+    def currency_symbol(self):
+        return self._currency_symbol
+
+    @property
+    def json(self):
+        return json.dumps(
+            {'name': self._name,
+             'children': [{'name': k, 'children': v}
+                          for k, v in viewitems(self._devices)]}
+        )
+
+
+class HierachicalCostingBreakup(object):
+    pass
 
 
 class OutputElnBomDescriptor(object):
@@ -97,17 +193,34 @@ class OutputBomLine(object):
 
     def _get_isinfo(self):
         # qty = electronics_qty.get_compliant_qty(self.ident, self.quantity)
-        try:
-            symbol = get_symbol(self.ident)
-        except NoGedaSymbolException:
-            self._isinfo = None
-            self._sourcing_exception = 'IDENT_NOT_RECOG'
-            return
+        if self.ident.startswith('PCB'):
+            from tendril.entityhub.modules import get_pcb_lib
+            pcblib = get_pcb_lib()
+            ident = self.ident[len('PCB '):]
+            if ident in pcblib.keys():
+                symbol = pcblib[ident]
+            else:
+                self._isinfo = None
+                self._sourcing_exception = SourcingIdentNotRecognized(
+                    self.parent.sourcing_policy, self.ident, self.refdeslist
+                )
+                return
+        else:
+            try:
+                symbol = get_symbol(self.ident)
+            except NoGedaSymbolException:
+                self._isinfo = None
+                self._sourcing_exception = SourcingIdentNotRecognized(
+                    self.parent.sourcing_policy, self.ident, self.refdeslist
+                )
+                return
         try:
             self._isinfo = symbol.indicative_sourcing_info[0]
         except IndexError:
             self._isinfo = None
-            self._sourcing_exception = 'NOT_SOURCEABLE'
+            self._sourcing_exception = SourcingIdentNotSourceable(
+                self.parent.sourcing_policy, self.ident, self.refdeslist
+            )
 
     @property
     def isinfo(self):
@@ -118,8 +231,16 @@ class OutputBomLine(object):
     @property
     def indicative_cost(self):
         if self.isinfo is not None:
-            return self.isinfo.effprice.extended_price(
-                self.uquantity, allow_partial=True)
+            qty = electronics_qty.get_compliant_qty(self.ident, self.quantity)
+            ubprice, nbprice = self.isinfo.vpart.get_price(qty)
+            if ubprice is not None:
+                price = ubprice
+            elif nbprice is not None:
+                price = nbprice
+            else:
+                price = self.isinfo.ubprice
+            effprice = self.isinfo.vpart.get_effective_price(price)
+            return effprice.extended_price(self.uquantity, allow_partial=True)
         else:
             return None
 
@@ -143,12 +264,18 @@ class OutputBom(object):
         """
         self.lines = []
         self.descriptor = descriptor
+        if self.descriptor.groupname is not None:
+            locality = 'OBOM.{0}'.format(self.descriptor.groupname)
+        else:
+            locality = 'OBOM'
         self._validation_context = ValidationContext(
-            self.descriptor.configname, 'OBOM'
+            self.descriptor.configname, locality
         )
         self.validation_errors = ErrorCollector()
+        self.sourcing_policy = SourcingIdentPolicy(self._validation_context)
         self._sourcing_errors = None
         self._indicative_cost = None
+        self._indicative_cost_breakup = None
 
     def sort_by_ident(self):
         self.lines.sort(key=lambda x: x.ident, reverse=False)
@@ -201,13 +328,28 @@ class OutputBom(object):
                     self._indicative_cost += lcost
         return self._indicative_cost
 
+    def _build_indicative_cost_breakup(self):
+        self._indicative_cost_breakup = \
+            OBomCostingBreakup(self.descriptor.configname)
+        for line in self.lines:
+            lcost = line.indicative_cost
+            if lcost is not None:
+                self._indicative_cost_breakup.insert(line.ident, lcost)
+        self._indicative_cost_breakup.sort()
+
+    @property
+    def indicative_cost_breakup(self):
+        if self._indicative_cost_breakup is None:
+            self._build_indicative_cost_breakup()
+        return self._indicative_cost_breakup
+
     @property
     def sourcing_errors(self):
         if self._sourcing_errors is None:
-            self._sourcing_errors = []
+            self._sourcing_errors = ErrorCollector()
             for line in self.lines:
                 if line.sourcing_error is not None:
-                    self._sourcing_errors.append(line.sourcing_error)
+                    self._sourcing_errors.add(line.sourcing_error)
         return self._sourcing_errors
 
 
@@ -272,8 +414,13 @@ class CompositeOutputBomLine(object):
 
     def add(self, line, column):
         """
+        Add a BOM line to the COBOM
 
-        :type line: outputbase.OutputBomLine
+        :param line: The BOM line to insert
+        :type line: :class:`OutputBomLine`
+        :param column: The column to which the line should be added.
+        :type column: int
+
         """
         if line.ident == self.ident:
             self.columns[column] = line.quantity
@@ -285,7 +432,6 @@ class CompositeOutputBomLine(object):
         try:
             return sum(self.columns)
         except TypeError:
-            print self.ident
             raise TypeError(self.columns)
 
     def subset_qty(self, idxs):
@@ -295,7 +441,6 @@ class CompositeOutputBomLine(object):
                 rval += self.columns[idx]
             return rval
         except TypeError:
-            print self.ident
             raise TypeError(self.columns)
 
     def merge_line(self, cline):
@@ -311,7 +456,7 @@ class CompositeOutputBom(object):
         self.descriptor = OutputElnBomDescriptor(None, None, name, None, 1)
         i = 0
         for bom in bom_list:
-            self.insert_bom(bom, i)
+            self._insert_bom(bom, i)
             i += 1
         self.sort_by_ident()
 
@@ -323,19 +468,29 @@ class CompositeOutputBom(object):
                     rval.append(idx)
         return rval
 
-    def insert_bom(self, bom, i):
+    def _insert_bom(self, bom, i):
         """
+        Inserts a BOM into the COBOM.
 
-        :type bom: outputbase.OutputBom
+        :param bom: The BOM to insert
+        :type bom: :class:`OutputBom`
+        :param i: The column to insert the BOM into
+        :type i: int
+
         """
         self.descriptors.append(bom.descriptor)
         for line in bom.lines:
-            self.insert_line(line, i)
+            self._insert_line(line, i)
 
-    def insert_line(self, line, i):
+    def _insert_line(self, line, i):
         """
+        Inserts a BOM line into the COBOM
 
-        :type line: outputbase.OutputBomLine
+        :param line: The BOM line to insert
+        :type line: :class:`OutputBomLine`
+        :param i: The column to insert the BOM line into
+        :type i: int
+
         """
         cline = self.find_by_ident(line.ident)
         if cline is None:
@@ -345,8 +500,11 @@ class CompositeOutputBom(object):
 
     def find_by_ident(self, ident):
         """
+        Find a line in the COBOM for the given ident.
 
-        :type line: outputbase.OutputBomLine
+        :param ident: The ident to find in the COBOM
+        :rtype: :class:`CompositeOutputBomLine`
+
         """
         for cline in self.lines:
             assert isinstance(cline, CompositeOutputBomLine)
@@ -437,7 +595,7 @@ def load_cobom_from_file(f, name, tf=None, verbose=True, generic=False):
         if line[0] == 'END':
             break
         if tf and not tf.has_contextual_repr(line[0]):
-            print line[0] + ' Possibly not recognized'
+            logger.warn('{0} Possibly not recognized'.format(line[0]))
         if tf:
             device, value, footprint = parse_ident(
                 tf.get_canonical_repr(line[0]), generic=generic

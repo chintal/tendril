@@ -352,6 +352,25 @@ class CSILPart(VendorPartBase):
         base_price, next_base_price = super(CSILPart, self).get_price(qty)
         for price in self._prices:
             if price.moq > qty and \
+                            price.extended_price(price.moq).native_value < base_price.extended_price(
+                        qty).native_value:  # noqa
+                possible_prices.append(price)
+        if len(possible_prices) == 0:
+            return base_price, next_base_price
+        else:
+            mintot = base_price.extended_price(qty).native_value
+            selprice = base_price
+            for price in possible_prices:
+                if price.extended_price(price.moq).native_value < mintot:
+                    selprice = price
+                    mintot = price.extended_price(price.moq).native_value
+            return selprice, super(CSILPart, self).get_price(selprice.moq + 1)[0]
+
+    def sp_get_price(self, qty):
+        possible_prices = []
+        base_price, next_base_price = super(CSILPart, self).get_price(qty)
+        for price in self._prices:
+            if price.moq > qty and \
                     price.extended_price(price.moq).native_value < base_price.extended_price(qty).native_value:  # noqa
                 possible_prices.append(price)
         if len(possible_prices) == 0:
@@ -424,7 +443,7 @@ class VendorCSIL(VendorBase):
                 return []
             return SourcingInfo(self, None, None, None,
                                 None, None, None, None)
-        ubprice, nbprice, urationale, olduprice = candidate.get_price(rqty)
+        ubprice, nbprice, urationale, olduprice = candidate.sp_get_price(rqty)
         oqty = ubprice.moq
         effprice = self.get_effective_price(ubprice)
         if get_all:
