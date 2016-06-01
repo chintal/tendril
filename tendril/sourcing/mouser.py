@@ -144,14 +144,17 @@ class VendorMouser(VendorBase):
     def search_vpnos(self, ident):
         parts, strategy = self._search_vpnos(ident)
         if parts is None:
-            return parts, strategy
+            return None, strategy
 
-        for part in parts:
-            partobj = self._partclass(part.pno, ident=ident,
-                                      vendor=self, max_age=None,
-                                      shell_only=True)
-            partobj.load_from_response(part.raw)
-            partobj.commit()
+        try:
+            for part in parts:
+                partobj = self._partclass(part.pno, ident=ident,
+                                          vendor=self, max_age=None,
+                                          shell_only=True)
+                partobj.load_from_response(part.raw)
+                partobj.commit()
+        except:
+            pass
 
         pnos = [x.pno for x in parts]
         return pnos, strategy
