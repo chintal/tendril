@@ -267,7 +267,7 @@ class VendorPartBase(object):
         self._vendor = vendor
         self._pkgqty = 1
         self._last_updated = None
-        if shell_only is True:
+        if shell_only is False:
             self._populate(max_age)
 
     def _populate(self, max_age):
