@@ -47,16 +47,26 @@
                           .color(d3.scale.category20c())
               ;
 
-              valueFormatter = function(d, i){
-                    return '{{ prototype.indicative_cost_breakup.currency_symbol|unicode }} ' + (d).toFixed(2);
+              valueFormatter = function(d, i, pc){
+                    var rstr = '{{ prototype.indicative_cost_breakup.currency_symbol|unicode }} '
+                               + (d).toFixed(2)
+                               + ' ('
+                               + pc
+                               + '%)';
+                    return rstr;
               };
 
               headerFormatter = function(d) {
                    return d;
               };
 
-              descend = function(d) {
-
+              getNodePc = function getpc(d, value){
+                var rnode = d;
+                while (rnode.parent){
+                    rnode = rnode.parent;
+                }
+                t = rnode.value;
+                return Math.round(((value/t) * 100) * 10) / 10;
               };
 
               // TODO
@@ -99,6 +109,7 @@
 
               chart.tooltip.contentGenerator( function(d){
                     value_number = getNodeValue(d.data);
+                    value_pc = getNodePc(d.data, value_number);
 
                     if (d.data.parent){
                         header_text = d.data.parent.name;
@@ -115,7 +126,6 @@
                     theadEnter.append("tr")
                         .append("td")
                         .attr("colspan",3)
-                        .append("strong")
                         .classed("x-value",true)
                         .html(headerFormatter(header_text));
 
@@ -140,7 +150,7 @@
 
                     trowEnter.append("td")
                         .classed("value",true)
-                        .html(function(p,i) { return valueFormatter(value_number,i) });
+                        .html(function(p,i) { return valueFormatter(value_number,i,value_pc) });
 
 
                     trowEnter.selectAll("td").each(function(p) {
