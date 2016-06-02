@@ -233,7 +233,7 @@
     {% if stage.configurations|length > 1 %}
     <div class="small-12 columns">
         <div id="comparative-costing-chart" class="cleanchart">
-            <svg style="width: 100%; height: {{ stage.configurations|length * 50 }}px"></svg>
+            <svg style="width: 100%; height: {{ (stage.configurations|length * 40) + 100 }}px"></svg>
         </div>
         <script type="text/javascript">
             $(document).ready( function () {
@@ -254,8 +254,13 @@
 
                   costing_chart.yAxis
                       .tickFormat(function(d) {
-                          return "{{ stage.native_currency_symbol|unicode }}" + d3.format(",.2f")(d)}
-                      )
+                          if (d > 0){
+                            return "{{ stage.native_currency_symbol|unicode }}" + d3.format(",.2f")(d);
+                          }
+                          else{
+                            return Math.log2(-d) + ' idents';
+                          };
+                      })
                   ;
 
 

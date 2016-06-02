@@ -241,7 +241,7 @@ def pcbs(pcbname=None):
         cobjs.sort(key=lambda y: y.indicative_cost)
         configurations_costing_data = json.dumps(
             [{
-                'key': "-2 ^ Sourcing Errors",
+                'key': "Sourcing Errors",
                 'values': [
                     {'label': x.ident,
                      'value': (2 ** x.sourcing_errors.terrors) * (-1)}
