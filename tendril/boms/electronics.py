@@ -69,6 +69,7 @@ from .validate import ConfigSJUnexpectedError
 from .outputbase import OutputBom
 from .outputbase import OutputElnBomDescriptor
 from .outputbase import HierachicalCostingBreakup
+from .outputbase import NoStructureHereException
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -475,8 +476,11 @@ class EntityElnBom(EntityBomBase):
         return rval
 
     def indicative_cost_hierarchical_breakup(self, configname):
+        group_boms = self.get_group_boms(configname)
+        if len(group_boms) == 1:
+            raise NoStructureHereException
         rval = HierachicalCostingBreakup(configname)
-        for obom in self.get_group_boms(configname):
+        for obom in group_boms:
             rval.insert(obom.descriptor.groupname,
                         obom.indicative_cost_breakup)
         return rval

@@ -29,6 +29,7 @@ from copy import copy
 
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.boms.electronics import EntityElnBom
+from tendril.boms.outputbase import NoStructureHereException
 from tendril.utils.parsers import changelog
 from tendril.utils.fsutils import register_for_changes
 
@@ -434,7 +435,10 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
 
     @property
     def indicative_cost_hierarchical_breakup(self):
-        return self.bom.indicative_cost_hierarchical_breakup(self.ident)
+        try:
+            return self.bom.indicative_cost_hierarchical_breakup(self.ident)
+        except NoStructureHereException:
+            return self.indicative_cost_breakup
 
     def _validate_obom(self, ec):
         # Final Validation of Output BOMs. This validation is of the

@@ -178,6 +178,10 @@ class HierachicalCostingBreakup(object):
         )
 
 
+class NoStructureHereException(Exception):
+    pass
+
+
 class OutputElnBomDescriptor(object):
     def __init__(self, pcbname, cardfolder, configname,
                  configurations, multiplier=1, groupname=None):

@@ -40,33 +40,6 @@
             </li>
             {% endfor %}
             {% endif %}
-            {% if stage.configdata.configdata.motiflist %}
-            <li class="title"> Motifs </li>
-            {% for key, value in stage.configdata.configdata.motiflist|dictsort %}
-            <li class="bullet-item">
-                <b> {{ key }} : </b> {{ value.desc }}
-            </li>
-            <li>
-            <ul class="small-block-grid-3 small-11 columns small-centered">
-                {% for p, s in value.iteritems() %}
-                    {% if p != 'desc' %}
-                        <li class="description"> {{ p|upper }} : {{ s }} </li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
-            </li>
-            {% endfor %}
-            {% endif %}
-            {% if stage.configdata.configdata.sjlist %}
-            <li class="title"> SJs </li>
-            <li class="bullet-item">
-                <ul class="small-block-grid-3">
-                {% for key, value in stage.configdata.configdata.sjlist|dictsort %}
-                <li><b> {{ key }} : </b> {{ value }}</li>
-                {% endfor %}
-                </ul>
-            </li>
-            {% endif %}
             {% if stage.prototype.status %}
               <span class="right label radius {{stage.prototype.status.html_class}}">
                   {{stage.prototype.status}}
@@ -120,18 +93,22 @@
 <div class="row" data-equalizer="costing">
 <!-- Pricing Information -->
     {% if stage.costing %}
-    <div class="small-12 medium-6 columns" data-equalizer-watch="costing">
-    <h3> Costing </h3>
-    <a name="costing"></a>
-        <div id="pcb-pricing-chart">
+    <div class="small-12 medium-6 columns panel header radius" data-equalizer-watch="costing">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Costing</h6>
+            <a name="costing"></a>
+        </div>
+        <div class="small-12 columns">
+        <div id="pcb-pricing-chart" class="cleanchart">
             <svg style="width: 100%; height: 300px;"></svg>
+        </div>
         </div>
     </div>
     <script type="text/javascript">
     $(document).ready( function () {
         nv.addGraph(function() {
           var chart = nv.models.multiChart()
-                      .margin({left: 70, right: 60})  //Adjust chart margins to give the x-axis some breathing room.
+                      .margin({left: 70, right: 75})  //Adjust chart margins to give the x-axis some breathing room.
                       //.useInteractiveGuideline(true)
                       //.showYAxis(true)     //Show the y-axis
                       //.showXAxis(true)     //Show the x-axis
@@ -224,70 +201,112 @@
 </div>
 
 <div class="row" data-magellan-destination="configurations">
-<h3> Configurations </h3>
 <a name="configurations"></a>
-<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-2" data-equalizer>
-    {% for configuration in stage.configdata.configurations %}
-    <li>
-        <a href="/entityhub/cards/{{configuration.configname}}">
+<div class="small-12 columns panel header radius">
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+        <h6>Configurations</h6>
+    </div>
+    <div class="small-12 columns">
+        <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
+    {% for configuration in stage.configurations %}
+        <li>
+        <a href="/entityhub/cards/{{configuration.ident}}">
         <ul class="pricing-table active-tb shadow mrgn-20-top">
-        <li class="price"> {{ configuration.configname }} </li>
-        <li class="description"> {{ configuration.desc }} </li>
-        {% if configuration.grouplist %}
-        <li class="title"> Groups </li>
-        <li>
-        <ul class="small-block-grid-3 small-11 columns small-centered">
-                {% for group in configuration.grouplist %}
-                <li class="bullet-item"> {{ group }} </li>
-                {% endfor %}
+            <li class="title"> {{ configuration.ident }} </li>
+            <li class="description"> {{ configuration.desc }} </li>
+            {% if configuration.status %}
+              <span class="right label radius {{ configuration.status.html_class }}">
+                  {{ configuration.status }}
+              </span>
+            {% endif %}
+            {% if configuration.sourcing_errors %}
+              <span class="left label radius alert">
+                  {{ configuration.sourcing_errors.terrors }} Sourcing Errors
+              </span>
+            {% endif %}
         </ul>
+        </a>
         </li>
-        {% endif %}
-        {% if configuration.motiflist %}
-        <li class="title"> Motifs </li>
-        {% for k, v in configuration.motiflist.iteritems() %}
-        {% if v|length >2 %}
-        <li class="bullet-item"> <b>{{ k }}</b> </li>
-        <li>
-        <ul class="small-block-grid-3 small-11 columns small-centered">
-            {% for p, s in v.iteritems() %}
-            <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
-            {% endfor %}
-        </ul>
-        </li>
-        {% else %}
-        <li>
-        <ul class="small-block-grid-3 small-11 columns small-centered">
-            <li class="bullet-item"> <b>{{ k }}</b> </li>
-            {% for p, s in v.iteritems() %}
-            <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
-            {% endfor %}
-        </ul>
-        </li>
-        {% endif %}
-        {% endfor %}
-        {% endif %}
-
-        {% if configuration.genlist %}
-        <li class="title"> Generators </li>
-        {% for k, v in configuration.genlist.iteritems() %}
-            <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
-        {% endfor %}
-        {% endif %}
-
-
-        {% if configuration.sjlist %}
-        <li class="title"> SJs </li>
-        <li><ul class="small-block-grid-3 small-11 columns small-centered">
-        {% for k, v in configuration.sjlist.iteritems() %}
-            <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
-        {% endfor %}
-        </ul></li>
-        {% endif %}
-    </ul>
-    </a>
-    </li>
     {% endfor %}
+        </ul>
+    </div>
+    {% if stage.configurations|length > 1 %}
+    <div class="small-12 columns">
+        <div id="comparative-costing-chart" class="cleanchart">
+            <svg style="width: 100%; height: {{ stage.configurations|length * 50 }}px"></svg>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                function get_data() {
+                    return {{ stage.configurations_costing|safe }}
+                 }
+
+                nv.addGraph(function() {
+                  var costing_chart = nv.models.multiBarHorizontalChart()
+                                      .x( function(d) { return d.label } )
+                                      .y( function(d) { return d.value } )
+                                      .duration(250)
+                                      .margin({left: 150})
+                                      .showControls(false)
+                                      .showLegend(false)
+                                      .stacked(true)
+                                      ;
+
+                  costing_chart.yAxis
+                      .tickFormat(function(d) {
+                          return "{{ stage.native_currency_symbol|unicode }}" + d3.format(",.2f")(d)}
+                      )
+                  ;
+
+
+                  d3.select('#comparative-costing-chart svg')
+                    .datum(get_data())
+                    .transition().duration(500)
+                    .call(costing_chart)
+                    ;
+
+                  nv.utils.windowResize(costing_chart.update);
+                  return costing_chart;
+                });
+            });
+        </script>
+    </div>
+    {% endif %}
+</div>
+
+<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-2" data-equalizer>
+
 </ul>
 </div>
 {% endblock %}
+
+
+<!--
+{% if stage.configdata.configdata.motiflist %}
+            <li class="title"> Motifs </li>
+            {% for key, value in stage.configdata.configdata.motiflist|dictsort %}
+            <li class="bullet-item">
+                <b> {{ key }} : </b> {{ value.desc }}
+            </li>
+            <li>
+            <ul class="small-block-grid-3 small-11 columns small-centered">
+                {% for p, s in value.iteritems() %}
+                    {% if p != 'desc' %}
+                        <li class="description"> {{ p|upper }} : {{ s }} </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            </li>
+            {% endfor %}
+            {% endif %}
+            {% if stage.configdata.configdata.sjlist %}
+            <li class="title"> SJs </li>
+            <li class="bullet-item">
+                <ul class="small-block-grid-3">
+                {% for key, value in stage.configdata.configdata.sjlist|dictsort %}
+                <li><b> {{ key }} : </b> {{ value }}</li>
+                {% endfor %}
+                </ul>
+            </li>
+            {% endif %}
+-->

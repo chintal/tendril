@@ -20,6 +20,8 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+import json
+
 from future.utils import viewitems
 from flask import render_template
 from flask import abort, flash
@@ -224,7 +226,8 @@ def pcbs(pcbname=None):
     pcblib = get_pcb_lib()
     if pcbname is None:
         stage_pcbs = [v for k, v in viewitems(pcblib)]
-        stage = {'pcbs': sorted([x for x in stage_pcbs], key=lambda y: (y.status, y.ident)),
+        stage = {'pcbs': sorted([x for x in stage_pcbs],
+                                key=lambda y: (y.status, y.ident)),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Bare PCBs", path="pcbs/")]}
@@ -232,9 +235,36 @@ def pcbs(pcbname=None):
                                pagetitle="Bare PCBs")
     else:
         prototype = pcblib[pcbname]
+        prototype_lib = get_prototype_lib()
+        cobjs = [prototype_lib[x]
+                 for x in prototype.configs.configuration_names]
+        cobjs.sort(key=lambda y: y.indicative_cost)
+        configurations_costing_data = json.dumps(
+            [{
+                'key': "-2 ^ Sourcing Errors",
+                'values': [
+                    {'label': x.ident,
+                     'value': (2 ** x.sourcing_errors.terrors) * (-1)}
+                    for x in cobjs
+                    ],
+                'color': '#d67777',
+            },
+             {
+                'key': "Indicative Costing",
+                'values': [
+                    {'label': x.ident, 'value': x.indicative_cost.native_value}
+                    for x in cobjs
+                ],
+                'color': '#4f99b4',
+            }]
+        )
+
         stage = {'prototype': prototype,
                  'name': pcbname,
                  'configdata': prototype.configs,
+                 'configurations': cobjs,
+                 'configurations_costing': configurations_costing_data,
+                 'native_currency_symbol': BASE_CURRENCY_SYMBOL,
                  'docs': get_docs_list(prototype.projfolder),
                  'imgs': get_img_list(prototype.projfolder),
                  'costing': get_pcb_costing_chart(prototype.projfolder),
