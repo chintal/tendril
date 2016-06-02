@@ -34,6 +34,7 @@ STATUS_ORDER = {
     'Experimental': (60, 'warning'),
     'Archived': (70, 'secondary'),
     'Discarded': (80, 'alert'),
+    'Undefined': (90, 'alert')
 }
 
 
@@ -97,7 +98,10 @@ status_objects = {}
 
 def get_status(ststr):
     if ststr not in status_objects.keys():
-        status_objects[ststr] = Status(ststr)
+        try:
+            status_objects[ststr] = Status(ststr)
+        except KeyError:
+            return get_status('Undefined')
     return status_objects[ststr]
 
 
