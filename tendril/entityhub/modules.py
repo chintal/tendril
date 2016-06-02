@@ -419,10 +419,6 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         return projects.cards[self.ident]
 
     @property
-    def indicative_cost_breakup(self):
-        return self.obom.indicative_cost_breakup
-
-    @property
     def indicative_cost(self):
         return self.obom.indicative_cost
 
@@ -431,6 +427,14 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         if self._sourcing_errors is None:
             self._sourcing_errors = self.obom.sourcing_errors
         return self._sourcing_errors
+
+    @property
+    def indicative_cost_breakup(self):
+        return self.obom.indicative_cost_breakup
+
+    @property
+    def indicative_cost_hierarchical_breakup(self):
+        return self.bom.indicative_cost_hierarchical_breakup(self.ident)
 
     def _validate_obom(self, ec):
         # Final Validation of Output BOMs. This validation is of the

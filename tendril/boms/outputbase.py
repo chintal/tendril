@@ -101,6 +101,7 @@ class OBomCostingBreakup(object):
         self._name = name
         self._currency_symbol = native_currency_defn.symbol
         self._devices = {}
+        self._total_cost = 0
 
     def insert(self, ident, cost):
         d, v, f = parse_ident(ident)
@@ -110,26 +111,71 @@ class OBomCostingBreakup(object):
             {'name': ident,
              'size': cost.native_value}
         )
+        self._total_cost += cost
 
     def sort(self):
         for d in self._devices.keys():
             self._devices[d].sort(key=lambda x: x['size'], reverse=True)
 
     @property
+    def total_cost(self):
+        return self._total_cost
+
+    @property
     def currency_symbol(self):
         return self._currency_symbol
+
+    @property
+    def content(self):
+        return [{'name': k, 'children': v}
+                for k, v in viewitems(self._devices)]
 
     @property
     def json(self):
         return json.dumps(
             {'name': self._name,
-             'children': [{'name': k, 'children': v}
-                          for k, v in viewitems(self._devices)]}
+             'children': [
+                 {'name': k, 'children': v} for k, v in
+                 sorted(viewitems(self._devices),
+                        key=lambda x: sum(y['size'] for y in x[1]),
+                        reverse=True)
+                 ]
+             }
         )
 
 
 class HierachicalCostingBreakup(object):
-    pass
+    def __init__(self, name):
+        self._name = name
+        self._currency_symbol = native_currency_defn.symbol
+        self._sections = {}
+
+    def insert(self, ident, breakup):
+        if ident not in self._sections.keys():
+            self._sections[ident] = breakup
+        else:
+            raise ValueError('ident already in sections')
+
+    @property
+    def currency_symbol(self):
+        return self._currency_symbol
+
+    @property
+    def content(self):
+        raise NotImplementedError
+
+    @property
+    def json(self):
+        return json.dumps(
+            {'name': self._name,
+             'children': [
+                 {'name': k, 'children': v.content} for k, v in
+                 sorted(viewitems(self._sections),
+                        key=lambda x: x[1].total_cost,
+                        reverse=True)
+                 ]
+             }
+        )
 
 
 class OutputElnBomDescriptor(object):

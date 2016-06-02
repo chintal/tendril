@@ -66,8 +66,9 @@ from .validate import ConfigGroupPolicy
 from .validate import ConfigSJPolicy
 from .validate import ConfigSJUnexpectedError
 
-from outputbase import OutputBom
-from outputbase import OutputElnBomDescriptor
+from .outputbase import OutputBom
+from .outputbase import OutputElnBomDescriptor
+from .outputbase import HierachicalCostingBreakup
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -471,6 +472,13 @@ class EntityElnBom(EntityBomBase):
         rval = []
         for group in self.configurations.configuration_grouplist(configname):
             rval.append(self.create_output_bom(configname, groupname=group))
+        return rval
+
+    def indicative_cost_hierarchical_breakup(self, configname):
+        rval = HierachicalCostingBreakup(configname)
+        for obom in self.get_group_boms(configname):
+            rval.insert(obom.descriptor.groupname,
+                        obom.indicative_cost_breakup)
         return rval
 
 

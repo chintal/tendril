@@ -48,7 +48,7 @@
               ;
 
               valueFormatter = function(d, i, pc){
-                    var rstr = '{{ prototype.indicative_cost_breakup.currency_symbol|unicode }} '
+                    var rstr = '{{ prototype.indicative_cost_hierarchical_breakup.currency_symbol|unicode }} '
                                + (d).toFixed(2)
                                + ' ('
                                + pc
@@ -59,6 +59,19 @@
               headerFormatter = function(d) {
                    return d;
               };
+
+              getNodePath = function getpath(d){
+                var path = '';
+                var rnode = d;
+                while (rnode.parent){
+                    rnode = rnode.parent;
+                    if (path){
+                        path = ' / ' + path;
+                    }
+                    path = rnode.name + path;
+                }
+                return path;
+              }
 
               getNodePc = function getpc(d, value){
                 var rnode = d;
@@ -110,13 +123,7 @@
               chart.tooltip.contentGenerator( function(d){
                     value_number = getNodeValue(d.data);
                     value_pc = getNodePc(d.data, value_number);
-
-                    if (d.data.parent){
-                        header_text = d.data.parent.name;
-                    }
-                    else{
-                        header_text = null;
-                    };
+                    header_text = getNodePath(d.data);
 
                     var table = d3.select(document.createElement("table"));
                     var theadEnter = table.selectAll("thead")
@@ -171,7 +178,7 @@
               });
 
               d3.select('#indicative-costing-breakup-chart svg')
-                .datum([{{ prototype.indicative_cost_breakup.json|safe }}])
+                .datum([{{ prototype.indicative_cost_hierarchical_breakup.json|safe }}])
                 .transition().duration(500)
                 .call(chart)
                 ;
