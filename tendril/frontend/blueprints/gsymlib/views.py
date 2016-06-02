@@ -125,6 +125,21 @@ def get_geda_browser_context(path):
     return context
 
 
+cardlisting = namedtuple('CardInclusionListing', 'name, desc, status, qty')
+
+
+def _status_filter(cards, diversity=5):
+    if not diversity:
+        return cards
+    used_statuses = []
+    for card in cards:
+        if card.status not in used_statuses:
+            used_statuses.append(card.status)
+    used_statuses.sort()
+    allowed_statuses = used_statuses[:diversity]
+    return [x for x in cards if x.status in allowed_statuses]
+
+
 def get_geda_symbol_context(ident):
     symbol = tendril.gedaif.gsymlib.get_symbol(ident, get_all=True)
     symbol = [x for x in symbol if x.status != 'Generator']
@@ -147,14 +162,18 @@ def get_geda_symbol_context(ident):
                 configs = cobom.descriptors[idx].configurations
                 carddesc = configs.description(cardname)
                 pcbstatus = configs.status_config(cardname)
-                cards.append((cardname, carddesc, pcbstatus, column))
+                cards.append(
+                    cardlisting(cardname, carddesc, pcbstatus, column)
+                )
+
+    cards = _status_filter(cards)
 
     stage = {'ident': ident,
-            'symbol': symbol[0],
-            'sympaths': [os.path.relpath(sym.fpath, GEDA_SYMLIB_ROOT) for sym in symbol],  # noqa
-            'imgpaths': [sym.img_repr_fname for sym in symbol],
-            'inclusion': cards,
-            'breadcrumbs': breadcrumbs}
+             'symbol': symbol[0],
+             'sympaths': [os.path.relpath(sym.fpath, GEDA_SYMLIB_ROOT) for sym in symbol],  # noqa
+             'imgpaths': [sym.img_repr_fname for sym in symbol],
+             'inclusion': cards,
+             'breadcrumbs': breadcrumbs}
 
     inv_loc_status = {}
     inv_loc_transform = {}

@@ -5,6 +5,7 @@
 
 {% extends "base_templates/base.html" %}
 {% import "parts/validation_errors.html" as validation %}
+{% import "parts/costing_chart.html" as costing_chart %}
 
 {% block magellan %}
 <!-- Magellan -->
@@ -36,57 +37,6 @@
 <ul class="pricing-table shadow mrgn-20-top">
     <li class="price"> {{ stage.card.configname }} </li>
     <li class="description"> {{ stage.card.desc }} </li>
-    {% if stage.card.grouplist %}
-    <li class="title"> Groups </li>
-    <li>
-    <ul class="small-block-grid-3 small-11 columns small-centered">
-            {% for group in stage.card.grouplist %}
-            <li class="bullet-item"> {{ group }} </li>
-            {% endfor %}
-    </ul>
-    </li>
-    {% endif %}
-    {% if stage.card.motiflist %}
-    <li class="title"> Motifs </li>
-    {% for k, v in stage.card.motiflist|dictsort %}
-    {% if v|length >2 %}
-    <li class="bullet-item"> <b>{{ k }}</b> </li>
-    <li>
-    <ul class="small-block-grid-3 small-11 columns small-centered">
-        {% for p, s in v|dictsort %}
-        <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
-        {% endfor %}
-    </ul>
-    </li>
-    {% else %}
-    <li>
-    <ul class="small-block-grid-3 small-11 columns small-centered">
-        <li class="bullet-item"> <b>{{ k }}</b> </li>
-        {% for p, s in v|dictsort %}
-        <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
-        {% endfor %}
-    </ul>
-    </li>
-    {% endif %}
-    {% endfor %}
-    {% endif %}
-
-    {% if stage.card.genlist %}
-    <li class="title"> Generators </li>
-    {% for k, v in stage.card.genlist|dictsort %}
-        <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
-    {% endfor %}
-    {% endif %}
-
-
-    {% if stage.card.sjlist %}
-    <li class="title"> SJs </li>
-    <li><ul class="small-block-grid-3 small-11 columns small-centered">
-    {% for k, v in stage.card.sjlist|dictsort %}
-        <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
-    {% endfor %}
-    </ul></li>
-    {% endif %}
 </ul>
 
     <div class="small-12 columns panel header radius">
@@ -191,187 +141,15 @@
 
 <div class="small-12 medium-6 columns" data-magellan-destination="costing">
     <a name="costing"></a>
-{% if stage.prototype.sourcing_errors.terrors %}
+    {% if stage.prototype.sourcing_errors.terrors %}
     <div class="small-12 columns panel header radius">
         <div class="sign small-9 medium-6 small-centered columns autoscale">
             <h6>Sourcing Errors</h6>
         </div>
         {{ validation.render_validation_errors(stage.prototype.sourcing_errors) }}
     </div>
-{% endif %}
-    <div class="small-12 columns panel header radius">
-        <div class="sign small-9 medium-6 small-centered columns autoscale">
-            <h6>Indicative Costing</h6>
-        </div>
-        <div class="small-12 columns">
-            <article class="indicative-source-info">
-                <span class="indicative-costing-label small-6 columns">
-                    Approximate Total Cost
-                </span>
-                <span class="indicative-costing small-6 columns">
-                    {{ stage.prototype.indicative_cost.native_string|unicode }}
-                </span>
-            </article>
-        </div>
-
-        <div id="indicative-costing-breakup-chart" class="small-12 columns">
-            <svg style="width: 100%; height: 300px;"></svg>
-        </div>
-
-        <div class="small-12 columns fine-print">
-            <h6>Notes</h6>
-            <ul>
-                <li>
-                    Check Sourcing Errors for any components which could not be
-                    sourced. Costs for these components are not incuded in the
-                    estimate.
-                </li>
-                <li>
-                    Costing information is based on approximations involving
-                    inventory quantity guidelines. Actual costs will vary based
-                    on the specific order circumstances.
-                </li>
-            </ul>
-        </div>
-
-        <script type="text/javascript">
-        $(document).ready( function () {
-            nv.addGraph(function() {
-              var chart = nv.models.sunburstChart()
-                          //.margin({left: 70, right: 60})  //Adjust chart margins to give the x-axis some breathing room.
-                          //.useInteractiveGuideline(true)
-                          //.showYAxis(true)     //Show the y-axis
-                          //.showXAxis(true)     //Show the x-axis
-                          //.showLegend(false)
-                          .mode('size')
-                          .color(d3.scale.category20c())
-              ;
-
-              valueFormatter = function(d, i){
-                    return '{{ stage.prototype.indicative_cost_breakup.currency_symbol|unicode }} ' + (d).toFixed(2);
-              };
-
-              headerFormatter = function(d) {
-                   return d;
-              };
-
-              descend = function(d) {
-
-              };
-
-              // TODO
-              // This is a really horrible implementation.
-              // Spend some time and redo it recursivey at some point.
-              getNodeValue = function getval(d) {
-                    var value_number = 0;
-                    if ( d.children ){
-                        for (i = 0; i < d.children.length; i++){
-                            child = d.children[i];
-                            if ( child.children ){
-                                for (j = 0; j < child.children.length; j++){
-                                    grandchild = child.children[j];
-                                    if ( grandchild.children ){
-                                        for (k = 0; k < grandchild.children.length; k++){
-                                            greatgrandchild = grandchild.children[k];
-                                            if ( greatgrandchild.children ){
-                                                ;
-                                            }
-                                            else{
-                                                value_number += greatgrandchild.value;
-                                            }
-                                        }
-                                    }
-                                    else{
-                                        value_number += grandchild.value;
-                                    }
-                                }
-                            }
-                            else{
-                                value_number += child.value;
-                            }
-                        }
-                    }
-                    else{
-                        value_number = d.value;
-                    };
-                    return value_number;
-              };
-
-              chart.tooltip.contentGenerator( function(d){
-                    value_number = getNodeValue(d.data);
-
-                    if (d.data.parent){
-                        header_text = d.data.parent.name;
-                    }
-                    else{
-                        header_text = null;
-                    };
-
-                    var table = d3.select(document.createElement("table"));
-                    var theadEnter = table.selectAll("thead")
-                        .data([d])
-                        .enter().append("thead");
-
-                    theadEnter.append("tr")
-                        .append("td")
-                        .attr("colspan",3)
-                        .append("strong")
-                        .classed("x-value",true)
-                        .html(headerFormatter(header_text));
-
-                    var tbodyEnter = table.selectAll("tbody")
-                        .data([d])
-                        .enter().append("tbody");
-
-                    var trowEnter = tbodyEnter.selectAll("tr")
-                            .data(function(p) { return p.series})
-                            .enter()
-                            .append("tr")
-                            .classed("highlight", function(p) { return p.highlight});
-
-                    trowEnter.append("td")
-                        .classed("legend-color-guide",true)
-                        .append("div")
-                        .style("background-color", function(p) { return p.color});
-
-                    trowEnter.append("td")
-                        .classed("key",true)
-                        .html(function(p) {return p.key});
-
-                    trowEnter.append("td")
-                        .classed("value",true)
-                        .html(function(p,i) { return valueFormatter(value_number,i) });
-
-
-                    trowEnter.selectAll("td").each(function(p) {
-                        if (p.highlight) {
-                            var opacityScale = d3.scale.linear().domain([0,1]).range(["#fff",p.color]);
-                            var opacity = 0.6;
-                            d3.select(this)
-                                .style("border-bottom-color", opacityScale(opacity))
-                                .style("border-top-color", opacityScale(opacity))
-                            ;
-                        }
-                    });
-
-                    var html = table.node().outerHTML;
-                    if (d.footer !== undefined)
-                        html += "<div class='footer'>" + d.footer + "</div>";
-                    return html;
-              });
-
-              d3.select('#indicative-costing-breakup-chart svg')
-                .datum([{{ stage.prototype.indicative_cost_breakup.json|safe }}])
-                .transition().duration(500)
-                .call(chart)
-                ;
-
-              nv.utils.windowResize(chart.update);
-              return chart;
-            });
-        });
-        </script>
-    </div>
+    {% endif %}
+    {{ costing_chart.render_indicative_costing_chart(stage.prototype) }}
 </div>
 
 
@@ -385,3 +163,59 @@
 
 </div>
 {% endblock %}
+
+<!--
+
+    {% if stage.card.grouplist %}
+    <li class="title"> Groups </li>
+    <li>
+    <ul class="small-block-grid-3 small-11 columns small-centered">
+            {% for group in stage.card.grouplist %}
+            <li class="bullet-item"> {{ group }} </li>
+            {% endfor %}
+    </ul>
+    </li>
+    {% endif %}
+    {% if stage.card.motiflist %}
+    <li class="title"> Motifs </li>
+    {% for k, v in stage.card.motiflist|dictsort %}
+    {% if v|length >2 %}
+    <li class="bullet-item"> <b>{{ k }}</b> </li>
+    <li>
+    <ul class="small-block-grid-3 small-11 columns small-centered">
+        {% for p, s in v|dictsort %}
+        <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
+        {% endfor %}
+    </ul>
+    </li>
+    {% else %}
+    <li>
+    <ul class="small-block-grid-3 small-11 columns small-centered">
+        <li class="bullet-item"> <b>{{ k }}</b> </li>
+        {% for p, s in v|dictsort %}
+        <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
+        {% endfor %}
+    </ul>
+    </li>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+
+    {% if stage.card.genlist %}
+    <li class="title"> Generators </li>
+    {% for k, v in stage.card.genlist|dictsort %}
+        <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
+    {% endfor %}
+    {% endif %}
+
+
+    {% if stage.card.sjlist %}
+    <li class="title"> SJs </li>
+    <li><ul class="small-block-grid-3 small-11 columns small-centered">
+    {% for k, v in stage.card.sjlist|dictsort %}
+        <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
+    {% endfor %}
+    </ul></li>
+    {% endif %}
+
+-->

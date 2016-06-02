@@ -121,12 +121,12 @@
                 <tbody>
                 {% for row in stage.inclusion %}
                     <tr>
-                        <td> <a href="/entityhub/cards/{{row.0}}">{{ row.0 }}</a> </td>
-                        <td> {{ row.1 }} </td>
-                        <td data-sort={{ row.2.num }} class="text-center">
-                            <span class="center label radius {{ row.2.html_class }}"> {{ row.2 }} </span>
+                        <td> <a href="/entityhub/cards/{{row.0}}">{{ row.name }}</a> </td>
+                        <td> {{ row.desc }} </td>
+                        <td data-sort={{ row.status.num }} class="text-center">
+                            <span class="center label radius {{ row.status.html_class }}"> {{ row.status }} </span>
                         </td>
-                        <td class="text-center"> {{ row.3 }} </td>
+                        <td class="text-center"> {{ row.qty }} </td>
                     </tr>
                 {% endfor %}
                 </tbody>
