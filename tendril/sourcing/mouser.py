@@ -22,6 +22,150 @@
 Mouser Vendor Module (:mod:`tendril.sourcing.mouser`)
 =====================================================
 
+'Standalone' Usage
+------------------
+
+This module can be imported by itself to provide limited but potentially
+useful functionality.
+
+>>> from tendril.sourcing import mouser
+
+.. rubric:: Search
+
+Search for Mouser part numbers given a Tendril-compatible ident string :
+
+>>> mouser.dvobj.search_vpnos('IC SMD W5300 LQFP100-14')
+([950-W5300], 'CATFILTER')
+
+Note that only certain types of components are supported by the search. The
+``device`` component of the ident string is used to determine whether or not
+a search will even be attempted. See :data:`VendorMouser._devices` for a
+list of supported device classes. For all device classes, search is
+supported only for components whose ``value`` is a manufacturer part number,
+or enough of one to sufficiently identify the part in question.
+
+.. seealso::
+    :ref:`symbol-conventions`
+
+.. warning::
+    Note that the Mouser API does NOT return packages, and as such filtering
+    of search results by package is not done here. Effectively, the
+    information contained by the ``footprint`` part of the ``ident`` is not
+    used by the Mouser support module.
+
+The Mouser vendor support module provided here does not support search for
+jellybean components. While the Mouser API used includes a ``Calculator``
+search method, neither the allowed search parameters nor the returned
+information includes the ``package information``.
+
+Even with supported device types, remember that this search is nowhere near
+bulletproof. The more generic a device and/or its name is, the less likely
+it is to work. The intended use for this type of search is in concert with
+an organization's engineering policies and an instance administrator who
+can make the necessary tweaks to the search algorithms and maintain a low
+error rate for component types commonly used within the instance.
+
+.. seealso::
+    :func:`VendorMouser._get_device_catstrings`
+
+Tweaks and improvements to the search process are welcome as pull requests
+to the tendril github repository, though their inclusion will be predicated
+on them causing minimal breakage to what already exists.
+
+.. rubric:: Retrieve
+
+Obtain information for a given Mouser part number :
+
+Unlike the :mod:`digikey` vendor support module, the Mouser support package
+does not allow direct instantiation of it's VendorPart class. Instead, the
+vendor object must be use to retrieve the part. This is done to improve
+caching via the vendor object and minimize activity on the API.
+
+>>> p = mouser.dvobj.get_vpart('950-W5300')
+>>> p.manufacturer
+WIZnet
+>>> p.mpartno
+W5300
+>>> p.vqtyavail
+862
+>>> p.datasheet
+http://www.mouser.com/ds/2/443/W5300_DS_V131E-586393.pdf
+>>> p.package
+
+>>> p.vpartdesc
+Ethernet ICs HI PERF ENET CONTR TCP/IP+MAC+PHY
+
+The pricing information is also populated by this time, and can be accessed
+though the part object using the interfaces defined in those class definitions.
+
+>>> for b in p._prices:
+...     print b
+...
+<VendorPrice ₹ 379.96 @1(1)>
+<VendorPrice ₹ 356.42 @50(1)>
+<VendorPrice ₹ 335.57 @100(1)>
+<VendorPrice ₹ 316.75 @250(1)>
+
+.. hint::
+    By default, the :class:`.vendors.VendorPrice` instances are represented
+    by the unit price in the currency defined by the
+    :data:`tendril.utils.types.currency.native_currency_defn`.
+
+.. warning::
+    The Mouser API only returns the first 4 price breaks, even if Mouser
+    actually offers additional price breaks. The results obtained from here
+    should be manually verified against the Mouser website if the required
+    quantity is greater than the MOQ of the largest price break.
+
+The full content of the API response, parsed by :mod:`suds`, is available
+from the part object when the part is constructed from an API response. This
+content is NOT present when the part has been reconstructed from the database.
+
+>>> p.part_data
+(MouserPart){
+   Availability = "862 In Stock"
+   DataSheetUrl = "http://www.mouser.com/ds/2/443/W5300_DS_V131E-586393.pdf"
+   Description = "Ethernet ICs HI PERF ENET CONTR TCP/IP+MAC+PHY"
+   ImagePath = "http://www.mouser.com/images/wiznet/images/W5300_SPL.jpg"
+   Category = "Ethernet ICs"
+   LeadTime = "28 Days"
+   LifecycleStatus = None
+   Manufacturer = "WIZnet"
+   ManufacturerPartNumber = "W5300"
+   Min = "1"
+   Mult = "1"
+   MouserPartNumber = "950-W5300"
+   PriceBreaks =
+      (ArrayOfPricebreaks){
+         Pricebreaks[] =
+            (Pricebreaks){
+               Quantity = 1
+               Price = "$5.65"
+               Currency = "USD"
+            },
+            (Pricebreaks){
+               Quantity = 50
+               Price = "$5.30"
+               Currency = "USD"
+            },
+            (Pricebreaks){
+               Quantity = 100
+               Price = "$4.99"
+               Currency = "USD"
+            },
+            (Pricebreaks){
+               Quantity = 250
+               Price = "$4.71"
+               Currency = "USD"
+            },
+      }
+   ProductDetailUrl = "http://in.mouser.com/Search/ProductDetail.aspx?qs=b%252bXOOdUOuvZOuYHXpl8liw%3d%3d"
+   Reeling = False
+   ROHSStatus = "RoHS Compliant"
+   SuggestedReplacement = None
+   MultiSimBlue = 0
+ }
+
 """
 
 import traceback
@@ -74,6 +218,7 @@ class MouserElnPart(VendorElnPartBase):
         self.vqtyavail = int(part_data.Availability.split()[0])
         self.vpartdesc = part_data.Description
         self.vparturl = part_data.ProductDetailUrl
+        self.part_data = part_data
 
         for price in part_data.PriceBreaks[0]:
             self.add_price(VendorPrice(
