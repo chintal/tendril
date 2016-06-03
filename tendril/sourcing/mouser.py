@@ -56,7 +56,7 @@ or enough of one to sufficiently identify the part in question.
 The Mouser vendor support module provided here does not support search for
 jellybean components. While the Mouser API used includes a ``Calculator``
 search method, neither the allowed search parameters nor the returned
-information includes the ``package information``.
+information include the ``package`` information.
 
 Even with supported device types, remember that this search is nowhere near
 bulletproof. The more generic a device and/or its name is, the less likely
@@ -90,10 +90,10 @@ W5300
 862
 >>> p.datasheet
 http://www.mouser.com/ds/2/443/W5300_DS_V131E-586393.pdf
->>> p.package
-
 >>> p.vpartdesc
 Ethernet ICs HI PERF ENET CONTR TCP/IP+MAC+PHY
+>>> print p.package
+None
 
 The pricing information is also populated by this time, and can be accessed
 though the part object using the interfaces defined in those class definitions.

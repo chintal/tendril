@@ -252,7 +252,8 @@ def pcbs(pcbname=None):
              {
                 'key': "Indicative Costing",
                 'values': [
-                    {'label': x.ident, 'value': x.indicative_cost.native_value}
+                    {'label': x.ident,
+                     'value': x.indicative_cost.native_value}
                     for x in cobjs
                 ],
                 'color': '#4f99b4',
