@@ -29,11 +29,13 @@
 {% endmacro %}
 
 {% macro render_switch(field) -%}
-    <div class="small-3 columns switch radius">
+    <div class="small-12 medium-6 large-8 columns text-right">
+        <label>{{ field.label.text|safe }}</label>
+    </div>
+    <div class="small-12 medium-6 large-4 columns text-right switch radius small">
         {{ field(**kwargs) }}
         <label for="{{ field.id }}"></label>
     </div>
-    <div class="small-9 columns"><label>{{ field.label.text|safe }}</label></div>
 {% endmacro %}
 
 {% macro render_compact_switch(field) -%}

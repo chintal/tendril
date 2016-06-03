@@ -9,11 +9,21 @@
 {% block main %}
 {% import "parts/sourcing_search_form.html" as sourcing_search_form %}
 {% import "parts/sourcing_ident_sources.html" as sourcing_ident_sources %}
+{% import "parts/gsymlib_symbol.html" as gsymlib_symbol %}
 
 <h2>Sourcing Search Results</h2>
 
 <div class="row">
-    {{ sourcing_search_form.render_search_form(form) }}
+    {% if stage.symbol %}
+        <div class="small-12 medium-8 columns">
+            {{ sourcing_search_form.render_search_form(form) }}
+        </div>
+        <div class="small-12 medium-4 columns">
+            {{ gsymlib_symbol.render_symbol(stage.symbol, False, None) }}
+        </div>
+    {% else %}
+        {{ sourcing_search_form.render_search_form(form) }}
+    {% endif %}
 </div>
 
 <div class="row">

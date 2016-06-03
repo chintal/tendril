@@ -30,6 +30,7 @@ from flask_user import login_required
 from . import vendors as blueprint
 from .forms import SourcingIdentSearch
 
+from tendril.gedaif.gsymlib import get_symbol
 from tendril.utils.fsutils import Crumb
 from tendril.sourcing.electronics import vendor_list
 from tendril.sourcing.electronics import get_vendor_by_name
@@ -70,6 +71,8 @@ def render_search_results():
         except SourcingException:
             vsi = []
 
+        symbol = get_symbol(ident)
+
         stage = {'crumbroot': '/sourcing',
                  'breadcrumbs': [
                      Crumb(name="Sourcing", path=""),
@@ -77,6 +80,7 @@ def render_search_results():
                      Crumb(name="Search Results", path="vendors/results")],
                  'isinfos': vsi,
                  'ident': ident,
+                 'symbol': symbol,
                  }
 
         return render_template('vendors_search_results.html', stage=stage,
