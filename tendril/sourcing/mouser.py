@@ -203,6 +203,151 @@ class VendorMouser(VendorBase):
                           'Diodes - General Purpose, Power, Switching',
                           'TVS Diodes',
                           ]
+        elif device.startswith('IC'):
+            catstrings = [
+                'Analog to Digital Converters - ADC',
+                'Special Purpose Amplifiers',
+                'Voltage References',
+                'Analog Switch ICs',
+                'Gate Drivers',
+                'High Speed Operational Amplifiers',
+                'Digital to Analog Converters - DAC',
+                'Flip Flops',
+                'Logic Gates',
+                'Translation - Voltage Levels',
+                'Encoders, Decoders, Multiplexers & Demultiplexers',
+                'Analog Comparators',
+                'Board Mount Hall Effect / Magnetic Sensors',
+                'Board Mount Temperature Sensors',
+                'Digital Potentiometer ICs',
+                'Counter ICs',
+                'Delay Lines / Timing Elements',
+                'Analog & Digital Crosspoint ICs',
+                'Logic Comparators',
+                'Digital Isolators',
+                # 'Adafruit Accessories',
+                'LDO Voltage Regulators',
+                'Accelerometers',
+                'EEPROM',
+                '16-bit Microcontrollers - MCU',
+                'Linear Voltage Regulators',
+                'Voltage Regulators - Switching Regulators',
+                # 'LED Mounting Hardware',
+                # 'Power Management IC Development Tools',
+                'Switching Controllers',
+                'Board Mount Pressure Sensors',
+                'Precision Amplifiers',
+                'Data Acquisition ADCs/DACs - Specialized',
+                # 'Development Boards & Kits - MSP430',
+                'Instrumentation Amplifiers',
+                'UART Interface IC',
+                'Multiplexer Switch ICs',
+                'Operational Amplifiers - Op Amps',
+                # 'Aluminum Electrolytic Capacitors - Leaded',
+                # 'Basic / Snap Action Switches',
+                'USB Interface IC',
+                'Switch ICs - Various',
+                'Inverters',
+                'Bus Transceivers',
+                'Sensor Interface',
+                # 'Data Conversion IC Development Tools',
+                # 'Headers & Wire Housings',
+                # 'Circuit Board Hardware - PCB',
+                # 'Circular MIL Spec Backshells',
+                # 'Automotive Connectors',
+                # 'RF Adapters - In Series',
+                # 'Ethernet Cables / Networking Cables',
+                # 'Coaxial Cables',
+                # 'Heat Shrink Tubing and Sleeves',
+                'Buffers & Line Drivers',
+                # 'Sockets & Adapters',
+                'RS-232 Interface IC',
+                # 'Interface Development Tools',
+                # 'MOSFET',
+                # 'Non-Isolated DC/DC Converters',
+                # 'Standard LEDs - SMD',
+                # 'Resettable Fuses - PPTC',
+                # 'Pluggable Terminal Blocks',
+                # 'I/O Connectors',
+                # 'High Speed / Modular Connectors',
+                # 'FFC & FPC Connectors',
+                # 'LED Circuit Board Indicators',
+                # 'Printers',
+                'Latches',
+                # 'Daughter Cards & OEM Boards',
+                'Standard Clock Oscillators',
+                'Power Switch ICs - Power Distribution',
+                'Differential Amplifiers',
+                'Power Factor Correction - PFC',
+                'Clock Synthesizer / Jitter Cleaner',
+                'Transistor Output Optocouplers',
+                'Interface - Specialized',
+                'RS-485 Interface IC',
+                'SRAM',
+                # 'RF Connectors / Coaxial Connectors',
+                # 'CPU - Central Processing Units',
+                # 'Anti-Static Control Products',
+                'FIFO',
+                'I/O Controller Interface IC',
+                'Interface - I/O Expanders',
+                # 'Amplifier IC Development Tools',
+                'Multipliers / Dividers',
+                'Active Filters',
+                'Motor / Motion / Ignition Controllers & Drivers',
+                'Timers & Support Products',
+                'Phase Locked Loops - PLL',
+                'CAN Interface IC',
+                'Battery Management',
+                'Clock Generators & Support Products',
+                'LVDS Interface IC',
+                'ARM Microcontrollers - MCU',
+                'Ethernet ICs',
+                # 'Ethernet Modules',
+                # 'Film Capacitors',
+                # 'Wirewound Resistors - Through Hole',
+                'Counter Shift Registers',
+                # 'DIMM Connectors',
+                # 'Fixed Inductors',
+                # 'Coupled Inductors',
+                # 'High Power LEDs - Single Color',
+                'Modulator / Demodulator',
+                # 'RF Development Tools',
+                # 'D-Sub Standard Connectors',
+                # 'Digital Signal Processors & Controllers - DSP, DSC',
+                # 'RF Amplifier',
+                # 'Heavy Duty Power Connectors',
+                # 'Multi-Conductor Cables',
+                # 'Varactor Diodes',
+                # 'Hook-up Wire',
+                # 'Blowers',
+                # 'Terminals',
+                # 'Rack & Panel Connectors',
+                'Isolated DC/DC Converters',
+                # 'JFET',
+                # 'Modular Connectors / Ethernet Connectors',
+                # 'Fan Accessories',
+                'Programmable Oscillators',
+                # 'D-Sub High Density Connectors',
+                # 'Non-Heat Shrink Tubing and Sleeves',
+                # 'LED Lighting Reflectors',
+                # 'Circular DIN Connectors',
+                # 'Thick Film Resistors - SMD',
+                # 'Thin Film Resistors - SMD',
+                # 'Specialized Cables',
+                # 'Solder & Shield Tubing',
+                # 'Switch Hardware',
+                'High Speed Optocouplers',
+                'Triac & SCR Output Optocouplers',
+                'LED Lighting Drivers',
+                # 'USB Connectors',
+                # 'Phone Connectors',
+                # 'Optically Isolated Amplifiers',
+                # 'D-Sub Backshells',
+                # 'DIN Rail Terminal Blocks',
+                # 'High Power LEDs - White',
+                # 'Fixed Terminal Blocks',
+                # 'Adhesive Tapes',
+            ]
         elif device.startswith('ZENER'):
             catstrings = ['Zener Diodes',]
         elif device.startswith('TRANSISTOR'):
@@ -215,9 +360,28 @@ class VendorMouser(VendorBase):
             return False, None
         return True, catstrings
 
+    # @staticmethod
+    # def _get_majority_category(parts):
+    #     cats = {}
+    #     for part in parts:
+    #         if part.package not in cats.keys():
+    #             cats[part.package] = 0
+    #         cats[part.package] += 1
+    #     scats = [(x, cats[x]) for x in cats.keys()]
+    #     scats.sort(key=lambda y: cats[y], reverse=True)
+    #     return scats[0][1]
+    #
+    # def _filter_results_by_majority_category(self, parts):
+    #     mcategory = self._get_majority_category(parts)
+    #     if mcategory is not None:
+    #         parts = [x for x in parts if x.package == mcategory]
+    #         return SearchResult(True, parts, 'MAJORITYCAT')
+    #     return SearchResult(True, parts, 'UNFILTERED')
+
     def _filter_results_by_category(self, parts, device):
         r, catstrings = self._get_device_catstrings(device)
         if not r:
+            # return self._filter_results_by_majority_category(parts)
             return SearchResult(True, parts, 'UNFILTERED')
         parts = [x for x in parts if x.package in catstrings]
         return SearchResult(True, parts, 'CATFILTER')
@@ -240,3 +404,55 @@ class VendorMouser(VendorBase):
 
     def _get_pas_vpnos(self, device, value, footprint):
         raise NotImplementedError
+
+
+def __get_api_key():
+    from tendril.utils.config import VENDORS_DATA
+    vopts = None
+    for v in VENDORS_DATA:
+        if v['name'] == 'mouser':
+            vopts = v
+            break
+    if vopts is not None:
+        return vopts['apikey']
+    return None
+
+
+dvobj = VendorMouser(name='mouser', dname='Mouser Electronics, Inc',
+                     pclass='electronics', mappath=None,
+                     currency_code='USD', currency_symbol='US$',
+                     apikey=__get_api_key())
+
+
+def __analyze_categories(devices):
+    from tendril.gedaif.gsymlib import gsymlib_idents
+    catstrings = {}
+    for ident in gsymlib_idents:
+        try:
+            d, v, f = parse_ident(ident)
+        except IndexError:
+            print "Malformed Ident {0}".format(ident)
+            continue
+        if not d:
+            print "Device Not Extracted for {0}".format(ident)
+            continue
+        if d not in devices:
+            continue
+        if d not in dvobj._devices:
+            continue
+        if not v:
+            print "Value Not Extracted for {0}".format(ident)
+            continue
+        # print "Searching for {0}".format(v)
+        r = dvobj.api_client.service.SearchByKeyword(
+            keyword=v, records=50, startingRecord=0, searchOptions=4
+        )
+        if not r.NumberOfResult:
+            print " No results for {0}".format(v)
+            continue
+        for part in r.Parts[0]:
+            if part.Category not in catstrings:
+                print "Found new category : {0}".format(part.Category)
+                catstrings[part.Category] = []
+            catstrings[part.Category].append(v)
+    return catstrings

@@ -254,7 +254,7 @@
 
                   costing_chart.yAxis
                       .tickFormat(function(d) {
-                          if (d > 0){
+                          if (d => 0){
                             return "{{ stage.native_currency_symbol|unicode }}" + d3.format(",.2f")(d);
                           }
                           else{

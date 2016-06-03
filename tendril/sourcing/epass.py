@@ -110,3 +110,21 @@ class VendorEPass(VendorBase):
 
     def search_vpnos(self, ident):
         return None, 'NOAPIKEY'
+
+
+def __get_api_key():
+    from tendril.utils.config import VENDORS_DATA
+    vopts = None
+    for v in VENDORS_DATA:
+        if v['name'] == 'e14':
+            vopts = v
+            break
+    if vopts is not None:
+        return vopts['apikey']
+    return None
+
+
+dvobj = VendorEPass(name='e14', dname='element14 India Private Limited.',
+                    pclass='electronics', mappath=None,
+                    currency_code='USD', currency_symbol='US$',
+                    apikey=__get_api_key())
