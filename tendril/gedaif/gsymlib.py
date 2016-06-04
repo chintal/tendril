@@ -52,6 +52,7 @@ from tendril.conventions.electronics import parse_resistance
 from tendril.conventions.electronics import parse_resistor
 from tendril.conventions.electronics import normalize_resistance
 
+from tendril.utils.types.lengths import Length
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Capacitance
 
@@ -186,7 +187,11 @@ class EDASymbolBase(object):
             from tendril.inventory.guidelines import electronics_qty
             from tendril.sourcing.electronics import get_sourcing_information
             from tendril.sourcing.electronics import SourcingException
-            iqty = electronics_qty.get_compliant_qty(self.ident, 1)
+            if fpiswire(self.device):
+                iqty = Length('1m')
+            else:
+                iqty = 1
+            iqty = electronics_qty.get_compliant_qty(self.ident, iqty)
             try:
                 vsi = get_sourcing_information(self.ident, iqty,
                                                allvendors=True)

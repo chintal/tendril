@@ -23,36 +23,34 @@ Docstring for modules
 """
 
 import os
-from future.utils import viewitems
-from copy import deepcopy
 from copy import copy
+from copy import deepcopy
 
-from tendril.gedaif.conffile import ConfigsFile
+from future.utils import viewitems
+
 from tendril.boms.electronics import EntityElnBom
-from tendril.boms.outputbase import NoStructureHereException
-from tendril.utils.parsers import changelog
-from tendril.utils.fsutils import register_for_changes
+from tendril.gedaif.conffile import ConfigsFile
 
-from tendril.boms.validate import ValidationContext
-from tendril.boms.validate import ValidationError
+
 from tendril.boms.validate import ConfigOptionPolicy
-from tendril.boms.validate import FilePolicy
-from tendril.boms.validate import MissingFileError
-from tendril.boms.validate import MangledFileError
+from tendril.boms.validate import ErrorCollector
 from tendril.boms.validate import IdentPolicy
 from tendril.boms.validate import IdentQtyPolicy
 from tendril.boms.validate import QuantityTypeError
-
-from tendril.boms.validate import ErrorCollector
+from tendril.boms.validate import ValidationContext
+from tendril.boms.validate import ValidationError
 from tendril.boms.validate import get_dict_val
+from tendril.boms.outputbase import NoStructureHereException
 
-from tendril.utils.config import WARM_UP_CACHES
 from tendril.utils import log
+from tendril.utils.config import WARM_UP_CACHES
+from tendril.utils.fsutils import register_for_changes
 
 from . import projects
 from . import serialnos
 from .db.controller import SerialNoNotFound
 from .entitybase import EntityBase
+from .prototypebase import PrototypeBase
 
 logger = log.get_logger(__name__, log.DEFAULT)
 
@@ -69,14 +67,11 @@ class ModuleInstanceTypeMismatchError(Exception):
     pass
 
 
-class MissingInformationError(Exception):
-    pass
-
-
-class ModulePrototypeBase(object):
+class ModulePrototypeBase(PrototypeBase):
     prevalidator = None
 
     def __init__(self, modulename):
+        super(ModulePrototypeBase, self).__init__()
         self._modulename = None
         self._configs = None
         self._bom = None
@@ -85,8 +80,6 @@ class ModulePrototypeBase(object):
         self._strategy = None
         self._changelog = None
         self._validated = False
-        self._validation_context = None
-        self._validation_errors = ErrorCollector()
         self._sourcing_errors = None
         self._indicative_cost = None
         self.ident = modulename
@@ -121,25 +114,6 @@ class ModulePrototypeBase(object):
     def desc(self):
         raise NotImplementedError
 
-    @property
-    def status(self):
-        if self._status is None:
-            self._get_status()
-        return self._status
-
-    @property
-    def strategy(self):
-        if self._strategy is None:
-            raise MissingInformationError(
-                "Production strategy information missing for {0}"
-                "".format(self.ident)
-            )
-        return self._strategy
-
-    @property
-    def changelog(self):
-        return self._changelog
-
     def _get_production_strategy(self):
         raise NotImplementedError
 
@@ -147,22 +121,16 @@ class ModulePrototypeBase(object):
         raise NotImplementedError
 
     @property
-    def _changelogpath(self):
+    def obom(self):
         raise NotImplementedError
 
-    def _get_changelog(self):
-        try:
-            self._changelog = changelog.ChangeLog(self._changelogpath)
-        except changelog.ChangeLogNotFoundError:
-            ctx = copy(self._validation_context)
-            ctx.locality = 'ChangeLog'
-            policy = FilePolicy(ctx, self._changelogpath, False)
-            raise MissingFileError(policy)
-        except changelog.ChangeLogParseError:
-            ctx = copy(self._validation_context)
-            ctx.locality = 'ChangeLog'
-            policy = FilePolicy(ctx, self._changelogpath, False)
-            raise MangledFileError(policy)
+    @property
+    def bom(self):
+        raise NotImplementedError
+
+    @property
+    def _changelogpath(self):
+        raise NotImplementedError
 
     def make_labels(self, sno, label_manager=None):
         raise NotImplementedError
@@ -173,7 +141,6 @@ class ModulePrototypeBase(object):
 
     def _register_for_changes(self):
         register_for_changes(self.projfolder, self._reload)
-        pass
 
     def _reload(self):
         # Not handled :
@@ -189,15 +156,6 @@ class ModulePrototypeBase(object):
 
     def _validate(self):
         raise NotImplementedError
-
-    def validate(self):
-        logger.debug("Validating {0}".format(self.ident))
-        self._validate()
-
-    @property
-    def validation_errors(self):
-        self._validate()
-        return self._validation_errors
 
 
 class PCBPrototype(ModulePrototypeBase):
@@ -237,6 +195,14 @@ class PCBPrototype(ModulePrototypeBase):
 
     def _get_status(self):
         self._status = self.configs.status
+
+    @property
+    def obom(self):
+        raise NotImplementedError
+
+    @property
+    def bom(self):
+        raise NotImplementedError
 
     def _get_production_strategy(self):
         raise NotImplementedError

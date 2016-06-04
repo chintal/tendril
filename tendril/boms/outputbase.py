@@ -103,6 +103,10 @@ class OBomCostingBreakup(object):
         self._devices = {}
         self._total_cost = 0
 
+    @property
+    def name(self):
+        return self._name
+
     def insert(self, ident, cost):
         d, v, f = parse_ident(ident)
         if d not in self._devices.keys():
@@ -127,19 +131,17 @@ class OBomCostingBreakup(object):
 
     @property
     def content(self):
-        return [{'name': k, 'children': v}
-                for k, v in viewitems(self._devices)]
+        return [{'name': k, 'children': v} for k, v in
+                sorted(viewitems(self._devices),
+                       key=lambda x: sum(y['size'] for y in x[1]),
+                       reverse=True)
+                ]
 
     @property
     def json(self):
         return json.dumps(
             {'name': self._name,
-             'children': [
-                 {'name': k, 'children': v} for k, v in
-                 sorted(viewitems(self._devices),
-                        key=lambda x: sum(y['size'] for y in x[1]),
-                        reverse=True)
-                 ]
+             'children': self.content
              }
         )
 
@@ -149,12 +151,28 @@ class HierachicalCostingBreakup(object):
         self._name = name
         self._currency_symbol = native_currency_defn.symbol
         self._sections = {}
+        self._counters = {}
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def total_cost(self):
+        return sum([v.total_cost for k, v in viewitems(self._sections)])
 
     def insert(self, ident, breakup):
         if ident not in self._sections.keys():
             self._sections[ident] = breakup
         else:
-            raise ValueError('ident already in sections')
+            if ident in self._counters.keys():
+                self._counters[ident] += 1
+            else:
+                self._counters[ident] = 2
+                newname = '.'.join([ident, '1'])
+                self._sections[newname] = self._sections.pop(ident)
+            newname = '.'.join([ident, str(self._counters[ident])])
+            self._sections[newname] = breakup
 
     @property
     def currency_symbol(self):
@@ -162,18 +180,16 @@ class HierachicalCostingBreakup(object):
 
     @property
     def content(self):
-        raise NotImplementedError
+        return [{'name': k, 'children': v.content} for k, v in
+                sorted(viewitems(self._sections),
+                       key=lambda x: x[1].total_cost,
+                       reverse=True)]
 
     @property
     def json(self):
         return json.dumps(
             {'name': self._name,
-             'children': [
-                 {'name': k, 'children': v.content} for k, v in
-                 sorted(viewitems(self._sections),
-                        key=lambda x: x[1].total_cost,
-                        reverse=True)
-                 ]
+             'children': self.content
              }
         )
 
@@ -194,52 +210,42 @@ class OutputElnBomDescriptor(object):
         self.groupname = groupname
 
 
-class OutputBomLine(object):
-    def __init__(self, comp, parent):
-        assert isinstance(comp, EntityBase)
-        self.ident = comp.ident
-        self.refdeslist = []
-        self.parent = parent
+class SourceableBomLineMixin(object):
+    def __init__(self):
         self._isinfo = ''
         self._sourcing_exception = None
 
-    def add(self, comp):
-        assert isinstance(comp, EntityBase)
-        if hasattr(comp, 'fillstatus'):
-            if comp.fillstatus == "DNP":
-                return
-            if comp.fillstatus == "CONF":
-                logger.warning("Configurable Component "
-                               "not Configured by Conf File : " + comp.refdes)
-        if comp.ident == self.ident:
-            self.refdeslist.append(comp.refdes)
-        else:
-            logger.error("Ident Mismatch")
-            raise Exception
+    @property
+    def ident(self):
+        raise NotImplementedError
+
+    @ident.setter
+    def ident(self, value):
+        raise NotImplementedError
 
     @property
-    def uquantity(self):
-        device, value, footprint = parse_ident(self.ident)
-        if device is None:
-            logger.warning("Device not identified : " + self.ident)
-        elif fpiswire(device):
-            try:
-                elen = Length(footprint) * 10 / 100
-                if elen < Length('5mm'):
-                    elen = Length('5mm')
-                elif elen > Length('1inch'):
-                    elen = Length('1inch')
-                return len(self.refdeslist) * (Length(footprint) + elen)
-            except ValueError:
-                logger.error(
-                    "Problem parsing length for ident : " + self.ident
-                )
-                raise
-        return len(self.refdeslist)
+    def parent(self):
+        raise NotImplementedError
+
+    @parent.setter
+    def parent(self, value):
+        raise NotImplementedError
+
+    @property
+    def refdeslist(self):
+        raise NotImplementedError
+
+    @refdeslist.setter
+    def refdeslist(self, value):
+        raise NotImplementedError
 
     @property
     def quantity(self):
-        return self.uquantity * self.parent.descriptor.multiplier
+        raise NotImplementedError
+
+    @property
+    def uquantity(self):
+        raise NotImplementedError
 
     def _get_isinfo(self):
         # qty = electronics_qty.get_compliant_qty(self.ident, self.quantity)
@@ -279,6 +285,12 @@ class OutputBomLine(object):
         return self._isinfo
 
     @property
+    def sourcing_error(self):
+        if self._isinfo == '':
+            self._get_isinfo()
+        return self._sourcing_exception
+
+    @property
     def indicative_cost(self):
         if self.isinfo is not None:
             qty = electronics_qty.get_compliant_qty(self.ident, self.quantity)
@@ -294,11 +306,76 @@ class OutputBomLine(object):
         else:
             return None
 
+
+class OutputBomLine(SourceableBomLineMixin):
+    def __init__(self, comp, parent):
+        super(OutputBomLine, self).__init__()
+        assert isinstance(comp, EntityBase)
+        self._ident = comp.ident
+        self._refdeslist = []
+        self._parent = parent
+
     @property
-    def sourcing_error(self):
-        if self._isinfo == '':
-            self._get_isinfo()
-        return self._sourcing_exception
+    def ident(self):
+        return self._ident
+
+    @ident.setter
+    def ident(self, value):
+        self._ident = value
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, value):
+        self._parent = value
+
+    @property
+    def refdeslist(self):
+        return self._refdeslist
+
+    @refdeslist.setter
+    def refdeslist(self, value):
+        self._refdeslist = value
+
+    def add(self, comp):
+        assert isinstance(comp, EntityBase)
+        if hasattr(comp, 'fillstatus'):
+            if comp.fillstatus == "DNP":
+                return
+            if comp.fillstatus == "CONF":
+                logger.warning("Configurable Component "
+                               "not Configured by Conf File : " + comp.refdes)
+        if comp.ident == self.ident:
+            self.refdeslist.append(comp.refdes)
+        else:
+            logger.error("Ident Mismatch")
+            raise Exception
+
+    @property
+    def uquantity(self):
+        device, value, footprint = parse_ident(self.ident)
+        if device is None:
+            logger.warning("Device not identified : " + self.ident)
+        elif fpiswire(device):
+            try:
+                elen = Length(footprint) * 10 / 100
+                if elen < Length('5mm'):
+                    elen = Length('5mm')
+                elif elen > Length('1inch'):
+                    elen = Length('1inch')
+                return len(self.refdeslist) * (Length(footprint) + elen)
+            except ValueError:
+                logger.error(
+                    "Problem parsing length for ident : " + self.ident
+                )
+                raise
+        return len(self.refdeslist)
+
+    @property
+    def quantity(self):
+        return self.uquantity * self.parent.descriptor.multiplier
 
     def __repr__(self):
         return "{0:<50} {1:<4} {2}".format(
@@ -306,13 +383,64 @@ class OutputBomLine(object):
         )
 
 
-class OutputBom(object):
+class CostableBom(object):
+    def __init__(self):
+        self._lines = []
+
+        self._sourcing_errors = None
+        self._indicative_cost = None
+        self._indicative_cost_breakup = None
+
+    @property
+    def ident(self):
+        raise NotImplementedError
+
+    @property
+    def lines(self):
+        return self._lines
+
+    @property
+    def indicative_cost(self):
+        if self._indicative_cost is None:
+            self._indicative_cost = 0
+            for line in self.lines:
+                lcost = line.indicative_cost
+                if lcost is not None:
+                    self._indicative_cost += lcost
+        return self._indicative_cost
+
+    def _build_indicative_cost_breakup(self):
+        self._indicative_cost_breakup = \
+            OBomCostingBreakup(self.ident)
+        for line in self.lines:
+            lcost = line.indicative_cost
+            if lcost is not None:
+                self._indicative_cost_breakup.insert(line.ident, lcost)
+        self._indicative_cost_breakup.sort()
+
+    @property
+    def indicative_cost_breakup(self):
+        if self._indicative_cost_breakup is None:
+            self._build_indicative_cost_breakup()
+        return self._indicative_cost_breakup
+
+    @property
+    def sourcing_errors(self):
+        if self._sourcing_errors is None:
+            self._sourcing_errors = ErrorCollector()
+            for line in self.lines:
+                if line.sourcing_error is not None:
+                    self._sourcing_errors.add(line.sourcing_error)
+        return self._sourcing_errors
+
+
+class OutputBom(CostableBom):
     def __init__(self, descriptor):
         """
 
         :type descriptor: outputbase.OutputElnBomDescriptor
         """
-        self.lines = []
+        super(OutputBom, self).__init__()
         self.descriptor = descriptor
         if self.descriptor.groupname is not None:
             locality = 'OBOM.{0}'.format(self.descriptor.groupname)
@@ -321,11 +449,16 @@ class OutputBom(object):
         self._validation_context = ValidationContext(
             self.descriptor.configname, locality
         )
-        self.validation_errors = ErrorCollector()
         self.sourcing_policy = SourcingIdentPolicy(self._validation_context)
-        self._sourcing_errors = None
-        self._indicative_cost = None
-        self._indicative_cost_breakup = None
+        self.validation_errors = ErrorCollector()
+
+    @property
+    def ident(self):
+        if self.descriptor.groupname is not None:
+            return '.'.join([self.descriptor.configname,
+                             self.descriptor.groupname])
+        else:
+            return self.descriptor.configname
 
     def sort_by_ident(self):
         self.lines.sort(key=lambda x: x.ident, reverse=False)
@@ -368,39 +501,185 @@ class OutputBom(object):
     def items(self):
         return self._item_gen()
 
-    @property
-    def indicative_cost(self):
-        if self._indicative_cost is None:
-            self._indicative_cost = 0
-            for line in self.lines:
-                lcost = line.indicative_cost
-                if lcost is not None:
-                    self._indicative_cost += lcost
-        return self._indicative_cost
 
-    def _build_indicative_cost_breakup(self):
-        self._indicative_cost_breakup = \
-            OBomCostingBreakup(self.descriptor.configname)
+class CompositeOutputBomLine(SourceableBomLineMixin):
+    def __init__(self, line, colcount, parent=None):
+        super(CompositeOutputBomLine, self).__init__()
+        self._parent = parent
+        self._ident = line.ident
+        self.columns = [0] * colcount
+
+    @property
+    def ident(self):
+        return self._ident
+
+    @ident.setter
+    def ident(self, value):
+        self._ident = value
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, value):
+        self._parent = value
+
+    @property
+    def refdeslist(self):
+        # REFDES does not currently survive composition
+        return [self._parent.get_col_title(x)
+                for x, q in enumerate(self.columns) if q > 0]
+
+    @refdeslist.setter
+    def refdeslist(self, value):
+        raise NotImplementedError
+
+    def add(self, line, column):
+        """
+        Add a BOM line to the COBOM
+
+        :param line: The BOM line to insert
+        :type line: :class:`OutputBomLine`
+        :param column: The column to which the line should be added.
+        :type column: int
+
+        """
+        if line.ident == self.ident:
+            self.columns[column] = line.quantity
+        else:
+            logger.error("Ident Mismatch")
+
+    @property
+    def quantity(self):
+        # Component output bom doesn't currently support multipliers.
+        return self.uquantity
+
+    @property
+    def uquantity(self):
+        try:
+            return sum(self.columns)
+        except TypeError:
+            raise TypeError(self.columns)
+
+    def subset_qty(self, idxs):
+        try:
+            rval = 0
+            for idx in idxs:
+                rval += self.columns[idx]
+            return rval
+        except TypeError:
+            raise TypeError(self.columns)
+
+    def merge_line(self, cline):
+        for idx, column in enumerate(self.columns):
+            self.columns[idx] += cline.columns[idx]
+
+
+class CompositeOutputBom(CostableBom):
+    def __init__(self, bom_list, name=None):
+        super(CompositeOutputBom, self).__init__()
+        self.descriptors = []
+        self.colcount = len(bom_list)
+        self.descriptor = OutputElnBomDescriptor(None, None, name, None, 1)
+        self._validation_context = ValidationContext(
+            self.descriptor.configname, 'ICOBOM'
+        )
+        self.sourcing_policy = SourcingIdentPolicy(self._validation_context)
+        self.validation_errors = ErrorCollector()
+
+        i = 0
+        for bom in bom_list:
+            self._insert_bom(bom, i)
+            i += 1
+        self.sort_by_ident()
+
+    @property
+    def ident(self):
+        return self.descriptor.configname
+
+    def get_col_title(self, idx):
+        return self.descriptors[idx].configname
+
+    def get_subset_idxs(self, confignames):
+        rval = []
+        for configname in confignames:
+            for idx, descriptor in enumerate(self.descriptors):
+                if descriptor.configname == configname:
+                    rval.append(idx)
+        return rval
+
+    def _insert_bom(self, bom, i):
+        """
+        Inserts a BOM into the COBOM.
+
+        :param bom: The BOM to insert
+        :type bom: :class:`OutputBom`
+        :param i: The column to insert the BOM into
+        :type i: int
+
+        """
+        self.descriptors.append(bom.descriptor)
+        for line in bom.lines:
+            self._insert_line(line, i)
+
+    def _insert_line(self, line, i):
+        """
+        Inserts a BOM line into the COBOM
+
+        :param line: The BOM line to insert
+        :type line: :class:`OutputBomLine`
+        :param i: The column to insert the BOM line into
+        :type i: int
+
+        """
+        cline = self.find_by_ident(line.ident)
+        if cline is None:
+            cline = CompositeOutputBomLine(line, self.colcount, self)
+            self.lines.append(cline)
+        cline.add(line, i)
+
+    def find_by_ident(self, ident):
+        """
+        Find a line in the COBOM for the given ident.
+
+        :param ident: The ident to find in the COBOM
+        :rtype: :class:`CompositeOutputBomLine`
+
+        """
+        for cline in self.lines:
+            assert isinstance(cline, CompositeOutputBomLine)
+            if cline.ident == ident:
+                return cline
+        return None
+
+    def sort_by_ident(self):
+        self.lines.sort(key=lambda x: x.ident, reverse=False)
+
+    def dump(self, stream):
+        writer = csv.writer(stream)
+        writer.writerow(
+            ['device'] +
+            [x.configname + ' x' + str(x.multiplier)
+             for x in self.descriptors] +
+            ['Total'])
         for line in self.lines:
-            lcost = line.indicative_cost
-            if lcost is not None:
-                self._indicative_cost_breakup.insert(line.ident, lcost)
-        self._indicative_cost_breakup.sort()
+            columns = [None if x == 0 else x for x in line.columns]
+            writer.writerow([line.ident] + columns + [line.quantity])
 
-    @property
-    def indicative_cost_breakup(self):
-        if self._indicative_cost_breakup is None:
-            self._build_indicative_cost_breakup()
-        return self._indicative_cost_breakup
-
-    @property
-    def sourcing_errors(self):
-        if self._sourcing_errors is None:
-            self._sourcing_errors = ErrorCollector()
-            for line in self.lines:
-                if line.sourcing_error is not None:
-                    self._sourcing_errors.add(line.sourcing_error)
-        return self._sourcing_errors
+    def collapse_wires(self):
+        for line in self.lines:
+            device, value, footprint = parse_ident(line.ident)
+            if device is None:
+                continue
+            if fpiswire(device):
+                newident = device + ' ' + value
+                newline = self.find_by_ident(newident)
+                if newline is None:
+                    line.ident = newident
+                else:
+                    newline.merge_line(line)
+                    self.lines.remove(line)
 
 
 class DeltaOutputBom(object):
@@ -455,140 +734,6 @@ class DeltaOutputBom(object):
     @property
     def subtractions_bom(self):
         return self._obom_sub
-
-
-class CompositeOutputBomLine(object):
-    def __init__(self, line, colcount):
-        self.ident = line.ident
-        self.columns = [0] * colcount
-
-    def add(self, line, column):
-        """
-        Add a BOM line to the COBOM
-
-        :param line: The BOM line to insert
-        :type line: :class:`OutputBomLine`
-        :param column: The column to which the line should be added.
-        :type column: int
-
-        """
-        if line.ident == self.ident:
-            self.columns[column] = line.quantity
-        else:
-            logger.error("Ident Mismatch")
-
-    @property
-    def quantity(self):
-        try:
-            return sum(self.columns)
-        except TypeError:
-            raise TypeError(self.columns)
-
-    def subset_qty(self, idxs):
-        try:
-            rval = 0
-            for idx in idxs:
-                rval += self.columns[idx]
-            return rval
-        except TypeError:
-            raise TypeError(self.columns)
-
-    def merge_line(self, cline):
-        for idx, column in enumerate(self.columns):
-            self.columns[idx] += cline.columns[idx]
-
-
-class CompositeOutputBom(object):
-    def __init__(self, bom_list, name=None):
-        self.descriptors = []
-        self.lines = []
-        self.colcount = len(bom_list)
-        self.descriptor = OutputElnBomDescriptor(None, None, name, None, 1)
-        i = 0
-        for bom in bom_list:
-            self._insert_bom(bom, i)
-            i += 1
-        self.sort_by_ident()
-
-    def get_subset_idxs(self, confignames):
-        rval = []
-        for configname in confignames:
-            for idx, descriptor in enumerate(self.descriptors):
-                if descriptor.configname == configname:
-                    rval.append(idx)
-        return rval
-
-    def _insert_bom(self, bom, i):
-        """
-        Inserts a BOM into the COBOM.
-
-        :param bom: The BOM to insert
-        :type bom: :class:`OutputBom`
-        :param i: The column to insert the BOM into
-        :type i: int
-
-        """
-        self.descriptors.append(bom.descriptor)
-        for line in bom.lines:
-            self._insert_line(line, i)
-
-    def _insert_line(self, line, i):
-        """
-        Inserts a BOM line into the COBOM
-
-        :param line: The BOM line to insert
-        :type line: :class:`OutputBomLine`
-        :param i: The column to insert the BOM line into
-        :type i: int
-
-        """
-        cline = self.find_by_ident(line.ident)
-        if cline is None:
-            cline = CompositeOutputBomLine(line, self.colcount)
-            self.lines.append(cline)
-        cline.add(line, i)
-
-    def find_by_ident(self, ident):
-        """
-        Find a line in the COBOM for the given ident.
-
-        :param ident: The ident to find in the COBOM
-        :rtype: :class:`CompositeOutputBomLine`
-
-        """
-        for cline in self.lines:
-            assert isinstance(cline, CompositeOutputBomLine)
-            if cline.ident == ident:
-                return cline
-        return None
-
-    def sort_by_ident(self):
-        self.lines.sort(key=lambda x: x.ident, reverse=False)
-
-    def dump(self, stream):
-        writer = csv.writer(stream)
-        writer.writerow(
-            ['device'] +
-            [x.configname + ' x' + str(x.multiplier)
-             for x in self.descriptors] +
-            ['Total'])
-        for line in self.lines:
-            columns = [None if x == 0 else x for x in line.columns]
-            writer.writerow([line.ident] + columns + [line.quantity])
-
-    def collapse_wires(self):
-        for line in self.lines:
-            device, value, footprint = parse_ident(line.ident)
-            if device is None:
-                continue
-            if fpiswire(device):
-                newident = device + ' ' + value
-                newline = self.find_by_ident(newident)
-                if newline is None:
-                    line.ident = newident
-                else:
-                    newline.merge_line(line)
-                    self.lines.remove(line)
 
 
 def create_obom_from_listing(component_list, head):
