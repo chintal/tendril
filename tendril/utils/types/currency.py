@@ -49,19 +49,25 @@ to be used independent of Tendril, at least those configuration options
 
 """
 
+from cachecontrol.heuristics import ExpiresAfter
+
 from tendril.utils.config import BASE_CURRENCY
 from tendril.utils.config import BASE_CURRENCY_SYMBOL
 
 from tendril.utils import www
 
-from six.moves.urllib.request import Request
-from six.moves.urllib.parse import urlencode
+# from six.moves.urllib.request import Request
+# from six.moves.urllib.parse import urlencode
 
 import json
 import codecs
 import numbers
 
 from .unitbase import TypedComparisonMixin
+
+# TODO Switch to a heuristic which uses a cached value only if a fresh
+# one is not available.
+requests_session = www.get_session(heuristic=ExpiresAfter(days=5))
 
 
 class CurrencyDefinition(object):
@@ -152,10 +158,8 @@ class CurrencyDefinition(object):
         apiurl = 'http://api.fixer.io/latest?'
         params = {'base': BASE_CURRENCY,
                   'symbols': code}
-        request = Request(apiurl + urlencode(params))
-        response = www.urlopen(request)
-        reader = codecs.getreader("utf-8")
-        data = json.load(reader(response))
+        r = requests_session.get(apiurl, params=params)
+        data = r.json()
         try:
             rate = 1 / float(data['rates'][code])
         except KeyError:

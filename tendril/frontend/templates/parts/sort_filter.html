@@ -6,17 +6,21 @@
 {% macro render_text_filter(title, fieldcode) -%}
     <div class="large-6 small-12 columns">
         <div class="row collapse">
-            <div class="large-2 small-3 columns text-right">
-                <ul class="sort-group button-group radius">
-                    <li><a class="sort button tiny" data-sort="{{ fieldcode }}:asc">
-                        <i class="fi-arrow-up"></i>
-                    </a></li>
-                    <li><a class="sort button tiny" data-sort="{{ fieldcode }}:desc">
-                        <i class="fi-arrow-down"></i>
-                    </a></li>
-                </ul>
-            </div>
-            <div class="large-2 small-9 columns">
+            <div class="large-4 small-12 columns filter-block">
+                <div class="sort-group">
+                    <ul class="sort-group button-group">
+                        <li>
+                            <a class="sort button tiny" data-sort="{{ fieldcode }}:asc">
+                                <i class="fi-arrow-up"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="sort button tiny" data-sort="{{ fieldcode }}:desc">
+                                <i class="fi-arrow-down"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
                 <div class="filterhead">
                     {{ title }}
                 </div>
@@ -29,27 +33,27 @@
 {% endmacro %}
 {% macro render_dimension(title, fieldcode, elems, all_len) -%}
     <div class="row collapse">
-        <div class="large-1 small-3 columns text-right">
-            <ul class="sort-group button-group radius">
-                <li>
-                    <a class="sort button tiny" data-sort="{{ fieldcode }}:asc">
-                        <i class="fi-arrow-up"></i>
-                    </a>
-                </li>
-                <li>
-                    <a class="sort button tiny" data-sort="{{ fieldcode }}:desc">
-                        <i class="fi-arrow-down"></i>
-                    </a>
-                </li>
-            </ul>
-        </div>
-        <div class="large-1 small-9 columns">
+        <div class="large-2 small-12 columns filter-block">
+            <div class="sort-group">
+                <ul class="sort-group button-group">
+                    <li>
+                        <a class="sort button tiny" data-sort="{{ fieldcode }}:asc">
+                            <i class="fi-arrow-up"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sort button tiny" data-sort="{{ fieldcode }}:desc">
+                            <i class="fi-arrow-down"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <div class="filterhead">
                 {{ title }}
             </div>
         </div>
         <div class="large-10 small-12 columns">
-            <ul class="filter-group button-group radius">
+            <ul class="filter-group button-group">
             <li>
                 <a class="filter button tiny active" data-filter="all">All ({{ all_len }})</a>
             </li>

@@ -530,6 +530,7 @@ class WWWCachedFetcher(CacheBase):
         :return: contents of the resource
 
         """
+        logger.debug('Getting url content : {0}'.format(url))
         return urlopen(url).read()
 
     def fetch(self, url, max_age=500000, getcpath=False):
@@ -719,10 +720,11 @@ class ThrottledTransport(HttpAuthenticated):
         sleeps for the remaining period and then passes the request along.
         """
         now = int(time.time())
+        logger.debug('Getting SOAP response')
         tsincelast = now - self._last_called
         if tsincelast < self._minumum_spacing:
             tleft = self._minumum_spacing - tsincelast
-            logger.debug("Throttling for {0}".format(tleft))
+            logger.info("Throttling SOAP client for {0}".format(tleft))
             time.sleep(tleft)
         self._last_called = now
         return HttpAuthenticated.send(self, request)
