@@ -28,6 +28,7 @@ from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import GenericEntityBase
 from tendril.utils import log
 from tendril.utils.types.lengths import Length
+from tendril.utils.types.unitbase import NumericalUnitBase
 
 from .costingbase import SourcingIdentPolicy
 from .costingbase import SourceableBomLineMixin
@@ -119,7 +120,15 @@ class OutputBomLine(SourceableBomLineMixin):
 
     @property
     def quantity(self):
-        return self.uquantity * self.parent.descriptor.multiplier
+        qty = self.uquantity * self.parent.descriptor.multiplier
+        return qty
+
+    @property
+    def quantity_str(self):
+        qty = str(self.quantity)
+        if isinstance(qty, NumericalUnitBase):
+            qty = qty.integral_repr
+        return qty
 
     def __repr__(self):
         return "{0:<50} {1:<4} {2}".format(

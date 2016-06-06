@@ -124,7 +124,7 @@
                 {% for row in stage.product.obom.lines %}
                     <tr>
                         <td> <a href="/gsymlib/detail/{{ row.ident }}"> {{ row.ident }} </a> </td>
-                        <td class="text-center"> {{ row.quantity }} </td>
+                        <td class="text-center"> {{ row.quantity_str }} </td>
                         <td>
                             {% for refdes in row.refdeslist %}{{ refdes }}{% if not loop.last %}, {% endif %}{% endfor %}
                         </td>
