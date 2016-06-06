@@ -22,6 +22,7 @@ See the COPYING, README, and INSTALL files for more information
 import json
 import csv
 from future.utils import viewitems
+from decimal import Decimal
 
 from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import GenericEntityBase
@@ -373,7 +374,7 @@ class OutputBomLine(SourceableBomLineMixin):
             logger.warning("Device not identified : " + self.ident)
         elif fpiswire(device):
             try:
-                elen = Length(footprint) * 10 / 100
+                elen = Length(footprint) * Decimal(0.1)
                 if elen < Length('5mm'):
                     elen = Length('5mm')
                 elif elen > Length('1inch'):
