@@ -657,12 +657,12 @@ def get_prototype_lib(regen=False):
     logger.debug("Generating Prototype Library")
     prototypes = {}
     for ident in projects.cards.keys():
-        get_prototype(ident)
+        _get_prototype(ident)
     logger.debug("Prototype Library Generated")
     return prototypes
 
 
-def get_prototype(ident):
+def _get_prototype(ident):
     global prototypes
     if ident in prototypes.keys():
         return prototypes[ident]
@@ -681,6 +681,11 @@ def get_prototype(ident):
 
     raise ModuleTypeError("Could not determine type for ident {0}"
                           "".format(ident))
+
+
+def get_prototype(ident):
+    plib = get_prototype_lib()
+    return plib[ident]
 
 
 pcbs = {}

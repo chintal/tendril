@@ -28,6 +28,38 @@ Docstring for validate
 from tendril.conventions.electronics import parse_ident
 from tendril.conventions.electronics import ident_transform
 from tendril.conventions.electronics import DEVICE_CLASSES
+from tendril.utils import log
+
+logger = log.get_logger(__name__, log.DEFAULT)
+
+
+class ValidatableBase(object):
+    def __init__(self):
+        self._validated = False
+        self._validation_context = None
+        self._validation_errors = ErrorCollector()
+
+    @property
+    def ident(self):
+        raise NotImplementedError
+
+    @ident.setter
+    def ident(self, value):
+        raise NotImplementedError
+
+    def _validate(self):
+        raise NotImplementedError
+
+    def validate(self):
+        if not self._validated:
+            logger.debug("Validating {0}".format(self.ident))
+            self._validate()
+
+    @property
+    def validation_errors(self):
+        if not self._validated:
+            self._validate()
+        return self._validation_errors
 
 
 class ValidationContext(object):

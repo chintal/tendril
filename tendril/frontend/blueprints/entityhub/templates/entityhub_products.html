@@ -11,9 +11,21 @@
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
     {% for product in stage.products %}
     <li>
-        <a href="/entityhub/products/{{ product.name }}">
+        <a href="/entityhub/products/{{ product.ident }}">
         <ul class="pricing-table active-tb shadow mrgn-20-top">
-            <li class="price"> {{ product.name }} </li>
+            <li class="title"> {{ product.ident }} </li>
+            <li class="description"> {{ product.info.desc }} </li>
+            {% if product.info.status %}
+              <span class="right label radius {{ product.info.status.html_class }}">
+                  {{ product.info.status }}
+              </span>
+            {% endif %}
+            {% if product.info.line %}
+              <span class="right label radius secondary">{{ product.info.line }}</span>
+            {% endif %}
+            {% if product.info.ptype %}
+              <span class="right label radius secondary">{{ product.info.ptype }}</span>
+            {% endif %}
         </ul>
         </a>
     </li>

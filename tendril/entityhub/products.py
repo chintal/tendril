@@ -28,6 +28,9 @@ from tendril.utils.fsutils import import_
 from tendril.utils.config import INSTANCE_ROOT
 from tendril.boms.outputbase import CompositeOutputBom
 from tendril.boms.outputbase import HierachicalCostingBreakup
+from tendril.conventions import status
+
+from tendril.boms.validate import ValidatableBase
 
 from .modules import get_prototype_lib
 from .prototypebase import PrototypeBase
@@ -43,16 +46,52 @@ INSTANCE_PRODUCT_CLASSES_PATH = os.path.join(PRODUCTS_ROOT, 'infoclasses')
 INSTANCE_PRODUCT_CLASSES = import_(INSTANCE_PRODUCT_CLASSES_PATH)
 
 
-class ProductInfo(object):
-    def __init__(self, infodict):
+class ProductInfo(ValidatableBase):
+    def __init__(self, infodict, parent):
+        super(ProductInfo, self).__init__()
+        self._parent = parent
         self._infodict = infodict
+
+    @property
+    def ident(self):
+        return self._parent.ident
 
     def labelinfo(self, sno):
         return sno, {}
 
     @property
+    def line(self):
+        # TODO Setup validation
+        return self._infodict['line']
+
+    @property
+    def ptype(self):
+        # TODO Setup validation
+        return self._infodict['type']
+
+    @property
     def desc(self):
+        # TODO Setup validation
         return self._infodict['desc']
+
+    @property
+    def version(self):
+        # TODO Setup validation
+        try:
+            return self._infodict['version']
+        except KeyError:
+            return None
+
+    @property
+    def status(self):
+        # TODO Setup validation
+        try:
+            return status.get_status(self._infodict['status'])
+        except KeyError:
+            return status.get_status('Undefined')
+
+    def _validate(self):
+        pass
 
 
 class ProductPrototypeBase(PrototypeBase):
@@ -69,6 +108,7 @@ class ProductPrototypeBase(PrototypeBase):
         self._boms = None
         self._obom = None
         self._sourcing_errors = None
+        self._indicative_cost_hierarchical_breakup = None
 
         self._load_product_info()
 
@@ -85,58 +125,81 @@ class ProductPrototypeBase(PrototypeBase):
             self._product_info = \
                 INSTANCE_PRODUCT_CLASSES.get_product_info_class(
                     self._raw_data['productinfo']['line'],
-                    self._raw_data['productinfo']
+                    infodict=self._raw_data['productinfo'], parent=self
                 )
         except ImportError:
-            self._product_info = ProductInfo(self._raw_data['productinfo'])
+            self._product_info = ProductInfo(
+                infodict=self._raw_data['productinfo'], parent=self
+            )
 
     @property
     def ident(self):
-        return self._name
+        if self.info.version:
+            return "{0} v{1}".format(self.name, self.version)
+        else:
+            return self.name
+
+    @property
+    def version(self):
+        return self._product_info.version
 
     @property
     def name(self):
         return self._name
 
     @property
+    def info(self):
+        return self._product_info
+
+    @property
     def core(self):
         return self._core
+
+    @staticmethod
+    def _parse_listing(listing):
+        rval = []
+        for cname in listing:
+            if cname is None:
+                continue
+            if isinstance(cname, dict):
+                qty = cname['qty']
+                try:
+                    cname = cname['card']
+                except KeyError:
+                    cname = cname['cable']
+            else:
+                qty = 1
+                cname = cname
+            rval.append((cname, qty))
+        return rval
+
+    @property
+    def card_listing(self):
+        return self._parse_listing(self._card_names)
+
+    @property
+    def cable_listing(self):
+        return self._parse_listing(self._cable_names)
+
+    @staticmethod
+    def _get_modules(parsed_listing):
+        rval = []
+        pl = get_prototype_lib()
+        for cname in parsed_listing:
+            rval.append((pl[cname[0]], cname[1]))
+        return rval
 
     @property
     def cards(self):
         if self._cards is None:
-            self._cards = []
-            pl = get_prototype_lib()
-            for cname in self._card_names:
-                if isinstance(cname, dict):
-                    qty = cname['qty']
-                    cname = cname['card']
-                else:
-                    qty = 1
-                self._cards.append((pl[cname], qty))
+            self._cards = self._get_modules(self.card_listing)
         return self._cards
-
-    @property
-    def card_names(self):
-        return self._card_names
 
     @property
     def cables(self):
         if self._cables is None:
-            self._cables = []
-            pl = get_prototype_lib()
-            for cname in self._cable_names:
-                if isinstance(cname, dict):
-                    qty = cname['qty']
-                    cname = cname['cable']
-                else:
-                    qty = 1
-                self._cables.append((pl[cname], qty))
+            self._cables = self._get_modules(self.cable_listing)
         return self._cables
-
-    @property
-    def cable_names(self):
-        return self._cable_names
 
     @property
     def labels(self):
@@ -216,14 +279,16 @@ class ProductPrototypeBase(PrototypeBase):
 
     @property
     def indicative_cost_hierarchical_breakup(self):
-        breakups = [x.indicative_cost_hierarchical_breakup
-                    for x in self._construct_components()]
-        if len(breakups) == 1:
-            return breakups[0]
-        rval = HierachicalCostingBreakup(self.ident)
-        for breakup in breakups:
-            rval.insert(breakup.name, breakup)
-        return rval
+        if self._indicative_cost_hierarchical_breakup is None:
+            breakups = [x.indicative_cost_hierarchical_breakup
+                        for x in self._construct_components()]
+            if len(breakups) == 1:
+                return breakups[0]
+            rval = HierachicalCostingBreakup(self.ident)
+            for breakup in breakups:
+                rval.insert(breakup.name, breakup)
+            self._indicative_cost_hierarchical_breakup = rval
+        return self._indicative_cost_hierarchical_breakup
 
     @property
     def _changelogpath(self):
@@ -236,7 +301,7 @@ class ProductPrototypeBase(PrototypeBase):
         raise NotImplementedError
 
     def _validate(self):
-        raise NotImplementedError
+        pass
 
 
 def get_folder_products(path):
@@ -267,7 +332,7 @@ productlib = gen_productlib()
 
 def get_product_by_ident(ident):
     for product in productlib:
-        if product.name == ident:
+        if product.ident == ident:
             return product
     logger.error("Could not find product for ident : " + ident)
 

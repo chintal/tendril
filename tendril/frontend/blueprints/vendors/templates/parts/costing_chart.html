@@ -3,11 +3,28 @@
     Released under the MIT license
 #}
 
+{% import "parts/validation_errors.html" as validation %}
+
 {% macro render_indicative_costing_chart(prototype) -%}
     <div class="small-12 columns panel header radius">
         <div class="sign small-9 medium-6 small-centered columns autoscale">
             <h6>Indicative Costing</h6>
         </div>
+        <div class="small-12 medium-6 columns">
+
+        <div id="indicative-costing-breakup-chart" class="small-12 columns">
+            <svg style="width: 100%; height: 300px;"></svg>
+        </div>
+
+        {% if prototype.sourcing_errors.terrors %}
+        <div class="small-12 columns">
+            {{ validation.render_validation_errors(prototype.sourcing_errors) }}
+        </div>
+        {% endif %}
+
+        </div>
+
+        <div class="small-12 medium-6 columns">
         <div class="small-12 columns">
             <article class="indicative-source-info">
                 <span class="indicative-costing-label small-6 columns">
@@ -18,10 +35,26 @@
                 </span>
             </article>
         </div>
-
-        <div id="indicative-costing-breakup-chart" class="small-12 columns">
-            <svg style="width: 100%; height: 300px;"></svg>
+        {% if prototype.indicative_cost_hierarchical_breakup.sections %}
+        <div class="small-12 columns">
+            <h4 class="indicative-source-info">
+                Top-level sections
+            </h4>
+            {% for title, percent, value in prototype.indicative_cost_hierarchical_breakup.sections %}
+            <article class="indicative-source-section-info">
+                <span class="indicative-costing-section-label small-6 columns">
+                    {{ title }}
+                </span>
+                <span class="indicative-costing-section-percent small-2 columns">
+                    {{ percent }}%
+                </span>
+                <span class="indicative-costing-section small-4 columns">
+                    {{ value.native_string | unicode }}
+                </span>
+            </article>
+            {% endfor %}
         </div>
+        {% endif %}
 
         <div class="small-12 columns fine-print">
             <h6>Notes</h6>
@@ -37,6 +70,8 @@
                     on the specific order circumstances.
                 </li>
             </ul>
+        </div>
+
         </div>
 
         <script type="text/javascript">

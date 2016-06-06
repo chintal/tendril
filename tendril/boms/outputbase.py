@@ -33,6 +33,7 @@ from tendril.gedaif.gsymlib import NoGedaSymbolException
 from tendril.utils import log
 from tendril.utils.types.lengths import Length
 from tendril.utils.types.currency import native_currency_defn
+from tendril.utils.types.currency import CurrencyValue
 
 from .validate import ValidationContext
 from .validate import ErrorCollector
@@ -101,7 +102,7 @@ class OBomCostingBreakup(object):
         self._name = name
         self._currency_symbol = native_currency_defn.symbol
         self._devices = {}
-        self._total_cost = 0
+        self._total_cost = CurrencyValue(0, native_currency_defn)
 
     @property
     def name(self):
@@ -120,6 +121,10 @@ class OBomCostingBreakup(object):
     def sort(self):
         for d in self._devices.keys():
             self._devices[d].sort(key=lambda x: x['size'], reverse=True)
+
+    @property
+    def sections(self):
+        return None
 
     @property
     def total_cost(self):
@@ -156,6 +161,14 @@ class HierachicalCostingBreakup(object):
     @property
     def name(self):
         return self._name
+
+    @property
+    def sections(self):
+        seclist = [
+            (k, int((v.total_cost / self.total_cost) * 100), v.total_cost)
+            for k, v in viewitems(self._sections)
+        ]
+        return sorted(seclist, key=lambda x: x[1], reverse=True)
 
     @property
     def total_cost(self):

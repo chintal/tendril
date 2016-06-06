@@ -23,7 +23,7 @@ Docstring for prototypebase
 """
 from copy import copy
 
-from tendril.boms.validate import ErrorCollector
+from tendril.boms.validate import ValidatableBase
 from tendril.boms.validate import FilePolicy
 from tendril.boms.validate import MissingFileError
 from tendril.boms.validate import MangledFileError
@@ -38,13 +38,11 @@ class MissingInformationError(Exception):
     pass
 
 
-class PrototypeBase(object):
+class PrototypeBase(ValidatableBase):
     def __init__(self):
+        super(PrototypeBase, self).__init__()
         self._status = None
         self._strategy = None
-        self._validated = False
-        self._validation_context = None
-        self._validation_errors = ErrorCollector()
 
     @property
     def ident(self):
@@ -117,14 +115,3 @@ class PrototypeBase(object):
 
     def _validate(self):
         raise NotImplementedError
-
-    def validate(self):
-        if not self._validated:
-            logger.debug("Validating {0}".format(self.ident))
-            self._validate()
-
-    @property
-    def validation_errors(self):
-        if not self._validated:
-            self._validate()
-        return self._validation_errors

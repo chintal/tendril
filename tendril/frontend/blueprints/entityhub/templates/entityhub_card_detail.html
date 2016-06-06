@@ -20,6 +20,7 @@
         {% if stage.prototype.validation_errors.terrors %}
             <dd data-magellan-arrival="validation"><a href="#validation">Validation</a></dd>
         {% endif %}
+        <dd data-magellan-arrival="configuration"><a href="#configuration">Configuration</a></dd>
         <dd data-magellan-arrival="costing"><a href="#costing">Costing</a></dd>
     </dl>
 </div>
@@ -91,7 +92,7 @@
             {% for row in stage.refbom.lines %}
                 <tr>
                     <td> <a href="/gsymlib/detail/{{ row.ident }}"> {{ row.ident }} </a> </td>
-                    <td> {{ row.quantity }} </td>
+                    <td class="text-center"> {{ row.quantity }} </td>
                     <td>
                         {% for refdes in row.refdeslist %}{{ refdes }}{% if not loop.last %}, {% endif %}{% endfor %}
                     </td>
@@ -139,43 +140,86 @@
 </div>
 {% endif %}
 
-<div class="small-12 medium-6 columns" data-magellan-destination="costing">
-    <a name="costing"></a>
-    {% if stage.prototype.sourcing_errors.terrors %}
+<div class="small-12 medium-6 columns" data-magellan-destination="configuration">
+    <a name="configuration"></a>
     <div class="small-12 columns panel header radius">
-        <div class="sign small-9 medium-6 small-centered columns autoscale">
-            <h6>Sourcing Errors</h6>
-        </div>
-        {{ validation.render_validation_errors(stage.prototype.sourcing_errors) }}
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+        <h6>Configuration</h6>
     </div>
-    {% endif %}
-    {{ costing_chart.render_indicative_costing_chart(stage.prototype) }}
+        {% if stage.prototype.configs.configuration_grouplist(stage.prototype.ident) %}
+        <div class="small-12 columns">
+            <h5 class="sectiontitle">Groups</h5>
+            {% for group in stage.prototype.configs.configuration_grouplist(stage.prototype.ident) %}
+            <article class="groupinfo">
+                <span class="name">{{ group }}</span>
+                <span class="desc">{{ stage.prototype.configs.get_group_desc(group) }}</span>
+            </article>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if stage.prototype.configs.configuration_motiflist(stage.prototype.ident) %}
+        <div class="small-12 columns">
+            <h5 class="sectiontitle">Motifs</h5>
+            {% for motif in stage.prototype.configs.configuration_motiflist(stage.prototype.ident) %}
+            <article class="groupinfo">
+                <span class="name">{{ motif }}</span>
+                <span class="desc">{{ motif.info }}</span>
+            </article>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if stage.prototype.configs.configuration_genlist(stage.prototype.ident) %}
+        <div class="small-12 columns">
+            <h5 class="sectiontitle">Generators</h5>
+            {% for gen, value in stage.prototype.configs.configuration_genlist(stage.prototype.ident).iteritems() %}
+            <article class="groupinfo">
+                <span class="name">{{ gen }}</span>
+                <span class="desc">{{ value }}</span>
+            </article>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if stage.prototype.configs.configuration_sjlist(stage.prototype.ident) %}
+        <div class="small-12 columns">
+            <h5 class="sectiontitle">SJs</h5>
+            <ul class="small-block-grid-3 small-12 columns small-centered">
+            {% for sj, v in stage.prototype.configs.configuration_sjlist(stage.prototype.ident).iteritems() %}
+                {% if v %}
+                <li class="simpletag">
+                <article class="groupinfo">
+                    <span class="simpletag"> {{ sj }} </span>
+                </article>
+                </li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 
     <!-- Test Protocols -->
-    <!-- Pricing -->
     <!-- Inclusion Information -->
     <!-- Serialnos Information > Each Pointing subsequently to  Test Results -->
     <!-- Inventory Information -->
     <!-- Utilization Information -->
 
+<!-- Pricing -->
+<div class="small-12 columns" data-magellan-destination="costing">
+    <a name="costing"></a>
+    {{ costing_chart.render_indicative_costing_chart(stage.prototype) }}
+</div>
 
 </div>
 {% endblock %}
 
 <!--
 
-    {% if stage.card.grouplist %}
-    <li class="title"> Groups </li>
-    <li>
-    <ul class="small-block-grid-3 small-11 columns small-centered">
-            {% for group in stage.card.grouplist %}
-            <li class="bullet-item"> {{ group }} </li>
-            {% endfor %}
-    </ul>
-    </li>
-    {% endif %}
+
     {% if stage.card.motiflist %}
     <li class="title"> Motifs </li>
     {% for k, v in stage.card.motiflist|dictsort %}
