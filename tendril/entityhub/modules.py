@@ -40,7 +40,7 @@ from tendril.boms.validate import QuantityTypeError
 from tendril.boms.validate import ValidationContext
 from tendril.boms.validate import ValidationError
 from tendril.boms.validate import get_dict_val
-from tendril.boms.outputbase import NoStructureHereException
+from tendril.boms.costingbase import NoStructureHereException
 
 from tendril.utils import log
 from tendril.utils.config import WARM_UP_CACHES

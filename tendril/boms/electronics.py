@@ -68,8 +68,8 @@ from .validate import ConfigSJUnexpectedError
 
 from .outputbase import OutputBom
 from .outputbase import OutputElnBomDescriptor
-from .outputbase import HierachicalCostingBreakup
-from .outputbase import NoStructureHereException
+from .costingbase import HierachicalCostingBreakup
+from .costingbase import NoStructureHereException
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)

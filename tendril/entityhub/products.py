@@ -26,10 +26,10 @@ from tendril.dox.labelmaker import manager
 
 from tendril.utils.fsutils import import_
 from tendril.utils.config import INSTANCE_ROOT
-from tendril.boms.outputbase import CompositeOutputBom
-from tendril.boms.outputbase import HierachicalCostingBreakup
 from tendril.conventions import status
 
+from tendril.boms.outputbase import CompositeOutputBom
+from tendril.boms.costingbase import HierachicalCostingBreakup
 from tendril.boms.validate import ValidatableBase
 
 from .modules import get_prototype_lib

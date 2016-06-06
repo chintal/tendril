@@ -19,9 +19,8 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from decimal import Decimal
-import numbers
 import re
+from decimal import Decimal
 from tendril.utils import log
 from .unitbase import NumericalUnitBase
 
@@ -36,50 +35,41 @@ def parse_length(value):
     match = lrex.match(value)
     if match is None:
         logger.warning("Length not parsed : " + value)
-        _olength = 0
-        _ounit = 'mm'
         raise ValueError(value)
 
     um = match.group('um')
     if um is not None:
         _olength = Decimal(um) / Decimal('1000000')
-        _ounit = 'um'
         return _olength
 
     mm = match.group('mm')
     if mm is not None:
         _olength = Decimal(mm) / Decimal('1000')
-        _ounit = 'mm'
         return _olength
 
     cm = match.group('cm')
     if cm is not None:
         _olength = Decimal(cm) / Decimal('100')
-        _ounit = 'cm'
         return _olength
 
     m = match.group('m')
     if m is not None:
         _olength = Decimal(m)
-        _ounit = 'm'
         return _olength
 
     inch = match.group('in')
     if inch is not None:
         _olength = Decimal(inch) * Decimal('25.4') / Decimal('1000')
-        _ounit = 'in'
         return _olength
 
     mil = match.group('mil')
     if mil is not None:
         _olength = Decimal(mil) * Decimal('25.4') / Decimal('1000000')
-        _ounit = 'mil'
         return _olength
 
     cmil = match.group('cmil')
     if cmil is not None:
         _olength = Decimal(cmil) * Decimal('25.4') / Decimal('100000')
-        _ounit = 'cmil'
         return _olength
 
 
