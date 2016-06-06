@@ -125,9 +125,11 @@ class OutputBomLine(SourceableBomLineMixin):
 
     @property
     def quantity_str(self):
-        qty = str(self.quantity)
+        qty = self.quantity
         if isinstance(qty, NumericalUnitBase):
             qty = qty.integral_repr
+        else:
+            qty = str(qty)
         return qty
 
     def __repr__(self):
@@ -256,6 +258,15 @@ class CompositeOutputBomLine(SourceableBomLineMixin):
     def quantity(self):
         # Component output bom doesn't currently support multipliers.
         return self.uquantity
+
+    @property
+    def quantity_str(self):
+        qty = self.quantity
+        if isinstance(qty, NumericalUnitBase):
+            qty = qty.integral_repr
+        else:
+            qty = str(qty)
+        return qty
 
     @property
     def uquantity(self):
