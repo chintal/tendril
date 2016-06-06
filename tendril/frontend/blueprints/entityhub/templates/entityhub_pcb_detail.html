@@ -254,7 +254,7 @@
 
                   costing_chart.yAxis
                       .tickFormat(function(d) {
-                          if (d => 0){
+                          if (d >= 0){
                             return "{{ stage.native_currency_symbol|unicode }}" + d3.format(",.2f")(d);
                           }
                           else{
@@ -279,9 +279,6 @@
     {% endif %}
 </div>
 
-<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-2" data-equalizer>
-
-</ul>
 </div>
 {% endblock %}
 

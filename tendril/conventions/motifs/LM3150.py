@@ -376,8 +376,14 @@ class MotifLM3150(MotifBase):
     def validate(self):
         pass
 
+    @property
     def listing(self):
-        pass
+        return [('Vout', self.Vout.quantized_repr),
+                ('Iout', self.Iout.quantized_repr),
+                ('Fsw', self.Fsw.quantized_repr),
+                ('Vin Range', '{0}-{1}'.format(self.Vin_min.quantized_repr,
+                                               self.Vin_max.quantized_repr)),
+                ]
 
     @property
     def parameters_base(self):

@@ -95,6 +95,10 @@ class MotifInampGainBase(MotifBase):
             lastval = rval
 
     @property
+    def listing(self):
+        return [('Gain', self.gain.quantized_repr)]
+
+    @property
     def parameters_base(self):
         p_gain = [
             ('R1', "Gain Setting Resistance", ''),

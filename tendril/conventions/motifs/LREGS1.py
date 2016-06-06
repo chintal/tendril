@@ -123,7 +123,7 @@ class MotifLREGS1(MotifBase):
 
     @property
     def listing(self):
-        return [('Vout', self.Vout)]
+        return [('Vout', self.Vout.quantized_repr)]
 
     def validate(self):
         pass

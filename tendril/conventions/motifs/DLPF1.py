@@ -185,6 +185,11 @@ class MotifDLPF1(MotifBase):
         return parameters
 
     @property
+    def listing(self):
+        return [('Fdiff', self.Fdiff.quantized_repr),
+                ('Fcm', self.Fcm.quantized_repr)]
+
+    @property
     def configdict_base(self):
         inputs = [
             ('desc', "Differential Low Pass RFI and AAF filter",

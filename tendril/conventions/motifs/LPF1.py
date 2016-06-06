@@ -98,6 +98,10 @@ class MotifLPF1(MotifBase):
         return stub
 
     @property
+    def listing(self):
+        return [('Fc', self.Fc.quantized_repr)]
+
+    @property
     def parameters_base(self):
         p_fc = [
             ('Fc', "Filter Cutoff Frequency", ''),
