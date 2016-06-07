@@ -256,7 +256,12 @@ class DigiKeyElnPart(VendorElnPartBase):
         for price in self._get_prices(soup):
             self.add_price(price)
 
-        self.overview_table = self._get_overview_table(soup)
+        try:
+            self.overview_table = self._get_overview_table(soup)
+        except AttributeError:
+            logger.error("Error acquiring DigiKey information for {0}"
+                         "".format(self.vpno))
+            return
         self.attributes_table = self._get_attributes_table(soup)
 
         self.manufacturer = self._get_manufacturer()
