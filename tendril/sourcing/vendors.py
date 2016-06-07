@@ -740,7 +740,10 @@ class VendorBase(object):
         ).extended_price(rqty).native_value
 
         for candidate in candidates:
-            ntcost = self._get_candidate_tcost(candidate, oqty)
+            try:
+                ntcost = self._get_candidate_tcost(candidate, oqty)
+            except AttributeError:
+                continue
             if ntcost < tcost:
                 tcost = ntcost
                 selcandidate = candidate
