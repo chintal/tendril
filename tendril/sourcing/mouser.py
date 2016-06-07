@@ -274,7 +274,6 @@ class VendorMouser(VendorBase):
     def _build_api_client(self):
         c = www.get_soap_client(self._api_endpoint,
                                 cache_requests=True,
-                                max_age=600000,
                                 minimum_spacing=5)
         header = self._build_mouser_header()
         c.set_options(soapheaders=header)

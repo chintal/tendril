@@ -422,6 +422,11 @@ config_options_network_caching = [
         "Whether or not to cache 301 and 302 redirects."
     ),
     ConfigOption(
+        'MAX_AGE_DEFAULT',
+        '600000',
+        'Default max_age for data originating from www.'
+    ),
+    ConfigOption(
         'FIREFOX_PROFILE_PATH',
         "None",
         "Path to the firefox profile to use for splinter."

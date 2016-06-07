@@ -49,6 +49,10 @@ This module uses the following configuration values from
 - :data:`tendril.utils.config.ENABLE_REDIRECT_CACHING`
   Whether or not redirect caching should be used.
 
+- :data:`tendril.utils.config.MAX_AGE_DEFAULT`
+  The default max age to use with all www caching methods which
+  support cache expiry.
+
 Redirect caching speeds up network accesses by saving ``301`` and ``302``
 redirects, and not needing to get the correct URL on a second access. This
 redirect cache is stored as a pickled object in the ``INSTANCE_CACHE``
@@ -135,6 +139,7 @@ from suds.transport.http import HttpTransport
 from fs.opener import fsopendir
 from fs.utils import movefile
 from tendril.utils.fsutils import temp_fs
+from tendril.utils.config import MAX_AGE_DEFAULT
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
@@ -158,6 +163,8 @@ logging.getLogger('suds.transport.http').setLevel(logging.INFO)
 WWW_CACHE = os.path.join(INSTANCE_CACHE, 'soupcache')
 REQUESTS_CACHE = os.path.join(INSTANCE_CACHE, 'requestscache')
 SOAP_CACHE = os.path.join(INSTANCE_CACHE, 'soapcache')
+
+_internet_connected = False
 
 
 def _get_http_proxy_url():
@@ -321,10 +328,8 @@ def _create_opener():
         openr = build_opener(HTTPSHandler(), HTTPSHandler(),
                              CachingRedirectHandler)
     openr.addheaders = [('User-agent', 'Mozilla/5.0')]
-    if _test_opener(openr) is True:
-        return openr
-    openr = build_opener(CachingRedirectHandler)
-    openr.addheaders = [('User-agent', 'Mozilla/5.0')]
+    global _internet_connected
+    _internet_connected = _test_opener(openr)
     return openr
 
 opener = _create_opener()
@@ -429,6 +434,9 @@ class CacheBase(object):
         """
         return filecontent
 
+    def _cached_exists(self, filepath):
+        return self.cache_fs.exists(filepath)
+
     def _is_cache_fresh(self, filepath, max_age):
         """
         Given the path to a file in the cache and the maximum age for the
@@ -440,7 +448,7 @@ class CacheBase(object):
         :param max_age: Maximum age of fresh content, in seconds.
 
         """
-        if self.cache_fs.exists(filepath):
+        if self._cached_exists(filepath):
             tn = int(time.time())
             tc = int(time.mktime(
                 self.cache_fs.getinfo(filepath)['modified_time'].timetuple())
@@ -458,10 +466,18 @@ class CacheBase(object):
         let this function maintain the cached responses and handle retrieval
         of the response.
 
+        If the module's :data:`_internet_connected` is set to False, the
+        cached value is returned regardless.
+
         """
         filepath = self._get_filepath(*args, **kwargs)
+        send_cached = False
+        if not _internet_connected and self._cached_exists(filepath):
+            send_cached = True
         if self._is_cache_fresh(filepath, max_age):
             logger.debug("Cache HIT")
+            send_cached = True
+        if send_cached is True:
             if getcpath is False:
                 try:
                     filecontent = self.cache_fs.open(filepath, 'rb').read()
@@ -533,7 +549,7 @@ class WWWCachedFetcher(CacheBase):
         logger.debug('Getting url content : {0}'.format(url))
         return urlopen(url).read()
 
-    def fetch(self, url, max_age=500000, getcpath=False):
+    def fetch(self, url, max_age=MAX_AGE_DEFAULT, getcpath=False):
         """
         Return the content located at the ``url`` provided. If a fresh cached
         version exists, it is returned. If not, a fresh one is obtained,
@@ -652,7 +668,7 @@ def get_session(target='http://', heuristic=None):
     if _proxy_dict is not None:
         s.proxies.update(_proxy_dict)
     if heuristic is None:
-        heuristic = ExpiresAfter(days=5)
+        heuristic = ExpiresAfter(seconds=MAX_AGE_DEFAULT)
     s.mount(target, _get_requests_cache_adapter(heuristic))
     return s
 
@@ -745,7 +761,7 @@ class CachedTransport(CacheBase, HttpAuthenticated):
 
         """
         cache_dir = kwargs.pop('cache_dir')
-        self._max_age = kwargs.pop('max_age', 600000)
+        self._max_age = kwargs.pop('max_age', MAX_AGE_DEFAULT)
         CacheBase.__init__(self, cache_dir=cache_dir)
 
     def _get_filepath(self, request):
@@ -832,7 +848,7 @@ class CachedThrottledTransport(ThrottledTransport, CachedTransport):
                                 Default 0.
         """
         cache_dir = kwargs.pop('cache_dir')
-        max_age = kwargs.pop('max_age', 600000)
+        max_age = kwargs.pop('max_age', MAX_AGE_DEFAULT)
         CachedTransport.__init__(self, cache_dir=cache_dir, max_age=max_age)
         ThrottledTransport.__init__(self, **kwargs)
 
@@ -859,7 +875,7 @@ class CachedThrottledTransport(ThrottledTransport, CachedTransport):
 
 
 def get_soap_client(wsdl, cache_requests=True,
-                    max_age=600000, minimum_spacing=0):
+                    max_age=MAX_AGE_DEFAULT, minimum_spacing=0):
     """
     Creates and returns a suds/SOAP client instance bound to the
     provided ``WSDL``. If ``cache_requests`` is True, then the
