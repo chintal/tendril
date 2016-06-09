@@ -892,7 +892,6 @@ def get_soap_client(wsdl, cache_requests=True,
             soap_transport = CachedThrottledTransport(
                 cache_dir=SOAP_CACHE, max_age=max_age,
                 minimum_spacing=minimum_spacing,
-                # proxy=_proxy_dict,
             )
         else:
             soap_transport = CachedThrottledTransport(

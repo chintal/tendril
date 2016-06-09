@@ -597,6 +597,11 @@ def get_folder_symbols(path, template=None,
                 if symbol.is_subcircuit:
                     subcircuits.append(symbol)
                 symbols.append(symbol)
+                # TODO This needs to be reimplemented in a cleaner form.
+                if symbol.value.startswith('DUAL'):
+                    nsymbol = GedaSymbol(symbol.fpath)
+                    nsymbol.value = symbol.value.split(' ', 1)[1]
+                    symbols.append(nsymbol)
     return symbols
 
 

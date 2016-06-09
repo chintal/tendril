@@ -73,11 +73,11 @@ DEVICE_CLASSES_DOC = [
     ('SOCKET STRIP', 'SIP sockets'),
     ('SOCKET DIP', 'IC sockets and bases'),
     ('RELAY', 'Relays'),
-    ('MODULE', 'Modules'),
     ('MODULE SMPS', 'OTS Prefabricated SMPS Modules'),
     ('MODULE LCD', 'LCDs'),
-    ('PCB', 'Printed Circuit Board'),
+    ('MODULE', 'Modules'),
     ('PCB EDGE', 'Printed Circuit Board Edges'),
+    ('PCB', 'Printed Circuit Board'),
     ('BUZZER', 'Buzzers'),
     ('CONN CIRCULAR', 'Circular Connectors'),
     ('CONN BNC', 'BNC Connectors'),
@@ -133,7 +133,7 @@ DEVICE_CLASSES_DOC = [
 ]
 
 
-DEVICE_CLASSES = set([x[0] for x in DEVICE_CLASSES_DOC])
+DEVICE_CLASSES = [x[0] for x in DEVICE_CLASSES_DOC]
 
 nofp_strs = {"PCB", "PCB EDGE", "CONN", "MODULE", "CRYSTAL OSC", "HEAT SINK",
              "SOCKET POWER", "FUSE", "SWITCH PUSHBTN",
@@ -352,6 +352,17 @@ def parse_crystal(value):
         return None
 
 
+def parse_led(value):
+    rex = re.compile(r'^(?P<color>RED|GREEN|YELLOW|BLUE|WHITE|BICOLOR)(/(?P<voltage>[\d.]+V))?(/(?P<wattage>[\d.]+W))?$')
+    try:
+        rdict = rex.search(value).groupdict()
+        return rdict.get('color', None), \
+            rdict.get('voltage', None), \
+            rdict.get('wattage', None)
+    except AttributeError:
+        return None
+
+
 from tendril.utils.types.electromagnetic import parse_resistance  # noqa
 from tendril.utils.types.electromagnetic import parse_capacitance  # noqa
 from tendril.utils.types.electromagnetic import parse_current  # noqa
@@ -381,6 +392,8 @@ def check_for_std_val(ident):
         vals = parse_capacitor(value)
     if device.startswith('CRYSTAL'):
         vals = parse_crystal(value)
+    if device.startswith('LED'):
+        vals = parse_led(value)
     if vals is not None:
         return True
     return False

@@ -504,13 +504,15 @@ class VendorDigiKey(VendorBase):
     #:
     _devices = [
         'IC SMD', 'IC THRU', 'IC PLCC',
-        'FERRITE BEAD SMD', 'TRANSISTOR THRU', 'TRANSISTOR SMD',
+        'FERRITE BEAD SMD', 'TRANSISTOR THRU', 'TRANSISTOR SMD', 'MOSFET SMD',
         'CONN DF13', 'CONN DF13 HOUS', 'CONN DF13 WIRE', 'CONN DF13 CRIMP',
-        'CONN MODULAR', 'DIODE SMD', 'DIODE THRU', 'BRIDGE RECTIFIER',
-        'VARISTOR', 'RES SMD', 'RES THRU', 'RES ARRAY SMD',
+        'DIODE SMD', 'DIODE THRU', 'LED SMD', 'BRIDGE RECTIFIER', 'ZENER SMD',
+        'RES SMD', 'RES THRU', 'RES ARRAY SMD', 'VARISTOR',
         'CAP CER SMD', 'CAP TANT SMD', 'CAP AL SMD', 'CAP MICA SMD',
-        'TRANSFORMER SMD', 'INDUCTOR SMD', 'RELAY',
-        'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO', 'ZENER SMD'
+        'CAP ELEC THRU', 'TRANSFORMER SMD', 'INDUCTOR SMD', 'RELAY',
+        'CRYSTAL AT', 'CRYSTAL OSC', 'CRYSTAL VCXO',
+        'CONN MODULAR', 'CONN SECII',
+        'LIGHT PIPE',  'MODULE SMPS', 'SWITCH TACT'
     ]
 
     _url_base = 'http://www.digikey.com'
@@ -562,7 +564,8 @@ class VendorDigiKey(VendorBase):
             return None, 'NODEVICE'
         try:
             if device.startswith('RES') or device.startswith('POT') or \
-                    device.startswith('CAP') or device.startswith('CRYSTAL'):
+                    device.startswith('CAP') or device.startswith('CRYSTAL') or \
+                    device.startswith('LED'):
                 if check_for_std_val(ident) is False:
                     return self._get_search_vpnos(device, value, footprint)
                 try:
@@ -1234,6 +1237,8 @@ class VendorDigiKey(VendorBase):
             package_filter_type = 'inlist'
             extraparams = (('Operating Mode', 'Fundamental'),)
             devtype = 'crystal'
+        elif device == "LED SMD":
+            raise NotImplementedError
         else:
             raise NotImplementedError
         return (devtype, searchurlbase, packagetf, package_header,
@@ -1305,8 +1310,8 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _process_package_options(filters, package_header,
                                  package_filter_type, footprint):
-        lparams = []
         if package_filter_type is not None:
+            lparams = []
             pkgopcode = None
             for option in filters[package_header][1]:
                 if not option[0]:
@@ -1333,7 +1338,9 @@ class VendorDigiKey(VendorBase):
                     lparams.append((filters[package_header][0], opt))
             else:
                 lparams.append((filters[package_header][0], pkgopcode))
-        return lparams
+            return lparams
+        else:
+            return []
 
     @staticmethod
     def _process_extraparams(filters, extraparams):
@@ -1365,9 +1372,13 @@ class VendorDigiKey(VendorBase):
         if packagetf is not None:
             footprint, extraparams_fp = packagetf(footprint)
 
-        params.extend(self._process_package_options(
+        packages_handled = False
+        package_params = self._process_package_options(
             filters, package_header, package_filter_type, footprint
-        ))
+        )
+        if len(package_params):
+            packages_handled = True
+            params.extend(package_params)
 
         if extraparams_fp is not None:
             if extraparams is not None:
@@ -1375,9 +1386,7 @@ class VendorDigiKey(VendorBase):
             else:
                 extraparams = extraparams_fp
         params.extend(self._process_extraparams(filters, extraparams))
-
         searchurl = searchurlbase + '?' + urllib.urlencode(params)
-
         soup = self.get_soup(searchurl)
         if soup is None:
             return None, 'URL_FAIL'
@@ -1403,7 +1412,10 @@ class VendorDigiKey(VendorBase):
             return None, 'NO_RESULTS:PAS2'
 
         results = sr.parts
-        sr = self._process_results(results, value, footprint)
+        if not packages_handled:
+            sr = self._process_results(results, value, footprint)
+        else:
+            sr = self._filter_results_unfiltered(results)
         if sr.success is False:
             return None, sr.strategy
         return sr.parts, sr.strategy

@@ -306,7 +306,7 @@ class EntityElnBom(EntityBomBase):
     def _add_item(self, item):
         # TODO This function includes very specific special cases
         # These need to come out of core and into the instance.
-        if item.data['device'] == 'TESTPOINT':
+        if item.data['device'] in {'TESTPOINT', 'PCB EDGE'}:
             return
         tgroup = self.find_tgroup(item)
         skip = False
@@ -331,6 +331,29 @@ class EntityElnBom(EntityBomBase):
             comp.define(
                 item.data['refdes'], 'SOLDER DOT', '0E',
                 footprint='MY-0603', fillstatus=item.data['fillstatus']
+            )
+            tgroup.insert_eln_comp(comp)
+            skip = True
+        if item.data['value'].startswith('DUAL'):
+            fp = item.data['footprint']
+            # if fp.endswith('-2'):
+            #     fp = fp[:-1 * len('-2')]
+            comp = EntityElnComp()
+            comp.define(
+                refdes=item.data['refdes'] + '.1',
+                device=item.data['device'],
+                value=item.data['value'].split(' ', 1)[1],
+                footprint=fp,
+                fillstatus=item.data['fillstatus']
+            )
+            tgroup.insert_eln_comp(comp)
+            comp = EntityElnComp()
+            comp.define(
+                refdes=item.data['refdes'] + '.2',
+                device=item.data['device'],
+                value=item.data['value'].split(' ', 1)[1],
+                footprint=fp,
+                fillstatus=item.data['fillstatus']
             )
             tgroup.insert_eln_comp(comp)
             skip = True
