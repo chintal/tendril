@@ -31,7 +31,6 @@ from future.utils import viewitems
 from tendril.boms.electronics import EntityElnBom
 from tendril.gedaif.conffile import ConfigsFile
 
-
 from tendril.boms.validate import ConfigOptionPolicy
 from tendril.boms.validate import ErrorCollector
 from tendril.boms.validate import IdentPolicy

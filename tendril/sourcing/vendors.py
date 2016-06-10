@@ -60,6 +60,10 @@ class VendorPartRetrievalError(Exception):
     pass
 
 
+class VendorPartPricingError(Exception):
+    pass
+
+
 class DBPartDataUnusable(Exception):
     pass
 
@@ -475,7 +479,10 @@ class VendorPartBase(object):
         )
 
     def get_effective_price(self, price):
-        return self._get_effective_price(price)
+        try:
+            return self._get_effective_price(price)
+        except:
+            raise VendorPartPricingError(self._vendor.name, self.vpno)
 
     @property
     def effective_prices(self):
@@ -743,10 +750,23 @@ class VendorBase(object):
         if get_all:
             return [self._get_candidate_isinfo(x, oqty) for x in candidates]
 
-        selcandidate = candidates[0]
-        tcost = selcandidate.get_effective_price(
-            selcandidate.get_price(rqty)[0]
-        ).extended_price(rqty).native_value
+        tcost = None
+        idx = 0
+        while not tcost:
+            selcandidate = candidates[idx]
+            try:
+                tcost = selcandidate.get_effective_price(
+                    selcandidate.get_price(rqty)[0]
+                ).extended_price(rqty).native_value
+            except VendorPartPricingError:
+                logger.error("Unable to price part {0}".format(selcandidate.vpno))
+                idx += 1
+            except IndexError:
+                if not get_all:
+                    return SourcingInfo(self, None, None, None,
+                                        None, None, None, None)
+                else:
+                    return []
 
         for candidate in candidates:
             try:
