@@ -56,6 +56,10 @@ SourcingInfo = namedtuple(
 )
 
 
+class VendorPartRetrievalError(Exception):
+    pass
+
+
 class DBPartDataUnusable(Exception):
     pass
 
@@ -105,6 +109,11 @@ class VendorMapFileDB(MapFileBase):
     def get_strategy(self, canonical):
         return controller.get_strategy(vendor=self._vendor_name,
                                        ident=canonical)
+
+    def remove_apartno(self, partno, canonical):
+        return controller.remove_amap_vpno(
+            vendor=self._vendor_name, ident=canonical, vpno=partno
+        )
 
 
 class VendorInvoiceLine(object):

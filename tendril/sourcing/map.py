@@ -118,10 +118,16 @@ def export_vendor_map_audit(vendor_obj, max_age=600000):
         for vpno in mapobj.get_all_partnos(ident):
             try:
                 vp = vendor_obj.get_vpart(vpno, ident, max_age)
+            except vendors.VendorPartRetrievalError:
+                logger.error(
+                    "Permanent Retrieval Error while getting part {0} from "
+                    "{1}. Removing from Map.".format(vpno, vendor_obj.name)
+                )
+                mapobj.remove_apartno(vpno, ident)
+                continue
             except:
-                logger.error("Error while getting part {0} from {1}".format(
-                    vpno, vendor_obj.name
-                ))
+                logger.error("Unhandled Error while getting part {0} from {1}"
+                             "".format(vpno, vendor_obj.name))
                 raise
             try:
                 assert isinstance(vp, vendors.VendorElnPartBase)

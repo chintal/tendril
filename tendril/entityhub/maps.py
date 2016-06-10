@@ -89,6 +89,9 @@ class MapFileBase(object):
     def length(self):
         raise NotImplementedError
 
+    def remove_apartno(self, partno, canonical):
+        raise NotImplementedError
+
 
 class MapFile(MapFileBase):
     # Deprecated.

@@ -182,6 +182,7 @@ import urllib
 import urlparse
 from copy import copy
 from decimal import Decimal
+from urllib2 import HTTPError
 
 from tendril.conventions.electronics import check_for_std_val
 from tendril.conventions.electronics import parse_capacitor
@@ -203,6 +204,8 @@ from .vendors import SearchResult
 from .vendors import VendorBase
 from .vendors import VendorElnPartBase
 from .vendors import VendorPrice
+from .vendors import VendorPartRetrievalError
+
 
 logger = log.get_logger(__name__, log.DEFAULT)
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
@@ -248,10 +251,17 @@ class DigiKeyElnPart(VendorElnPartBase):
         and populates the object with all the necessary information.
 
         """
-        soup = self._vendor.get_soup(self.vparturl)
+        try:
+            soup = self._vendor.get_soup(self.vparturl)
+        except HTTPError as e:
+            if e.code == 404:
+                logger.error("Got 404 opening DigiKey product page : " + self.vpno)
+                raise VendorPartRetrievalError
+            else:
+                raise
         if soup is None:
             logger.error("Unable to open DigiKey product page : " + self.vpno)
-            return
+            raise VendorPartRetrievalError
 
         for price in self._get_prices(soup):
             self.add_price(price)
