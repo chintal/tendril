@@ -269,6 +269,19 @@ class ConfigBase(object):
                     for param, action in lactions.iteritems():
                         if action == 'pass':
                             continue
+                        if action == 'extend':
+                            if param == 'grouplist':
+                                if param not in nconfig.keys():
+                                    nconfig[param] = []
+                                if param not in component.keys():
+                                    warnings.warn(
+                                        "Something wrong with Matrix Definitions",
+                                        Warning
+                                    )
+                                    continue
+                                nlist = [x for x in component[param] if x is not None]
+                                nconfig[param].extend(nlist)
+                                continue
                         if action == 'update':
                             if param in ['genlist', 'sjlist']:
                                 if param not in nconfig.keys():
