@@ -771,7 +771,7 @@ class VendorBase(object):
         for candidate in candidates:
             try:
                 ntcost = self._get_candidate_tcost(candidate, oqty)
-            except AttributeError:
+            except VendorPartPricingError:
                 continue
             if ntcost < tcost:
                 tcost = ntcost
