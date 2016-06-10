@@ -215,7 +215,10 @@ class MouserElnPart(VendorElnPartBase):
         self.mpartno = part_data.ManufacturerPartNumber
         self.datasheet = part_data.DataSheetUrl
         self.package = None
-        self.vqtyavail = int(part_data.Availability.split()[0])
+        try:
+            self.vqtyavail = int(part_data.Availability.split()[0])
+        except TypeError:
+            self.vqtyavail = 0
         self.vpartdesc = part_data.Description
         self.vparturl = part_data.ProductDetailUrl
         self.part_data = part_data
