@@ -23,6 +23,7 @@ import os
 from urllib import urlencode
 from urllib2 import unquote
 from collections import namedtuple
+from future.utils import viewitems
 
 from flask import render_template, abort, request
 from flask import redirect, url_for
@@ -125,7 +126,14 @@ def get_geda_browser_context(path):
     return context
 
 
-cardlisting = namedtuple('CardInclusionListing', 'name, desc, status, qty')
+context_cardlisting = namedtuple(
+    'ContextCardListing',
+    'name, desc, status, qty, proj, projdesc, projstatus'
+)
+simple_cardlisting = namedtuple(
+    'SimpleCardListing',
+    'name, desc, status, qty'
+)
 
 
 def _status_filter(cards, diversity=5):
@@ -138,6 +146,26 @@ def _status_filter(cards, diversity=5):
     used_statuses.sort()
     allowed_statuses = used_statuses[:diversity]
     return [x for x in cards if x.status in allowed_statuses]
+
+
+def _group_by_pcbname(cards):
+    rval = {}
+    for card in cards:
+        ncard = simple_cardlisting(card.name, card.desc,
+                                   card.status, card.qty)
+        if card.proj in rval.keys():
+            rval[card.proj][1].append(ncard)
+        else:
+            rval[card.proj] = [card.projdesc, [ncard],
+                               card.projstatus, None, None]
+    for key, value in viewitems(rval):
+        qtys = [x.qty for x in value[1]]
+        value[3] = min(qtys)
+        value[4] = max(qtys)
+        if value[3] == value[4]:
+            value[4] = None
+        value[1] = sorted(value[1], key=lambda y: y.name)
+    return rval
 
 
 def get_geda_symbol_context(ident):
@@ -162,17 +190,21 @@ def get_geda_symbol_context(ident):
                 configs = cobom.descriptors[idx].configurations
                 carddesc = configs.description(cardname)
                 pcbstatus = configs.status_config(cardname)
-                cards.append(
-                    cardlisting(cardname, carddesc, pcbstatus, column)
-                )
+                proj = configs.pcbname
+                projdesc = configs.description()
+                projstatus = configs.status
+                cards.append(context_cardlisting(
+                    cardname, carddesc, pcbstatus, column,
+                    proj, projdesc, projstatus))
 
     cards = _status_filter(cards)
+    inclusion = _group_by_pcbname(cards)
 
     stage = {'ident': ident,
              'symbol': symbol[0],
              'sympaths': [os.path.relpath(sym.fpath, GEDA_SYMLIB_ROOT) for sym in symbol],  # noqa
              'imgpaths': [sym.img_repr_fname for sym in symbol],
-             'inclusion': cards,
+             'inclusion': inclusion,
              'breadcrumbs': breadcrumbs}
 
     inv_loc_status = {}

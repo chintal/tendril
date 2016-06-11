@@ -112,21 +112,45 @@
             <table id="inclusion_table" class="display" data-paging='false'>
                 <thead>
                 <tr>
-                    <th class="all">Card</th>
+                    <th></th>
+                    <th class="all">Project</th>
                     <th class="desktop">Description</th>
                     <th class="all">Status</th>
                     <th class="all">Quantity</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for row in stage.inclusion %}
-                    <tr>
-                        <td> <a href="/entityhub/cards/{{row.0}}">{{ row.name }}</a> </td>
-                        <td> {{ row.desc }} </td>
-                        <td data-sort={{ row.status.num }} class="text-center">
-                            <span class="center label radius {{ row.status.html_class }}"> {{ row.status }} </span>
+                {% for k, v in stage.inclusion.iteritems() %}
+                    <tr data-content="
+                    <div class='dtchildslider'>
+                    <table class='childtable'>
+                        {% for card in v.1 %}
+                        <tr>
+                            <td>
+                                <a href='/entityhub/cards/{{card.name}}'>{{ card.name }}</a>
+                            </td>
+                            <td> {{ card.desc }} </td>
+                            <td class='text-center'>
+                                <span class='center label radius {{ card.status.html_class }}'>
+                                    {{ card.status }}
+                                </span>
+                            </td>
+                            <td class='text-center'> {{ card.qty }} </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    </div>
+                    ">
+                        <td class="details-control"></td>
+                        <td> <a href="/entityhub/pcbs/{{k}}">{{ k }}</a> </td>
+                        <td> {{ v.0 }} </td>
+                        <td data-sort={{ v.2 }} class="text-center">
+                            <span class="center label radius {{ v.2.html_class }}">
+                                {{ v.2 }}
+                            </span>
                         </td>
-                        <td class="text-center"> {{ row.qty }} </td>
+                        <td data-sort={% if v.4 %}{{v.4}}{% else %}{{v.3}}{% endif %} class="text-center">
+                            {{ v.3 }}{% if v.4 %}-{{v.4}}{% endif %} </td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -137,10 +161,33 @@
                 var table = $('#inclusion_table').DataTable({
                     /* Disable initial sort */
                     "aaSorting": [],
+                    columnDefs:[
+                        {orderable: false, targets: [0]}
+                    ],
                     {% include 'parts/datatable_defaults.html' %}
                 });
                 table.buttons().container()
                     .appendTo( '#inclusion_table_wrapper .small-12.medium-6.columns:eq(0)' );
+                $('#inclusion_table tr').each( function () {
+                    table.row($(this)).child( $(this).attr('data-content'), 'no-padding');
+                });
+                $('#inclusion_table tbody').on('click', 'td.details-control', function () {
+                    var tr = $(this).closest('tr');
+                    var row = table.row( tr );
+                    if ( row.child.isShown() ) {
+                        // This row is already open - close it
+                        $('div.dtchildslider', row.child()).slideUp( function () {
+                            row.child.hide();
+                            tr.removeClass('shown');
+                        });
+                    }
+                    else {
+                        // Open this row
+                        row.child.show();
+                        tr.addClass('shown');
+                        $('div.dtchildslider', row.child()).slideDown();
+                    }
+                });
             });
         </script>
 

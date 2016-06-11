@@ -99,7 +99,7 @@ class MotifLPF1(MotifBase):
 
     @property
     def listing(self):
-        return [('Fc', self.Fc.quantized_repr)]
+        return [('Fc', self.Fc)]
 
     @property
     def parameters_base(self):

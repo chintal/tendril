@@ -231,8 +231,12 @@ class CompositeOutputBomLine(SourceableBomLineMixin):
 
     @property
     def refdeslist(self):
-        # REFDES does not currently survive composition
         return [self._parent.get_col_title(x)
+                for x, q in enumerate(self.columns) if q > 0]
+
+    @property
+    def collist(self):
+        return [(self._parent.get_col_title(x), self.columns[x])
                 for x, q in enumerate(self.columns) if q > 0]
 
     @refdeslist.setter
