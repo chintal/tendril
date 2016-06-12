@@ -321,7 +321,7 @@ class CostableBom(object):
     @property
     def indicative_cost(self):
         if self._indicative_cost is None:
-            self._indicative_cost = 0
+            self._indicative_cost = CurrencyValue(0, native_currency_defn)
             for line in self.lines:
                 lcost = line.indicative_cost
                 if lcost is not None:

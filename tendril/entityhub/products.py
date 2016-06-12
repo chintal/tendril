@@ -181,6 +181,10 @@ class ProductPrototypeBase(PrototypeBase):
     def cable_listing(self):
         return self._parse_listing(self._cable_names)
 
+    @property
+    def module_listing(self):
+        return {k: v for k, v in (self.card_listing + self.cable_listing)}
+
     @staticmethod
     def _get_modules(parsed_listing):
         rval = []
@@ -230,7 +234,7 @@ class ProductPrototypeBase(PrototypeBase):
         return self._product_info.desc
 
     def _get_status(self):
-        raise NotImplementedError
+        self._status = self._product_info.status
 
     def _construct_components(self):
         components = []
@@ -355,3 +359,11 @@ def generate_labels(product, sno, label_manager=None):
                   "prototype object's make_labels function directly instead.",
                   DeprecationWarning)
     product.make_labels(sno, label_manager)
+
+
+def get_module_inclusion(modulename):
+    rval = []
+    for p in productlib:
+        if modulename in p.module_listing.keys():
+            rval.append((p, p.module_listing[modulename]))
+    return rval

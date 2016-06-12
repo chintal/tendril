@@ -5,6 +5,24 @@
 
 {% import "parts/validation_errors.html" as validation %}
 
+{% macro render_notes() -%}
+<div class="small-12 columns fine-print">
+    <h6>Notes</h6>
+    <ul>
+        <li>
+            Check Sourcing Errors for any components which could not be
+            sourced. Costs for these components are not incuded in the
+            estimate.
+        </li>
+        <li>
+            Costing information is based on approximations involving
+            inventory quantity guidelines. Actual costs will vary based
+            on the specific order circumstances.
+        </li>
+    </ul>
+</div>
+{% endmacro -%}
+
 {% macro render_indicative_costing_chart(prototype) -%}
     <div class="small-12 columns panel header radius">
         <div class="sign small-9 medium-6 small-centered columns autoscale">
@@ -13,13 +31,19 @@
         <div class="small-12 medium-6 columns">
 
         <div id="indicative-costing-breakup-chart" class="small-12 columns">
-            <svg style="width: 100%; height: 300px;"></svg>
+            <svg style="width: 100%; height: 350px;"></svg>
         </div>
 
         {% if prototype.sourcing_errors.terrors %}
         <div class="small-12 columns">
             {{ validation.render_validation_errors(prototype.sourcing_errors) }}
         </div>
+        {% endif %}
+
+        {% if prototype.indicative_cost_hierarchical_breakup.sections %}
+        {% if prototype.indicative_cost_hierarchical_breakup.sections|length > 7 %}
+            {{ render_notes() }}
+        {% endif %}
         {% endif %}
 
         </div>
@@ -56,21 +80,13 @@
         </div>
         {% endif %}
 
-        <div class="small-12 columns fine-print">
-            <h6>Notes</h6>
-            <ul>
-                <li>
-                    Check Sourcing Errors for any components which could not be
-                    sourced. Costs for these components are not incuded in the
-                    estimate.
-                </li>
-                <li>
-                    Costing information is based on approximations involving
-                    inventory quantity guidelines. Actual costs will vary based
-                    on the specific order circumstances.
-                </li>
-            </ul>
-        </div>
+        {% if prototype.indicative_cost_hierarchical_breakup.sections %}
+        {% if prototype.indicative_cost_hierarchical_breakup.sections|length <= 7 %}
+            {{ render_notes() }}
+        {% endif %}
+        {% else %}
+            {{ render_notes() }}
+        {% endif %}
 
         </div>
 
@@ -117,36 +133,11 @@
                 return Math.round(((value/t) * 100) * 10) / 10;
               };
 
-              // TODO
-              // This is a really horrible implementation.
-              // Spend some time and redo it recursivey at some point.
               getNodeValue = function getval(d) {
                     var value_number = 0;
                     if ( d.children ){
-                        for (i = 0; i < d.children.length; i++){
-                            child = d.children[i];
-                            if ( child.children ){
-                                for (j = 0; j < child.children.length; j++){
-                                    grandchild = child.children[j];
-                                    if ( grandchild.children ){
-                                        for (k = 0; k < grandchild.children.length; k++){
-                                            greatgrandchild = grandchild.children[k];
-                                            if ( greatgrandchild.children ){
-                                                ;
-                                            }
-                                            else{
-                                                value_number += greatgrandchild.value;
-                                            }
-                                        }
-                                    }
-                                    else{
-                                        value_number += grandchild.value;
-                                    }
-                                }
-                            }
-                            else{
-                                value_number += child.value;
-                            }
+                        for (var i = 0; i < d.children.length; i++){
+                            value_number += getNodeValue(d.children[i]);
                         }
                     }
                     else{

@@ -5,6 +5,9 @@
 
 {% extends "base_templates/base.html" %}
 {% import "parts/validation_errors.html" as validation %}
+{% import "parts/costing_chart.html" as costing_chart %}
+{% import "parts/module_configs.html" as configs %}
+{% import "parts/module_boms.html" as boms %}
 
 {% block magellan %}
 <!-- Magellan -->
@@ -12,10 +15,15 @@
     <dl class="sub-nav">
         <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
         <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
+        {% if stage.inclusion %}
+            <dd data-magellan-arrival="inclusion"><a href="#inclusion">Inclusion</a></dd>
+        {% endif %}
         <dd data-magellan-arrival="refbom"><a href="#refbom">BOM</a></dd>
         {% if stage.prototype.validation_errors.terrors %}
             <dd data-magellan-arrival="validation"><a href="#validation">Validation</a></dd>
         {% endif %}
+        <dd data-magellan-arrival="configuration"><a href="#configuration">Configuration</a></dd>
+        <dd data-magellan-arrival="costing"><a href="#costing">Costing</a></dd>
     </dl>
 </div>
 {% endblock %}
@@ -32,60 +40,9 @@
 <ul class="pricing-table shadow mrgn-20-top">
     <li class="price"> {{ stage.cable.configname }} </li>
     <li class="description"> {{ stage.cable.desc }} </li>
-    {% if stage.cable.grouplist %}
-    <li class="title"> Groups </li>
-    <li>
-    <ul class="small-block-grid-3 small-11 columns small-centered">
-            {% for group in stage.cable.grouplist %}
-            <li class="bullet-item"> {{ group }} </li>
-            {% endfor %}
-    </ul>
-    </li>
-    {% endif %}
-    {% if stage.cable.motiflist %}
-    <li class="title"> Motifs </li>
-    {% for k, v in stage.cable.motiflist|dictsort %}
-    {% if v|length >2 %}
-    <li class="bullet-item"> <b>{{ k }}</b> </li>
-    <li>
-    <ul class="small-block-grid-3 small-11 columns small-centered">
-        {% for p, s in v|dictsort %}
-        <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
-        {% endfor %}
-    </ul>
-    </li>
-    {% else %}
-    <li>
-    <ul class="small-block-grid-3 small-11 columns small-centered">
-        <li class="bullet-item"> <b>{{ k }}</b> </li>
-        {% for p, s in v|dictsort %}
-        <li class="bullet-item"> {{ p|upper }} : {{ s }} </li>
-        {% endfor %}
-    </ul>
-    </li>
-    {% endif %}
-    {% endfor %}
-    {% endif %}
-
-    {% if stage.cable.genlist %}
-    <li class="title"> Generators </li>
-    {% for k, v in stage.cable.genlist|dictsort %}
-        <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
-    {% endfor %}
-    {% endif %}
-
-
-    {% if stage.cable.sjlist %}
-    <li class="title"> SJs </li>
-    <li><ul class="small-block-grid-3 small-11 columns small-centered">
-    {% for k, v in stage.cable.sjlist|dictsort %}
-        <li class="bullet-item"> <b>{{ k }} :</b> {{ v }}  </li>
-    {% endfor %}
-    </ul></li>
-    {% endif %}
 </ul>
 
-    <div class="small-11 columns panel header radius">
+    <div class="small-12 columns panel header radius">
         <div class="sign small-9 medium-6 small-centered columns autoscale">
             <h6>References</h6>
         </div>
@@ -116,6 +73,21 @@
 </div>
 </div>
 
+<!-- Inclusion Information -->
+{% if stage.inclusion %}
+<div class="row">
+    <div class="small-12 columns" data-magellan-destination="inclusion">
+        <a name="inclusion"></a>
+        <div class="small-12 columns panel header radius">
+            <div class="sign small-9 medium-6 small-centered columns autoscale">
+                <h6>Inclusion</h6>
+            </div>
+            {{ boms.render_inclusion(stage.inclusion) }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- BOM -->
 <div class="row">
 <div class="small-12 medium-6 columns" data-magellan-destination="refbom">
@@ -125,39 +97,7 @@
         <h6>Reference BOM</h6>
     </div>
 
-    <div class="small-12 columns">
-        <table id="refbom_table" class="display" data-paging='false'>
-            <thead>
-            <tr>
-                <th class="all">Ident</th>
-                <th class="all">Quantity</th>
-                <th class="none">Refdes</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for row in stage.refbom.lines %}
-                <tr>
-                    <td> <a href="/gsymlib/detail/{{ row.ident }}"> {{ row.ident }} </a> </td>
-                    <td> {{ row.quantity_str }} </td>
-                    <td>
-                        {% for refdes in row.refdeslist %}{{ refdes }}{% if not loop.last %}, {% endif %}{% endfor %}
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <script type="text/javascript">
-        $(document).ready( function () {
-            var table = $('#refbom_table').DataTable({
-                /* Disable initial sort */
-                "aaSorting": [],
-                {% include 'parts/datatable_defaults.html' %}
-            });
-            table.buttons().container()
-                .appendTo( '#refbom_table_wrapper .small-12.medium-6.columns:eq(0)' );
-        });
-    </script>
+    {{ boms.render_bom(stage.refbom) }}
 </div>
 </div>
 
@@ -173,14 +113,28 @@
 </div>
 {% endif %}
 
+<div class="small-12 medium-6 columns" data-magellan-destination="configuration">
+    <a name="configuration"></a>
+    <div class="small-12 columns panel header radius">
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+        <h6>Configuration</h6>
+    </div>
+        {{ configs.render_configuration(stage.prototype) }}
+    </div>
+</div>
+
 
     <!-- Test Protocols -->
-    <!-- Pricing -->
-    <!-- Inclusion Information -->
+
     <!-- Serialnos Information > Each Pointing subsequently to  Test Results -->
     <!-- Inventory Information -->
     <!-- Utilization Information -->
 
+<!-- Pricing -->
+<div class="small-12 columns" data-magellan-destination="costing">
+    <a name="costing"></a>
+    {{ costing_chart.render_indicative_costing_chart(stage.prototype) }}
+</div>
 
 </div>
 {% endblock %}

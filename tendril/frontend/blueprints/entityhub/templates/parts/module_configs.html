@@ -1,0 +1,76 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% macro render_configuration(prototype) -%}
+
+    {% if prototype.configs.configuration_grouplist(prototype.ident) %}
+    <div class="small-12 columns">
+        <h5 class="sectiontitle">Groups</h5>
+        <section class="groupinfos">
+        {% for group in prototype.configs.configuration_grouplist(prototype.ident) %}
+        <article class="groupinfo">
+            <span class="name">{{ group }}</span>
+            <span class="desc">{{ prototype.configs.get_group_desc(group) }}</span>
+        </article>
+        {% endfor %}
+        </section>
+    </div>
+    {% endif %}
+
+        {% if prototype.configs.configuration_motiflist(prototype.ident) %}
+        <div class="small-12 columns">
+            <h5 class="sectiontitle">Motifs</h5>
+            <section class="groupinfos">
+            {% for motif in prototype.bom.motifs %}
+            <article class="groupinfo">
+                <span class="name">{{ motif.refdes }}</span>
+                <div class="desc">
+                    {{ motif.desc }}
+                    <div class="motifinfos">
+                    {% for listing in motif.listing %}
+                        <div class="motifinfo">
+                            <span class="name">{{ listing.0 }}</span>
+                            <span class="desc">{{ listing.1 }}</span>
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+            </section>
+        </div>
+        {% endif %}
+
+        {% if prototype.configs.configuration_genlist(prototype.ident) %}
+        <div class="small-12 columns">
+            <h5 class="sectiontitle">Generators</h5>
+            <section class="groupinfos">
+            {% for gen, value in prototype.configs.configuration_genlist(prototype.ident).iteritems() %}
+            <article class="groupinfo">
+                <span class="name">{{ gen }}</span>
+                <span class="desc">{{ value }}</span>
+            </article>
+            {% endfor %}
+            </section>
+        </div>
+        {% endif %}
+
+        {% if prototype.configs.configuration_sjlist(prototype.ident) %}
+        <div class="small-12 columns">
+            <h5 class="sectiontitle">SJs</h5>
+            <ul class="small-block-grid-3 small-12 columns small-centered taglist">
+            {% for sj, v in prototype.configs.configuration_sjlist(prototype.ident).iteritems() %}
+                {% if v %}
+                <li class="taglistelement">
+                <article class="taglistelement">
+                    <span class="simpletag"> {{ sj }} </span>
+                </article>
+                </li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+{% endmacro -%}

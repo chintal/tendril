@@ -1,0 +1,83 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+
+{% macro render_bom(refbom) -%}
+    <div class="small-12 columns">
+        <table id="refbom_table" class="display" data-paging='true'>
+            <thead>
+            <tr>
+                <th class="all">Ident</th>
+                <th class="all">Quantity</th>
+                <th class="none">Refdes</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in refbom.lines %}
+                <tr>
+                    <td> <a href="/gsymlib/detail/{{ row.ident }}"> {{ row.ident }} </a> </td>
+                    <td> {{ row.quantity_str }} </td>
+                    <td>
+                        {% for refdes in row.refdeslist %}{{ refdes }}{% if not loop.last %}, {% endif %}{% endfor %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#refbom_table').DataTable({
+                /* Disable initial sort */
+                "aaSorting": [],
+                "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+                {% include 'parts/datatable_defaults.html' %}
+            });
+            table.buttons().container()
+                .appendTo( '#refbom_table_wrapper .small-12.medium-6.columns:eq(0)' )
+                .addClass('small-12 columns no-padding');
+        });
+    </script>
+{% endmacro -%}
+
+{% macro render_inclusion(inclusion) -%}
+    <div class="small-12 columns">
+        <table id="inclusion_table" class="display" data-paging='false'>
+            <thead>
+                <tr>
+                    <th class="all"> Product </th>
+                    <th class="desktop"> Description </th>
+                    <th class="all"> Status </th>
+                    <th class="all"> Quantity </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product, qty in inclusion %}
+                <tr>
+                    <td> <a href="/entityhub/products/{{product.ident}}"> {{ product.ident }} </a></td>
+                    <td> {{ product.desc }} </td>
+                    <td data-sort={{ product.status }} class="text-center">
+                            <span class="center label radius {{ product.status.html_class }}">
+                                {{ product.status }}
+                            </span>
+                    </td>
+                    <td class="text-center"> {{ qty }} </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#inclusion_table').DataTable({
+                /* Disable initial sort */
+                "aaSorting": [],
+                {% include 'parts/datatable_defaults.html' %}
+            });
+            table.buttons().container()
+                .appendTo( '#inclusion_table_wrapper .small-12.medium-6.columns:eq(0)' );
+        });
+    </script>
+{% endmacro -%}
