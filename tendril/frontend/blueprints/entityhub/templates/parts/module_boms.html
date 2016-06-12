@@ -42,6 +42,73 @@
     </script>
 {% endmacro -%}
 
+{% macro render_cobom(cobom) -%}
+    <div class="small-12 columns">
+        <table id="refbom_table" class="display" data-paging='true'>
+            <thead>
+            <tr>
+                <th></th>
+                <th class="all">Ident</th>
+                <th class="all">Quantity</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in cobom.lines %}
+                <tr data-content="
+                <div class='dtchildslider'>
+                <table class='childtable'>
+                {% for col in row.collist %}
+                    <tr>
+                        <td> {{ col.0 }} </td>
+                        <td class='text-center'> {{ col.1 }} </td>
+                    </tr>
+                {% endfor %}
+                </table>
+                </div>
+                ">
+                    <td class="details-control"></td>
+                    <td> <a href="/gsymlib/detail/{{ row.ident }}"> {{ row.ident }} </a> </td>
+                    <td class="text-center"> {{ row.quantity_str }} </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#refbom_table').DataTable({
+                /* Disable initial sort */
+                "aaSorting": [],
+                "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+                columnDefs:[{orderable: false, targets: [0]}],
+                {% include 'parts/datatable_defaults.html' %}
+            });
+
+            table.buttons().container()
+                .appendTo( '#refbom_table_wrapper .small-12.medium-6.columns:eq(0)' )
+                .addClass('small-12 columns no-padding');
+
+            $('#refbom_table tbody').on('click', 'td.details-control', function () {
+                var tr = $(this).closest('tr');
+                var row = table.row( tr );
+                if ( row.child.isShown() ) {
+                    // This row is already open - close it
+                    $('div.dtchildslider', row.child()).slideUp( function () {
+                        row.child.hide();
+                        tr.removeClass('shown');
+                    });
+                }
+                else {
+                    // Open this row
+                    row.child( tr.attr('data-content'), 'no-padding').show();
+                    tr.addClass('shown');
+                    $('div.dtchildslider', row.child()).slideDown();
+                }
+            });
+        });
+    </script>
+{% endmacro -%}
+
 {% macro render_inclusion(inclusion) -%}
     <div class="small-12 columns">
         <table id="inclusion_table" class="display" data-paging='false'>

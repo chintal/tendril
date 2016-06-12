@@ -4,32 +4,60 @@
 #}
 
 {% extends "base_templates/base.html" %}
+{% import "parts/sort_filter.html" as sort_filter %}
 
 {% block main %}
 
 <h3> Products </h3>
-<ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
-    {% for product in stage.products %}
-    <li>
-        <a href="/entityhub/products/{{ product.ident }}">
-        <ul class="pricing-table active-tb shadow mrgn-20-top">
-            <li class="title"> {{ product.ident }} </li>
-            <li class="description"> {{ product.info.desc }} </li>
-            {% if product.info.status %}
-              <span class="right label radius {{ product.info.status.html_class }}">
-                  {{ product.info.status }}
-              </span>
-            {% endif %}
-            {% if product.info.line %}
-              <span class="right label radius secondary">{{ product.info.line }}</span>
-            {% endif %}
-            {% if product.info.ptype %}
-              <span class="right label radius secondary">{{ product.info.ptype }}</span>
-            {% endif %}
-        </ul>
-        </a>
-    </li>
-    {% endfor %}
-</ul>
-
+<div class="row">
+    <form id="filters"><fieldset>
+    <legend> Sort & Filter Options </legend>
+        {{ sort_filter.render_dimension('Line', 'line', stage.lines|dictsort, stage.products|length) }}
+        {{ sort_filter.render_dimension('Type', 'ptype', stage.ptypes|dictsort, stage.products|length) }}
+        {{ sort_filter.render_dimension('Status', 'status', stage.statuses, stage.products|length) }}
+        <div class="row collapse">
+            {{ sort_filter.render_text_filter('Title', 'title') }}
+            <div class="large-6 small-12 columns">
+                <div class="small-8 columns">
+                    <div id="filter-status" class="filter-status text-center panel callout radius" data-note="Products">
+                    </div>
+                </div>
+                <div class="small-4 columns right">
+                    <a id="reset" class="button expand tiny">Reset</a>
+                </div>
+            </div>
+        </div>
+    </fieldset></form>
+</div>
+<div class="row">
+    <ul id='card-container' class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
+        {% for product in stage.products %}
+        <li class="card-instance"
+            data-status="{{ product.info.status }}" data-line="{{ product.info.line }}"
+            data-title="{{ product.ident }}" data-ptype="{{ product.info.ptype }}"
+        >
+            <a href="/entityhub/products/{{ product.ident }}">
+            <ul class="pricing-table active-tb shadow mrgn-20-top">
+                <li class="title"> {{ product.ident }} </li>
+                <li class="description"> {{ product.info.desc }} </li>
+                {% if product.info.status %}
+                  <span class="right label radius {{ product.info.status.html_class }}">
+                      {{ product.info.status }}
+                  </span>
+                {% endif %}
+                {% if product.info.line %}
+                  <span class="right label radius secondary">{{ product.info.line }}</span>
+                {% endif %}
+                {% if product.info.ptype %}
+                  <span class="right label radius secondary">{{ product.info.ptype }}</span>
+                {% endif %}
+            </ul>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% assets "mixer_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+</div>
 {% endblock %}

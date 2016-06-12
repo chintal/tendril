@@ -234,9 +234,17 @@ class CompositeOutputBomLine(SourceableBomLineMixin):
         return [self._parent.get_col_title(x)
                 for x, q in enumerate(self.columns) if q > 0]
 
+    @staticmethod
+    def _get_qty_str(qty):
+        if isinstance(qty, NumericalUnitBase):
+            return qty.integral_repr
+        else:
+            return str(qty)
+
     @property
     def collist(self):
-        return [(self._parent.get_col_title(x), self.columns[x])
+        return [(self._parent.get_col_title(x),
+                 self._get_qty_str(self.columns[x]))
                 for x, q in enumerate(self.columns) if q > 0]
 
     @refdeslist.setter
@@ -265,12 +273,7 @@ class CompositeOutputBomLine(SourceableBomLineMixin):
 
     @property
     def quantity_str(self):
-        qty = self.quantity
-        if isinstance(qty, NumericalUnitBase):
-            qty = qty.integral_repr
-        else:
-            qty = str(qty)
-        return qty
+        return self._get_qty_str(self.quantity)
 
     @property
     def uquantity(self):

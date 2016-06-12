@@ -324,8 +324,26 @@ def projects():
 def products(productname=None):
     if productname is None:
         stage_products = sorted(ehproducts.productlib,
-                                key=lambda x: x.name)
-        stage = {'products': stage_products,
+                                key=lambda x: (x.info.status, x.name))
+
+        lines = {}
+        ptypes = {}
+        tstatuses = {str(x): 0 for x in status.get_known_statuses()}
+        for product in stage_products:
+            if product.info.ptype not in ptypes.keys():
+                ptypes[product.info.ptype] = 1
+            else:
+                ptypes[product.info.ptype] += 1
+            if product.info.line not in lines.keys():
+                lines[product.info.line] = 1
+            else:
+                lines[product.info.line] += 1
+            tstatuses[str(product.status)] += 1
+        statuses = [(x, tstatuses[str(x)]) for x in status.get_known_statuses()]
+        stage = {'statuses': statuses,
+                 'lines': lines,
+                 'ptypes': ptypes,
+                 'products': stage_products,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Products", path="products/")]

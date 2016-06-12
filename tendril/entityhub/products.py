@@ -326,9 +326,10 @@ def gen_productlib(path=PRODUCTS_ROOT, recursive=True):
     if recursive:
         for root, dirs, files in os.walk(path):
             products += get_folder_products(root)
-
     else:
         products = get_folder_products(path)
+    while None in products:
+        products.remove(None)
     return products
 
 productlib = gen_productlib()
