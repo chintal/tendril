@@ -28,6 +28,7 @@
 <a name="details"></a>
         <ul class="pricing-table shadow mrgn-20-top">
             <li class="price autoscale "> {{ stage.prototype.ident }} </li>
+            <li class="description"> {{ stage.prototype.rprojfolder }} </li>
             <li class="description"> {{ stage.prototype.configs.description() }} </li>
             {% if stage.prototype.status %}
               <span class="right label radius {{stage.prototype.status.html_class}}">

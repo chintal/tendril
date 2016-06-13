@@ -7,13 +7,17 @@
 
 {% block main %}
 
-<h3> All gEDA Projects </h3>
+<h3> All EDA Projects </h3>
 <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
     {% for k, v in stage.projects|dictsort %}
     <li>
+        <a href="/entityhub/projects/{{ k }}">
         <ul class="pricing-table active-tb shadow mrgn-20-top">
             <li class="title"> {{ k }} </li>
+            <li class="description"> {{ v.rprojfolder }} </li>
+            <li class="description"> {{ v.desc }} </li>
         </ul>
+        </a>
     </li>
     {% endfor %}
 </ul>

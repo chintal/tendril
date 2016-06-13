@@ -44,6 +44,7 @@ from tendril.dox.gedaproject import get_docs_list
 
 from tendril.utils import log
 from tendril.utils.config import WARM_UP_CACHES
+from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.fsutils import register_for_changes
 
 from . import projects
@@ -199,7 +200,10 @@ class EDAProjectPrototype(ModulePrototypeBase):
 
     @property
     def desc(self):
-        return self.configs.description()
+        try:
+            return self.configs.description()
+        except KeyError:
+            return None
 
     @property
     def _changelogpath(self):
@@ -208,6 +212,10 @@ class EDAProjectPrototype(ModulePrototypeBase):
     def _validate(self):
         # TODO Verify PCB size, layers
         pass
+
+    @property
+    def rprojfolder(self):
+        return os.path.relpath(self.projfolder, PROJECTS_ROOT)
 
 
 class CableProjectPrototype(EDAProjectPrototype):
@@ -757,6 +765,21 @@ def get_pcb_lib(regen=False):
     return pcbs
 
 
+projectlib = {}
+
+
+def get_project_lib(regen=False):
+    global projectlib
+    if regen is False and projectlib:
+        return projectlib
+    projectlib = {}
+    for project, folder in viewitems(projects.pcbs):
+        projectlib[project] = PCBPrototype(project)
+    for project, folder in viewitems(projects.cable_projects):
+        projectlib[project] = CableProjectPrototype(project)
+    return projectlib
+
+
 def fill_prototype_lib():
     logger.debug("Filling out Prototype Library")
     for k, prototype in viewitems(get_prototype_lib()):
@@ -768,3 +791,4 @@ if WARM_UP_CACHES is True:
     get_prototype_lib()
     fill_prototype_lib()
     get_pcb_lib()
+    get_project_lib()

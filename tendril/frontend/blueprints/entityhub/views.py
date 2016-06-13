@@ -37,10 +37,10 @@ from tendril.entityhub.modules import CardPrototype
 from tendril.entityhub.modules import CablePrototype
 
 from tendril.entityhub.modules import get_pcb_lib
+from tendril.entityhub.modules import get_project_lib
 
 # TODO Consider migration of the next section of imports
 # to a prototype like structure
-from tendril.entityhub import projects as ehprojects
 from tendril.entityhub import products as ehproducts
 from tendril.entityhub import serialnos as ehserialnos
 from tendril.entityhub.db.controller import SeriesNotFound
@@ -48,7 +48,6 @@ from tendril.entityhub.db.controller import SeriesNotFound
 from tendril.dox.gedaproject import get_img_list
 from tendril.dox.gedaproject import get_pcbpricing_data
 
-from tendril.inventory import electronics as invelectronics
 from tendril.inventory.electronics import get_inventory_stage
 from tendril.utils.fsutils import Crumb
 from tendril.utils.types.currency import BASE_CURRENCY_SYMBOL
@@ -260,21 +259,19 @@ def pcbs(pcbname=None):
 @blueprint.route('/projects/')
 @login_required
 def projects(projectname=None):
-    pcblib = get_pcb_lib()
+    projectlib = get_project_lib()
     if projectname is None:
-        stage_projects = ehprojects.projects
+        stage_projects = projectlib
         stage = {'projects': stage_projects,
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
-                                 Crumb(name="gEDA Projects", path="projects/")]
+                                 Crumb(name="EDA Projects", path="projects/")]
                  }
         return render_template('entityhub_projects.html', stage=stage,
-                               pagetitle="gEDA Projects")
+                               pagetitle="EDA Projects")
     else:
-        prototype = pcblib[projectname]
+        prototype = projectlib[projectname]
         stage = {'prototype': prototype,
-                 'imgs': get_img_list(prototype.projfolder),
-                 'costing': get_pcb_costing_chart(prototype.projfolder),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="EDA Projects", path="projects/"),

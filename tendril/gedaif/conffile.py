@@ -56,9 +56,23 @@ class ConfigsFile(ConfigBase):
         super(ConfigsFile, self).validate()
 
     @property
+    def projectname(self):
+        if self.pcbname is not None:
+            return self.pcbname
+        else:
+            return self.cblname
+
+    @property
     def pcbname(self):
         if self.is_pcb:
             return self._configdata['pcbname']
+        else:
+            return None
+
+    @property
+    def cblname(self):
+        if self.is_cable:
+            return self._configdata['cblname']
         else:
             return None
 

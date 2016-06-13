@@ -104,7 +104,7 @@ def get_projects(basefolder=None):
                 if cf.is_pcb:
                     lpcbs[cf.pcbname] = os.path.join(root, d)
                 else:
-                    lcable_projects[cf.pcbname] = os.path.join(root, d)
+                    lcable_projects[cf.cblname] = os.path.join(root, d)
                 for config in cf.configuration_names:
                     lcards[config] = os.path.join(root, d)
                     lcard_reporoot[config] = \
