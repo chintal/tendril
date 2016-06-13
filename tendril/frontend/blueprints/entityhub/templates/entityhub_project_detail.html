@@ -1,0 +1,163 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% extends "base_templates/base.html" %}
+{% import "parts/inventory_ident.html" as inventory_ident %}
+{% import "parts/sourcing_part_costing_chart.html" as sourcing_part_costing_chart %}
+
+{% block magellan %}
+<!-- Magellan -->
+<div data-magellan-expedition="sticky">
+    <dl class="sub-nav">
+        <dd data-magellan-arrival="details"><a href="#details">Details</a></dd>
+        <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
+        <dd data-magellan-arrival="changelog"><a href="#changelog">ChangeLog</a></dd>
+        <dd data-magellan-arrival="configurations"><a href="#configurations">Configurations</a></dd>
+    </dl>
+</div>
+{% endblock %}
+
+
+{% block main %}
+
+<div class="row">
+<div class="small-12 medium-6 columns" data-magellan-destination="details">
+<h3> gEDA Project Details </h3>
+<a name="details"></a>
+        <ul class="pricing-table shadow mrgn-20-top">
+            <li class="price autoscale "> {{ stage.prototype.ident }} </li>
+            <li class="description"> {{ stage.prototype.configs.description() }} </li>
+            {% if stage.prototype.status %}
+              <span class="right label radius {{stage.prototype.status.html_class}}">
+                  {{stage.prototype.status}}
+              </span>
+            {% endif %}
+        </ul>
+
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>References</h6>
+        </div>
+
+        <div class="small-12 columns">
+        <a href="/entityhub/pcbs/{{stage.prototype.ident}}">
+            <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+                <div class="text-center">Bare PCB</div>
+                <div class="text-center"><b>{{ stage.prototype.ident }}</b></div>
+            </div>
+        </a>
+        </div>
+    </div>
+</div>
+
+<!-- Documentation -->
+<div class="small-12 medium-6 columns">
+<h3> Documentation </h3>
+<a name="documentation"></a>
+    <ul class="doclinklist">
+        {% for doc in stage.prototype.docs %}
+            {% include 'parts/doc_link_list_element.html' %}
+        {% endfor %}
+    </ul>
+</div>
+</div>
+
+<!--Changelog and Issues-->
+<div class="row">
+    {% if stage.prototype.changelog %}
+    <div class="small-12 medium-6 columns" data-magellan-destination="changelog">
+        <a name="changelog"></a>
+        <div class="small-12 columns panel header radius">
+            <div class="sign small-9 medium-6 small-centered columns autoscale">
+                <h6>ChangeLog</h6>
+            </div>
+            {% set changelog = stage.prototype.changelog.parts %}
+            {% include 'parts/changelog.html' %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row" data-magellan-destination="configurations">
+<a name="configurations"></a>
+<div class="small-12 columns panel header radius">
+    <div class="sign small-9 medium-6 small-centered columns autoscale">
+        <h6>Configurations</h6>
+    </div>
+    <div class="small-12 columns">
+        <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
+    {% for configuration in stage.configurations %}
+        <li>
+        <a href="/entityhub/cards/{{configuration.ident}}">
+        <ul class="pricing-table active-tb shadow mrgn-20-top">
+            <li class="title"> {{ configuration.ident }} </li>
+            <li class="description"> {{ configuration.desc }} </li>
+            {% if configuration.status %}
+              <span class="right label radius {{ configuration.status.html_class }}">
+                  {{ configuration.status }}
+              </span>
+            {% endif %}
+            {% if configuration.sourcing_errors %}
+              <span class="left label radius alert">
+                  {{ configuration.sourcing_errors.terrors }} Sourcing Errors
+              </span>
+            {% endif %}
+        </ul>
+        </a>
+        </li>
+    {% endfor %}
+        </ul>
+    </div>
+    {% if stage.configurations|length > 1 %}
+    <div class="small-12 columns">
+        <div id="comparative-costing-chart" class="cleanchart">
+            <svg style="width: 100%; height: {{ (stage.configurations|length * 40) + 100 }}px"></svg>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                function get_data() {
+                    return {{ stage.configurations_costing|safe }}
+                 }
+
+                nv.addGraph(function() {
+                  var costing_chart = nv.models.multiBarHorizontalChart()
+                                      .x( function(d) { return d.label } )
+                                      .y( function(d) { return d.value } )
+                                      .duration(250)
+                                      .margin({left: 150})
+                                      .showControls(false)
+                                      .showLegend(false)
+                                      .stacked(true)
+                                      ;
+
+                  costing_chart.yAxis
+                      .tickFormat(function(d) {
+                          if (d >= 0){
+                            return "{{ stage.native_currency_symbol|unicode }}" + d3.format(",.2f")(d);
+                          }
+                          else{
+                            return Math.log2(-d) + ' idents';
+                          };
+                      })
+                  ;
+
+
+                  d3.select('#comparative-costing-chart svg')
+                    .datum(get_data())
+                    .transition().duration(500)
+                    .call(costing_chart)
+                    ;
+
+                  nv.utils.windowResize(costing_chart.update);
+                  return costing_chart;
+                });
+            });
+        </script>
+    </div>
+    {% endif %}
+</div>
+
+</div>
+{% endblock %}

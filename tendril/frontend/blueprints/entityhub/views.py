@@ -250,24 +250,38 @@ def pcbs(pcbname=None):
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Bare PCBs", path="pcbs/"),
                                  Crumb(name=pcbname, path="pcbs/" + pcbname)]}
-        stage.update(_get_configurations_stage(prototype))
         ident = 'PCB ' + pcbname
         stage.update(get_inventory_stage(ident))
         return render_template('entityhub_pcb_detail.html', stage=stage,
-                               pagetitle="PCB Details")
+                               pagetitle="PCB Detail {0}".format(pcbname))
 
 
+@blueprint.route('/projects/<projectname>')
 @blueprint.route('/projects/')
 @login_required
-def projects():
-    stage_projects = ehprojects.projects
-    stage = {'projects': stage_projects,
-             'crumbroot': '/entityhub',
-             'breadcrumbs': [Crumb(name="Entity Hub", path=""),
-                             Crumb(name="gEDA Projects", path="projects/")]
-             }
-    return render_template('entityhub_projects.html', stage=stage,
-                           pagetitle="gEDA Projects")
+def projects(projectname=None):
+    pcblib = get_pcb_lib()
+    if projectname is None:
+        stage_projects = ehprojects.projects
+        stage = {'projects': stage_projects,
+                 'crumbroot': '/entityhub',
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="gEDA Projects", path="projects/")]
+                 }
+        return render_template('entityhub_projects.html', stage=stage,
+                               pagetitle="gEDA Projects")
+    else:
+        prototype = pcblib[projectname]
+        stage = {'prototype': prototype,
+                 'imgs': get_img_list(prototype.projfolder),
+                 'costing': get_pcb_costing_chart(prototype.projfolder),
+                 'crumbroot': '/entityhub',
+                 'breadcrumbs': [Crumb(name="Entity Hub", path=""),
+                                 Crumb(name="EDA Projects", path="projects/"),
+                                 Crumb(name=projectname, path="projects/" + projectname)]}
+        stage.update(_get_configurations_stage(prototype))
+        return render_template('entityhub_project_detail.html', stage=stage,
+                               pagetitle="Project Details {0}".format(projectname))
 
 
 @blueprint.route('/products/<productname>')

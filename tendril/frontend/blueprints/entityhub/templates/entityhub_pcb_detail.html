@@ -15,7 +15,6 @@
         <dd data-magellan-arrival="documentation"><a href="#documentation">Documentation</a></dd>
         <dd data-magellan-arrival="changelog"><a href="#changelog">ChangeLog</a></dd>
         <dd data-magellan-arrival="costing"><a href="#costing">Costing</a></dd>
-        <dd data-magellan-arrival="configurations"><a href="#configurations">Configurations</a></dd>
     </dl>
 </div>
 {% endblock %}
@@ -40,6 +39,21 @@
               </span>
             {% endif %}
         </ul>
+
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>References</h6>
+        </div>
+
+        <div class="small-12 columns">
+        <a href="/entityhub/projects/{{stage.prototype.ident}}">
+            <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+                <div class="text-center">EDA Project</div>
+                <div class="text-center"><b>{{ stage.prototype.ident }}</b></div>
+            </div>
+        </a>
+        </div>
+    </div>
 </div>
 
 <!-- Documentation -->
@@ -67,7 +81,7 @@
     </ul>
 </div>
 
-<!--ChangeLog and Issues-->
+<!--Changelog and Issues-->
 <div class="row">
     {% if stage.prototype.changelog %}
     <div class="small-12 medium-6 columns" data-magellan-destination="changelog">
@@ -80,7 +94,7 @@
             {% include 'parts/changelog.html' %}
         </div>
     </div>
-{% endif %}
+    {% endif %}
 </div>
 
 
@@ -94,84 +108,4 @@
     {{ inventory_ident.render_status(stage.inv_status) }}
 </div>
 
-<div class="row" data-magellan-destination="configurations">
-<a name="configurations"></a>
-<div class="small-12 columns panel header radius">
-    <div class="sign small-9 medium-6 small-centered columns autoscale">
-        <h6>Configurations</h6>
-    </div>
-    <div class="small-12 columns">
-        <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
-    {% for configuration in stage.configurations %}
-        <li>
-        <a href="/entityhub/cards/{{configuration.ident}}">
-        <ul class="pricing-table active-tb shadow mrgn-20-top">
-            <li class="title"> {{ configuration.ident }} </li>
-            <li class="description"> {{ configuration.desc }} </li>
-            {% if configuration.status %}
-              <span class="right label radius {{ configuration.status.html_class }}">
-                  {{ configuration.status }}
-              </span>
-            {% endif %}
-            {% if configuration.sourcing_errors %}
-              <span class="left label radius alert">
-                  {{ configuration.sourcing_errors.terrors }} Sourcing Errors
-              </span>
-            {% endif %}
-        </ul>
-        </a>
-        </li>
-    {% endfor %}
-        </ul>
-    </div>
-    {% if stage.configurations|length > 1 %}
-    <div class="small-12 columns">
-        <div id="comparative-costing-chart" class="cleanchart">
-            <svg style="width: 100%; height: {{ (stage.configurations|length * 40) + 100 }}px"></svg>
-        </div>
-        <script type="text/javascript">
-            $(document).ready( function () {
-                function get_data() {
-                    return {{ stage.configurations_costing|safe }}
-                 }
-
-                nv.addGraph(function() {
-                  var costing_chart = nv.models.multiBarHorizontalChart()
-                                      .x( function(d) { return d.label } )
-                                      .y( function(d) { return d.value } )
-                                      .duration(250)
-                                      .margin({left: 150})
-                                      .showControls(false)
-                                      .showLegend(false)
-                                      .stacked(true)
-                                      ;
-
-                  costing_chart.yAxis
-                      .tickFormat(function(d) {
-                          if (d >= 0){
-                            return "{{ stage.native_currency_symbol|unicode }}" + d3.format(",.2f")(d);
-                          }
-                          else{
-                            return Math.log2(-d) + ' idents';
-                          };
-                      })
-                  ;
-
-
-                  d3.select('#comparative-costing-chart svg')
-                    .datum(get_data())
-                    .transition().duration(500)
-                    .call(costing_chart)
-                    ;
-
-                  nv.utils.windowResize(costing_chart.update);
-                  return costing_chart;
-                });
-            });
-        </script>
-    </div>
-    {% endif %}
-</div>
-
-</div>
 {% endblock %}
