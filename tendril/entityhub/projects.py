@@ -87,6 +87,7 @@ def get_projects(basefolder=None):
     lpcbs = {}
     lprojects = {}
     lcard_reporoot = {}
+    lcable_projects = {}
 
     if basefolder is None:
         basefolder = PROJECTS_ROOT
@@ -102,15 +103,17 @@ def get_projects(basefolder=None):
                 cf = conffile.ConfigsFile(os.path.join(root, d))
                 if cf.is_pcb:
                     lpcbs[cf.pcbname] = os.path.join(root, d)
+                else:
+                    lcable_projects[cf.pcbname] = os.path.join(root, d)
                 for config in cf.configuration_names:
                     lcards[config] = os.path.join(root, d)
                     lcard_reporoot[config] = \
                         os.path.relpath(os.path.join(root, d), basefolder)
 
-    return lprojects, lpcbs, lcards, lcard_reporoot
+    return lprojects, lpcbs, lcards, lcard_reporoot, lcable_projects
 
 
-projects, pcbs, cards, card_reporoot = get_projects()
+projects, pcbs, cards, card_reporoot, cable_projects = get_projects()
 
 
 def get_module_config(modulename):

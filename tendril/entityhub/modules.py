@@ -158,10 +158,9 @@ class ModulePrototypeBase(PrototypeBase):
         raise NotImplementedError
 
 
-class PCBPrototype(ModulePrototypeBase):
+class EDAProjectPrototype(ModulePrototypeBase):
     def __init__(self, modulename):
-        super(PCBPrototype, self).__init__(modulename)
-        self._indicative_sourcing_info = None
+        super(EDAProjectPrototype, self).__init__(modulename)
 
     @property
     def ident(self):
@@ -169,20 +168,11 @@ class PCBPrototype(ModulePrototypeBase):
 
     @ident.setter
     def ident(self, value):
-        if value not in projects.pcbs.keys():
-            raise ModuleNotRecognizedError(
-                    "PCB {0} not recognized".format(value))
-        self._modulename = value
-        self._validation_context = ValidationContext(value)
-
-        try:
-            self._get_changelog()
-        except ValidationError as e:
-            self._validation_errors.add(e)
+        raise NotImplementedError
 
     @property
     def projfolder(self):
-        return projects.pcbs[self.ident]
+        raise NotImplementedError
 
     def make_labels(self, sno, label_manager=None):
         pass
@@ -215,6 +205,60 @@ class PCBPrototype(ModulePrototypeBase):
     def _changelogpath(self):
         return os.path.join(self.projfolder, 'ChangeLog')
 
+    def _validate(self):
+        # TODO Verify PCB size, layers
+        pass
+
+
+class CableProjectPrototype(EDAProjectPrototype):
+    @property
+    def ident(self):
+        return self._modulename
+
+    @ident.setter
+    def ident(self, value):
+        if value not in projects.cable_projects.keys():
+            raise ModuleNotRecognizedError(
+                "Cable Project {0} not recognized".format(value))
+        self._modulename = value
+        self._validation_context = ValidationContext(value)
+
+        try:
+            self._get_changelog()
+        except ValidationError as e:
+            self._validation_errors.add(e)
+
+    @property
+    def projfolder(self):
+        return projects.cable_projects[self.ident]
+
+
+class PCBPrototype(EDAProjectPrototype):
+    def __init__(self, modulename):
+        super(PCBPrototype, self).__init__(modulename)
+        self._indicative_sourcing_info = None
+
+    @property
+    def ident(self):
+        return self._modulename
+
+    @ident.setter
+    def ident(self, value):
+        if value not in projects.pcbs.keys():
+            raise ModuleNotRecognizedError(
+                    "PCB {0} not recognized".format(value))
+        self._modulename = value
+        self._validation_context = ValidationContext(value)
+
+        try:
+            self._get_changelog()
+        except ValidationError as e:
+            self._validation_errors.add(e)
+
+    @property
+    def projfolder(self):
+        return projects.pcbs[self.ident]
+
     @property
     def indicative_sourcing_info(self):
         if self._indicative_sourcing_info is None:
@@ -230,10 +274,6 @@ class PCBPrototype(ModulePrototypeBase):
                 vsi = []
             self._indicative_sourcing_info = vsi
         return self._indicative_sourcing_info
-
-    def _validate(self):
-        # TODO Verify PCB size, layers
-        pass
 
     @property
     def docs(self):
