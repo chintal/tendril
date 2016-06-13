@@ -8,6 +8,7 @@ Submodules
 
    tendril.boms.electronics
    tendril.boms.configbase
+   tendril.boms.costingbase
    tendril.boms.outputbase
    tendril.boms.products
    tendril.boms.validate

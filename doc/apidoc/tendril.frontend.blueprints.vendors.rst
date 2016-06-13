@@ -7,6 +7,7 @@ Submodules
 .. toctree::
 
    tendril.frontend.blueprints.vendors.views
+   tendril.frontend.blueprints.vendors.forms
 
 Module contents
 ---------------

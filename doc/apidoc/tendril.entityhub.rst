@@ -15,6 +15,7 @@ Submodules
    tendril.entityhub.modules
    tendril.entityhub.products
    tendril.entityhub.projects
+   tendril.entityhub.prototypebase
    tendril.entityhub.serialnos
    tendril.entityhub.snomap
    tendril.entityhub.supersets
