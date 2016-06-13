@@ -1,0 +1,177 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+{% macro render_status(inv_status) -%}
+<div class="small-12 medium-6 columns">
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Inventory Status</h6>
+        </div>
+        <div class="small-12 columns">
+            <table id="inv_status_table" class="display" data-paging='false'>
+                <thead>
+                <tr>
+                    <th class="all">Inventory Location</th>
+                    <th class="desktop">Quantity</th>
+                    <th class="desktop">Reserved</th>
+                    <th class="all">Available</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for code, status in inv_status.loc_status|dictsort %}
+                    <tr>
+                        <td> <a href="/inventory/location/{{ code }}">{{ status.0 }}</a> </td>
+                        <td class="text-center"> {{ status.1 or '-' }} </td>
+                        <td class="text-center"> {{ status.2 or '-' }} </td>
+                        <td class="text-center"> {{ status.3 or '-' }} </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td> <b> TOTAL </b> </td>
+                        <td class="text-center"><b>{{ inv_status.total_quantity }}</b></td>
+                        <td class="text-center"><b>{{ inv_status.total_reservations }}</b></td>
+                        <td class="text-center"><b>{{ inv_status.total_availability }}</b></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#inv_status_table').DataTable({
+                    /* Disable initial sort */
+                    "aaSorting": [],
+                    "info": false,
+                    {% include 'parts/datatable_defaults.html' %}
+                });
+                table.buttons().container()
+                    .appendTo( '#inv_status_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            });
+        </script>
+    </div>
+</div>
+{% endmacro -%}
+
+{% macro render_guideline(guideline) -%}
+<div class="small-12 colums">
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Inventory Guideline</h6>
+        </div>
+        <div class="small-12 medium-4 columns">
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th class="text-center" colspan="2">Order Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="text-center" width="50%">Minimum</td>
+                    <td class="text-center" width="50%">{{ guideline.oqty_min }}</td>
+                </tr>
+                <tr>
+                    <td class="text-center" width="50%">Multiple</td>
+                    <td class="text-center" width="50%">{{ guideline.oqty_multiple }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="small-12 medium-4 columns">
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th class="text-center" colspan="2">Baseline</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="text-center" width="50%">Quantity</td>
+                    <td class="text-center" width="50%">{{ guideline.baseline_qty }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="small-12 medium-4 columns">
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th class="text-center" colspan="2">Excess</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="text-center" width="50%">Minimum (Percentage)</td>
+                    <td class="text-center" width="50%">{{ guideline.excess_min_pc }}</td>
+                </tr>
+                <tr>
+                    <td class="text-center" width="50%">Minimum (Quantity)</td>
+                    <td class="text-center" width="50%">{{ guideline.excess_min_qty }}</td>
+                </tr>
+                <tr>
+                    <td class="text-center" width="50%">Maximum (Quantity)</td>
+                    <td class="text-center" width="50%">{{ guideline.excess_max_qty }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endmacro -%}
+
+
+{% macro render_transform(inv_transform, ident) -%}
+<div class="small-12 medium-6 columns">
+    <div class="small-12 columns panel header radius">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Inventory Transforms</h6>
+        </div>
+        <div class="small-12 columns">
+            <table id="inv_transform_table" class="display" data-paging='false'>
+                <thead>
+                <tr>
+                    <th class="all">Inventory Location</th>
+                    <th class="all">Contextual Representation</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for code, row in inv_transform|dictsort %}
+                    <tr>
+                        <td> <a href="/inventory/transform/{{ code }}">{{ row.0 }}</a> </td>
+                        <td> {{ row.1 or '' }} </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td> <b> Canonical </b> </td>
+                        <td><b>{{ ident }}</b></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#inv_transform_table').DataTable({
+                    /* Disable initial sort */
+                    "aaSorting": [],
+                    "info": false,
+                    "ordering": false,
+                    {% include 'parts/datatable_defaults.html' %}
+                    "bAutoWidth": true,
+                });
+                table.buttons().container()
+                    .appendTo( '#inv_transform_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            });
+        </script>
+    </div>
+</div>
+{% endmacro -%}

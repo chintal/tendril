@@ -38,8 +38,8 @@
 
 <!-- Some Simple Detail Table -->
 <ul class="pricing-table shadow mrgn-20-top">
-    <li class="price"> {{ stage.cable.configname }} </li>
-    <li class="description"> {{ stage.cable.desc }} </li>
+    <li class="price"> {{ stage.prototype.ident }} </li>
+    <li class="description"> {{ stage.prototype.desc }} </li>
 </ul>
 
     <div class="small-12 columns panel header radius">
@@ -48,12 +48,18 @@
         </div>
 
         <div class="small-12 columns">
-        <!-- Base PCB -->
-        {% if stage.barepcb %}
-        <a href="/entityhub/pcbs/{{stage.barepcb}}">
+        <a href="/entityhub/projects/{{stage.prototype.projectname}}">
             <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
-                <div class="text-center">gEDA Project</div>
-                <div class="text-center"><b>{{ stage.barepcb }}</b></div>
+                <div class="text-center">EDA Project</div>
+                <div class="text-center"><b>{{ stage.prototype.projectname }}</b></div>
+            </div>
+        </a>
+        <!-- Base PCB -->
+        {% if stage.prototype.pcbname %}
+        <a href="/entityhub/pcbs/{{stage.prototype.pcbname}}">
+            <div class="button radius small-12 columns active-tb shadow mrgn-20-top">
+                <div class="text-center">Bare PCB</div>
+                <div class="text-center"><b>{{ stage.prototype.pcbname }}</b></div>
             </div>
         </a>
         {% endif %}
@@ -66,7 +72,7 @@
 <h3> Documentation </h3>
 <a name="documentation"></a>
     <ul class="doclinklist">
-        {% for doc in stage.docs %}
+        {% for doc in stage.prototype.docs %}
             {% include 'parts/doc_link_list_element.html' %}
         {% endfor %}
     </ul>
@@ -97,7 +103,7 @@
         <h6>Reference BOM</h6>
     </div>
 
-    {{ boms.render_bom(stage.refbom) }}
+    {{ boms.render_bom(stage.prototype.obom) }}
 </div>
 </div>
 

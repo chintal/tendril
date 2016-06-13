@@ -4,6 +4,8 @@
 #}
 
 {% extends "base_templates/base.html" %}
+{% import "parts/inventory_ident.html" as inventory_ident %}
+{% import "parts/sourcing_part_costing_chart.html" as sourcing_part_costing_chart %}
 
 {% block magellan %}
 <!-- Magellan -->
@@ -26,20 +28,12 @@
 <h3> PCB Details </h3>
 <a name="details"></a>
         <ul class="pricing-table shadow mrgn-20-top">
-            <li class="price autoscale "> {{ stage.name }} </li>
-            <li class="description"> {{ stage.configdata.description() }} </li>
+            <li class="price autoscale "> {{ stage.prototype.ident }} </li>
+            <li class="description"> {{ stage.prototype.configs.description() }} </li>
             <li class="title"> PCB Details </li>
-            {% for descriptor in stage.configdata.pcbdescriptors %}
+            {% for descriptor in stage.prototype.configs.pcbdescriptors %}
             <li class="bullet-item"> {{ descriptor }} </li>
             {% endfor %}
-            {% if stage.configdata.configdata.grouplist %}
-            <li class="title"> Groups </li>
-            {% for group in stage.configdata.configdata.grouplist %}
-            <li class="bullet-item">
-                <b> {{ group.name }} : </b> {{ group.desc }}
-            </li>
-            {% endfor %}
-            {% endif %}
             {% if stage.prototype.status %}
               <span class="right label radius {{stage.prototype.status.html_class}}">
                   {{stage.prototype.status}}
@@ -53,7 +47,7 @@
 <h3> Documentation </h3>
 <a name="documentation"></a>
     <ul class="doclinklist">
-        {% for doc in stage.docs %}
+        {% for doc in stage.prototype.docs %}
             {% include 'parts/doc_link_list_element.html' %}
         {% endfor %}
     </ul>
@@ -93,111 +87,11 @@
 <div class="row" data-equalizer="costing">
 <!-- Pricing Information -->
     {% if stage.costing %}
-    <div class="small-12 medium-6 columns panel header radius" data-equalizer-watch="costing">
-        <div class="sign small-9 medium-6 small-centered columns autoscale">
-            <h6>Costing</h6>
-            <a name="costing"></a>
-        </div>
-        <div class="small-12 columns">
-        <div id="pcb-pricing-chart" class="cleanchart">
-            <svg style="width: 100%; height: 300px;"></svg>
-        </div>
-        </div>
-    </div>
-    <script type="text/javascript">
-    $(document).ready( function () {
-        nv.addGraph(function() {
-          var chart = nv.models.multiChart()
-                      .margin({left: 70, right: 75})  //Adjust chart margins to give the x-axis some breathing room.
-                      //.useInteractiveGuideline(true)
-                      //.showYAxis(true)     //Show the y-axis
-                      //.showXAxis(true)     //Show the x-axis
-                      .showLegend(false)
-          ;
-
-          chart.xAxis
-            .axisLabel('Quantity')
-            .tickFormat(d3.format(',d'))
-            ;
-
-          chart.yAxis1
-            .axisLabel('Unit Price')
-            .tickFormat(function (d) {
-               return  '{{ stage.costing.csymbol|unicode }}' + d;
-            });
-
-          chart.yAxis2
-            .axisLabel('Total Price')
-            .tickFormat(function (d) {
-               return  '{{ stage.costing.csymbol|unicode }}' + d;
-            });
-
-          d3.select('#pcb-pricing-chart svg')
-            .datum({{ stage.costing.data|safe }})
-            .transition().duration(500)
-            .call(chart)
-            ;
-
-          nv.utils.windowResize(chart.update);
-
-          return chart;
-        });
-    });
-
-    </script>
+        {{ sourcing_part_costing_chart.render_part_costing_chart(stage.costing) }}
     {% endif %}
 
-<!-- Inventory Information -->
-    <div class="small-12 medium-6 columns" data-equalizer-watch="costing">
-        <div class="small-12 columns panel header radius">
-            <div class="sign small-9 medium-6 small-centered columns autoscale">
-                <h6>Inventory Status</h6>
-            </div>
-            <div class="small-12 columns">
-                <table id="inv_status_table" class="display" data-paging='false'>
-                    <thead>
-                    <tr>
-                        <th class="all">Inventory Location</th>
-                        <th class="desktop">Quantity</th>
-                        <th class="desktop">Reserved</th>
-                        <th class="all">Available</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for code, status in stage.inv_loc_status|dictsort %}
-                        <tr>
-                            <td> <a href="/inventory/location/{{ code }}">{{ status.0 }}</a> </td>
-                            <td class="text-center"> {{ status.1 or '-' }} </td>
-                            <td class="text-center"> {{ status.2 or '-' }} </td>
-                            <td class="text-center"> {{ status.3 or '-' }} </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td> <b> TOTAL </b> </td>
-                            <td class="text-center"><b>{{ stage.inv_total_quantity }}</b></td>
-                            <td class="text-center"><b>{{ stage.inv_total_reservations }}</b></td>
-                            <td class="text-center"><b>{{ stage.inv_total_availability }}</b></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-            <script type="text/javascript">
-                $(document).ready( function () {
-                    var table = $('#inv_status_table').DataTable({
-                        /* Disable initial sort */
-                        "aaSorting": [],
-                        "info": false,
-                        {% include 'parts/datatable_defaults.html' %}
-                    });
-                    table.buttons().container()
-                        .appendTo( '#inv_status_table_wrapper .small-12.medium-6.columns:eq(0)' );
-                });
-            </script>
-        </div>
-    </div>
-<!-- Product Utilization Information -->
+    <!-- Inventory Information -->
+    {{ inventory_ident.render_status(stage.inv_status) }}
 </div>
 
 <div class="row" data-magellan-destination="configurations">
@@ -281,34 +175,3 @@
 
 </div>
 {% endblock %}
-
-
-<!--
-{% if stage.configdata.configdata.motiflist %}
-            <li class="title"> Motifs </li>
-            {% for key, value in stage.configdata.configdata.motiflist|dictsort %}
-            <li class="bullet-item">
-                <b> {{ key }} : </b> {{ value.desc }}
-            </li>
-            <li>
-            <ul class="small-block-grid-3 small-11 columns small-centered">
-                {% for p, s in value.iteritems() %}
-                    {% if p != 'desc' %}
-                        <li class="description"> {{ p|upper }} : {{ s }} </li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
-            </li>
-            {% endfor %}
-            {% endif %}
-            {% if stage.configdata.configdata.sjlist %}
-            <li class="title"> SJs </li>
-            <li class="bullet-item">
-                <ul class="small-block-grid-3">
-                {% for key, value in stage.configdata.configdata.sjlist|dictsort %}
-                <li><b> {{ key }} : </b> {{ value }}</li>
-                {% endfor %}
-                </ul>
-            </li>
-            {% endif %}
--->

@@ -41,6 +41,7 @@ from tendril.utils.fsutils import Crumb
 from tendril.utils.config import GEDA_SYMLIB_ROOT
 
 from tendril.inventory import electronics as invelectronics
+from tendril.inventory.electronics import get_inventory_stage
 from tendril.inventory import guidelines as invguidelines
 from tendril.entityhub import guidelines as ehguidelines
 
@@ -139,6 +140,8 @@ simple_cardlisting = namedtuple(
 def _status_filter(cards, diversity=5):
     if not diversity:
         return cards
+    if not cards:
+        return cards
     used_statuses = []
     for card in cards:
         if card.status not in used_statuses:
@@ -150,6 +153,8 @@ def _status_filter(cards, diversity=5):
 
 def _group_by_pcbname(cards):
     rval = {}
+    if not cards:
+        return {}
     for card in cards:
         ncard = simple_cardlisting(card.name, card.desc,
                                    card.status, card.qty)
@@ -207,31 +212,7 @@ def get_geda_symbol_context(ident):
              'inclusion': inclusion,
              'breadcrumbs': breadcrumbs}
 
-    inv_loc_status = {}
-    inv_loc_transform = {}
-    for loc in invelectronics.inventory_locations:
-        qty = loc.get_ident_qty(ident) or 0
-        reserve = loc.get_reserve_qty(ident) or 0
-        inv_loc_status[loc._code] = (loc.name, qty, reserve, qty-reserve)
-        inv_loc_transform[loc._code] = (loc.name,
-                                        loc.tf.get_contextual_repr(ident))
-    inv_total_reservations = invelectronics.get_total_reservations(ident)
-    inv_total_quantity = invelectronics.get_total_availability(ident)
-    inv_total_availability = inv_total_quantity - inv_total_reservations
-    inv_guideline = invguidelines.electronics_qty.get_guideline(ident)
-    inv_guideline = ehguidelines.QtyGuidelineTableRow(ident, inv_guideline)
-
-    inv_stage = {
-        'inv_loc_status': inv_loc_status,
-        'inv_total_reservations': inv_total_reservations,
-        'inv_total_quantity': inv_total_quantity,
-        'inv_total_availability': inv_total_availability,
-        'inv_loc_transform': inv_loc_transform,
-        'inv_guideline': inv_guideline,
-        'inv': invelectronics,
-    }
-
-    stage.update(inv_stage)
+    stage.update(get_inventory_stage(ident))
     return stage
 
 

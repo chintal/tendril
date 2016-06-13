@@ -4,9 +4,7 @@
 #}
 
 {% extends "base_templates/base.html" %}
-{% import "parts/inventory_guideline.html" as inventory_guideline %}
-{% import "parts/inventory_status.html" as inventory_status %}
-{% import "parts/inventory_transform.html" as inventory_transform %}
+{% import "parts/inventory_ident.html" as inventory_ident %}
 {% import "parts/sourcing_ident_sources.html" as sourcing_ident_sources %}
 
 {% block magellan %}
@@ -196,10 +194,9 @@
 <!--Inventory Information-->
 <div class="row" data-magellan-destination="inventory">
 <a name="inventory"></a>
-    {{ inventory_status.render_status(stage.inv_loc_status, stage.inv_total_quantity,
-                                      stage.inv_total_reservations, stage.inv_total_availability) }}
-    {{ inventory_transform.render_transform(stage.inv_loc_transform, stage.ident) }}
-    {{ inventory_guideline.render_guideline(stage.inv_guideline) }}
+    {{ inventory_ident.render_status(stage.inv_status) }}
+    {{ inventory_ident.render_transform(stage.inv_transform, stage.ident) }}
+    {{ inventory_ident.render_guideline(stage.inv_guideline) }}
 </div>
 <!--Inventory History-->
 

@@ -45,11 +45,11 @@ from tendril.entityhub import products as ehproducts
 from tendril.entityhub import serialnos as ehserialnos
 from tendril.entityhub.db.controller import SeriesNotFound
 
-from tendril.dox.gedaproject import get_docs_list
 from tendril.dox.gedaproject import get_img_list
 from tendril.dox.gedaproject import get_pcbpricing_data
 
 from tendril.inventory import electronics as invelectronics
+from tendril.inventory.electronics import get_inventory_stage
 from tendril.utils.fsutils import Crumb
 from tendril.utils.types.currency import BASE_CURRENCY_SYMBOL
 
@@ -104,19 +104,7 @@ def cables(cblname=None):
                                pagetitle="Cables")
     else:
         prototype = prototypes[cblname]
-        cablefolder = prototype.projfolder
-        gcf = prototype.configs
-        stage_cable = gcf.configuration(cblname)
-        stage_bom = prototype.bom
-        stage_docs = get_docs_list(cablefolder, cblname)
-        barepcb = gcf.rawconfig['cblname']
-        stage = {'name': cblname,
-                 'cable': stage_cable,
-                 'bom': stage_bom,
-                 'refbom': stage_bom.create_output_bom(cblname),
-                 'docs': stage_docs,
-                 'barepcb': barepcb,
-                 'prototype': prototype,
+        stage = {'prototype': prototype,
                  'inclusion': ehproducts.get_module_inclusion(cblname),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
@@ -160,19 +148,7 @@ def cards(cardname=None):
                                pagetitle="Cards")
     else:
         prototype = prototypes[cardname]
-        cardfolder = prototype.projfolder
-        gcf = prototype.configs
-        stage_card = gcf.configuration(cardname)
-        stage_bom = prototype.bom
-        stage_docs = get_docs_list(cardfolder, cardname)
-        barepcb = gcf.pcbname
-        stage = {'name': cardname,
-                 'card': stage_card,
-                 'bom': stage_bom,
-                 'refbom': stage_bom.create_output_bom(cardname),
-                 'docs': stage_docs,
-                 'barepcb': barepcb,
-                 'prototype': prototype,
+        stage = {'prototype': prototype,
                  'inclusion': ehproducts.get_module_inclusion(cardname),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
@@ -221,6 +197,36 @@ def get_pcb_costing_chart(projectfolder):
     return lstage
 
 
+def _get_configurations_stage(prototype):
+    prototype_lib = get_prototype_lib()
+    cobjs = [prototype_lib[x]
+             for x in prototype.configs.configuration_names]
+    cobjs.sort(key=lambda y: y.indicative_cost)
+    configurations_costing_data = json.dumps(
+        [{
+            'key': "Sourcing Errors",
+            'values': [
+                {'label': x.ident,
+                 'value': (2 ** x.sourcing_errors.terrors) * (-1)}
+                for x in cobjs
+                ],
+            'color': '#d67777',
+        }, {
+            'key': "Indicative Costing",
+            'values': [
+                {'label': x.ident,
+                 'value': x.indicative_cost.native_value}
+                for x in cobjs
+                ],
+            'color': '#4f99b4',
+        }]
+    )
+    return {'configurations': cobjs,
+            'configurations_costing': configurations_costing_data,
+            'native_currency_symbol': BASE_CURRENCY_SYMBOL,
+            }
+
+
 @blueprint.route('/pcbs/<pcbname>')
 @blueprint.route('/pcbs/')
 @login_required
@@ -237,70 +243,16 @@ def pcbs(pcbname=None):
                                pagetitle="Bare PCBs")
     else:
         prototype = pcblib[pcbname]
-        prototype_lib = get_prototype_lib()
-        cobjs = [prototype_lib[x]
-                 for x in prototype.configs.configuration_names]
-        cobjs.sort(key=lambda y: y.indicative_cost)
-        configurations_costing_data = json.dumps(
-            [{
-                'key': "Sourcing Errors",
-                'values': [
-                    {'label': x.ident,
-                     'value': (2 ** x.sourcing_errors.terrors) * (-1)}
-                    for x in cobjs
-                    ],
-                'color': '#d67777',
-            },
-             {
-                'key': "Indicative Costing",
-                'values': [
-                    {'label': x.ident,
-                     'value': x.indicative_cost.native_value}
-                    for x in cobjs
-                ],
-                'color': '#4f99b4',
-            }]
-        )
-
         stage = {'prototype': prototype,
-                 'name': pcbname,
-                 'configdata': prototype.configs,
-                 'configurations': cobjs,
-                 'configurations_costing': configurations_costing_data,
-                 'native_currency_symbol': BASE_CURRENCY_SYMBOL,
-                 'docs': get_docs_list(prototype.projfolder),
                  'imgs': get_img_list(prototype.projfolder),
                  'costing': get_pcb_costing_chart(prototype.projfolder),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Bare PCBs", path="pcbs/"),
                                  Crumb(name=pcbname, path="pcbs/" + pcbname)]}
-
+        stage.update(_get_configurations_stage(prototype))
         ident = 'PCB ' + pcbname
-        inv_loc_status = {}
-        inv_loc_transform = {}
-        for loc in invelectronics.inventory_locations:
-            qty = loc.get_ident_qty(ident) or 0
-            reserve = loc.get_reserve_qty(ident) or 0
-            inv_loc_status[loc._code] = (loc._name, qty, reserve, qty-reserve)
-
-            inv_loc_transform[loc._code] = (loc._name,
-                                            loc.tf.get_contextual_repr(ident))
-        inv_total_reservations = invelectronics.get_total_reservations(ident)
-        inv_total_quantity = invelectronics.get_total_availability(ident)
-        inv_total_availability = inv_total_quantity - inv_total_reservations
-
-        inv_stage = {
-            'inv_loc_status': inv_loc_status,
-            'inv_total_reservations': inv_total_reservations,
-            'inv_total_quantity': inv_total_quantity,
-            'inv_total_availability': inv_total_availability,
-            'inv_loc_transform': inv_loc_transform,
-            'inv': invelectronics,
-        }
-
-        stage.update(inv_stage)
-
+        stage.update(get_inventory_stage(ident))
         return render_template('entityhub_pcb_detail.html', stage=stage,
                                pagetitle="PCB Details")
 
@@ -325,7 +277,6 @@ def products(productname=None):
     if productname is None:
         stage_products = sorted(ehproducts.productlib,
                                 key=lambda x: (x.info.status, x.name))
-
         lines = {}
         ptypes = {}
         tstatuses = {str(x): 0 for x in status.get_known_statuses()}
@@ -358,7 +309,7 @@ def products(productname=None):
                                  Crumb(name=productname, path="pcbs/" + productname)],  # noqa
                  }
         return render_template('entityhub_product_detail.html', stage=stage,
-                               pagetitle="Products")
+                               pagetitle="Product Detail {0}".format(productname))
 
 
 @blueprint.route('/snoseries/<series>')

@@ -313,3 +313,31 @@ def get_recognized_repr(regen=False):
 
 recognized_representations = None
 get_recognized_repr()
+
+
+def get_inventory_stage(ident):
+    inv_loc_status = {}
+    inv_loc_transform = {}
+    for loc in inventory_locations:
+        qty = loc.get_ident_qty(ident) or 0
+        reserve = loc.get_reserve_qty(ident) or 0
+        inv_loc_status[loc._code] = (loc.name, qty, reserve, qty - reserve)
+        inv_loc_transform[loc._code] = (loc.name,
+                                        loc.tf.get_contextual_repr(ident))
+    inv_total_reservations = get_total_reservations(ident)
+    inv_total_quantity = get_total_availability(ident)
+    inv_total_availability = inv_total_quantity - inv_total_reservations
+    from tendril.inventory.guidelines import electronics_qty
+    inv_guideline = electronics_qty.get_guideline(ident)
+    from tendril.entityhub.guidelines import QtyGuidelineTableRow
+    inv_guideline = QtyGuidelineTableRow(ident, inv_guideline)
+
+    inv_stage = {
+        'loc_status': inv_loc_status,
+        'total_reservations': inv_total_reservations,
+        'total_quantity': inv_total_quantity,
+        'total_availability': inv_total_availability,
+    }
+    return {'inv_status': inv_stage,
+            'inv_transform': inv_loc_transform,
+            'inv_guideline': inv_guideline}

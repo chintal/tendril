@@ -40,6 +40,7 @@ from tendril.boms.validate import ValidationContext
 from tendril.boms.validate import ValidationError
 from tendril.boms.validate import get_dict_val
 from tendril.boms.costingbase import NoStructureHereException
+from tendril.dox.gedaproject import get_docs_list
 
 from tendril.utils import log
 from tendril.utils.config import WARM_UP_CACHES
@@ -233,6 +234,10 @@ class PCBPrototype(ModulePrototypeBase):
     def _validate(self):
         # TODO Verify PCB size, layers
         pass
+
+    @property
+    def docs(self):
+        return get_docs_list(self.projfolder)
 
 
 class EDAModulePrototypeBase(ModulePrototypeBase):
@@ -472,6 +477,10 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         rval.add(lverrors)
         return rval
 
+    @property
+    def docs(self):
+        return get_docs_list(self.projfolder, self.ident)
+
 
 class CardPrototype(EDAModulePrototypeBase):
     prevalidator = staticmethod(projects.check_module_is_card)
@@ -479,6 +488,10 @@ class CardPrototype(EDAModulePrototypeBase):
     @property
     def pcbname(self):
         return self.bom.configurations.rawconfig['pcbname']
+
+    @property
+    def projectname(self):
+        return self.pcbname
 
     def _get_status(self):
         self._status = self.configs.status_config(self.ident)
@@ -499,6 +512,10 @@ class CablePrototype(EDAModulePrototypeBase):
     @property
     def cblname(self):
         return self.bom.configurations.rawconfig['cblname']
+
+    @property
+    def projectname(self):
+        return self.cblname
 
 
 def get_module_prototype(modulename):

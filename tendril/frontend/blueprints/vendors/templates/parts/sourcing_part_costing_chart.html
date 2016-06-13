@@ -1,0 +1,62 @@
+{#
+    Copyright (c) 2015 Chintalagiri Shashank
+    Released under the MIT license
+#}
+
+
+{% macro render_part_costing_chart(costing) -%}
+
+<div class="small-12 medium-6 columns panel header radius" data-equalizer-watch="costing">
+        <div class="sign small-9 medium-6 small-centered columns autoscale">
+            <h6>Costing</h6>
+            <a name="costing"></a>
+        </div>
+        <div class="small-12 columns">
+        <div id="pcb-pricing-chart" class="cleanchart">
+            <svg style="width: 100%; height: 300px;"></svg>
+        </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+    $(document).ready( function () {
+        nv.addGraph(function() {
+          var chart = nv.models.multiChart()
+                      .margin({left: 70, right: 75})  //Adjust chart margins to give the x-axis some breathing room.
+                      //.useInteractiveGuideline(true)
+                      //.showYAxis(true)     //Show the y-axis
+                      //.showXAxis(true)     //Show the x-axis
+                      .showLegend(false)
+          ;
+
+          chart.xAxis
+            .axisLabel('Quantity')
+            .tickFormat(d3.format(',d'))
+            ;
+
+          chart.yAxis1
+            .axisLabel('Unit Price')
+            .tickFormat(function (d) {
+               return  '{{ costing.csymbol|unicode }}' + d;
+            });
+
+          chart.yAxis2
+            .axisLabel('Total Price')
+            .tickFormat(function (d) {
+               return  '{{ costing.csymbol|unicode }}' + d;
+            });
+
+          d3.select('#pcb-pricing-chart svg')
+            .datum({{ costing.data|safe }})
+            .transition().duration(500)
+            .call(chart)
+            ;
+
+          nv.utils.windowResize(chart.update);
+
+          return chart;
+        });
+    });
+
+    </script>
+
+{% endmacro -%}
