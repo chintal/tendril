@@ -506,8 +506,11 @@ class CacheBase(object):
             # This can be pretty expensive if the move is across a real filesystem
             # boundary. We should instead use a temporary file in the cache_fs
             # itself
-            movefile(temp_fs, temp_fs.unsyspath(temppath),
-                     self.cache_fs, filepath)
+            try:
+                movefile(temp_fs, temp_fs.unsyspath(temppath),
+                         self.cache_fs, filepath)
+            except:
+                logger.warning("Unable to write cache file {0}".format(filepath))
         except:
             raise
 

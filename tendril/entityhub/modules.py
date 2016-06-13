@@ -781,14 +781,20 @@ def get_project_lib(regen=False):
 
 
 def fill_prototype_lib():
-    logger.debug("Filling out Prototype Library")
+    tlen = len(get_prototype_lib().keys())
+    count = 0
     for k, prototype in viewitems(get_prototype_lib()):
+        count += 1
+        logger.info("{0:3}/{1:3} Validating {2}".format(count, tlen, k))
         prototype.validate()
-    logger.debug("Prototype Library Filled Out")
 
 
 if WARM_UP_CACHES is True:
+    logger.info('Building Prototype Library')
     get_prototype_lib()
+    logger.info('Filling Prototype Library')
     fill_prototype_lib()
+    logger.info('Building PCB Library')
     get_pcb_lib()
+    logger.info('Building Project Library')
     get_project_lib()
