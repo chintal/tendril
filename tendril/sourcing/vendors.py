@@ -568,7 +568,8 @@ class VendorBase(object):
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=config.BASE_CURRENCY,
                  currency_symbol=config.BASE_CURRENCY_SYMBOL,
-                 vendorlogo=None, sname=None, is_manufacturer=None):
+                 vendorlogo=None, sname=None, is_manufacturer=None,
+                 vtype=None):
         self._name = name
         self._dname = dname
         self._sname = sname
@@ -576,6 +577,7 @@ class VendorBase(object):
         self._is_manufacturer = is_manufacturer
         self._currency = currency.CurrencyDefinition(currency_code,
                                                      currency_symbol)
+        self._vtype = vtype
         self._pclass = pclass
         self._order = None
         self._orderbasecosts = []
