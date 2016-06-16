@@ -31,7 +31,11 @@ def init_vendors():
     vlist = []
     vdatalist = copy.copy(config.VENDORS_DATA)
     for vendor in vdatalist:
-        vtype = vendor.pop('type')
+        vtype = vendor.get('type', None)
+        if not vtype:
+            logger.error('Vendor Type not defined for {0}'
+                         ''.format(vendor['name']))
+            continue
         module_name = '.{0}'.format(vtype.lower())
         module = importlib.import_module(module_name, __package__)
         class_name = 'Vendor{0}'.format(vtype)
