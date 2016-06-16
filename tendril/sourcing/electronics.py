@@ -31,7 +31,7 @@ def init_vendors():
     vlist = []
     vdatalist = copy.copy(config.VENDORS_DATA)
     for vendor in vdatalist:
-        vtype = vendor.get('type', None)
+        vtype = vendor.get('vtype', None)
         if not vtype:
             logger.error('Vendor Type not defined for {0}'
                          ''.format(vendor['name']))
