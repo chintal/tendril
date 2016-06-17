@@ -84,6 +84,7 @@ DEVICE_CLASSES_DOC = [
     ('CONN SMA', 'SMA Connectors'),
     ('CONN BANANA', 'Banana Connectors'),
     ('CONN BERG STRIP', 'Berg Strips'),
+    ('CONN TERMINAL DMC', 'Phoenix Contact DMC series PCB mount Terminals'),
     ('CONN TERMINAL BLOCK', 'Terminal Blocks, usually single-part'),
     ('CONN TERMINAL', 'Terminal Connectors, usually two-part.'),
     ('CONN DTYPE HOOD', 'Hood for DTYPE Connectors'),
