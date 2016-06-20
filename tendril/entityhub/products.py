@@ -119,6 +119,8 @@ class ProductPrototypeBase(PrototypeBase):
         self._card_names = self._raw_data['cards']
         self._cable_names = self._raw_data['cables']
         self._labels = self._raw_data['labels']
+        # TODO Some products don't have a viable core. Allowances must be made
+        # Eg QM anf QI.
         self._core = self._raw_data['derive_sno_from']
         self._calibformat = self._raw_data['calibformat']
         try:

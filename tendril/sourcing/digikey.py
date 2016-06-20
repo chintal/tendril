@@ -593,8 +593,9 @@ class VendorDigiKey(VendorBase):
             logger.error('Fatal Error searching for : ' + ident)
             return None, None
 
-    @staticmethod
-    def _search_preprocess(device, value, footprint):
+    rex_to_package = re.compile(ur'^TO(?P<code>[\d]+[A-Za-z]*)$')
+
+    def _search_preprocess(self, device, value, footprint):
         """
         Pre-processes and returns the ``(device, value, footprint)`` tuple
         parsed from the part ident, making tweaks necessary to translate
@@ -609,10 +610,10 @@ class VendorDigiKey(VendorBase):
             into the instance folder.
 
         """
-        if footprint == 'TO220':
-            footprint = 'TO-220'
-        if footprint == 'TO92':
-            footprint = 'TO-92'
+        if footprint is not None:
+            m = self.rex_to_package.match(footprint)
+            if m:
+                footprint = 'TO-' + m.group('code')
         return device, value, footprint
 
     @staticmethod
@@ -731,11 +732,13 @@ class VendorDigiKey(VendorBase):
         if device.startswith('IC'):
             subcatstrings = ['Interface - Controllers']
         elif device.startswith('DIODE'):
-            subcatstrings = ['Diodes, Rectifiers - Single']
+            subcatstrings = ['Diodes - Rectifiers - Single',
+                             'Diodes - Rectifiers - Arrays']
         elif device.startswith('TRANSISTOR'):
             subcatstrings = ['FETs - Single']
         elif device.startswith('BRIDGE RECTIFIER'):
-            subcatstrings = ['Bridge Rectifiers']
+            subcatstrings = ['Bridge Rectifiers',
+                             'Diodes - Bridge Rectifiers']
         else:
             return False, None
         return True, subcatstrings
