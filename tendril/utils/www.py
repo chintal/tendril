@@ -137,7 +137,7 @@ from suds.transport.http import HttpAuthenticated
 from suds.transport.http import HttpTransport
 
 from fs.opener import fsopendir
-from fs.utils import movefile
+from fs.utils import copyfile
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.config import MAX_AGE_DEFAULT
 from tendril.utils import log
@@ -507,7 +507,7 @@ class CacheBase(object):
             # boundary. We should instead use a temporary file in the cache_fs
             # itself
             try:
-                movefile(temp_fs, temp_fs.unsyspath(temppath),
+                copyfile(temp_fs, temp_fs.unsyspath(temppath),
                          self.cache_fs, filepath)
             except:
                 logger.warning("Unable to write cache file {0}".format(filepath))
