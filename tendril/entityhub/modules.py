@@ -245,6 +245,7 @@ class PCBPrototype(EDAProjectPrototype):
     def __init__(self, modulename):
         super(PCBPrototype, self).__init__(modulename)
         self._indicative_sourcing_info = None
+        self._pcb_info = None
 
     @property
     def ident(self):
@@ -282,6 +283,16 @@ class PCBPrototype(EDAProjectPrototype):
                 vsi = []
             self._indicative_sourcing_info = vsi
         return self._indicative_sourcing_info
+
+    @property
+    def info(self):
+        if not self._pcb_info:
+            from tendril.gedaif.pcb import get_pcbinfo
+            from tendril.gedaif.projfile import GedaProjectFile
+            pf = GedaProjectFile(self.projfolder)
+            pcbf = os.path.join(self.projfolder, 'pcb', pf.pcbfile + '.pcb')
+            self._pcb_info = get_pcbinfo(pcbf)
+        return self._pcb_info
 
     @property
     def docs(self):

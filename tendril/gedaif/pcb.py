@@ -28,6 +28,10 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 
+def get_pcbinfo(pcbpath):
+    raise NotImplementedError
+
+
 def conv_pcb2pdf(pcbpath, docfolder, projname):
     pcb_folder, pcb_file = os.path.split(pcbpath)
     psfile = os.path.join(docfolder, projname + '-pcb.ps')
