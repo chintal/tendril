@@ -312,11 +312,11 @@ class GedaSymbol(EDASymbolBase):
 
         if self.is_generator:
             _genftime = get_file_mtime(self.genpath)
-            if _genftime > _last_updated:
+            if not _genftime or _genftime > _last_updated:
                 _last_updated = _genftime
         if self.is_subcircuit:
             _schftime = get_file_mtime(self.schematic_path)
-            if _schftime > _last_updated:
+            if not _last_updated or _schftime > _last_updated:
                 _last_updated = _schftime
         self.last_updated = _last_updated
 
