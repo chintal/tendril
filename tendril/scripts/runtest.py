@@ -51,7 +51,6 @@ from tendril.testing import testrunner
 from tendril.utils import log
 logger = log.get_logger("runtest", log.DEFAULT)
 
-
 def _get_parser():
     """
     Constructs the CLI argument parser for the tendril-runtest script.
@@ -78,10 +77,14 @@ def _get_parser():
         '--force', '-f', action='store_true', default=False,
         help="Re-run all tests, even if fresh test passed."
     )
+    parser.add_argument(
+        '--offline', '-o', metavar='DEVICE_TYPE', type=str, nargs=1,
+        help='Offline testing. Device descriptor required'
+    )
     return parser
 
 
-def run(serialno, force, stale):
+def run(serialno, force, stale, devicetype=None):
     """
     Run tests for device.
 
@@ -93,11 +96,14 @@ def run(serialno, force, stale):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
 
-    devicetype = serialnos.get_serialno_efield(sno=serialno)
-    logger.info(serialno + " is device : " + devicetype)
-
-    testrunner.run_test(serialno, force=force, stale=stale)
-
+    
+    if devicetype is None:
+        devicetype = serialnos.get_serialno_efield(sno=serialno)
+        logger.info(serialno + " is device : " + devicetype)
+        testrunner.run_test(serialno, force=force, stale=stale)
+    
+    else:
+        testrunner.run_test_offline(serialno, devicetype)
 
 def main():
     """
@@ -108,16 +114,22 @@ def main():
     if not args.serialno and not args.detect:
         parser.print_help()
         return
-    if not args.serialno:
+    if args.detect:
         try:
             mactype = args.detect[0]
             sno = macs.get_sno_from_device(mactype)
         except:
             logger.error("Got exception when trying to detect serialno")
             raise
-    else:
+    
+    elif args.serialno:
         sno = args.serialno
-    run(sno, args.force, args.stale)
+    
+    devicetype = None
+    if args.offline:
+        devicetype = args.offline[0]
+    
+    run(sno, args.force, args.stale, devicetype)
 
 
 if __name__ == '__main__':

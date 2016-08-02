@@ -48,13 +48,17 @@ from tendril.utils.config import DOCUMENT_WALLET_ROOT
 
 from tendril.utils.fsutils import temp_fs
 
-
-if DOCUMENT_WALLET_ROOT.startswith('rpc://'):
-    wallet_fs = RPCFS('http://' + DOCUMENT_WALLET_ROOT[6:])
-else:
-    wallet_fs = fsopendir(DOCUMENT_WALLET_ROOT)
+wallet_fs_static_obj = None
 wallet_temp_fs = temp_fs.makeopendir('wallet')
 
+def wallet_fs ():
+    global wallet_fs_static_obj
+    if not wallet_fs_static_obj:
+        if DOCUMENT_WALLET_ROOT.startswith('rpc://'):
+            wallet_fs_static_obj = RPCFS('http://' + DOCUMENT_WALLET_ROOT[6:])
+        else:
+            wallet_fs_static_obj = fsopendir(DOCUMENT_WALLET_ROOT)
+    return wallet_fs_static_obj
 
 def get_document_path(key):
     """
@@ -67,17 +71,17 @@ def get_document_path(key):
     :param key: Key of the document you want.
     :return: The absolute path to the document.
     """
+    
     if key in DOCUMENT_WALLET.keys():
         try:
-            return wallet_fs.getsyspath(DOCUMENT_WALLET[key])
+            return wallet_fs().getsyspath(DOCUMENT_WALLET[key])
         except NoSysPathError:
             if not wallet_temp_fs.exists(DOCUMENT_WALLET[key]):
-                copyfile(wallet_fs, DOCUMENT_WALLET[key],
+                copyfile(wallet_fs(), DOCUMENT_WALLET[key],
                          wallet_temp_fs, DOCUMENT_WALLET[key])
             return wallet_temp_fs.getsyspath(DOCUMENT_WALLET[key])
     else:
         raise ValueError
-
 
 def is_in_wallet(fpath):
     """

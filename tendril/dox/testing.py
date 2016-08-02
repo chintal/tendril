@@ -152,6 +152,73 @@ def render_test_report(serialno=None, outfolder=None, session=None):
 
     return render_pdf(stage, template, outpath)
 
+def gen_local_test_results(serialno, devicetype, suites, outfolder=None):
+    
+    if serialno is None:
+        raise ValueError("serialno cannot be None")
+    
+    if devicetype is None:
+        raise ValueError("devicetype cannot be None")
+    
+    if suites is None:
+        raise ValueError("suites cannot be None")
+    
+    if outfolder is None:
+        outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
+
+    outpath = os.path.join(outfolder, serialno + '.yaml')
+    #fileOut = file(outpath, 'w')
+    
+    #import yaml
+    #yaml.dump(suites, fileOut)
+
+    return outpath
+
+def render_test_report_standalone(serialno, devicetype, suites, outfolder=None):
+    
+    if serialno is None:
+        raise ValueError("serialno cannot be None")
+    
+    if devicetype is None:
+        raise ValueError("devicetype cannot be None")
+    
+    if suites is None:
+        raise ValueError("suites cannot be None")
+    
+    if outfolder is None:
+        outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'testing')
+
+    template = os.path.join('testing', 'test_report_template.tex')
+    outpath = os.path.join(outfolder,
+                           'TEST-REPORT-' + serialno + '.pdf')
+
+    projectfolder = projects.cards[devicetype]
+    gcf = ConfigsFile(projectfolder)
+
+    graphs = []
+    instruments = {}
+    for suite in suites:
+        for test in suite._tests:
+            graphs.extend(test.graphs)
+            graphs.extend(test.histograms)
+            if test._inststr is not None and \
+                    test._inststr not in instruments.keys():
+                instruments[test._inststr] = len(instruments.keys()) + 1
+
+    print suites[0]
+    
+    stage = {'suites': [x.render_dox() for x in suites],
+             'sno': serialno,
+             'testdate': max([x.ts for x in suites]).format(),
+             'devicetype': devicetype,
+             'desc': gcf.description(devicetype),
+             'svnrevision': vcs.get_path_revision(projectfolder),
+             'svnrepo': vcs.get_path_repository(projectfolder),
+             'graphs': graphs,
+             'instruments': instruments
+             }
+
+    return render_pdf(stage, template, outpath)
 
 def render_device_summary(devicetype, include_failed=False, outfolder=None):
     """
