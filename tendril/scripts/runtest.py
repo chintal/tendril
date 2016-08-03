@@ -1,4 +1,6 @@
-# Copyright (C) 2015 Chintalagiri Shashank
+# Copyright (c)
+#   (c) 2015-2016 Anurag Kar
+#   (c) 2015      Chintalagiri Shashank
 #
 # This file is part of Tendril.
 #
