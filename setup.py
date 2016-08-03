@@ -55,6 +55,7 @@ install_requirements = [
     'matplotlib',  # Pulls in numpy!
     'splinter',    # Replace with direct selenium usage
     'versioneer',
+    'watchdog',
 
     # Extracted Modules
     'driver2200087',
@@ -76,7 +77,7 @@ doc_requirements = [
     'sphinx-rtd-theme',
     'sphinxcontrib-documentedlist',
     'sphinxcontrib-sqlalchemyviz',
-    'sphinxcontrib-googleanalytics==0.1.dev20150826',
+    'sphinxcontrib-googleanalytics',
     'sphinxcontrib-argdoc',
     'versioneer'
 ]
@@ -140,7 +141,9 @@ setup(
     tests_require=test_requirements,
     setup_requires=setup_requirements,
     extras_require={
-        'doc': doc_requirements
+        'doc': doc_requirements,
+        'test': test_requirements,
+        'package': setup_requirements,
     },
     entry_points={
         'console_scripts': script_entry_points

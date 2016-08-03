@@ -237,10 +237,13 @@ Installing the Dependencies
            development headers) to be installed on your system. A non-exhaustive
            list of the libraries you should have available is :
 
-             - freetype
+             - libfreetype
              - libpng
+             - libjpeg
              - libffi
-             - libpqxx (postgresql)
+             - libpqxx
+             - libxml2
+             - libxslt1
 
 2. Install dependencies not covered by ``requirements.txt``
 

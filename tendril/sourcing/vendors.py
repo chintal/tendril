@@ -286,6 +286,7 @@ class VendorPartBase(object):
     def _populate(self, max_age):
         if self._vendor is not None and self._canonical_repr is not None:
             with get_session() as s:
+                # TODO Allow max_age = -1 for don't care
                 if max_age > 0:
                     try:
                         self.load_from_db(max_age, s)
@@ -327,7 +328,7 @@ class VendorPartBase(object):
         else:
             self._load_from_db(max_age, session=session)
 
-    def _load_from_db(self, max_age, session):
+    def _load_from_db(self, max_age, session, expired_is_error=False):
         try:
             vpno = controller.get_vpno_obj(
                 vendor=self._vendor._name, ident=self._canonical_repr,
@@ -336,6 +337,8 @@ class VendorPartBase(object):
             data_ts = vpno.updated_at.timestamp
             now = time.time()
             if now - data_ts > max_age:
+                # TODO Populate part anyway here, and use sourcing maintenance
+                # queue to refresh in the background.
                 raise DBPartDataExpired
             self._vqtyavail = vpno.detail.vqtyavail
             self._manufacturer = vpno.detail.manufacturer
@@ -671,6 +674,7 @@ class VendorBase(object):
         mtime = self._map.get_map_time(canonical=ident)
         now = time.time()
         if not mtime or now - mtime > max_age:
+            # TODO Pass on request to vendor maintenance queue instead
             try:
                 vpnos, strategy = self.search_vpnos(ident)
                 if not vpnos:
