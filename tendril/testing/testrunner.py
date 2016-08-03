@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import sys
 import copy
 import os
 import arrow
@@ -25,7 +24,6 @@ from collections import namedtuple
 
 from tendril.entityhub import serialnos
 from tendril.entityhub import projects
-from tendril.entityhub import macs
 from tendril.entityhub.products import get_product_calibformat
 
 from tendril.gedaif.conffile import ConfigsFile
@@ -281,7 +279,6 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder,
 
 def run_electronics_test(serialno, devicetype, projectfolder,
                          incremental=True, stale=5, offline=False):
-
     if offline is True:
         incremental = False
 
@@ -302,25 +299,27 @@ def run_electronics_test(serialno, devicetype, projectfolder,
                 suite_needs_be_run = True
         else:
             suite_needs_be_run = True
-        
+
         if suite_needs_be_run is True:
             suite.run_test()
             suite.ts = arrow.utcnow()
-            if offline is False:
+            if not offline:
                 commit_test_results(suite)
             suite.finish()
-        
+
         suites.append(suite)
-    
-    if offline is True:
-        from tendril.dox import testing
-        testing.gen_local_test_results(serialno, devicetype, suites)
-    
+
+    # TODO Provide some option to dump raw test data, unrelated to online status
+    # if offline is True:
+    #     from tendril.dox import testing
+    #     testing.gen_local_test_results(serialno, devicetype, suites)
+
     return suites
 
 
 def commit_test_results(suite):
     controller.commit_test_suite(suiteobj=suite)
+
 
 def write_to_device(serialno, devicetype, suites=None):
     try:
@@ -334,20 +333,22 @@ def write_to_device(serialno, devicetype, suites=None):
                      devicetype)
 
 
-def publish_and_print(serialno, devicetype, suites=None, print_to_paper=False):
+def publish_and_print(serialno, devicetype, suites=None,
+                      print_to_paper=False):
     from tendril.dox import testing
     if suites is not None:
-        pdfpath = testing.render_test_report_standalone(serialno, devicetype, suites)
+        pdfpath = testing.render_test_report_standalone(serialno, devicetype,
+                                                        suites)
     else:
         pdfpath = testing.render_test_report(serialno=serialno)
         register_document(serialno=serialno, docpath=pdfpath,
-                      doctype='TEST-RESULT', efield=devicetype,
-                      series='TEST/' + serialnos.get_series(sno=serialno))
+                          doctype='TEST-RESULT', efield=devicetype,
+                          series='TEST/' + serialnos.get_series(sno=serialno))
     if PRINTER_NAME and print_to_paper:
         os.system('lp -d {1} -o media=a4 {0}'.format(pdfpath, PRINTER_NAME))
 
-def run_test(serialno=None, force=False, stale=5):
 
+def run_test(serialno=None, force=False, stale=5):
     if serialno is None:
         raise AttributeError("serialno cannot be None")
     logger.info("Staring Test for Serial No : " + serialno)
@@ -376,8 +377,8 @@ def run_test(serialno=None, force=False, stale=5):
 
     return suites
 
-def run_test_offline(serialno, devicetype):
 
+def run_test_offline(serialno, devicetype):
     if devicetype is None:
         raise AttributeError("Device descriptor cannot be None")
     logger.info("Staring Test for Device : " + devicetype)
@@ -388,8 +389,7 @@ def run_test_offline(serialno, devicetype):
         raise AttributeError("Project for " + devicetype + " not found.")
 
     suites = run_electronics_test(serialno, devicetype, projectfolder,
-                                  incremental=False, stale=None,
-                                  offline=True)
+                                  incremental=False, stale=None, offline=True)
 
     user_input = raw_input("Write to device [y/N] ?: ").strip()
     if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
@@ -397,16 +397,10 @@ def run_test_offline(serialno, devicetype):
 
     user_input = raw_input("Print to Paper [y/N] ?: ").strip()
     if user_input.lower() in ['y', 'yes', 'ok', 'pass']:
-        publish_and_print(serialno, devicetype, suites=suites, print_to_paper=True)
+        publish_and_print(serialno, devicetype, suites=suites,
+                          print_to_paper=True)
     else:
-        publish_and_print(serialno, devicetype, suites=suites, print_to_paper=False)
+        publish_and_print(serialno, devicetype, suites=suites,
+                          print_to_paper=False)
 
     return suites
-
-if __name__ == '__main__':
-    if sys.argv[1] == 'detect':
-        mactype = sys.argv[2]
-        sno = macs.get_sno_from_device(mactype)
-    else:
-        sno = sys.argv[1]
-    run_test(sno)
