@@ -24,6 +24,7 @@ from fs.opener import fsopendir
 from fs.utils import copyfile
 from fs import path
 from fs.rpcfs import RPCFS
+from fs.rpcfs import RemoteConnectionError
 
 from tendril.utils.db import with_db
 
@@ -43,31 +44,42 @@ from tendril.utils import log
 
 logger = log.get_logger(__name__, log.INFO)
 
-docstore_fs_static_obj = None
 
-refdoc_fs_static_obj = None
+def _docstore_init():
+    if DOCSTORE_ROOT.startswith('rpc://'):
+        try:
+            l_docstore_fs = RPCFS('http://' + DOCSTORE_ROOT[len('rpc://'):])
+        except RemoteConnectionError:
+            lpath = os.path.join(INSTANCE_ROOT, 'docstore')
+            logger.error('Could not connect to configured DOCSTORE. '
+                         'Using {0}.'.format(lpath))
+            l_docstore_fs = fsopendir(lpath, create_dir=True)
+    else:
+        l_docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
+    return l_docstore_fs
+
+docstore_fs = _docstore_init()
+
+
+def _refdocs_init():
+    if REFDOC_ROOT.startswith('rpc://'):
+        try:
+            l_refdoc_fs = RPCFS('http://' + REFDOC_ROOT[len('rpc://'):])
+        except RemoteConnectionError:
+            lpath = os.path.join(INSTANCE_ROOT, 'refdocs')
+            logger.error('Could not connect to configured REFDOCS. '
+                         'Using {0}.'.format(lpath))
+            l_refdoc_fs = fsopendir(lpath, create_dir=True)
+    else:
+        l_refdoc_fs = fsopendir(REFDOC_ROOT, create_dir=True)
+    return l_refdoc_fs
+
+refdoc_fs = _refdocs_init()
 
 workspace_fs = fsopendir(os.path.join(INSTANCE_ROOT, 'scratch'),
                          create_dir=True)
 local_fs = fsopendir('/')
 
-def docstore_fs ():
-    global docstore_fs_static_obj
-    if not docstore_fs_static_obj:
-        if DOCSTORE_ROOT.startswith('rpc://'):
-            docstore_fs_static_obj = RPCFS('http://' + DOCSTORE_ROOT[len('rpc://'):])
-        else:
-            docstore_fs_static_obj = fsopendir(DOCSTORE_ROOT, create_dir=True)
-    return docstore_fs_static_obj
-
-def refdoc_fs ():
-    global refdoc_fs_static_obj
-    if not refdoc_fs_static_obj:
-        if REFDOC_ROOT.startswith('rpc://'):
-            refdoc_fs_static_obj = RPCFS('http://' + REFDOC_ROOT[len('rpc://'):])
-        else:
-            refdoc_fs_static_obj = fsopendir(REFDOC_ROOT)
-    return refdoc_fs_static_obj
 
 class ExposedDocument(object):
     def __init__(self, desc, fspath, fs, ts=None, efield=None):
@@ -79,9 +91,9 @@ class ExposedDocument(object):
         self._get_fs_prefix()
 
     def _get_fs_prefix(self):
-        if self.fs == refdoc_fs():
+        if self.fs == refdoc_fs:
             self._prefix = os.path.join('/expose', REFDOC_PREFIX)
-        elif self.fs == docstore_fs():
+        elif self.fs == docstore_fs:
             self._prefix = os.path.join('/expose', DOCSTORE_PREFIX)
         elif self.fs == wallet_fs:
             self._prefix = os.path.join('/expose', DOCUMENT_WALLET_PREFIX)
@@ -123,7 +135,7 @@ def get_docs_list_for_serialno(serialno):
     for document in documents:
         rval.append(ExposedDocument(document.doctype,
                                     document.docpath,
-                                    docstore_fs(),
+                                    docstore_fs,
                                     document.created_at,
                                     document.efield))
     return rval
@@ -136,7 +148,7 @@ def get_docs_list_for_doctype(doctype, limit=None):
     for document in documents:
         rval.append(ExposedDocument(document.doctype,
                                     document.docpath,
-                                    docstore_fs(),
+                                    docstore_fs,
                                     document.created_at,
                                     document.efield))
     return rval
@@ -153,14 +165,14 @@ def get_docs_list_for_sno_doctype(serialno=None, doctype=None, limit=None,
 
     if one is True:
         return ExposedDocument(documents.doctype, documents.docpath,
-                               docstore_fs(), documents.created_at,
+                               docstore_fs, documents.created_at,
                                documents.efield)
 
     rval = []
     for document in documents:
         rval.append(ExposedDocument(document.doctype,
                                     document.docpath,
-                                    docstore_fs(),
+                                    docstore_fs,
                                     document.created_at,
                                     document.efield))
     return rval
@@ -194,13 +206,13 @@ def copy_docs_to_workspace(serialno=None, workspace=None,
         if docname.startswith(serialno):
             if not os.path.splitext(docname)[0] == serialno:
                 docname = docname[len(serialno) + 1:]
-        copyfile(docstore_fs(), doc.docpath, workspace, docname)
+        copyfile(docstore_fs, doc.docpath, workspace, docname)
 
 
 @with_db
 def delete_document(docpath, session=None):
     deregister_document(docpath=docpath, session=session)
-    docstore_fs().remove(docpath)
+    docstore_fs.remove(docpath)
 
 
 @with_db
@@ -218,9 +230,9 @@ def insert_document(sno, docpath, series):
     if series is None:
         series = serialnos.get_series(sno)
     storepath = path.join(series, fname)
-    if not docstore_fs().exists(path.dirname(storepath)):
-        docstore_fs().makedir(path.dirname(storepath), recursive=True)
-    copyfile(local_fs, docpath, docstore_fs(), storepath)
+    if not docstore_fs.exists(path.dirname(storepath)):
+        docstore_fs.makedir(path.dirname(storepath), recursive=True)
+    copyfile(local_fs, docpath, docstore_fs, storepath)
     return storepath
 
 
