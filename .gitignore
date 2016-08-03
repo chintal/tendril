@@ -11,6 +11,7 @@
 /build
 /stash
 *.egg
+*.eggs
 
 
 # Created by .ignore support plugin (hsz.mobi)
