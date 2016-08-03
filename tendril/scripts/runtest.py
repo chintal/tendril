@@ -78,25 +78,33 @@ def _get_parser():
         '--force', '-f', action='store_true', default=False,
         help="Re-run all tests, even if fresh test passed."
     )
+    parser.add_argument(
+        '--offline', '-o', metavar='DEVICETYPE', type=str, nargs=1,
+        help='Offline testing. Device descriptor required.'
+    )
+
     return parser
 
 
-def run(serialno, force, stale):
+def run(serialno, force, stale, devicetype):
     """
     Run tests for device.
 
     :param serialno: The serial number of the device.
     :param force: Re-run all test suites, even if fresh passed results exist.
     :param stale: Minimum age of test result to consider it stage.
+    :param devicetype: Specify the device type for offline testing.
 
     """
     if serialno is None:
         raise AttributeError("serialno cannot be None")
 
-    devicetype = serialnos.get_serialno_efield(sno=serialno)
-    logger.info(serialno + " is device : " + devicetype)
-
-    testrunner.run_test(serialno, force=force, stale=stale)
+    if devicetype is None:
+        devicetype = serialnos.get_serialno_efield(sno=serialno)
+        logger.info(serialno + " is device : " + devicetype)
+        testrunner.run_test(serialno, force=force, stale=stale)
+    else:
+        testrunner.run_test_offline(serialno, devicetype)
 
 
 def main():
@@ -105,19 +113,29 @@ def main():
     """
     parser = _get_parser()
     args = parser.parse_args()
+
     if not args.serialno and not args.detect:
         parser.print_help()
         return
-    if not args.serialno:
+
+    sno = None
+    devicetype = None
+
+    if args.detect:
         try:
             mactype = args.detect[0]
             sno = macs.get_sno_from_device(mactype)
         except:
             logger.error("Got exception when trying to detect serialno")
             raise
-    else:
+
+    if not sno:
         sno = args.serialno
-    run(sno, args.force, args.stale)
+
+    if args.offline:
+        devicetype = args.offline[0]
+
+    run(sno, args.force, args.stale, devicetype)
 
 
 if __name__ == '__main__':

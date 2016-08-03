@@ -24,6 +24,7 @@ from fs.opener import fsopendir
 from fs.utils import copyfile
 from fs import path
 from fs.rpcfs import RPCFS
+from fs.rpcfs import RemoteConnectionError
 
 from tendril.utils.db import with_db
 
@@ -42,16 +43,38 @@ from wallet import wallet_fs
 from tendril.utils import log
 
 logger = log.get_logger(__name__, log.INFO)
-if DOCSTORE_ROOT.startswith('rpc://'):
-    docstore_fs = RPCFS('http://' + DOCSTORE_ROOT[len('rpc://'):])
-else:
-    docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
 
-if REFDOC_ROOT.startswith('rpc://'):
-    refdoc_fs = RPCFS('http://' + REFDOC_ROOT[len('rpc://'):])
-else:
-    refdoc_fs = fsopendir(REFDOC_ROOT)
 
+def _docstore_init():
+    if DOCSTORE_ROOT.startswith('rpc://'):
+        try:
+            l_docstore_fs = RPCFS('http://' + DOCSTORE_ROOT[len('rpc://'):])
+        except RemoteConnectionError:
+            lpath = os.path.join(INSTANCE_ROOT, 'docstore')
+            logger.error('Could not connect to configured DOCSTORE. '
+                         'Using {0}.'.format(lpath))
+            l_docstore_fs = fsopendir(lpath, create_dir=True)
+    else:
+        l_docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
+    return l_docstore_fs
+
+docstore_fs = _docstore_init()
+
+
+def _refdocs_init():
+    if REFDOC_ROOT.startswith('rpc://'):
+        try:
+            l_refdoc_fs = RPCFS('http://' + REFDOC_ROOT[len('rpc://'):])
+        except RemoteConnectionError:
+            lpath = os.path.join(INSTANCE_ROOT, 'refdocs')
+            logger.error('Could not connect to configured REFDOCS. '
+                         'Using {0}.'.format(lpath))
+            l_refdoc_fs = fsopendir(lpath, create_dir=True)
+    else:
+        l_refdoc_fs = fsopendir(REFDOC_ROOT, create_dir=True)
+    return l_refdoc_fs
+
+refdoc_fs = _refdocs_init()
 
 workspace_fs = fsopendir(os.path.join(INSTANCE_ROOT, 'scratch'),
                          create_dir=True)

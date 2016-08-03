@@ -37,23 +37,39 @@ certificates, so on.
 
 """
 
+import os
 from fs.opener import fsopendir
 from fs.utils import copyfile
 from fs import path
 from fs.errors import NoSysPathError
 from fs.rpcfs import RPCFS
+from fs.rpcfs import RemoteConnectionError
 
+from tendril.utils.config import INSTANCE_ROOT
 from tendril.utils.config import DOCUMENT_WALLET
 from tendril.utils.config import DOCUMENT_WALLET_ROOT
 
 from tendril.utils.fsutils import temp_fs
+from tendril.utils import log
+logger = log.get_logger(__name__, log.DEFAULT)
 
-
-if DOCUMENT_WALLET_ROOT.startswith('rpc://'):
-    wallet_fs = RPCFS('http://' + DOCUMENT_WALLET_ROOT[6:])
-else:
-    wallet_fs = fsopendir(DOCUMENT_WALLET_ROOT)
 wallet_temp_fs = temp_fs.makeopendir('wallet')
+
+
+def _wallet_init():
+    if DOCUMENT_WALLET_ROOT.startswith('rpc://'):
+        try:
+            l_wallet_fs = RPCFS('http://' + DOCUMENT_WALLET_ROOT[len('rpc://'):])
+        except RemoteConnectionError:
+            lpath = os.path.join(INSTANCE_ROOT, 'wallet')
+            logger.error('Could not connect to configured DOCUMENT_WALLET. '
+                         'Using {0}.'.format(lpath))
+            l_wallet_fs = fsopendir(lpath, create_dir=True)
+    else:
+        l_wallet_fs = fsopendir(DOCUMENT_WALLET_ROOT, create_dir=True)
+    return l_wallet_fs
+
+wallet_fs = _wallet_init()
 
 
 def get_document_path(key):
@@ -67,6 +83,7 @@ def get_document_path(key):
     :param key: Key of the document you want.
     :return: The absolute path to the document.
     """
+
     if key in DOCUMENT_WALLET.keys():
         try:
             return wallet_fs.getsyspath(DOCUMENT_WALLET[key])
