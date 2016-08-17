@@ -39,6 +39,8 @@ install_requirements = [
     'requests',
     'appenlight-client',
     'suds',
+    'pcb-tools',
+    'pyhull',
 
     # Flask Dependencies (to be pruned?)
     'jsmin',
@@ -78,7 +80,7 @@ doc_requirements = [
     'sphinxcontrib-documentedlist',
     'sphinxcontrib-sqlalchemyviz',
     'sphinxcontrib-googleanalytics',
-    'sphinxcontrib-argdoc',
+    'sphinx-argparse',
     'versioneer'
 ]
 
