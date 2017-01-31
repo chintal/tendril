@@ -22,7 +22,6 @@ See the COPYING, README, and INSTALL files for more information
 
 from tendril.conventions.motifs.motifbase import MotifBase
 
-from tendril.conventions import series
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import VoltageGain
 
@@ -60,18 +59,7 @@ class MotifInampGainBase(MotifBase):
 
     @gain.setter
     def gain(self, value):
-        r1_dev = self.get_elem_by_idx('R1').data['device']
-        r1_fp = self.get_elem_by_idx('R1').data['footprint']
-        if r1_fp[0:3] == "MY-":
-            r1_fp = r1_fp[3:]
-
-        self.rseries = series.get_series(self._configdict['Rseries'],
-                                         'resistor',
-                                         start=self._configdict['Rmin'],
-                                         end=self._configdict['Rmax'],
-                                         device=r1_dev,
-                                         footprint=r1_fp)
-
+        self.rseries = self._get_component_series('R1', 'resistor')
         allowed_res_vals = self.rseries.gen_vals('resistor')
         required_res_val = self.gain_to_res(value)
 

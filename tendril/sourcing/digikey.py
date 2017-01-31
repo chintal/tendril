@@ -697,7 +697,8 @@ class VendorDigiKey(VendorBase):
         """
         if device.startswith('IC'):
             catstrings = ['Integrated Circuits (ICs)',
-                          'Isolators']
+                          'Isolators',
+                          'Sensors, Transducers']
         elif device.startswith('DIODE'):
             catstrings = ['Discrete Semiconductor Products']
         elif device.startswith('TRANSISTOR'):

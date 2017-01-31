@@ -1,3 +1,4 @@
+scipy
 appenlight-client
 requests
 cachecontrol[filecache]

@@ -58,6 +58,7 @@ install_requirements = [
     'splinter',    # Replace with direct selenium usage
     'versioneer',
     'watchdog',
+    'scipy',       # Used for filter coefficients
 
     # Extracted Modules
     'driver2200087',

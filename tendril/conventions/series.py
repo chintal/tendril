@@ -81,6 +81,31 @@ class ValueSeries(object):
             resistance, wattage = electronics.parse_resistor(value)
             return self._typeclass(resistance)
 
+    def get_closest_value(self, target, heuristic=None):
+        if heuristic == '+':
+            raise NotImplementedError
+        elif heuristic == '-':
+            raise NotImplementedError
+        elif heuristic is None:
+            ldelta = None
+            lvalue = None
+            for value in self.gen_vals(self._stype):
+                if value == target:
+                    return value
+                if value > target:
+                    if ldelta is None:
+                        return value
+                    else:
+                        ndelta = target - value
+                        if abs(ndelta) < abs(ldelta):
+                            return value
+                        else:
+                            return lvalue
+                ldelta = target - value
+                lvalue = value
+        else:
+            raise AttributeError
+
 
 class IEC60063ValueSeries(ValueSeries):
     def __init__(self, series, stype, start=None, end=None,

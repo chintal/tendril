@@ -19,6 +19,8 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+from tendril.conventions import series
+
 
 class MotifBase(object):
     columns = ['refdes', 'device', 'value', 'footprint',
@@ -111,3 +113,28 @@ class MotifBase(object):
                     parameter[2]
                 ))
         return inputs
+
+    def _get_component_series(self, refdes, type):
+        if type == 'capacitor':
+            stype = type
+            sstr = 'Cseries'
+            smin = 'Cmin'
+            smax = 'Cmax'
+        elif type == 'resistor':
+            stype = type
+            sstr = 'Rseries'
+            smin = 'Rmin'
+            smax = 'Rmax'
+        else:
+            raise NotImplementedError
+
+        dev = self.get_elem_by_idx(refdes).data['device']
+        fp = self.get_elem_by_idx(refdes).data['footprint']
+        if fp[0:3] == "MY-":
+            fp = fp[3:]
+        return series.get_series(self._configdict[sstr],
+                                 stype,
+                                 start=self._configdict[smin],
+                                 end=self._configdict[smax],
+                                 device=dev,
+                                 footprint=fp)
