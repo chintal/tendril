@@ -469,10 +469,22 @@ class GSymGeneratorFile(object):
 
             if gendata['type'] == 'resistor':
                 self._type = 'Resistor'
+                giseries = None
                 for resistance in gendata['resistances']:
                     if resistance is not None:
                         values.append(resistance)
                         self._iunits.append(resistance)
+                if 'composite_series' in gendata.keys():
+                    from tendril.conventions.series import CustomValueSeries
+                    try:
+                        name = gendata['composite_series']['name']
+                        tsymbol = GedaSymbol(self._sympath)
+                        giseries = CustomValueSeries(
+                            name, 'resistor', device=tsymbol.device,
+                            footprint=tsymbol.footprint
+                        )
+                    except KeyError:
+                        pass
                 if 'generators' in gendata.keys():
                     for generator in gendata['generators']:
                         self._igen.append(generator)
@@ -482,9 +494,16 @@ class GSymGeneratorFile(object):
                                 start=generator['start'], end=generator['end']
                             )
                             for rvalue in rvalues:
-                                values.append(construct_resistor(rvalue, generator['wattage']))  # noqa
+                                pval = construct_resistor(
+                                    rvalue, generator['wattage']
+                                )
+                                values.append(pval)
+                                if giseries is not None:
+                                    giseries.add_value(rvalue, pval)
                         else:
                             raise ValueError
+                if giseries is not None:
+                    self._iseries.append(giseries)
                 if 'values' in gendata.keys():
                     if gendata['values'][0].strip() != '':
                         values += gendata['values']
@@ -509,10 +528,22 @@ class GSymGeneratorFile(object):
 
             if gendata['type'] == 'capacitor':
                 self._type = 'Capacitor'
+                giseries = None
                 for capacitance in gendata['capacitances']:
                     if capacitance is not None:
                         values.append(capacitance)
                         self._iunits.append(capacitance)
+                if 'composite_series' in gendata.keys():
+                    from tendril.conventions.series import CustomValueSeries
+                    try:
+                        name = gendata['composite_series']['name']
+                        tsymbol = GedaSymbol(self._sympath)
+                        giseries = CustomValueSeries(
+                            name, 'capacitor', device=tsymbol.device,
+                            footprint=tsymbol.footprint
+                        )
+                    except KeyError:
+                        pass
                 if 'generators' in gendata.keys():
                     for generator in gendata['generators']:
                         self._igen.append(generator)
@@ -522,9 +553,16 @@ class GSymGeneratorFile(object):
                                 start=generator['start'], end=generator['end']
                             )
                             for cvalue in cvalues:
-                                values.append(construct_capacitor(cvalue, generator['voltage']))  # noqa
+                                pval = construct_capacitor(
+                                    cvalue, generator['voltage']
+                                )
+                                values.append(pval)
+                                if giseries is not None:
+                                    giseries.add_value(cvalue, pval)
                         else:
                             raise ValueError
+                if giseries is not None:
+                    self._iseries.append(giseries)
                 if 'values' in gendata.keys():
                     if gendata['values'][0].strip() != '':
                         values += gendata['values']

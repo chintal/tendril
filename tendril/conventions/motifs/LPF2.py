@@ -80,10 +80,11 @@ class MotifLPF2(MotifBase):
                 self._populate_components(ci)
             except ValueError:
                 continue
+            score = self.Score
             if best is None:
-                best = (ci, self.Score)
-            elif self.Score > best[1]:
-                best = (ci, self.Score)
+                best = (ci, score)
+            elif score > best[1]:
+                best = (ci, score)
 
         self._Ci = best[0]
         self._populate_components(self._Ci)
@@ -212,7 +213,7 @@ class MotifLPF2(MotifBase):
     def get_configdict_stub(self):
         stub = {'desc': "Second Order Sallen-Key Low Pass Filter",
                 'Fc': "15000Hz", 'poly': 'Butterworth',
-                'Rseries': "E24", 'Rmin': '100E', 'Rmax': '100K',
+                'Rseries': "E24", 'Rmin': '470E', 'Rmax': '47K',
                 'Cseries': "E6", 'Cmin': "100pF", 'Cmax': "22uF",
                 }
         return stub
