@@ -225,7 +225,6 @@ class MotifLPF2(MotifBase):
     def parameters_base(self):
         p_fc = [
             ('Fc', "Filter Cutoff Frequency", self._tgt_Fc),
-            ('poly', "Filter Polynomial", ''),
             ('Q', "Filter Pole Quality", round(self._tgt_Q, 5)),
             ('Score', "Solution Score", 1)
         ]
