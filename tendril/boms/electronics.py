@@ -267,9 +267,11 @@ class EntityElnBom(EntityBomBase):
     @property
     def motifs(self, all_defined=False):
         if all_defined:
-            return self._motifs
+            return sorted(self._motifs,
+                          key=lambda x: (x._type, int(x._ident)))
         else:
-            return self._included_motifs
+            return sorted(self._included_motifs,
+                          key=lambda x: (x._type, int(x._ident)))
 
     def create_groups(self):
         groupnamelist = self.configurations.group_names

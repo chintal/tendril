@@ -25,17 +25,11 @@ Verifications based on
 http://www.daycounter.com/Filters/SallenKeyLP/Sallen-Key-LP-Filter-Design-Equations.phtml
 http://sim.okawa-denshi.jp/en/OPstool.php
 
-TODO
-The initial guess for C1 is actually a fixed value of C1. This needs to be
-automatically chosen.
-Using the initial C1, the other numbers are all just set per series. This
-should be augmented to take into account the fact that the closest match in
-the series may well be far from ideal.
 """
 
-from decimal import Decimal
 from math import pi
 from math import sqrt
+from math import log10
 from scipy import signal
 
 from tendril.conventions.motifs.motifbase import MotifBase
@@ -60,8 +54,6 @@ class MotifLPF2(MotifBase):
         self.r1series = self._get_component_series('R1', 'resistor')
         self.r2series = self._get_component_series('R2', 'resistor')
 
-        self.Ci = configdict['Ci']
-
         # Set Frequency
         assert configdict['poly'] in ['Butterworth', 'Bessel']
         self.poly = configdict['poly']
@@ -70,27 +62,35 @@ class MotifLPF2(MotifBase):
         self._process()
         self.validate()
 
-    @property
-    def Ci(self):
-        return self._Ci
-
-    @Ci.setter
-    def Ci(self, value):
-        self._Ci = Capacitance(value)
-
     def _process(self):
         # # TODO improve this calculation
         if self.poly == 'Butterworth':
             num, den = signal.butter(2, 1, 'lowpass', analog=True, output='ba')
             self._a = den[1]
             self._b = den[0]
+            self._tgt_Q = sqrt(self._b) / self._a
         elif self.poly == 'Bessel':
             raise NotImplementedError
         else:
             raise ValueError
 
+        best = None
+        for ci in self.c1series.gen_vals('capacitor'):
+            try:
+                self._populate_components(ci)
+            except ValueError:
+                continue
+            if best is None:
+                best = (ci, self.Score)
+            elif self.Score > best[1]:
+                best = (ci, self.Score)
+
+        self._Ci = best[0]
+        self._populate_components(self._Ci)
+
+    def _populate_components(self, Ci):
         # Set C1 to initial guess
-        cC1 = self._Ci
+        cC1 = Ci
         cC1 = self._set_component('C1', cC1, self.c1series)
 
         # Set C2 to nearest match
@@ -100,7 +100,8 @@ class MotifLPF2(MotifBase):
 
         # Set R1 and R2
         tn1 = self._a * float(cC2)
-        tn2 = (self._a * float(cC2))**2 - 4 * self._b * float(cC1) * float(cC2)
+        tn2 = (self._a * float(cC2)) ** 2 - 4 * self._b * float(cC1) * float(
+            cC2)
         tn2 = sqrt(tn2)
         td = 4 * pi * float(self._tgt_Fc) * float(cC1) * float(cC2)
 
@@ -121,16 +122,48 @@ class MotifLPF2(MotifBase):
         return series.get_type_value(svalue)
 
     @property
+    def Score(self):
+        score = 1.0
+
+        # Gain settings
+        ke_fc = 10.0
+        ke_q = 10.0
+        ke_r = 0.01
+        ke_c = 0.005
+
+        # Fc correctness
+        e_fc = ke_fc * log10(self.Fc / self._tgt_Fc)
+        score *= (1 - abs(e_fc))
+
+        # Q correctness
+        e_q = ke_q * log10(self.Q / self._tgt_Q)
+        score *= (1 - abs(e_q))
+
+        # Component range
+        e_R1 = ke_r * log10(self.R1 / self.r1series.get_characteristic_value())
+        score *= (1 - abs(e_R1))
+        e_R2 = ke_r * log10(self.R2 / self.r2series.get_characteristic_value())
+        score *= (1 - abs(e_R2))
+        e_C1 = ke_c * log10(self.C1 / self.c1series.get_characteristic_value())
+        score *= (1 - abs(e_C1))
+        e_C2 = ke_c * log10(self.C2 / self.c2series.get_characteristic_value())
+        score *= (1 - abs(e_C2))
+
+        return round(score, 5)
+
+    @property
     def _r1r2c1c2(self):
         return float(self.R1) * float(self.R2) * float(self.C1) * float(self.C2)
 
     @property
     def a1(self):
-        return float(self.C1) * float(self.R1 + self.R2) * 2 * pi * float(self.Fc)
+        r = float(self.C1) * float(self.R1 + self.R2) * 2 * pi * float(self.Fc)
+        return round(r, 5)
 
     @property
     def b1(self):
-        return (2 * pi * float(self.Fc)) ** 2 * self._r1r2c1c2
+        r = (2 * pi * float(self.Fc)) ** 2 * self._r1r2c1c2
+        return round(r, 5)
 
     @property
     def Fc(self):
@@ -138,11 +171,8 @@ class MotifLPF2(MotifBase):
 
     @property
     def Q(self):
-        return sqrt(self._r1r2c1c2) / (float(self.R1 + self.R2) * float(self.C1))
-
-    @Q.setter
-    def Q(self, value):
-        self._tgt_Q = Decimal(value)
+        q = sqrt(self._r1r2c1c2) / (float(self.R1 + self.R2) * float(self.C1))
+        return round(q, 5)
 
     @Fc.setter
     def Fc(self, value):
@@ -184,7 +214,6 @@ class MotifLPF2(MotifBase):
                 'Fc': "15000Hz", 'poly': 'Butterworth',
                 'Rseries': "E24", 'Rmin': '100E', 'Rmax': '100K',
                 'Cseries': "E6", 'Cmin': "100pF", 'Cmax': "22uF",
-                'Ci': '470pF',
                 }
         return stub
 
@@ -197,15 +226,15 @@ class MotifLPF2(MotifBase):
         p_fc = [
             ('Fc', "Filter Cutoff Frequency", self._tgt_Fc),
             ('poly', "Filter Polynomial", ''),
-            ('Q', "Filter Pole Quality", sqrt(self._b) / (self._a)),
+            ('Q', "Filter Pole Quality", round(self._tgt_Q, 5)),
+            ('Score', "Solution Score", 1)
         ]
         p_coeff = [
-            ('a1', '', self._a),
-            ('b1', '', self._b)
+            ('a1', '', round(self._a, 5)),
+            ('b1', '', round(self._b))
         ]
         p_intermediate = [
-            ('Ci', "Capacitance Guess", self._configdict['Ci']),
-            ('CR', "Capacitance ratio (C2/C1)", self.mCR)
+            ('CR', "Capacitance ratio (C2/C1)", ''.join(['>=', str(self.mCR)]))
         ]
         parameters = [
             (p_fc, "Filter Parameters"),
@@ -222,10 +251,9 @@ class MotifLPF2(MotifBase):
             ('Cmin', '100pF', 'Minimum Capacitance', Capacitance),
             ('Cmax', '22uF', 'Maximum Capacitance', Capacitance),
             ('Rseries', 'E6', 'Resistance Series', str),
-            ('Rmin', '1pF', 'Minimum Resistance', Resistance),
-            ('Rmax', '100nF', 'Maximum Resistance', Resistance),
+            ('Rmin', '470E', 'Minimum Resistance', Resistance),
+            ('Rmax', '47K', 'Maximum Resistance', Resistance),
             ('Fc', "15000Hz", 'Filter Cutoff Frequency', Frequency),
             ('poly', "Butterworth", 'Filter Polynomial', str),
-            ('Ci', "470pF", 'Inital Capacitance Guess', Capacitance)
         ]
         return inputs

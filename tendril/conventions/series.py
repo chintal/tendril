@@ -25,6 +25,7 @@ Docstring for series.py
 
 import copy
 import iec60063
+from math import log10
 
 from decimal import InvalidOperation
 from tendril.conventions import electronics
@@ -105,6 +106,14 @@ class ValueSeries(object):
                 lvalue = value
         else:
             raise AttributeError
+
+    def get_characteristic_value(self):
+        s = 0
+        n = 0
+        for value in self.gen_vals(self._stype):
+            s += log10(float(value))
+            n += 1
+        return self._typeclass(10 ** (s/n))
 
 
 class IEC60063ValueSeries(ValueSeries):

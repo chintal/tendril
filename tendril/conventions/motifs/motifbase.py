@@ -48,7 +48,7 @@ class MotifBase(object):
 
     @property
     def elements(self):
-        return self._elements
+        return sorted(self._elements, key=lambda x: x.motif)
 
     def _line_generator(self):
         for elem in self._elements:
