@@ -208,7 +208,7 @@ class MotifLPF2(MotifBase):
         return self.C2 / self.C1
 
     def validate(self):
-        pass
+        assert self.Score > 0.9
 
     def get_configdict_stub(self):
         stub = {'desc': "Second Order Sallen-Key Low Pass Filter",
@@ -220,7 +220,8 @@ class MotifLPF2(MotifBase):
 
     @property
     def listing(self):
-        return [('Fc', self.Fc), ('Q', self.Q)]
+        return [('Fc', self.Fc.quantized_repr),
+                ('Q', self.Q)]
 
     @property
     def parameters_base(self):
