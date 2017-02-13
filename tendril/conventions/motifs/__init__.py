@@ -22,12 +22,23 @@ See the COPYING, README, and INSTALL files for more information
 import os
 
 from tendril.utils.config import TENDRIL_ROOT
+from tendril.utils.config import INSTANCE_ROOT
+from tendril.utils.fsutils import import_
+
+INSTANCE_MOTIFS_ROOT = os.path.join(INSTANCE_ROOT, 'motifs')
+INSTANCE_MOTIFS = import_(INSTANCE_MOTIFS_ROOT)
 
 
 def create_motif_object(motifst):
+    try:
+        return INSTANCE_MOTIFS.create_motif_object(motifst)
+    except ValueError:
+        pass
+
     modname = motifst.split('.')[0]
     modstr = 'tendril.conventions.motifs.' + modname
     clsname = 'Motif' + modname
+
     try:
         mod = __import__(modstr, fromlist=[clsname])
         cls = getattr(mod, clsname)
@@ -40,15 +51,15 @@ motifs_list = None
 
 
 def get_motifs_list():
-    if motifs_list is not None:
-        return motifs_list
+    motifs = INSTANCE_MOTIFS.get_motifs_list()
     motifspath = os.path.join(TENDRIL_ROOT, 'conventions', 'motifs')
     candidates = [f for f in os.listdir(motifspath)
-                  if os.path.isfile(os.path.join(motifspath, f))]
-
-    motifs = []
+                  if os.path.isfile(os.path.join(motifspath, f))
+                  and not f.startswith('_')]
     for candidate in candidates:
         name, ext = os.path.splitext(candidate)
+        if name in motifs:
+            continue
         if ext == '.py':
             try:
                 create_motif_object(name + '.1')
@@ -56,6 +67,4 @@ def get_motifs_list():
             except ValueError:
                 pass
 
-    global motifs_list
-    motifs_list = motifs
-    return motifs_list
+    return motifs
