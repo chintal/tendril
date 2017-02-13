@@ -51,10 +51,14 @@ def _get_parser():
         prog='tendril-genvmap'
     )
     add_vendor_selection_options(parser)
+    parser.add_argument(
+        '--force', '-f', action='store_true', default=False,
+        help='Regenerate mapfile even if it seems to be up-to-date'
+    )
     return parser
 
 
-def run(vobj=None):
+def run(vobj=None, force=False):
     """
     Generates vendor maps for the provided vendor.
 
@@ -64,11 +68,16 @@ def run(vobj=None):
     from tendril.sourcing.map import gen_vendor_mapfile
     from tendril.sourcing.electronics import vendor_list
 
+    if force is True:
+        maxage = 0
+    else:
+        maxage = 1
+
     if not vobj:
         for v in vendor_list:
-            gen_vendor_mapfile(v)
+            gen_vendor_mapfile(v, maxage)
     else:
-        gen_vendor_mapfile(vobj)
+        gen_vendor_mapfile(vobj, maxage)
 
 
 def main():
@@ -97,7 +106,7 @@ def main():
             print("  {0:<20} {1}".format(v._name, v.name))
         return
 
-    run(v)
+    run(v, args.force)
 
 
 if __name__ == '__main__':

@@ -43,9 +43,9 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 
-def gen_mapfile(vendor, idents):
+def gen_mapfile(vendor, idents, maxage=-1):
     pb = TendrilProgressBar(max=len(idents))
-    vendor_obj = controller.get_vendor(name=vendor._name)
+    vendor_obj = controller.get_vendor(name=vendor.cname)
     for ident in idents:
         pb.next(note=ident)
         vpnos, strategy = vendor.search_vpnos(ident)
@@ -67,7 +67,7 @@ def gen_mapfile(vendor, idents):
     vendor.map._dump_mapfile()
 
 
-def gen_vendor_mapfile(vendor_obj):
+def gen_vendor_mapfile(vendor_obj, maxage=-1):
     """
 
     :type vendor_obj: sourcing.vendors.VendorBase
@@ -86,7 +86,7 @@ def gen_vendor_mapfile(vendor_obj):
             if symbol.ident.strip() != "":
                 idents.append(symbol.ident)
 
-        gen_mapfile(vendor_obj, idents)
+        gen_mapfile(vendor_obj, idents, maxage)
         logger.info("Done Generating Electronics Vendor Map : " +
                     vendor_obj.name)
 
@@ -97,14 +97,14 @@ def gen_vendor_mapfile(vendor_obj):
         for pcb, folder in iteritems(pcblib):
             idents.append(pcb)
 
-        gen_mapfile(vendor_obj, idents)
+        gen_mapfile(vendor_obj, idents, maxage)
         logger.info("Done Generating PCB Vendor Map File : " + vendor_obj.name)
     else:
         logger.warning('Vendor pclass is not recognized. Not generating map.')
         return
 
 
-def export_vendor_map_audit(vendor_obj, max_age=600000):
+def export_vendor_map_audit(vendor_obj, max_age=-1):
     if isinstance(vendor_obj, int):
         vendor_obj = vendor_list[vendor_obj]
     mapobj = vendor_obj.map

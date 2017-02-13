@@ -41,6 +41,7 @@ from tendril.conventions.electronics import construct_capacitor
 from tendril.utils.types import currency
 from tendril.utils.config import PRICELISTVENDORS_FOLDER
 from tendril.utils.config import INSTANCE_ROOT
+from tendril.utils.config import VENDOR_DEFAULT_MAXAGE
 
 from tendril.utils.fsutils import get_file_mtime
 from tendril.utils.files import yml as yaml
@@ -261,7 +262,7 @@ class VendorPricelist(VendorBase):
     def get_vpdict(self, vpartno):
         return self._pl_get_vpart_dict(vpartno)
 
-    def get_vpart(self, vpartno, ident=None, max_age=600000):
+    def get_vpart(self, vpartno, ident=None, max_age=VENDOR_DEFAULT_MAXAGE):
         vp_dict = self._pl_get_vpart_dict(vpartno)
         if ident is not None:
             if vp_dict['ident'].strip() != ident:

@@ -31,6 +31,7 @@ from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
 from tendril.utils import config
 from tendril.utils.db import get_session
+from tendril.utils.config import VENDOR_DEFAULT_MAXAGE
 
 from db import controller
 
@@ -83,7 +84,7 @@ class DBPartDataUnavailable(DBPartDataUnusable):
 class VendorMapFileDB(MapFileBase):
     def __init__(self, vendor):
         self._vendor = vendor
-        self._vendor_name = vendor._name
+        self._vendor_name = vendor.cname
         super(VendorMapFileDB, self).__init__(self._vendor.mappath)
 
     def length(self):
@@ -268,7 +269,8 @@ class VendorPrice(object):
 
 
 class VendorPartBase(object):
-    def __init__(self, vpno, ident, vendor, max_age=600000, shell_only=False):
+    def __init__(self, vpno, ident, vendor,
+                 max_age=VENDOR_DEFAULT_MAXAGE, shell_only=False):
         self._vpno = vpno
         self._vqtyavail = None
         self._manufacturer = None
@@ -283,16 +285,14 @@ class VendorPartBase(object):
         if shell_only is False:
             self._populate(max_age)
 
-    def _populate(self, max_age):
+    def _populate(self, max_age=VENDOR_DEFAULT_MAXAGE):
         if self._vendor is not None and self._canonical_repr is not None:
             with get_session() as s:
-                # TODO Allow max_age = -1 for don't care
-                if max_age > 0:
-                    try:
-                        self.load_from_db(max_age, s)
-                        return
-                    except DBPartDataUnusable:
-                        pass
+                try:
+                    self.load_from_db(max_age, s)
+                    return
+                except DBPartDataUnusable:
+                    pass
                 self._get_data()
                 try:
                     self.commit(s)
@@ -310,7 +310,7 @@ class VendorPartBase(object):
 
     def _commit_to_db(self, session):
         vpno = controller.get_vpno_obj(
-            vendor=self._vendor._name, ident=self._canonical_repr,
+            vendor=self._vendor.cname, ident=self._canonical_repr,
             vpno=self._vpno, session=session
         )
         controller.populate_vpart_detail(
@@ -331,12 +331,12 @@ class VendorPartBase(object):
     def _load_from_db(self, max_age, session, expired_is_error=False):
         try:
             vpno = controller.get_vpno_obj(
-                vendor=self._vendor._name, ident=self._canonical_repr,
+                vendor=self._vendor.cname, ident=self._canonical_repr,
                 vpno=self._vpno, session=session
             )
             data_ts = vpno.updated_at.timestamp
             now = time.time()
-            if now - data_ts > max_age:
+            if now - data_ts > max_age >= 0:
                 # TODO Populate part anyway here, and use sourcing maintenance
                 # queue to refresh in the background.
                 raise DBPartDataExpired
@@ -534,7 +534,7 @@ class VendorElnPartBase(VendorPartBase):
         )
         return vpno
 
-    def _load_from_db(self, max_age, session):
+    def _load_from_db(self, max_age, session, expired_is_error=False):
         vpno = super(VendorElnPartBase, self)._load_from_db(max_age,
                                                             session=session)
         if vpno is not None:
@@ -607,6 +607,10 @@ class VendorBase(object):
             return self._name
 
     @property
+    def cname(self):
+        return self._name
+
+    @property
     def pclass(self):
         return self._pclass
 
@@ -666,14 +670,20 @@ class VendorBase(object):
             for vpno in self._map.get_all_partnos(ident):
                 yield ident, vpno
 
-    def get_all_vparts(self, max_age=600000):
+    def get_all_vparts(self, max_age=VENDOR_DEFAULT_MAXAGE):
         for ident, vpno in self.get_all_vpnos():
             yield self.get_vpart(vpartno=vpno, ident=ident, max_age=max_age)
 
-    def get_vpnos(self, ident, max_age=600000):
+    def get_vpnos(self, ident, max_age=VENDOR_DEFAULT_MAXAGE):
+        acquire = False
         mtime = self._map.get_map_time(canonical=ident)
-        now = time.time()
-        if not mtime or now - mtime > max_age:
+        if max_age > 0:
+            now = time.time()
+            if not mtime or now - mtime > max_age:
+                acquire = True
+        elif max_age == 0 or mtime is None:
+            acquire = True
+        if acquire is True:
             # TODO Pass on request to vendor maintenance queue instead
             try:
                 vpnos, strategy = self.search_vpnos(ident)
@@ -691,7 +701,7 @@ class VendorBase(object):
     def search_vpnos(self, ident):
         raise NotImplementedError
 
-    def get_vpart(self, vpartno, ident=None, max_age=1000000):
+    def get_vpart(self, vpartno, ident=None, max_age=VENDOR_DEFAULT_MAXAGE):
         idx = (vpartno, ident)
         if idx not in self._partcache.keys():
             part = self._partclass(vpartno, ident=ident,
@@ -765,7 +775,8 @@ class VendorBase(object):
                     selcandidate.get_price(rqty)[0]
                 ).extended_price(rqty).native_value
             except VendorPartPricingError:
-                logger.error("Unable to price part {0}".format(selcandidate.vpno))
+                logger.error("Unable to price part {0}"
+                             "".format(selcandidate.vpno))
                 idx += 1
             except IndexError:
                 if not get_all:
@@ -774,6 +785,7 @@ class VendorBase(object):
                 else:
                     return []
 
+        selcandidate = None
         for candidate in candidates:
             try:
                 ntcost = self._get_candidate_tcost(candidate, oqty)
@@ -796,13 +808,13 @@ class VendorBase(object):
         self._orderadditionalcosts.append((desc, percent))
 
     def get_effective_price(self, price):
-        # TODO This needs to move into the VendorPart instead
         warnings.warn("Deprecated access of VendorBase.get_effective_price. "
                       "Use VendorPartBase.get_effective_price instead.",
                       DeprecationWarning)
         effective_unitp = price.unit_price.source_value
         for additional_cost in self._orderadditionalcosts:
-            effective_unitp += price.unit_price.source_value * float(additional_cost[1]) / 100  # noqa
+            effective_unitp += price.unit_price.source_value * \
+                               float(additional_cost[1]) / 100
         return VendorPrice(
             price.moq, effective_unitp, self.currency, price.oqmultiple
         )
@@ -908,11 +920,11 @@ class VendorBase(object):
     @staticmethod
     def _find_exact_match_package(parts, value):
         """
-        Given a list of :class:`.vendors.SearchPart` instances and a known value,
-        returns a :class:`.vendors.SearchResult` instance, whose ``parts``
-        attribute includes only the package of the part whose manufacturer
-        part number (``mfgpno``) exactly matches the given value, if such
-        an exact match can be found.
+        Given a list of :class:`.vendors.SearchPart` instances and a known
+        value, returns a :class:`.vendors.SearchResult` instance, whose
+        ``parts`` attribute includes only the package of the part whose
+        manufacturer part number (``mfgpno``) exactly matches the given value,
+        if such an exact match can be found.
 
         The :class:`.vendors.SearchResult` returned on success has it's
         strategy attribute set to ``EXACT_MATCH_FFP``.
@@ -951,8 +963,8 @@ class VendorBase(object):
     @staticmethod
     def _filter_results_bycpackage(parts, cpackage, strategy):
         """
-        Given a list of :class:`.vendors.SearchPart` instances, and a consensus package
-        string, returns a :class:`.vendors.SearchResult` instance, whose
+        Given a list of :class:`.vendors.SearchPart` instances, and a consensus
+        package string, returns a :class:`.vendors.SearchResult` instance, whose
         ``parts`` attribute includes the part numbers of all the parts in the
         provided list whose package attribute matches the consensus package.
 
@@ -1086,11 +1098,11 @@ class VendorBase(object):
     @staticmethod
     def _remove_duplicates(parts):
         """
-        Given a list of :class:`.vendors.SearchPart` instances, this function removes
-        any duplicates that may have crept in. In this case, the necessary and
-        sufficient condition for two :class:`.vendors.SearchPart` instances to be
-        duplicates of each other is that they have the same vendor part number
-        (``pno``).
+        Given a list of :class:`.vendors.SearchPart` instances, this function
+        removes any duplicates that may have crept in. In this case, the
+        necessary and sufficient condition for two :class:`.vendors.SearchPart`
+        instances to be duplicates of each other is that they have the same
+        vendor part number (``pno``).
 
         """
         vpnos = []

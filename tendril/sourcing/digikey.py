@@ -130,7 +130,7 @@ these contents are only available when part details are obtained from the
 soup itself, and not when reconstructed from the Tendril database.
 
 >>> for k in p.attributes_table.keys():
-...     print k
+...     print(k)
 ...
 Category
 Operating Temperature
@@ -485,11 +485,11 @@ class DigiKeyInvoice(customs.CustomsInvoice):
                     try:
                         if int(boqty) > 0:
                             logger.warning(
-                                "Apparant backorder. Crosscheck customs treatment for: " +  # noqa
-                                idx + ' ' + ident
+                                "Apparant backorder. Crosscheck customs "
+                                "treatment for: {0} {1}".format(idx, ident)
                             )
                     except ValueError:
-                        print line
+                        print(line)
 
                     unitp_str = line[header.index('Unit Price')].strip()
 
@@ -573,8 +573,10 @@ class VendorDigiKey(VendorBase):
         if device not in self._devices:
             return None, 'NODEVICE'
         try:
-            if device.startswith('RES') or device.startswith('POT') or \
-                    device.startswith('CAP') or device.startswith('CRYSTAL') or \
+            if device.startswith('RES') or \
+                    device.startswith('POT') or \
+                    device.startswith('CAP') or \
+                    device.startswith('CRYSTAL') or \
                     device.startswith('LED'):
                 if check_for_std_val(ident) is False:
                     return self._get_search_vpnos(device, value, footprint)
@@ -736,7 +738,8 @@ class VendorDigiKey(VendorBase):
             subcatstrings = ['Diodes - Rectifiers - Single',
                              'Diodes - Rectifiers - Arrays']
         elif device.startswith('TRANSISTOR'):
-            subcatstrings = ['FETs - Single']
+            subcatstrings = ['Transistors - FETs, MOSFETs - Single',
+                             'Transistors - FETs, MOSFETs - Arrays']
         elif device.startswith('BRIDGE RECTIFIER'):
             subcatstrings = ['Bridge Rectifiers',
                              'Diodes - Bridge Rectifiers']
@@ -1026,7 +1029,8 @@ class VendorDigiKey(VendorBase):
                 ostr = 'T'
             else:
                 raise ValueError(str(rparts))
-        vfmt = lambda d: str(d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize())  # noqa
+        vfmt = lambda d: str(d.quantize(Decimal(1))
+                             if d == d.to_integral() else d.normalize())
         return vfmt(rval) + ostr
 
     @staticmethod
@@ -1074,7 +1078,8 @@ class VendorDigiKey(VendorBase):
                 for i in range(do):
                     oindex -= 1
 
-        vfmt = lambda d: str(d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize())  # noqa
+        vfmt = lambda d: str(d.quantize(Decimal(1))
+                             if d == d.to_integral() else d.normalize())
         return vfmt(cval) + ostrs[oindex]
 
     @staticmethod
@@ -1195,7 +1200,7 @@ class VendorDigiKey(VendorBase):
     @property
     def _searchurl_crystal(self):
         return urlparse.urljoin(self._search_url_base,
-                                'crystals-and-oscillators/crystals/')
+                                'crystals-oscillators-resonators/crystals/')
 
     def _get_device_searchparams(self, device):
         packagetf = None

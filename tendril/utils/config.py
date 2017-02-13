@@ -726,6 +726,13 @@ config_options_vendors = [
         "The folder in which vendor maps should be dumped"
     ),
     ConfigOption(
+        'VENDOR_DEFAULT_MAXAGE',
+        "-1",
+        "The maximum age in seconds after which sourcing information is "
+        "considered stale. Set to -1 for no checks. The continuous background "
+        "update is pretty unwieldy."
+    ),
+    ConfigOption(
         'OCTOPART_API_KEY',
         "None",
         "The OctoPart API Key to use for vendors based on the OctoPart API."

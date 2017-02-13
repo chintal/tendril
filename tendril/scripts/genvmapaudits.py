@@ -23,15 +23,20 @@ See the COPYING, README, and INSTALL files for more information
 import argparse
 
 
-def run(vobj=None):
+def run(vobj=None, force=False):
     from tendril.sourcing.map import export_vendor_map_audit
     from tendril.sourcing.electronics import vendor_list
 
+    if force is True:
+        maxage = 0
+    else:
+        maxage = -1
+
     if not vobj:
         for v in vendor_list:
-            export_vendor_map_audit(v)
+            export_vendor_map_audit(v, maxage)
     else:
-        export_vendor_map_audit(vobj)
+        export_vendor_map_audit(vobj, maxage)
 
 
 def main():
@@ -46,6 +51,10 @@ def main():
     parser.add_argument(
         '--all', '-a', action='store_true', default=False,
         help='Run for all vendors. If used, will ignore VENDOR_NAME.'
+    )
+    parser.add_argument(
+        '--force', '-f', action='store_true', default=False,
+        help='Regenerate even if it seems to be up-to-date'
     )
 
     args = parser.parse_args()
@@ -66,10 +75,10 @@ def main():
         print("recognized vendors: ")
 
         for v in vendor_list:
-            print("  {0:<20} {1}".format(v._name, v.name))
+            print("  {0:<20} {1}".format(v.cname, v.name))
         return
 
-    run(v)
+    run(v, args.force)
 
 
 if __name__ == '__main__':
