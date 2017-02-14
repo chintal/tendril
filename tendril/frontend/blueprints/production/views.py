@@ -54,7 +54,7 @@ def orders():
     return jsonify(dxproduction.get_all_prodution_order_snos())
 
 
-@blueprint.route('/<order_sno>/getlabels')
+@blueprint.route('/order/<order_sno>/getlabels')
 @login_required
 def get_device_labels(order_sno=None):
     production_order = order.ProductionOrder(order_sno)
