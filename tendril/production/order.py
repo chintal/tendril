@@ -752,6 +752,7 @@ class ProductionOrder(object):
         return
 
     def make_labels(self, label_manager=None, include_all_indents=False,
+                    include_main_indent=False,
                     pb_class=None, stacked_pb=False, leaf_pb=True):
         cards = self.cards
         deltas = self.deltas
@@ -776,13 +777,14 @@ class ProductionOrder(object):
                     )
                 indent.make_labels(label_manager=label_manager)
         else:
-            if len(self.indent_snos):
-                indent = self.indents[-1]
-                if leaf_pb is True:
-                    pb.next(
-                        note='Labels for Indent {0}'.format(indent.serialno)
-                    )
-                indent.make_labels(label_manager=label_manager)
+            if include_main_indent is True:
+                if len(self.indent_snos):
+                    indent = self.indents[-1]
+                    if leaf_pb is True:
+                        pb.next(
+                            note='Labels for Indent {0}'.format(indent.serialno)
+                        )
+                    indent.make_labels(label_manager=label_manager)
         for card in cards:
             if leaf_pb is True:
                 pb.next(note='Label for Card {0}'.format(card.refdes))

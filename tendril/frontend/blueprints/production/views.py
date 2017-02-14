@@ -64,7 +64,8 @@ def get_device_labels(order_sno=None):
     workspace_path = os.path.join(fe_workspace_path, get_tempname())
     os.makedirs(workspace_path)
     labelmanager = get_manager()
-    production_order.make_labels(label_manager=labelmanager)
+    production_order.make_labels(label_manager=labelmanager,
+                                 include_main_indent=False)
     rfile = labelmanager.generate_pdf(workspace_path, force=True)
 
     if not rfile:
