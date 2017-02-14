@@ -101,14 +101,14 @@ def get_csil_prices(params=exparams, rval=None):
     }
 
     browser = splinter.Browser('firefox', profile=FIREFOX_PROFILE_PATH)
-    url = 'http://www.pcbpower.com:8080'
+    url = 'http://login.pcbpower.com/V2/login.aspx'
     browser.visit(url)
     values = {
-        'ctl00$ContentPlaceHolder1$txtUserName': dvobj.username,
-        'ctl00$ContentPlaceHolder1$txtPassword': dvobj.password
+        'txtUserName': dvobj.username,
+        'txtPassword': dvobj.password
     }
     browser.fill_form(values)
-    button = browser.find_by_name('ctl00$ContentPlaceHolder1$btnlogin')
+    button = browser.find_by_name('btnlogin')
     button.click()
     link = browser.find_by_id('ctl00_aPlaceOrder')
     link.click()
