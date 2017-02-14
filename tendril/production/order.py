@@ -763,7 +763,7 @@ class ProductionOrder(object):
             pbmax = len(cards) + len(deltas)
             if include_all_indents is True:
                 pbmax += len(self.indent_snos)
-            else:
+            elif include_main_indent is True:
                 pbmax += 1
             pb = pb_class(max=pbmax)
         else:
@@ -776,15 +776,14 @@ class ProductionOrder(object):
                         note='Labels for Indent {0}'.format(indent.serialno)
                     )
                 indent.make_labels(label_manager=label_manager)
-        else:
-            if include_main_indent is True:
-                if len(self.indent_snos):
-                    indent = self.indents[-1]
-                    if leaf_pb is True:
-                        pb.next(
-                            note='Labels for Indent {0}'.format(indent.serialno)
-                        )
-                    indent.make_labels(label_manager=label_manager)
+        elif include_main_indent is True:
+            if len(self.indent_snos):
+                indent = self.indents[-1]
+                if leaf_pb is True:
+                    pb.next(
+                        note='Labels for Indent {0}'.format(indent.serialno)
+                    )
+                indent.make_labels(label_manager=label_manager)
         for card in cards:
             if leaf_pb is True:
                 pb.next(note='Label for Card {0}'.format(card.refdes))
