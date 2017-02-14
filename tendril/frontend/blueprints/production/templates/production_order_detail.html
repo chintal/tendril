@@ -132,6 +132,17 @@
         {% for doc in stage.docs %}
             {% include 'parts/doc_link_list_element.html' %}
         {% endfor %}
+        <a href="{{ stage.order_sno }}/getlabels" target="_blank">
+            <li class="small-12 small-centered columns panel radius active-tb shadow mrgn-20-top">
+                <div class="row small-collapse medium-uncollapse">
+                <div class="show-for-medium-up medium-2 columns text-center"><i class="fi-download icon"></i></div>
+                <div class="small-9 medium-8 columns text-center">DEVICE LABELS</div>
+                <div class="small-3 medium-2 columns text-center">
+                    <img src="/static/images/pdf.png">
+                </div>
+                </div>
+            </li>
+        </a>
     </ul>
 </div>
 

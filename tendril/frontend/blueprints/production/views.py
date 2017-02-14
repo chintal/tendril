@@ -45,12 +45,35 @@ from tendril.utils.fsutils import Crumb
 from tendril.utils.fsutils import TEMPDIR
 from tendril.utils.fsutils import get_tempname
 from tendril.utils.db import get_session
+from tendril.dox.labelmaker import get_manager
 
 
 @blueprint.route('/orders.json')
 @login_required
 def orders():
     return jsonify(dxproduction.get_all_prodution_order_snos())
+
+
+@blueprint.route('/<order_sno>/getlabels')
+@login_required
+def get_device_labels(order_sno=None):
+    production_order = order.ProductionOrder(order_sno)
+    fe_workspace_path = os.path.join(TEMPDIR, 'frontend')
+    if not os.path.exists(fe_workspace_path):
+        os.makedirs(fe_workspace_path)
+    workspace_path = os.path.join(fe_workspace_path, get_tempname())
+    os.makedirs(workspace_path)
+    labelmanager = get_manager()
+    production_order.make_labels(label_manager=labelmanager)
+    rfile = labelmanager.generate_pdf(workspace_path, force=True)
+
+    if not rfile:
+        return "Didn't get a manifest set!"
+    try:
+        content = open(rfile).read()
+        return Response(content, mimetype="application/pdf")
+    except IOError as exc:
+        return str(exc)
 
 
 @blueprint.route('/order/new', methods=['POST', 'GET'])
