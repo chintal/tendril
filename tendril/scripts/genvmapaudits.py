@@ -59,7 +59,7 @@ def main():
 
     args = parser.parse_args()
     if args.all:
-        run()
+        run(force=args.force)
         return
 
     if not args.vendor_name:

@@ -292,12 +292,11 @@ class VendorPartBase(object):
                     self.load_from_db(max_age, s)
                     return
                 except DBPartDataUnusable:
-                    pass
-                self._get_data()
-                try:
-                    self.commit(s)
-                except NoResultFound:
-                    pass
+                    self._get_data()
+                    try:
+                        self.commit(s)
+                    except NoResultFound:
+                        pass
         else:
             self._get_data()
 

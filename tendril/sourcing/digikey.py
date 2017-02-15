@@ -212,7 +212,7 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 
 class DigiKeyElnPart(VendorElnPartBase):
-    def __init__(self, dkpartno, ident=None, vendor=None, max_age=600000):
+    def __init__(self, dkpartno, ident=None, vendor=None, max_age=-1):
         """
         This class acquires and contains information about a single DigiKey
         part number, specified by the `dkpartno` parameter.
@@ -418,7 +418,7 @@ class DigiKeyElnPart(VendorElnPartBase):
         datasheet_link = cell.findAll('a')[0].attrs['href']
         return datasheet_link.strip()
 
-    _regex_vqtyavail = re.compile(r'^Digi-Key Stock: (?P<qty>\d+(,*\d+)*)')
+    _regex_vqtyavail = re.compile(r'^(?P<qty>\d+(,*\d+)*)\s*Can ship immediately')
     _regex_vqty_vai = re.compile(r'^Value Added Item')
 
     def _get_vqtyavail(self):
