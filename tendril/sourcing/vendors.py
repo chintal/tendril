@@ -23,9 +23,11 @@ import os
 import csv
 import time
 import warnings
+
 from collections import namedtuple
 from sqlalchemy.orm.exc import NoResultFound
 from six.moves.urllib.error import HTTPError, URLError
+from cachetools import LFUCache
 
 from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
@@ -584,7 +586,7 @@ class VendorBase(object):
         self._order = None
         self._orderbasecosts = []
         self._orderadditionalcosts = []
-        self._partcache = {}
+        self._partcache = LFUCache(1000)
         if mappath is not None:
             self._mappath = mappath
         else:

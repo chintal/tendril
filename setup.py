@@ -35,12 +35,13 @@ install_requirements = [
     'colorama',
     'future',
     'mistune',
-    'cachecontrol[filecache]',
+    'cachecontrol[filecache]',  # utils.www caching for requests implementation
     'requests',
     'appenlight-client',
     'suds',
     'pcb-tools',
     'pyhull',
+    'cachetools',  # sourcing.vendors.VendorBase._partcache
 
     # Flask Dependencies (to be pruned?)
     'jsmin',

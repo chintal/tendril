@@ -503,14 +503,15 @@ class CacheBase(object):
             fp.write(sdata)
             fp.close()
             logger.debug("Creating new cache entry")
-            # This can be pretty expensive if the move is across a real filesystem
-            # boundary. We should instead use a temporary file in the cache_fs
-            # itself
+            # This can be pretty expensive if the move is across a real
+            # filesystem boundary. We should instead use a temporary file
+            # in the cache_fs itself
             try:
                 copyfile(temp_fs, temp_fs.unsyspath(temppath),
                          self.cache_fs, filepath)
             except:
-                logger.warning("Unable to write cache file {0}".format(filepath))
+                logger.warning("Unable to write cache file "
+                               "{0}".format(filepath))
         except:
             raise
 
@@ -690,7 +691,7 @@ def get_soup_requests(url, session=None):
     speed things up. It also provides a way for the caller to modify the
     cache heuristic, if needed.
 
-    Any exceptions encountered will be raised, and is left for the caller
+    Any exceptions encountered will be raised, and are left for the caller
     to handle. The assumption is that a HTTP or URL error is going to make
     the soup unusable anyway.
 
