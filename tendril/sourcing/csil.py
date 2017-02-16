@@ -32,6 +32,7 @@ from .vendors import VendorBase
 from .vendors import VendorPrice
 from .vendors import VendorPartBase
 from .vendors import SourcingInfo
+from .vendors import VendorPartRetrievalError
 
 from tendril.utils import fsutils
 from tendril.utils.terminal import TendrilProgressBar
@@ -276,7 +277,7 @@ class CSILPart(VendorPartBase):
         else:
             self._pcbname = self.vpno
         if self._pcbname not in projects.pcbs.keys():
-            raise ValueError("Unrecognized PCB")
+            raise VendorPartRetrievalError("Unrecognized PCB")
         self._projectfolder = projects.pcbs[self._pcbname]
         self._load_descriptors()
         self._manufacturer = self._vendor.name
