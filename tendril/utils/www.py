@@ -683,7 +683,7 @@ def get_soup_requests(url, session=None):
     The :mod:`lxml` parser is used.
 
     If a ``session`` (previously created from :func:`get_session`) is
-    provided, this session is used left open. If it is not, a new session
+    provided, this session is used and left open. If it is not, a new session
     is created for the request and closed before the soup is returned.
 
     Using a caller-defined session allows re-use of a single session across
