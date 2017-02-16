@@ -155,7 +155,8 @@ def replace_in_test_cnf_dict(cnf_dict, token, value, channelmap=None):
     return d
 
 
-def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
+def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype,
+                                offline=False):
     """
 
     :param cnf_suite:
@@ -163,6 +164,7 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
     :type gcf: tendril.gedaif.conffile.ConfigsFile
     :param devicetype:
     :param offline:
+    :param dummy:
     :return:
     """
     if len(cnf_suite.keys()) != 1:
@@ -263,7 +265,7 @@ def get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype, offline=False):
 
 
 def get_electronics_test_suites(serialno, devicetype, projectfolder,
-                                offline=False):
+                                offline=False, dummy=False):
     try:
         gcf = ConfigsFile(projectfolder)
         logger.info("Using gEDA configs file from : " +
@@ -275,6 +277,7 @@ def get_electronics_test_suites(serialno, devicetype, projectfolder,
         suite = get_suiteobj_from_cnf_suite(cnf_suite, gcf, devicetype,
                                             offline=offline)
         for lsuite in suite:
+            lsuite.dummy = dummy
             lsuite.serialno = serialno
             logger.info("Constructed Suite : " + repr(lsuite))
             yield lsuite

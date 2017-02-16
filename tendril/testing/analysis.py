@@ -409,9 +409,7 @@ def get_device_test_summary(devicetype=None, include_failed=False,
     logger.info("Creating dummy test suites")
     dummy_suites = get_electronics_test_suites(None, devicetype,
                                                projectfolder,
-                                               offline=True)
-    for suite in dummy_suites:
-        suite.dummy = True
+                                               offline=True, dummy=True)
 
     collector = ResultCollector(dummy_suites, include_failed=include_failed)
 
