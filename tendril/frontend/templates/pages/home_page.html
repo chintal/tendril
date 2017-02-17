@@ -7,7 +7,7 @@
 
 {% block main %}
 
-{% if current_user.is_authenticated() %}
+{% if current_user.is_authenticated %}
 
 <p></p>
 
@@ -78,7 +78,7 @@
     faucibus ante ligula, sed suscipit nibh pellentesque quis. Aenean ut lacus eros. Donec ac suscipit libero.
 </p>
 
-{% if not current_user.is_authenticated() %}
+{% if not current_user.is_authenticated %}
 <p>
     Due to the proprietary nature of the information contained within, please
     <a href="{{ url_for('user.login') }}">Sign in</a> or
