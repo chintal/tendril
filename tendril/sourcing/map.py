@@ -24,6 +24,7 @@ Docstring for map
 
 import os
 import csv
+import six
 from future.utils import iteritems
 
 from tendril.gedaif import gsymlib
@@ -129,15 +130,14 @@ def export_vendor_map_audit(vendor_obj, max_age=-1):
                 logger.error("Unhandled Error while getting part {0} from {1}"
                              "".format(vpno, vendor_obj.name))
                 raise
-            try:
-                assert isinstance(vp, vendors.VendorElnPartBase)
-                outw.writerow([vp.ident, vp.vpno, vp.mpartno, vp.package,
-                               vp.vpartdesc, vp.manufacturer,
-                               vp.vqtyavail, vp.abs_moq])
-            except AssertionError:
-                outw.writerow([vp.ident, vp.vpno, vp.mpartno, None,
-                               vp.vpartdesc, vp.manufacturer,
-                               vp.vqtyavail, vp.abs_moq])
+            if isinstance(vp, vendors.VendorElnPartBase):
+                row = [vp.ident, vp.vpno, vp.mpartno, vp.package, vp.vpartdesc,
+                       vp.manufacturer, vp.vqtyavail, vp.abs_moq]
+            else:
+                row = [vp.ident, vp.vpno, vp.mpartno, None, vp.vpartdesc,
+                       vp.manufacturer, vp.vqtyavail, vp.abs_moq]
+
+            outw.writerow([six.text_type(s).encode("utf-8") for s in row])
 
             pb.next(note=':'.join([ident, vpno]))
             # "\n%f%% %s;%s\nGenerating Vendor Map Audit" % (
