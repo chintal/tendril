@@ -45,11 +45,14 @@ try:
         Analytics(app)
         app.config['ANALYTICS']['PIWIK']['SITE_ID'] = PIWIK_SITE_ID
         app.config['ANALYTICS']['PIWIK']['BASE_URL'] = PIWIK_BASE_URL
+        app.config['ANALYTICS']['PIWIK']['ENABLED'] = True
+        app.config['ANALYTICS']['ENABLED'] = True
 except ImportError:
     ENABLE_PIWIK = False
     PIWIK_SITE_ID = None
     PIWIK_BASE_URL = None
     Analytics = None
+    app.config['ANALYTICS']['ENABLED'] = False
 
 
 # Appenlight Monitoring

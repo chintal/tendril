@@ -24,6 +24,7 @@
           <script type="text/javascript" src="{{ ASSET_URL }}"></script>
       {% endassets %}
       <link rel="stylesheet" href="/static/icons/foundation-icons.css" />
+      {{ analytics }}
   </head>
 <body>
     <div class="sticky">
@@ -181,7 +182,6 @@
         $('div.dataTables_filter input').addClass('clear-left');
         $('div.dataTables_filter label').contents().unwrap();
     });
-    {{ analytics }}
     </script>
 </body>
 </html>
