@@ -52,6 +52,7 @@ install_requirements = [
     "Flask-Principal",
     'Flask-Migrate',
     'Flask-Assets',
+    'Flask-Analytics',
     'wtforms-components',
 
     # Perhaps require reconsideration

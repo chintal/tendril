@@ -32,6 +32,27 @@ warm_up_caches()
 # This is the WSGI compliant web application object
 app = Flask(__name__)
 
+
+# Inject middleware
+
+# Piwik Analytics
+try:
+    from tendril.utils.config import ENABLE_PIWIK
+    if ENABLE_PIWIK is True:
+        from tendril.utils.config import PIWIK_SITE_ID
+        from tendril.utils.config import PIWIK_BASE_URL
+        from flask_analytics import Analytics
+        Analytics(app)
+        app.config['ANALYTICS']['PIWIK']['SITE_ID'] = PIWIK_SITE_ID
+        app.config['ANALYTICS']['PIWIK']['BASE_URL'] = PIWIK_BASE_URL
+except ImportError:
+    ENABLE_PIWIK = False
+    PIWIK_SITE_ID = None
+    PIWIK_BASE_URL = None
+    Analytics = None
+
+
+# Appenlight Monitoring
 try:
     from tendril.utils.config import ENABLE_APPENLIGHT
     if ENABLE_APPENLIGHT is True:
@@ -41,5 +62,7 @@ try:
             app, {'appenlight.api_key': APPENLIGHT_PRIVATE_API_KEY}
         )
 except ImportError:
+    ENABLE_APPENLIGHT = False
+    APPENLIGHT_PRIVATE_API_KEY = None
     APPENLIGHT_API_KEY = None
     appenlight = None

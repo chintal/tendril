@@ -347,7 +347,7 @@ config_options_resources = [
 
 load_config(config_options_resources)
 
-config_options_appenlight = [
+config_options_services = [
     ConfigOption(
         "APPENLIGHT_PRIVATE_API_KEY",
         "{}",
@@ -363,9 +363,24 @@ config_options_appenlight = [
         "False",
         "Whether to use AppEnlight to monitor application."
     ),
+    ConfigOption(
+        "PIWIK_SITE_ID",
+        "{}",
+        "Site ID to use with Piwik."
+    ),
+    ConfigOption(
+        "PIWIK_BASE_URL",
+        "{}",
+        "Base URL of the Piwik instance to use."
+    ),
+    ConfigOption(
+        "ENABLE_PIWIK",
+        "False",
+        "Whether to use Piwik for analytics."
+    ),
 ]
 
-load_config(config_options_appenlight)
+load_config(config_options_services)
 
 
 config_options_geda = [
@@ -802,8 +817,8 @@ all_config_option_groups = [
      "Options to configure the 'filesystems' containing instance resources"],
     [doc_render(config_options_resources),
      "Options to configure details of various instance resources"],
-    [doc_render(config_options_appenlight),
-     "Options to configure appenlight integration"],
+    [doc_render(config_options_services),
+     "Options to configure third-party infrastructure services integration"],
     [doc_render(config_options_geda),
      "Options to configure the gEDA installation and related resources"],
     [doc_render(config_options_network_caching),
