@@ -56,9 +56,13 @@ DEFAULT = logging.INFO
 def init():
     logging.basicConfig(level=logging.DEBUG)
     silence = [
+        logging.getLogger('requests.packages.urllib3.connectionpool'),
+        logging.getLogger('passlib.registry'),
         logging.getLogger('passlib.utils.compat'),
         logging.getLogger('appenlight_client.utils'),
-        logging.getLogger('appenlight_client.timing')
+        logging.getLogger('appenlight_client.timing'),
+        logging.getLogger('appenlight_client.client'),
+        logging.getLogger('appenlight_client.transports.requests'),
     ]
     for logger in silence:
         logger.setLevel(logging.WARNING)
