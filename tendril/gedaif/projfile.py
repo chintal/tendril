@@ -39,11 +39,10 @@ class GedaProjectFile(object):
             for line in f:
                 line = self.strip_line(line)
                 if line != '':
-                    parts = line.split('\t')
+                    parts = line.split()
                     if parts[0].strip() == 'schematics':
-                        for part in parts[1].split(' '):
-                            self.schfiles.append(part.strip())
-                    if parts[0].strip('\t') == 'output-name':
+                        self.schfiles = [x.strip() for x in parts[1:]]
+                    if parts[0].strip() == 'output-name':
                         self.pcbfile = parts[1].strip().split('/')[-1]
 
     @staticmethod
