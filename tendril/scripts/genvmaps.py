@@ -95,7 +95,7 @@ def main():
     parser = _get_parser()
     args = parser.parse_args()
     if args.all:
-        run()
+        run(force=args.force, lazy=args.lazy)
         return
 
     if not args.vendor_name:
@@ -114,7 +114,7 @@ def main():
             print("  {0:<20} {1}".format(v._name, v.name))
         return
 
-    run(v, args.force)
+    run(v, args.force, args.lazy)
 
 
 if __name__ == '__main__':
