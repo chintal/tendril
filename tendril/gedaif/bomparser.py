@@ -20,6 +20,7 @@ gEDA BOM Parser Module (:mod:`tendril.gedaif.bomparser`)
 """
 
 import subprocess
+import csv
 import os
 import shutil
 
@@ -150,16 +151,60 @@ class GedaBomParser(CachedBomParser):
     def generate_bom_file(self, outpath, backend=None):
         self._get_temp_schematic()
         cmd = ["gnetlist",
-               '-o', outpath,
                '-g', backend,
                '-Oattrib_file=' + os.path.join(self.projectfolder,
                                                self._basefolder,
                                                'attribs')
                ]
-        cmd.extend(self.schpaths)
-        subprocess.call(cmd,
-                        stdout=FNULL,
-                        stderr=subprocess.STDOUT,)
+        outdir, outfile = os.path.split(outpath)
+        idx_refdes = None
+        idx_schfile = None
+        intermediate_outpath = os.path.join(outdir, 'int.' + outfile)
+        with open(intermediate_outpath, 'wb') as outf:
+            outw = csv.writer(outf, delimiter='\t')
+            header_written = False
+            found_refdes = set()
+            additional_schfiles = {}
+            for schpath in self.schpaths:
+                schfile = os.path.split(schpath)[1]
+                soutpath = os.path.join(outdir, '.'.join([schfile, outfile]))
+                scmd = cmd + ['-o', soutpath, schpath]
+                subprocess.call(scmd,
+                                stdout=FNULL,
+                                stderr=subprocess.STDOUT,)
+                with open(soutpath, 'rb') as sf:
+                    sr = csv.reader(sf, delimiter='\t')
+                    if not header_written:
+                        header = next(sr) + ['schfile']
+                        outw.writerow(header)
+                        idx_refdes = header.index('refdes')
+                        idx_schfile = header.index('schfile')
+                        header_written = True
+                    else:
+                        next(sr)
+                    for row in sr:
+                        refdes = row[idx_refdes]
+                        if refdes not in found_refdes:
+                            found_refdes.add(refdes)
+                            outw.writerow(row + [schfile])
+                        else:
+                            if refdes in additional_schfiles.keys():
+                                additional_schfiles[refdes].append(schfile)
+                            else:
+                                additional_schfiles[refdes] = [schfile]
+        if len(additional_schfiles.keys()):
+            with open(intermediate_outpath, 'rb') as inf:
+                r = csv.reader(inf, delimiter='\t')
+                with open(outpath, 'wb') as outf:
+                    w = csv.writer(outf, delimiter='\t')
+                    for row in r:
+                        if row[idx_refdes] in additional_schfiles.keys():
+                            files = [row[idx_schfile]]
+                            files.extend(additional_schfiles[row[idx_refdes]])
+                            row[idx_schfile] = ';'.join(files)
+                        w.writerow(row)
+        else:
+            shutil.copy(intermediate_outpath, outpath)
         return outpath
 
     def prep_bom(self):
