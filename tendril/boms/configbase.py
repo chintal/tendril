@@ -182,13 +182,14 @@ class ConfigBase(object):
     @property
     def file_groups(self):
         rval = {}
+        # TODO Verify file names are correct
         for group in self.grouplist:
-            if 'files' in group.keys():
-                if isinstance(group['files'], list):
-                    for f in group['files']:
+            if 'file' in group.keys():
+                if isinstance(group['file'], list):
+                    for f in group['file']:
                         rval[f] = group['name']
                 else:
-                    rval[group['files']] = group['name']
+                    rval[group['file']] = group['name']
         return rval
 
     @property
