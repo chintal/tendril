@@ -23,13 +23,16 @@ See the COPYING, README, and INSTALL files for more information
 import argparse
 
 
-def run(vobj=None, force=False):
+def run(vobj=None, force=False, lazy=False):
     from tendril.sourcing.map import export_vendor_map_audit
     from tendril.sourcing.electronics import vendor_list
 
+    maxage = -1
+
     if force is True:
         maxage = 0
-    else:
+
+    if lazy is True:
         maxage = -1
 
     if not vobj:
@@ -54,7 +57,11 @@ def main():
     )
     parser.add_argument(
         '--force', '-f', action='store_true', default=False,
-        help='Regenerate even if it seems to be up-to-date'
+        help='Regenerate for all parts, even if they are not stale.'
+    )
+    parser.add_argument(
+        '--lazy', '-l', action='store_true', default=False,
+        help="Don't regenerate for parts which exist, even if they are stale."
     )
 
     args = parser.parse_args()
@@ -78,7 +85,7 @@ def main():
             print("  {0:<20} {1}".format(v.cname, v.name))
         return
 
-    run(v, args.force)
+    run(v, args.force, args.lazy)
 
 
 if __name__ == '__main__':

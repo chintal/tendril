@@ -53,12 +53,17 @@ def _get_parser():
     add_vendor_selection_options(parser)
     parser.add_argument(
         '--force', '-f', action='store_true', default=False,
-        help='Regenerate mapfile even if it seems to be up-to-date'
+        help='Regenerate mapfile for all idents, even if is not stale.'
+    )
+    parser.add_argument(
+        '--lazy', '-l', action='store_true', default=False,
+        help="Don't regenerate mapfile for idents which exist, "
+             "even if it is stale."
     )
     return parser
 
 
-def run(vobj=None, force=False):
+def run(vobj=None, force=False, lazy=False):
     """
     Generates vendor maps for the provided vendor.
 
@@ -68,10 +73,13 @@ def run(vobj=None, force=False):
     from tendril.sourcing.map import gen_vendor_mapfile
     from tendril.sourcing.electronics import vendor_list
 
+    maxage = -1
+
     if force is True:
         maxage = 0
-    else:
-        maxage = 1
+
+    if lazy is True:
+        maxage = -1
 
     if not vobj:
         for v in vendor_list:
