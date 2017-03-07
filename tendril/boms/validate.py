@@ -450,8 +450,6 @@ class BomGroupPolicy(ValidationPolicy):
         self.is_error = False
 
     def check(self, item):
-        print item
-        print item.data
         group = item.data['group']
         schfile = item.data['schfile']
         if not schfile or schfile == 'unknown':
