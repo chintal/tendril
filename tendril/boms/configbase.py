@@ -180,6 +180,18 @@ class ConfigBase(object):
             return [{'name': 'default', 'desc': 'Unclassified'}]
 
     @property
+    def file_groups(self):
+        rval = {}
+        for group in self.grouplist:
+            if 'files' in group.keys():
+                if isinstance(group['files'], list):
+                    for f in group['files']:
+                        rval[f] = group['name']
+                else:
+                    rval[group['files']] = group['name']
+        return rval
+
+    @property
     def group_names(self):
         return [x['name'] for x in self.grouplist]
 

@@ -47,6 +47,7 @@ class BomLine(object):
 
     def __init__(self, line, columns):
         self.data = {}
+        line = line.rstrip('\r\n')
         elems = line.split('\t')
         for i in range(len(columns)):
             self.data[columns[i]] = elems[i]
@@ -209,7 +210,7 @@ class GedaBomParser(CachedBomParser):
 
     def prep_bom(self):
         self.bom_reader = self.get_bom_file()
-        self.columns = self.bom_reader.readline().split('\t')[:-1]
+        self.columns = self.bom_reader.readline().rstrip().split('\t')
         self.line_gen = self.get_lines()
 
     def get_lines(self):

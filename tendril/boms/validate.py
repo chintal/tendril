@@ -440,17 +440,32 @@ class BomMotifPolicy(ValidationPolicy):
 
 
 class BomGroupPolicy(ValidationPolicy):
-    def __init__(self, context, known_groups, allow_blank=True, default='default'):
+    def __init__(self, context, known_groups, file_groups=None,
+                 allow_blank=True, default='default'):
         super(BomGroupPolicy, self).__init__(context)
         self._known_groups = known_groups
+        self._file_groups = file_groups
         self._allow_blank = allow_blank
         self._default = default
         self.is_error = False
 
     def check(self, item):
+        print item
+        print item.data
         group = item.data['group']
+        schfile = item.data['schfile']
+        if not schfile or schfile == 'unknown':
+            schfiles = []
+        else:
+            schfiles = schfile.split(';')
+        done = False
         if not group or group == 'unknown':
-            group = 'default'
+            for f in schfiles:
+                if f in self.file_groups.keys():
+                    group = self.file_groups[f]
+                    done = True
+            if not done:
+                group = 'default'
         if group not in self._known_groups:
             raise BomGroupError(self, group,
                                 item.data['refdes'],
@@ -468,6 +483,9 @@ class BomGroupPolicy(ValidationPolicy):
     def known_groups(self):
         return self._known_groups
 
+    @property
+    def file_groups(self):
+        return self._file_groups
 
 class IdentPolicy(ValidationPolicy):
     def __init__(self, context, rfunc):

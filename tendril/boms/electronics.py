@@ -99,9 +99,10 @@ class EntityElnComp(EntityBase):
         if item is not None:
             self.define(item.data['refdes'], item.data['device'],
                         item.data['value'], item.data['footprint'],
-                        item.data['fillstatus'])
+                        item.data['fillstatus'], item.data['schfile'])
 
-    def define(self, refdes, device, value, footprint="", fillstatus=""):
+    def define(self, refdes, device, value, footprint="", fillstatus="",
+               schfile=None):
         """
         Define the component.
 
@@ -121,6 +122,7 @@ class EntityElnComp(EntityBase):
         self.footprint = footprint
         self.fillstatus = fillstatus
         self._defined = True
+        self.schfile = None
 
     @property
     def fillstatus(self):
@@ -275,6 +277,7 @@ class EntityElnBom(EntityBomBase):
 
     def create_groups(self):
         groupnamelist = self.configurations.group_names
+        file_groups = self.configurations.file_groups
         if 'default' not in groupnamelist:
             groupnamelist.append('default')
         for group in groupnamelist:
@@ -282,7 +285,7 @@ class EntityElnBom(EntityBomBase):
             x = EntityElnGroup(group, self.configurations.pcbname)
             self.grouplist.append(x)
         self._group_policy = BomGroupPolicy(self._validation_context,
-                                            groupnamelist)
+                                            groupnamelist, file_groups)
 
     def find_group(self, groupname):
         """
