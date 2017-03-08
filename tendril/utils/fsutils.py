@@ -30,6 +30,7 @@ or python libraries.
     get_tempname
     fsutils_cleanup
     zipdir
+    get_concatenated_fd
 
     Crumb
     get_path_breadcrumbs
@@ -65,6 +66,12 @@ from datetime import datetime
 from collections import namedtuple
 
 from tendril.utils import log
+
+try:
+    from six.moves import cStringIO as StringIO
+except ImportError:
+    from six import StringIO
+
 logger = log.get_logger(__name__, log.INFO)
 log.logging.getLogger('watchdog.observers.inotify_buffer').setLevel(log.WARNING)
 
@@ -118,6 +125,29 @@ def zipdir(path, zfpath):
             )
     zfile.close()
     return zfpath
+
+
+def get_concatenated_fd(filepaths):
+    """
+    Generates a :class:`cStringIO` instance containing the content of
+    the files at the provided ``filepaths``.
+
+    The returned cStringIO instance is a file-like object, holding in
+    memory the concatenated content of the source files, included in
+    the same ordering as in the provided list.
+
+    :param filepaths: List of filepaths
+    :return: StringIO / cStringIO object with the contents of the files
+    """
+    fds = [open(x, 'rb') for x in filepaths]
+    data = StringIO()
+    while fds:
+        data_read = fds[0].read(-1)
+        data.write(data_read)
+        fds[0].close()
+        fds.pop(0)
+    data.seek(0)
+    return data
 
 
 #: A named tuple definition for a Crumb of a Breadcrumb.

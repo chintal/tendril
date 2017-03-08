@@ -22,7 +22,7 @@
 Docstring for yml
 """
 
-
+import os
 from yaml import load as oload
 from yaml import dump as odump
 
@@ -33,9 +33,25 @@ except ImportError:
     from yaml import Loader
     from yaml import Dumper
 
+from tendril.utils.fsutils import get_concatenated_fd
+
 
 def load(f):
-    return oload(f, Loader=Loader)
+    if isinstance(f, str):
+        filepaths = []
+        if os.path.exists(f) and os.path.isfile(f):
+            filepaths.append(f)
+        dirpath = f + '.d'
+        if os.path.exists(dirpath) and os.path.isdir(dirpath):
+            dirfiles = [os.path.join(dirpath, x)
+                        for x in sorted(os.listdir(dirpath))]
+            filepaths.extend([x for x in dirfiles
+                              if os.path.isfile(x) and x.endswith('.yaml')])
+        if not len(filepaths):
+            raise IOError("YAML file not found : {0}".format(f))
+        return oload(get_concatenated_fd(filepaths), Loader=Loader)
+    else:
+        return oload(f, Loader=Loader)
 
 
 def dump(data, f=None, **kwargs):

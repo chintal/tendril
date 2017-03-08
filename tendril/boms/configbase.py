@@ -118,12 +118,11 @@ class ConfigBase(object):
         raise NotImplementedError
 
     def get_configs_file(self):
-        with open(self._cfpath) as configfile:
-            configdata = yaml.load(configfile)
-            try:
-                return self._verify_schema_decl(configdata)
-            except SchemaNotSupportedError as e:
-                self._validation_errors.add(e)
+        configdata = yaml.load(self._cfpath)
+        try:
+            return self._verify_schema_decl(configdata)
+        except SchemaNotSupportedError as e:
+            self._validation_errors.add(e)
 
     @property
     def _schema_name_policy(self):
