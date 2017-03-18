@@ -15,8 +15,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This file is part of tendril
-See the COPYING, README, and INSTALL files for more information
+Project Validation Script  (``tendril-validate``)
+=================================================
+
+Reports validation errors for the specified projects / modules.
+
+.. seealso::
+    :mod:`tendril.boms.validate`
+
+.. rubric:: Script Usage
+
+.. argparse::
+    :module: tendril.scripts.validate
+    :func: _get_parser
+    :prog: tendril-validate
+    :nodefault:
+
 """
 
 import os
@@ -37,7 +51,7 @@ logger = log.get_logger("validate", log.DEFAULT)
 
 def _get_parser():
     """
-    Constructs the CLI argument parser for the tendril-gendox script.
+    Constructs the CLI argument parser for the tendril-validate script.
     """
     parser = argparse.ArgumentParser(
         description='Validate (gEDA) projects and modules.',
@@ -52,6 +66,11 @@ def _get_parser():
 
 
 def validate_module(modulename, s=False):
+    """
+    Report validation errors for the specified module.
+    :param modulename: The name of the module.
+    :param s: Whether to report sourcing errors as well.
+    """
     logger.info("VALIDATING MODULE {0}".format(modulename))
     module = modules.get_module_prototype(modulename)
     module.validation_errors.render_cli(modulename)
@@ -60,6 +79,11 @@ def validate_module(modulename, s=False):
 
 
 def validate_project(projectfolder, s=False):
+    """
+    Report validation errors for all modules provided by the specified project.
+    :param projectfolder: The path to the project folder.
+    :param s: Whether to report sourcing errors as well.
+    """
     try:
         projectfolder = get_project_folder(projectfolder)
         cf = conffile.ConfigsFile(projectfolder)
@@ -72,7 +96,8 @@ def validate_project(projectfolder, s=False):
 
 def validate_all(s=False):
     """
-    Validate all known modules
+    Report validation errors for all known modules.
+    :param s: Whether to report sourcing errors as well.
     """
     for project, projectfolder in projects.projects.items():
         validate_project(projectfolder, s=s)
@@ -80,7 +105,7 @@ def validate_all(s=False):
 
 def main():
     """
-    The tendril-gendox script entry point.
+    The tendril-validate script entry point.
     """
     import logging
     logging.getLogger('tendril.sourcing.electronics').setLevel(logging.WARNING)

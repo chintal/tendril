@@ -30,6 +30,7 @@ from tendril.conventions.electronics import ident_transform
 from tendril.conventions.electronics import DEVICE_CLASSES
 
 from colorama import Fore
+from colorama import Style
 from tendril.utils import terminal
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -623,21 +624,21 @@ class ErrorCollector(ValidationError):
     def render_cli(self, name):
         width = terminal.get_terminal_width()
         hline = '-' * width
-        print(hline)
+        print(Style.BRIGHT + hline)
         titleformat = "{0:<" + str(width - 13) + "} {1:>2} {2}"
-        print(titleformat.format(name, self.terrors, 'ALERTS'))
+        print(titleformat.format(name, self.terrors, 'ALERTS') + Style.NORMAL)
         if self.nerrors:
             print(Fore.RED + hline)
             print(titleformat.format('', self.nerrors, 'ERRORS'))
             for n, g in self.errors_by_type.items():
-                print(hline)
-                print(titleformat.format(n, len(g), 'INSTANCES'))
+                print(hline + Style.BRIGHT)
+                print(titleformat.format(n, len(g), 'INSTANCES') + Style.NORMAL)
                 self._render_cli_group(g)
         if self.nwarnings:
             print(Fore.YELLOW + hline)
             print(titleformat.format('', self.nwarnings, 'WARNINGS'))
             for n, g in self.warnings_by_type.items():
-                print(hline)
-                print(titleformat.format(n, len(g), 'INSTANCES'))
+                print(hline + Style.BRIGHT)
+                print(titleformat.format(n, len(g), 'INSTANCES') + Style.NORMAL)
                 self._render_cli_group(g)
         print(Fore.RESET + hline)
