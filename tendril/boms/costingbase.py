@@ -83,11 +83,11 @@ class SourcingIdentNotSourceable(IdentErrorBase):
         return {
             'is_error': self.policy.is_error,
             'group': self.msg,
-            'headline': "'{0}' is not sourceable."
-                        "".format(self.ident),
+            'headline': "'{0}'".format(self.ident),
             'detail': "Viable sources for this component are not known. "
                       "Component not included in costing analysis. Used by "
                       "refdes {0}".format(', '.join(self.refdeslist)),
+            'detail_core': ', '.join(self.refdeslist)
         }
 
 

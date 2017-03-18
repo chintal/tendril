@@ -513,6 +513,7 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
         # Validate all OBOM line quantity types
         self._validate_obom(lvalidation_errors)
         self._sourcing_errors = self.obom.sourcing_errors
+        # TODO Check for valid snoseries
         # TODO Check for empty groups?
         # TODO Check for unused motifs?
         # TODO Validate all motifs as configured

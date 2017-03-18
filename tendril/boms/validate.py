@@ -28,8 +28,10 @@ Docstring for validate
 from tendril.conventions.electronics import parse_ident
 from tendril.conventions.electronics import ident_transform
 from tendril.conventions.electronics import DEVICE_CLASSES
-from tendril.utils import log
 
+from colorama import Fore
+from tendril.utils import terminal
+from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
@@ -233,11 +235,11 @@ class IdentNotRecognized(IdentErrorBase):
         return {
             'is_error': self.policy.is_error,
             'group': self.msg,
-            'headline': "'{0}' is not a recognized ident."
-                        "".format(self.ident),
+            'headline': "'{0}'".format(self.ident),
             'detail': "This ident is not recognized by the library and is "
                       "therefore deemed invalid. Used by refdes {0}"
                       "".format(', '.join(self.refdeslist)),
+            'detail_core': ', '.join(self.refdeslist),
         }
 
 
@@ -485,6 +487,7 @@ class BomGroupPolicy(ValidationPolicy):
     def file_groups(self):
         return self._file_groups
 
+
 class IdentPolicy(ValidationPolicy):
     def __init__(self, context, rfunc):
         super(IdentPolicy, self).__init__(context)
@@ -607,3 +610,34 @@ class ErrorCollector(ValidationError):
         for e in self._errors:
             rval += '  {0}\n'.format(repr(e))
         return rval
+
+    def _render_cli_group(self, g):
+        for idx, i in enumerate(g):
+            if 'detail_core' in i.keys():
+                detail = i['detail_core']
+            else:
+                detail = i['detail']
+            print("{0}.{1} : {2}"
+                  "".format(idx + 1, i['headline'], detail))
+
+    def render_cli(self, name):
+        width = terminal.get_terminal_width()
+        hline = '-' * width
+        print(hline)
+        titleformat = "{0:<" + str(width - 13) + "} {1:>2} {2}"
+        print(titleformat.format(name, self.terrors, 'ALERTS'))
+        if self.nerrors:
+            print(Fore.RED + hline)
+            print(titleformat.format('', self.nerrors, 'ERRORS'))
+            for n, g in self.errors_by_type.items():
+                print(hline)
+                print(titleformat.format(n, len(g), 'INSTANCES'))
+                self._render_cli_group(g)
+        if self.nwarnings:
+            print(Fore.YELLOW + hline)
+            print(titleformat.format('', self.nwarnings, 'WARNINGS'))
+            for n, g in self.warnings_by_type.items():
+                print(hline)
+                print(titleformat.format(n, len(g), 'INSTANCES'))
+                self._render_cli_group(g)
+        print(Fore.RESET + hline)

@@ -26,6 +26,16 @@ Small functions to help simplify and streamline script creation.
 
 """
 
+import os
+
+
+def get_project_folder(projectfolder):
+    if os.path.split(projectfolder)[1] == 'configs.yaml':
+        projectfolder = os.path.split(projectfolder)[0]
+    if os.path.split(projectfolder)[1] == 'schematic':
+        projectfolder = os.path.split(projectfolder)[0]
+    return projectfolder
+
 
 def add_project_selector_options(parser):
     """
@@ -48,12 +58,20 @@ def add_project_selector_options(parser):
     )
     parser.add_argument(
         '--recurse', '-r', action='store_true', default=False,
-        help='Recursively search for projects under each provided folder.'
+        help='Recursively search for projects under each provided PATH.'
     )
     parser.add_argument(
         '--all', '-a', action='store_true', default=False,
         help='All recognized projects.'
     )
+
+
+def add_module_selector_options(parser):
+    parser.add_argument(
+        '--modules', '-m', metavar='MODULE', type=str, nargs='*',
+        help='Module Names. Overrides any PATHs that may be provided.'
+    )
+    add_project_selector_options(parser)
 
 
 def add_vendor_selection_options(parser):
