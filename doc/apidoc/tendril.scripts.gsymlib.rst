@@ -1,5 +1,5 @@
 
-.. automodule:: tendril.scripts.gsymlib
+.. automodule:: tendril.scripts.getdox
     :members:
     :undoc-members:
     :show-inheritance:

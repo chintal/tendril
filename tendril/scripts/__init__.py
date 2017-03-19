@@ -31,6 +31,7 @@ with tendril.
    tendril.scripts.genvmapaudits
    tendril.scripts.genvmaps
    tendril.scripts.getdox
+   tendril.scripts.gsymlib
    tendril.scripts.order
    tendril.scripts.production
    tendril.scripts.runtest
