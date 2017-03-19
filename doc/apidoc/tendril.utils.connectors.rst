@@ -1,5 +1,5 @@
 
-.. automodule:: tendril.sourcing.epass
+.. automodule:: tendril.utils.connectors
     :members:
     :undoc-members:
     :show-inheritance:

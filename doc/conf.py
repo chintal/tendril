@@ -56,7 +56,7 @@ if INCLUDE_GA:
 
 intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
                        'driver2200087': ('http://driver2200087.readthedocs.org/en/latest', None),
-                       'bs4': ('http://www.crummy.com/software/BeautifulSoup/bs4/doc/', None),
+                       'bs4': ('https://www.crummy.com/software/BeautifulSoup/bs4/doc/objects.inv', None),
                        'sqlalchemy': ('http://docs.sqlalchemy.org/en/rel_1_0/', None),
                        'jinja2': ('http://jinja.pocoo.org/docs/dev/', None),
                        'matplotlib': ('http://matplotlib.org', None),

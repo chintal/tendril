@@ -41,7 +41,6 @@ Vendor Support Modules
 .. toctree::
 
    tendril.sourcing.digikey
-   tendril.sourcing.epass
    tendril.sourcing.mouser
    tendril.sourcing.ti
    tendril.sourcing.csil
@@ -57,7 +56,6 @@ Sourcing Inheritance Diagram
    tendril.sourcing.customs
    tendril.sourcing.csil
    tendril.sourcing.digikey
-   tendril.sourcing.epass
    tendril.sourcing.mouser
    tendril.sourcing.ti
    tendril.sourcing.pricelist
