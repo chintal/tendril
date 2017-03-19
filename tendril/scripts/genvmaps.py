@@ -40,6 +40,7 @@ library.
 
 import argparse
 from .helpers import add_vendor_selection_options
+from .helpers import add_base_options
 
 
 def _get_parser():
@@ -50,6 +51,7 @@ def _get_parser():
         description='(Re)generate vendor maps.',
         prog='tendril-genvmap'
     )
+    add_base_options(parser)
     add_vendor_selection_options(parser)
     parser.add_argument(
         '--force', '-f', action='store_true', default=False,

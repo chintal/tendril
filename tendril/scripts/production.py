@@ -79,6 +79,7 @@ from tendril.dox.labelmaker import get_manager
 from tendril.utils.config import INSTANCE_ROOT
 
 from tendril.production.order import ProductionOrder
+from .helpers import add_base_options
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
@@ -92,6 +93,7 @@ def _get_parser():
         description='Generate production orders and associated documentation.',
         prog='tendril-production'
     )
+    add_base_options(parser)
     parser.add_argument(
         '--order-folder', '-d', metavar='PATH', type=str, nargs='?',
         help='Path to the order folder. Search location for order files and '

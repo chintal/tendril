@@ -40,6 +40,7 @@ order can be regenerated using the appropriate script.
 
 
 import argparse
+from .helpers import add_base_options
 
 from tendril.dox import docstore
 from tendril.utils import log
@@ -54,6 +55,7 @@ def _get_parser():
         description='Copy published documents into the workspace.',
         prog='tendril-getdox'
     )
+    add_base_options(parser)
     parser.add_argument(
         'serialno', metavar='SNO', type=str, nargs='?',
         help='Document serial number'

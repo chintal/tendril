@@ -44,6 +44,7 @@ from tendril.utils.fsutils import in_directory
 
 from .helpers import add_module_selector_options
 from .helpers import get_project_folder
+from .helpers import add_base_options
 
 from tendril.utils import log
 logger = log.get_logger("validate", log.DEFAULT)
@@ -57,6 +58,7 @@ def _get_parser():
         description='Validate (gEDA) projects and modules.',
         prog='tendril-validate'
     )
+    add_base_options(parser)
     add_module_selector_options(parser)
     parser.add_argument(
         '--sourcing', '-s', action='store_true', default=False,

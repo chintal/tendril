@@ -21,6 +21,7 @@ See the COPYING, README, and INSTALL files for more information
 
 
 import argparse
+from .helpers import add_base_options
 
 
 def run(vobj=None, force=False, lazy=False):
@@ -47,6 +48,7 @@ def main():
         description='(Re)generate vendor map audits.',
         prog='tendril-genvmapaudit'
     )
+    add_base_options(parser)
     parser.add_argument(
         'vendor_name', metavar='VENDOR_NAME', type=str, nargs='?',
         help='Name of the vendor.'

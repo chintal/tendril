@@ -48,6 +48,8 @@ import argparse
 from tendril.entityhub import macs
 from tendril.entityhub import serialnos
 from tendril.testing import testrunner
+from .helpers import add_base_options
+
 from tendril.utils import log
 logger = log.get_logger("writecalib", log.DEFAULT)
 
@@ -60,6 +62,7 @@ def _get_parser():
         description='Write calibration parameters to device.',
         prog='tendril-writecalib'
     )
+    add_base_options(parser)
     parser.add_argument(
         'serialno', metavar='SNO', type=str, nargs='?',
         help='Device serial number'

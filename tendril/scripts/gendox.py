@@ -63,6 +63,7 @@ from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.fsutils import in_directory
 
 from .helpers import add_project_selector_options
+from .helpers import add_base_options
 
 from tendril.utils import log
 logger = log.get_logger("gendox", log.DEFAULT)
@@ -76,6 +77,7 @@ def _get_parser():
         description='(Re-)Generate gEDA project documentation.',
         prog='tendril-gendox'
     )
+    add_base_options(parser)
     parser.add_argument(
         '--force', '-f', action='store_true', default=False,
         help='Regenerate documentation even if it seems to be up-to-date'

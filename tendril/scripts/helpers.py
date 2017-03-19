@@ -37,6 +37,13 @@ def get_project_folder(projectfolder):
     return projectfolder
 
 
+def add_base_options(parser):
+    import tendril
+    ver = 'tendril {0}'.format(tendril.__version__)
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s ({0})'.format(ver))
+
+
 def add_project_selector_options(parser):
     """
     Add arguments for project selection to the provided

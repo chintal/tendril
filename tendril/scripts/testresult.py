@@ -38,6 +38,7 @@ import argparse
 
 from tendril.testing import analysis
 from tendril.utils.db import get_session
+from .helpers import add_base_options
 
 
 def _get_parser():
@@ -48,6 +49,7 @@ def _get_parser():
         description='Replay Latest Test Results',
         prog='tendril-runtest'
     )
+    add_base_options(parser)
     parser.add_argument(
         'serialno', metavar='SNO', type=str,
         help='Device serial number'
