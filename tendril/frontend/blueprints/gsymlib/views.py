@@ -23,14 +23,14 @@ import os
 from urllib import urlencode
 from urllib2 import unquote
 from collections import namedtuple
-from future.utils import viewitems
 
 from flask import render_template, abort, request
 from flask import redirect, url_for
 from flask import jsonify
 from flask_user import login_required
 
-
+from tendril.entityhub.supersets import _group_by_pcbname
+from tendril.entityhub.supersets import _status_filter
 import tendril.gedaif.gsymlib
 
 from . import gsymlib as blueprint
@@ -39,11 +39,7 @@ from tendril.entityhub import supersets
 from tendril.utils.fsutils import get_path_breadcrumbs
 from tendril.utils.fsutils import Crumb
 from tendril.utils.config import GEDA_SYMLIB_ROOT
-
-from tendril.inventory import electronics as invelectronics
 from tendril.inventory.electronics import get_inventory_stage
-from tendril.inventory import guidelines as invguidelines
-from tendril.entityhub import guidelines as ehguidelines
 
 
 def is_geda_folder(path):
@@ -123,54 +119,7 @@ def get_geda_browser_context(path):
                'hide_generators': hide_generators,
                'flatten_folders': flatten_folders,
                'query_string': queryst}
-
     return context
-
-
-context_cardlisting = namedtuple(
-    'ContextCardListing',
-    'name, desc, status, qty, proj, projdesc, projstatus'
-)
-simple_cardlisting = namedtuple(
-    'SimpleCardListing',
-    'name, desc, status, qty'
-)
-
-
-def _status_filter(cards, diversity=5):
-    if not diversity:
-        return cards
-    if not cards:
-        return cards
-    used_statuses = []
-    for card in cards:
-        if card.status not in used_statuses:
-            used_statuses.append(card.status)
-    used_statuses.sort()
-    allowed_statuses = used_statuses[:diversity]
-    return [x for x in cards if x.status in allowed_statuses]
-
-
-def _group_by_pcbname(cards):
-    rval = {}
-    if not cards:
-        return {}
-    for card in cards:
-        ncard = simple_cardlisting(card.name, card.desc,
-                                   card.status, card.qty)
-        if card.proj in rval.keys():
-            rval[card.proj][1].append(ncard)
-        else:
-            rval[card.proj] = [card.projdesc, [ncard],
-                               card.projstatus, None, None]
-    for key, value in viewitems(rval):
-        qtys = [x.qty for x in value[1]]
-        value[3] = min(qtys)
-        value[4] = max(qtys)
-        if value[3] == value[4]:
-            value[4] = None
-        value[1] = sorted(value[1], key=lambda y: y.name)
-    return rval
 
 
 def get_geda_symbol_context(ident):
@@ -184,32 +133,11 @@ def get_geda_symbol_context(ident):
         breadcrumbs.insert(-1, Crumb(name=os.path.splitext(symbol[0].fname)[0] + '.gen',  # noqa
                                      path='detail/' + os.path.splitext(symbol[0].fname)[0] + '.gen'))  # noqa
 
-    cobom = supersets.get_bom_superset()
-    line = cobom.find_by_ident(ident)
-    cards = None
-    if line:
-        cards = []
-        for idx, column in enumerate(line.columns):
-            if column > 0:
-                cardname = cobom.descriptors[idx].configname
-                configs = cobom.descriptors[idx].configurations
-                carddesc = configs.description(cardname)
-                pcbstatus = configs.status_config(cardname)
-                proj = configs.pcbname
-                projdesc = configs.description()
-                projstatus = configs.status
-                cards.append(context_cardlisting(
-                    cardname, carddesc, pcbstatus, column,
-                    proj, projdesc, projstatus))
-
-    cards = _status_filter(cards)
-    inclusion = _group_by_pcbname(cards)
-
     stage = {'ident': ident,
              'symbol': symbol[0],
              'sympaths': [os.path.relpath(sym.fpath, GEDA_SYMLIB_ROOT) for sym in symbol],  # noqa
              'imgpaths': [sym.img_repr_fname for sym in symbol],
-             'inclusion': inclusion,
+             'inclusion': supersets.get_symbol_inclusion(ident),
              'breadcrumbs': breadcrumbs}
 
     stage.update(get_inventory_stage(ident))

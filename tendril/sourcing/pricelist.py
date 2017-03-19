@@ -103,6 +103,10 @@ class PricelistPart(VendorPartBase):
                 loqty = tqty
         return lcost, loqty, lprice
 
+    @property
+    def datasheet(self):
+        return None
+
 
 class VendorPricelist(VendorBase):
     _partclass = PricelistPart

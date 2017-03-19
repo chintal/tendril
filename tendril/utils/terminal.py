@@ -62,6 +62,12 @@ def get_terminal_width():
     return get_terminal_size()[0]
 
 
+def render_hline():
+    width = get_terminal_width()
+    hline = '-' * width
+    print(hline)
+
+
 def get_terminal_size():
     """
     getTerminalSize()

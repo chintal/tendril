@@ -90,8 +90,10 @@ class OutputBomLine(SourceableBomLineMixin):
             if comp.fillstatus == "DNP":
                 return
             if comp.fillstatus == "CONF":
-                logger.warning("Configurable Component "
-                               "not Configured by Conf File : " + comp.refdes)
+                # TODO
+                # logger.warning("Configurable Component "
+                #                "not Configured by Conf File : " + comp.refdes)
+                pass
         if comp.ident == self.ident:
             self.refdeslist.append(comp.refdes)
         else:
@@ -102,7 +104,9 @@ class OutputBomLine(SourceableBomLineMixin):
     def uquantity(self):
         device, value, footprint = parse_ident(self.ident)
         if device is None:
-            logger.warning("Device not identified : " + self.ident)
+            # TODO
+            # logger.warning("Device not identified : " + self.ident)
+            pass
         elif fpiswire(device):
             try:
                 elen = Length(footprint) * Decimal(0.1)

@@ -286,12 +286,10 @@ class ConfigBase(object):
                                 if param not in nconfig.keys():
                                     nconfig[param] = []
                                 if param not in component.keys():
-                                    warnings.warn(
-                                        "Something wrong with Matrix Definitions",
-                                        Warning
-                                    )
+                                    # TODO Consider a valdation warning here
                                     continue
-                                nlist = [x for x in component[param] if x is not None]
+                                nlist = [x for x in component[param]
+                                         if x is not None]
                                 nconfig[param].extend(nlist)
                                 continue
                         if action == 'update':
@@ -299,10 +297,7 @@ class ConfigBase(object):
                                 if param not in nconfig.keys():
                                     nconfig[param] = {}
                                 if param not in component.keys():
-                                    warnings.warn(
-                                        "Something wrong with Matrix Definitions",
-                                        Warning
-                                    )
+                                    # TODO Consider a valdation warning here
                                     continue
                                 nconfig[param].update(component[param])
                                 continue

@@ -50,7 +50,7 @@ from logging import CRITICAL  # noqa
 
 #: The default log level for all loggers created through this module,
 #: unless otherwise specified at the time of instantiation.
-DEFAULT = logging.INFO
+DEFAULT = logging.WARNING
 
 
 def init():

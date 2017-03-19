@@ -23,26 +23,29 @@ Docstring for status
 """
 
 import numbers
+from colorama import Fore
 
 
 STATUS_ORDER = {
-    'Prototype': (10, None),
-    'Active': (20, 'success'),
-    'Deprecated': (30, 'warning'),
-    'Suspended': (40, 'disabled'),
-    'Prospective': (50, 'info'),
-    'Experimental': (60, 'warning'),
-    'Archived': (70, 'secondary'),
-    'Discarded': (80, 'alert'),
-    'Undefined': (90, 'alert')
+    'Prototype': (10, None, Fore.LIGHTBLUE_EX),
+    'Active': (20, 'success', Fore.GREEN),
+    'Deprecated': (30, 'warning', Fore.YELLOW),
+    'Suspended': (40, 'disabled', Fore.MAGENTA),
+    'Prospective': (50, 'info', Fore.BLUE),
+    'Experimental': (60, 'warning', Fore.YELLOW),
+    'Archived': (70, 'secondary', Fore.LIGHTBLUE_EX),
+    'Discarded': (80, 'alert', Fore.RED),
+    'Undefined': (90, 'alert', Fore.RED),
+    'Virtual': (20, 'success', Fore.GREEN),
 }
 
 
 class Status(object):
     def __init__(self, ststr):
-        self._ststr = ststr
-        self._stint = STATUS_ORDER[ststr][0]
-        self._sthtml = STATUS_ORDER[ststr][1]
+        self._ststr = ststr or 'Active'
+        self._stint = STATUS_ORDER[self._ststr][0]
+        self._sthtml = STATUS_ORDER[self._ststr][1]
+        self._tcolor = STATUS_ORDER[self._ststr][2]
 
     def __repr__(self):
         return self._ststr
@@ -53,6 +56,10 @@ class Status(object):
     @property
     def html_class(self):
         return self._sthtml
+
+    @property
+    def terminal_repr(self):
+        return self._tcolor + self._ststr + Fore.RESET
 
     @property
     def num(self):

@@ -141,7 +141,7 @@ from fs.utils import copyfile
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.config import MAX_AGE_DEFAULT
 from tendril.utils import log
-logger = log.get_logger(__name__)
+logger = log.get_logger(__name__, log.WARNING)
 
 logging.getLogger('cachecontrol.controller').setLevel(logging.INFO)
 logging.getLogger('requests.packages.urllib3.connectionpool').\

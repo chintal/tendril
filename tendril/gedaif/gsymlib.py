@@ -184,21 +184,24 @@ class EDASymbolBase(object):
     @property
     def indicative_sourcing_info(self):
         if self._indicative_sourcing_info is None:
-            from tendril.inventory.guidelines import electronics_qty
-            from tendril.sourcing.electronics import get_sourcing_information
-            from tendril.sourcing.electronics import SourcingException
-            if fpiswire(self.device):
-                iqty = Length('1m')
-            else:
-                iqty = 1
-            iqty = electronics_qty.get_compliant_qty(self.ident, iqty)
-            try:
-                vsi = get_sourcing_information(self.ident, iqty,
-                                               allvendors=True)
-            except SourcingException:
-                vsi = []
-            self._indicative_sourcing_info = vsi
+            self._indicative_sourcing_info = self.sourcing_info_qty(1)
         return self._indicative_sourcing_info
+
+    def sourcing_info_qty(self, qty):
+        from tendril.inventory.guidelines import electronics_qty
+        from tendril.sourcing.electronics import get_sourcing_information
+        from tendril.sourcing.electronics import SourcingException
+        if fpiswire(self.device):
+            iqty = Length(qty)
+        else:
+            iqty = qty
+        iqty = electronics_qty.get_compliant_qty(self.ident, iqty)
+        try:
+            vsi = get_sourcing_information(self.ident, iqty,
+                                           allvendors=True)
+        except SourcingException:
+            vsi = []
+        return vsi
 
     @property
     def datasheet_url(self):
@@ -722,7 +725,6 @@ def regenerate_symlib():
     for sym in generators:
         for iseries in sym.generator.iseries:
             custom_series[iseries._name] = iseries
-
 
 regenerate_symlib()
 

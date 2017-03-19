@@ -24,7 +24,7 @@ import importlib
 
 from tendril.utils import config
 from tendril.utils import log
-logger = log.get_logger(__name__)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 
 def init_vendors():
