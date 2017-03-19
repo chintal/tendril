@@ -624,7 +624,7 @@ class ErrorCollector(ValidationError):
     def render_cli(self, name):
         width = terminal.get_terminal_width()
         hline = '-' * width
-        print(Style.BRIGHT + hline)
+        print(hline + Style.BRIGHT)
         titleformat = "{0:<" + str(width - 13) + "} {1:>2} {2}"
         print(titleformat.format(name, self.terrors, 'ALERTS') + Style.NORMAL)
         if self.nerrors:
@@ -641,4 +641,4 @@ class ErrorCollector(ValidationError):
                 print(hline + Style.BRIGHT)
                 print(titleformat.format(n, len(g), 'INSTANCES') + Style.NORMAL)
                 self._render_cli_group(g)
-        print(Fore.RESET + hline)
+        print(Fore.RESET + Style.BRIGHT + hline + Style.NORMAL)

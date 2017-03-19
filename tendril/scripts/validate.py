@@ -65,42 +65,48 @@ def _get_parser():
     return parser
 
 
-def validate_module(modulename, s=False):
+def validate_module(modulename, s=False, statuses=None):
     """
     Report validation errors for the specified module.
     :param modulename: The name of the module.
     :param s: Whether to report sourcing errors as well.
+    :param statuses: Criterion for module status to include the module.
     """
-    logger.info("VALIDATING MODULE {0}".format(modulename))
     module = modules.get_module_prototype(modulename)
+    if statuses is not None:
+        if module.status not in statuses:
+            return
+    logger.info("VALIDATING MODULE {0}".format(modulename))
     module.validation_errors.render_cli(modulename)
     if s is True:
         module.sourcing_errors.render_cli(modulename + ' SOURCING')
 
 
-def validate_project(projectfolder, s=False):
+def validate_project(projectfolder, s=False, statuses=None):
     """
     Report validation errors for all modules provided by the specified project.
     :param projectfolder: The path to the project folder.
     :param s: Whether to report sourcing errors as well.
+    :param statuses: Criterion for module status to include the module.
     """
     try:
         projectfolder = get_project_folder(projectfolder)
         cf = conffile.ConfigsFile(projectfolder)
         modulenames = cf.configuration_names
         for modulename in modulenames:
-            validate_module(modulename, s=s)
+            validate_module(modulename, s=s, statuses=statuses)
     except conffile.NoGedaProjectError:
         logger.error("No gEDA Project found at " + projectfolder)
 
 
-def validate_all(s=False):
+def validate_all(s=False, statuses=None):
     """
     Report validation errors for all known modules.
     :param s: Whether to report sourcing errors as well.
+    :param statuses: Criterion for module status to include the module.
     """
     for project, projectfolder in projects.projects.items():
-        validate_project(projectfolder, s=s)
+        validate_project(projectfolder, s=s, statuses=statuses)
 
 
 def main():
@@ -112,31 +118,36 @@ def main():
     logging.getLogger('tendril.utils.www').setLevel(logging.WARNING)
     parser = _get_parser()
     args = parser.parse_args()
+    statuses = args.statuses or []
+    statuses.extend(['Active', 'Prototype', 'Prospective', 'Experimental'])
     if args.all:
-        validate_all(s=args.sourcing)
-    elif args.modules:
-        for modulename in args.modules:
-            validate_module(modulename, s=args.sourcing)
+        validate_all(s=args.sourcing, statuses=statuses)
     else:
-        if not len(args.projfolders):
+        done = False
+        if args.modules:
+            for modulename in args.modules:
+                validate_module(modulename, s=args.sourcing)
+                done = True
+        else:
+            for projfolder in args.projfolders:
+                if not os.path.isabs(projfolder):
+                    projfolder = os.path.join(os.getcwd(), projfolder)
+                    projfolder = os.path.normpath(projfolder)
+                if not in_directory(projfolder, PROJECTS_ROOT):
+                    logger.error(
+                        'Provided directory does not seem to be under the '
+                        'tendril PROJECTS_ROOT. Skipp   ing ' + projfolder
+                    )
+                    continue
+                targets = [projfolder]
+                if args.recurse:
+                    lprojects, lpcbs, lcards, lcard_reporoot, lcable_projects = \
+                        projects.get_projects(projfolder)
+                    targets.extend([lprojects[x] for x in lprojects.keys()])
+                for target in targets:
+                    validate_project(target, s=args.sourcing, statuses=statuses)
+        if not done:
             parser.print_help()
-        for projfolder in args.projfolders:
-            if not os.path.isabs(projfolder):
-                projfolder = os.path.join(os.getcwd(), projfolder)
-                projfolder = os.path.normpath(projfolder)
-            if not in_directory(projfolder, PROJECTS_ROOT):
-                logger.error(
-                    'Provided directory does not seem to be under the '
-                    'tendril PROJECTS_ROOT. Skipp   ing ' + projfolder
-                )
-                continue
-            targets = [projfolder]
-            if args.recurse:
-                lprojects, lpcbs, lcards, lcard_reporoot, lcable_projects = \
-                    projects.get_projects(projfolder)
-                targets.extend([lprojects[x] for x in lprojects.keys()])
-            for target in targets:
-                validate_project(target, s=args.sourcing)
 
 
 if __name__ == '__main__':

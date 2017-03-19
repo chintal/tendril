@@ -64,6 +64,22 @@ def add_project_selector_options(parser):
         '--all', '-a', action='store_true', default=False,
         help='All recognized projects.'
     )
+    parser.add_argument(
+        '--include-suspended', '-iu', dest='statuses', action='append_const',
+        const='Suspended', help='Include suspended projects.'
+    )
+    parser.add_argument(
+        '--include-deprecated', '-ip', dest='statuses', action='append_const',
+        const='Deprecated', help='Include deprecated projects.'
+    )
+    parser.add_argument(
+        '--include-archived', '-ir', dest='statuses', action='append_const',
+        const='Archived', help='Include archived projects.'
+    )
+    parser.add_argument(
+        '--include-discarded', '-is', dest='statuses', action='append_const',
+        const='Discarded', help='Include discarded projects.'
+    )
 
 
 def add_module_selector_options(parser):
