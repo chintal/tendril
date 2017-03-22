@@ -59,6 +59,7 @@ Tendril application code.
 
     tendril.utils.terminal
     tendril.utils.types
+    tendril.utils.connectors
     tendril.utils.files
     tendril.utils.parsers
     tendril.utils.colors

@@ -19,7 +19,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Docstring for __init__.py
+The Connectors Utils Package (:mod:`tendril.utils.connectors`)
+==============================================================
+
+.. toctree::
+
+    tendril.utils.connectors.prefab
+
 """
 
 from pkgutil import extend_path

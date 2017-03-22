@@ -41,7 +41,8 @@ install_requirements = [
     'suds',
     'pcb-tools',
     'pyhull',
-    'cachetools',  # sourcing.vendors.VendorBase._partcache
+    'cachetools',   # sourcing.vendors.VendorBase._partcache
+    'jsonpickle',   # tendril-server-prefab interfaces
 
     # Flask Dependencies (to be pruned?)
     'jsmin',

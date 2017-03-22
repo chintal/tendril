@@ -303,6 +303,16 @@ config_options_fs = [
         'MQ_SERVER',
         'None',
         'Message Queue Server URL'
+    ),
+    ConfigOption(
+        'USE_PREFAB_SERVER',
+        'False',
+        'Use Prefab Server'
+    ),
+    ConfigOption(
+        'PREFAB_SERVER',
+        'None',
+        'Pre-assembled Datasets Server URL'
     )
 ]
 

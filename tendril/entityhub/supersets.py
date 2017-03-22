@@ -26,18 +26,20 @@ from collections import namedtuple
 from future.utils import viewitems
 from tendril.boms.outputbase import CompositeOutputBom
 from tendril.entityhub.modules import get_prototype_lib
+from tendril.utils.connectors import prefab
 from tendril.utils.config import WARM_UP_CACHES
+from tendril.utils.config import USE_PREFAB_SERVER
 from tendril.utils import log
 
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
 context_cardlisting = namedtuple(
-    'ContextCardListing',
+    'context_cardlisting',
     'name, desc, status, qty, proj, projdesc, projstatus'
 )
 simple_cardlisting = namedtuple(
-    'SimpleCardListing',
+    'simple_cardlisting',
     'name, desc, status, qty'
 )
 
@@ -81,7 +83,12 @@ def _group_by_pcbname(cards):
     return rval
 
 
-def get_symbol_inclusion(ident):
+def get_symbol_inclusion(ident, use_prefab=True):
+    if use_prefab and USE_PREFAB_SERVER:
+        try:
+            return prefab.rpc('get_symbol_inclusion', ident=ident)
+        except prefab.PrefabServerUnavailable:
+            pass
     cobom = get_bom_superset()
     line = cobom.find_by_ident(ident)
     cards = None

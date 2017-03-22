@@ -53,6 +53,9 @@ class Status(object):
     def __str__(self):
         return self._ststr
 
+    def __reduce__(self):
+        return get_status, [self._ststr]
+
     @property
     def html_class(self):
         return self._sthtml
@@ -121,3 +124,10 @@ def get_known_statuses():
 
 def allowed_status_values():
     return STATUS_ORDER.keys()
+
+
+def print_status(status):
+    if not isinstance(status, Status):
+        status = Status(status)
+    return status.terminal_repr
+

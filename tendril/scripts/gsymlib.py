@@ -38,7 +38,7 @@ import argparse
 
 from tendril.gedaif import gsymlib
 from tendril.entityhub import supersets
-from tendril.conventions.status import Status
+from tendril.conventions.status import print_status
 
 from .helpers import add_base_options
 
@@ -94,10 +94,10 @@ def render_symbol(symbol, verbose=False, inclusion=False, pricing=False):
         verbose = True
     if not verbose:
         print(symformat.format(symbol.ident,
-                               Status(symbol.status).terminal_repr))
+                               print_status(symbol.status)))
         return
     title = symformat.format(symbol.ident,
-                             Status(symbol.status).terminal_repr)
+                             print_status(symbol.status))
     print(Style.BRIGHT + title + Style.NORMAL)
     detailformat = "{0:<15} {1}"
     print(detailformat.format('Description', symbol.description))
@@ -138,7 +138,7 @@ def render_symbol(symbol, verbose=False, inclusion=False, pricing=False):
                     pdesc = ldata[0][:width-46] + '...'
                 else:
                     pdesc = ldata[0]
-                pstatus = ldata[2].terminal_repr
+                pstatus = print_status(ldata[2])
                 print(inclformat.format(project, qtystr, pdesc, pstatus))
     terminal.render_hline()
 

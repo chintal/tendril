@@ -251,6 +251,6 @@ def commit_metadata():
 #: The full Tendril database/sqlalchemy metadata.
 #: Rendered by :mod:`sqlalchemyviz` into the following ER diagram.
 #:
-#: #.. sqlaviz::
-#: #    :metadataobject: tendril.utils.db.metadata
+#: .. sqlaviz::
+#:     :metadataobject: tendril.utils.db.metadata
 metadata = get_metadata()
