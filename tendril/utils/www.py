@@ -145,7 +145,7 @@ logger = log.get_logger(__name__, log.WARNING)
 
 logging.getLogger('cachecontrol.controller').setLevel(logging.INFO)
 logging.getLogger('requests.packages.urllib3.connectionpool').\
-    setLevel(logging.INFO)
+    setLevel(logging.WARNING)
 
 logging.getLogger('suds.xsd.query').setLevel(logging.INFO)
 logging.getLogger('suds.xsd.sxbasic').setLevel(logging.INFO)
