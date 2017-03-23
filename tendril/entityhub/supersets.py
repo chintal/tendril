@@ -84,7 +84,7 @@ def _group_by_pcbname(cards):
 
 
 def get_symbol_inclusion(ident, use_prefab=True):
-    if use_prefab and USE_PREFAB_SERVER:
+    if use_prefab:
         try:
             return prefab.rpc('get_symbol_inclusion', ident=ident)
         except prefab.PrefabServerUnavailable:

@@ -27,8 +27,10 @@ The Prefab Server Connector Module (:mod:`tendril.utils.connectors.prefab`)
 import json
 import jsonpickle
 import requests
+import requests.exceptions
 
 from tendril.utils.config import PREFAB_SERVER
+from tendril.utils.config import USE_PREFAB_SERVER
 
 
 class PrefabServerUnavailable(Exception):
@@ -36,6 +38,8 @@ class PrefabServerUnavailable(Exception):
 
 
 def rpc(method, **kwargs):
+    if not USE_PREFAB_SERVER:
+        raise PrefabServerUnavailable
     headers = {'content-type': 'application/json'}
     payload = {
         "method": method, "params": kwargs,
@@ -47,5 +51,7 @@ def rpc(method, **kwargs):
                                  headers=headers,
                                  timeout=(0.1, 5)).json()
     except requests.ConnectionError:
+        raise PrefabServerUnavailable
+    except requests.exceptions.ReadTimeout:
         raise PrefabServerUnavailable
     return jsonpickle.decode(response['result'])
