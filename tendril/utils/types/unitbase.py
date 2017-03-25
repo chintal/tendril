@@ -45,6 +45,7 @@ while the older ones still need to be migrated to this form.
 from math import log10
 from math import floor
 from decimal import Decimal
+from fractions import Fraction
 import six
 import numbers
 
@@ -123,6 +124,8 @@ class UnitBase(object):
         if isinstance(value, (six.text_type, six.string_types)):
             value = _parse_func(value)
         elif isinstance(value, numbers.Number):
+            if isinstance(value, Fraction):
+                value = Decimal(float(value))
             if not isinstance(value, Decimal):
                 value = Decimal(value)
 

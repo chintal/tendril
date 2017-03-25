@@ -30,6 +30,8 @@ def parse_temperature(value):
         return num_val
     elif ostr == 'F':
         return ((num_val - 32) * 5) / 9 + Decimal('273.14')
+    else:
+        raise ValueError('Temperature unit incorrect or not specified!')
 
 
 class Temperature(NumericalUnitBase):
