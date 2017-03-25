@@ -19,6 +19,20 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+from colorama import Fore
+
+
+def do_failsafe_connection(do_connect):
+    success = False
+    while not success:
+        try:
+            do_connect()
+            success = True
+        except IOError as e:
+            print Fore.RED + str(e) + Fore.RESET
+            raw_input(Fore.YELLOW + "Please check connections and press Enter to continue..." + Fore.RESET)
+            success = False
+
 
 class InstrumentChannelBase(object):
     def __init__(self, parent):
@@ -131,12 +145,16 @@ class InstrumentBase(object):
 
     def consumer_register(self, consumer):
         if self._connected is not True:
-            try:
-                self.connect()
-            except NotImplementedError:
-                pass
+            do_failsafe_connection(self.do_connection)
+        
         self._consumers.append(consumer)
 
+    def do_connection(self):
+        try:
+            self.connect()
+        except NotImplementedError:
+            pass
+    
     def consumer_done(self, consumer):
         self._consumers.remove(consumer)
         if len(self._consumers) == 0 and self._connected is True:

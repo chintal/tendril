@@ -44,9 +44,22 @@ from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
-def add_prep_steps_from_cnf_prep(testobj, cnf_prep):
+def add_prep_steps_from_cnf_prep(testobj, cnf_prep, testvars = None):
+    # Require a more general implementation
+    if testvars and 'prior_gain' in testvars.keys():
+        if testvars['prior_gain'] > 1:
+            preamp_conf = str('1/'+str(int(round(testvars['prior_gain'], 0))))
+        elif testvars['prior_gain'] < 1:
+            preamp_conf = str(int(round(1/testvars['prior_gain'], 0)))
+        else:
+            preamp_conf = "1"
+    
+    else:
+        preamp_conf = "1"
+    
     for step in cnf_prep:
         if 'user' in step.keys():
+            step['user'] = step['user'].replace("<PREAMP>", preamp_conf)
             stepobj = TestPrepUser(step['user'])
             testobj.add_prep(stepobj)
 
@@ -59,8 +72,9 @@ def get_testobj_from_cnf_test(cnf_test, testvars, bomobj, offline=False):
     logger.debug("Creating test object : " + cnf_test.keys()[0])
     testobj = get_test_object(cnf_test.keys()[0], offline=offline)
     additionalvars = cnf_test[cnf_test.keys()[0]]
+    
     if 'prep' in additionalvars.keys():
-        add_prep_steps_from_cnf_prep(testobj, additionalvars.pop('prep'))
+        add_prep_steps_from_cnf_prep(testobj, additionalvars.pop('prep'), testvars)
     vardict = copy.copy(testvars)
     if additionalvars is not None:
         vardict.update(additionalvars)

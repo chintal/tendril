@@ -70,9 +70,10 @@ def commit_test_suite(suiteobj=None, session=None):
 
     session.add(sro)
     for test in suiteobj.tests:
-        sro.tests.append(
-            create_test_model_obj(testobj=test, suite=sro, session=session)
-        )
+        if not test.skipped:
+            sro.tests.append(
+                create_test_model_obj(testobj=test, suite=sro, session=session)
+            )
 
 
 @with_db
