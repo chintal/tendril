@@ -36,6 +36,24 @@ logger = log.get_logger(__name__, log.INFO)
 TestLine = namedtuple('TestLine', ['desc', 'expected', 'measured'])
 
 
+def userInputPrompt (string):
+    ans = None
+    while ans is None:
+        user_input = raw_input(Fore.YELLOW + string + " [y/n]" + Fore.RESET)
+        if user_input == 'N' or user_input == 'n':
+            ans = False
+        elif user_input == 'Y' or user_input == 'y':
+            ans = True
+    return ans
+
+
+def runTestWithUserPrompt (testfunc, string):
+    repeat = True
+    while repeat:
+        testfunc()
+        repeat = userInputPrompt(string)
+
+
 class TestPrepBase(object):
     """ Object representing a preparatory step for a Test """
     def __init__(self):
@@ -59,6 +77,8 @@ class TestPrepUser(TestPrepBase):
         self._string = string
 
     def run_prep(self):
+        hline = '-' * 80
+        print Fore.YELLOW + hline + Fore.RESET
         print Fore.YELLOW + self._string + Fore.RESET
         raw_input(Fore.YELLOW +
                   "Press Enter to continue..." +
@@ -170,6 +190,7 @@ class TestBase(RunnableTest):
         self._offline = offline
         self._inststr = None
         self._passfailonly = False
+        self.skipped = None
 
     @property
     def offline(self):
@@ -181,14 +202,53 @@ class TestBase(RunnableTest):
         return measurement
 
     def run_test(self):
-        logger.debug("Running Test : " + repr(self))
-        if self._offline is True:
-            raise IOError("Cannot run an offline test")
-        for prep in self._prep:
-            prep.run_prep()
+        try:
+            runTestWithUserPrompt(self.do_test, "Repeat test?")
+        except KeyboardInterrupt:
+            print Fore.RED + "Aborted by user!" + Fore.RESET
+        
+    def do_test(self):
+        self.skipped = True
+        try:
+            logger.debug("Running Test : " + repr(self))
+            
+            if self._offline is True:
+                raise IOError("Cannot run an offline test")
+        
+            for prep in self._prep:
+                prep.run_prep()
+            
+            self.do_measurements()
+        
+            self.ts = arrow.utcnow()
+            self.display_test_result()
+            self.skipped = False
+        
+        except KeyboardInterrupt:
+            print Fore.RED + "Aborted by user!" + Fore.RESET
+    
+    def do_measurements(self):
         for measurement in self._measurements:
             measurement.do_measurement()
-        self.ts = arrow.utcnow()
+    
+    def result_str(self):
+        raise NotImplementedError
+    
+    def display_test_result(self):
+        if self.passed is True:
+            result = Fore.GREEN + '[PASSED]' + Fore.RESET
+        else:
+            result = Fore.RED + '[FAILED]' + Fore.RESET
+        width = terminal.get_terminal_width()
+        hline = '-' * 80
+        print Fore.YELLOW + hline + Fore.RESET
+        fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
+        print Fore.BLUE + self.result_str() + Fore.RESET
+        print fstring.format(
+            Fore.YELLOW, (self.desc or 'None'), Fore.WHITE, result
+        )
+        print "{0}".format(self.title)
+        print "{0}".format(repr(self))
 
     def _load_variable(self, name, typeclass, default=None):
         if name not in self.variables.keys():
@@ -337,19 +397,7 @@ class TestBase(RunnableTest):
         raise NotImplementedError
 
     def finish(self):
-        if self.passed is True:
-            result = Fore.GREEN + '[PASSED]' + Fore.RESET
-        else:
-            result = Fore.RED + '[FAILED]' + Fore.RESET
-        width = terminal.get_terminal_width()
-        hline = '-' * 80
-        print Fore.YELLOW + hline + Fore.RESET
-        fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
-        print fstring.format(
-            Fore.YELLOW, (self.desc or 'None'), Fore.WHITE, result
-        )
-        print "{0}".format(self.title)
-        print "{0}".format(repr(self))
+        pass
 
     def destroy(self):
         pass
@@ -372,17 +420,47 @@ class TestSuiteBase(RunnableTest):
         self._tests.append(test)
 
     def run_test(self):
+        try:
+            runTestWithUserPrompt(self.do_test, "Repeat test suite?")
+        
+        except KeyboardInterrupt:
+            print Fore.RED + "Aborted by user!" + Fore.RESET
+    
+    def do_test(self):
         logger.debug("Running Test Suite : " + repr(self))
-        for prep in self._prep:
-            prep.run_prep()
-        for test in self._tests:
-            test.run_test()
-
+        
+        try:
+            for prep in self._prep:
+                prep.run_prep()
+            for test in self._tests:
+                test.run_test()
+            
+            self.display_test_suite_result()
+        
+        except KeyboardInterrupt:
+            print Fore.RED + "Aborted by user!" + Fore.RESET
+        
+    def display_test_suite_result(self):
+        width = terminal.get_terminal_width()
+        hline = '-' * width
+        hcolor = Fore.CYAN
+        print hcolor + hline + Fore.RESET
+        if self.passed is True:
+            result = Fore.GREEN + '[PASSED]' + Fore.RESET
+        else:
+            result = Fore.RED + '[FAILED]' + Fore.RESET
+        fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
+        print fstring.format(
+            hcolor, (self.desc or 'None'), Fore.WHITE,  result
+        )
+        print "{0}{1}{2}".format(hcolor, repr(self), Fore.RESET)
+        print hcolor + hline + Fore.RESET
+    
     @property
     def passed(self):
         rval = True
         for test in self._tests:
-            if test.passed is False:
+            if test.skipped is True or test.passed is False:
                 rval = False
         return rval
 
@@ -402,20 +480,6 @@ class TestSuiteBase(RunnableTest):
     def finish(self):
         for test in self._tests:
             test.finish()
-        width = terminal.get_terminal_width()
-        hline = '-' * width
-        hcolor = Fore.CYAN
-        print hcolor + hline + Fore.RESET
-        if self.passed is True:
-            result = Fore.GREEN + '[PASSED]' + Fore.RESET
-        else:
-            result = Fore.RED + '[FAILED]' + Fore.RESET
-        fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
-        print fstring.format(
-            hcolor, (self.desc or 'None'), Fore.WHITE,  result
-        )
-        print "{0}{1}{2}".format(hcolor, repr(self), Fore.RESET)
-        print hcolor + hline + Fore.RESET
 
     def destroy(self):
         for test in self._tests:

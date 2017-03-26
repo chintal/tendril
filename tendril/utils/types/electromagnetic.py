@@ -51,8 +51,11 @@ def parse_capacitance(value):
         num_val = Decimal(value[:-1])
         ostr = value[-1:]
     except InvalidOperation:
-        num_val = Decimal(value[:-2])
-        ostr = value[-2:]
+        try:
+            num_val = Decimal(value[:-2])
+            ostr = value[-2:]
+        except InvalidOperation:
+            raise ValueError
 
     if ostr == 'F':
         return num_val
@@ -77,8 +80,12 @@ def parse_inductance(value):
         num_val = Decimal(value[:-1])
         ostr = value[-1:]
     except InvalidOperation:
-        num_val = Decimal(value[:-2])
-        ostr = value[-2:]
+        try:
+            num_val = Decimal(value[:-2])
+            ostr = value[-2:]
+        
+        except InvalidOperation:
+            raise ValueError
 
     if ostr == 'H':
         return num_val
@@ -101,8 +108,11 @@ def parse_voltage(value):
         num_val = Decimal(value[:-1])
         ostr = value[-1:]
     except InvalidOperation:
-        num_val = Decimal(value[:-2])
-        ostr = value[-2:]
+        try:
+            num_val = Decimal(value[:-2])
+            ostr = value[-2:]
+        except InvalidOperation:
+            raise ValueError
 
     if ostr == 'V':
         return num_val
@@ -152,8 +162,11 @@ def parse_current(value):
         num_val = Decimal(value[:-1])
         ostr = value[-1:]
     except InvalidOperation:
-        num_val = Decimal(value[:-2])
-        ostr = value[-2:]
+        try:
+            num_val = Decimal(value[:-2])
+            ostr = value[-2:]
+        except InvalidOperation:
+            raise ValueError
 
     if ostr == 'A':
         return num_val

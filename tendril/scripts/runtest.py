@@ -46,6 +46,7 @@ This script runs tests for a device.
 """
 
 import argparse
+from colorama import Fore
 
 from tendril.entityhub import macs
 from tendril.entityhub import serialnos
@@ -140,7 +141,10 @@ def main():
     if args.offline:
         devicetype = args.offline[0]
 
-    run(sno, args.force, args.stale, devicetype)
+    try:
+        run(sno, args.force, args.stale, devicetype)
+    except KeyboardInterrupt:
+        print Fore.RED + "Tendril runtest aborted by user!" + Fore.RESET
 
 
 if __name__ == '__main__':
