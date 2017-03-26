@@ -125,7 +125,7 @@ class UnitBase(object):
             value = _parse_func(value)
         elif isinstance(value, numbers.Number):
             if isinstance(value, Fraction):
-                value = Decimal(float(value))
+                value = float(value)
             if not isinstance(value, Decimal):
                 value = Decimal(value)
 
@@ -492,9 +492,33 @@ class Percentage(NumericalUnitBase):
 
 
 class GainBase(NumericalUnitBase):
+    _inverse_class = None
+
     def __init__(self, value, _orders, _dostr, _parse_func, gtype=None):
         super(GainBase, self).__init__(value, _orders, _dostr, _parse_func)
         self._gtype = gtype
+
+    def __rdiv__(self, other):
+        """
+        Division of one Unit type class instance with a numerical type
+        results in a Unit type class instance of the same type, whose value
+        is the numerical operand's value divided by the unit type operand's
+        value.
+
+        In this case, the second operand must be a Unit type class instance,
+        and not the reverse.
+        """
+        if isinstance(other, numbers.Number):
+            if not self._inverse_class:
+                inv_cls = self.__class__
+            else:
+                inv_cls = self._inverse_class
+            if isinstance(other, Decimal):
+                return inv_cls(other / self.value)
+            else:
+                return inv_cls(Decimal(other) / self.value)
+        else:
+            return NotImplemented
 
     def in_db(self):
         return 20 * log10(self._value)

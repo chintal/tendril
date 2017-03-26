@@ -83,7 +83,7 @@ def parse_inductance(value):
         try:
             num_val = Decimal(value[:-2])
             ostr = value[-2:]
-        
+
         except InvalidOperation:
             raise ValueError
 
@@ -283,7 +283,7 @@ def parse_voltage_gain(value):
 
 class VoltageGain(GainBase):
     def __init__(self, value):
-        _gtype = Voltage
+        _gtype = (Voltage, Voltage)
         _ostrs = ['V/V']
         _dostr = 'V/V'
         _parse_func = parse_voltage_gain
