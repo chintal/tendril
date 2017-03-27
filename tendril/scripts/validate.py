@@ -129,7 +129,7 @@ def main():
         if args.modules:
             for modulename in args.modules:
                 validate_module(modulename, s=args.sourcing)
-                done = True
+            done = True
         else:
             for projfolder in args.projfolders:
                 if not os.path.isabs(projfolder):
@@ -148,6 +148,7 @@ def main():
                     targets.extend([lprojects[x] for x in lprojects.keys()])
                 for target in targets:
                     validate_project(target, s=args.sourcing, statuses=statuses)
+                    done = True
         if not done:
             parser.print_help()
 

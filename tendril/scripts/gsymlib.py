@@ -113,7 +113,7 @@ def render_symbol(symbol, verbose=False, inclusion=False, pricing=False):
         if not len(isinfos):
             print("--- No known sources of this component ---")
         else:
-            isiformat = "{0:30} {1:40} {2:6} (@{3})"
+            isiformat = "{0:27} {1:37} {2:6} (@{3})"
             for isinfo in isinfos:
                 print(isiformat.format(isinfo.vobj.name,
                                        isinfo.vpart.vpno,
