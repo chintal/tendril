@@ -63,6 +63,10 @@ def init():
         logging.getLogger('appenlight_client.timing'),
         logging.getLogger('appenlight_client.client'),
         logging.getLogger('appenlight_client.transports.requests'),
+        logging.getLogger('pika.callback'),
+        logging.getLogger('pika.channel'),
+        logging.getLogger('pika.heartbeat'),
+        logging.getLogger('pika.connection'),
     ]
     for logger in silence:
         logger.setLevel(logging.WARNING)

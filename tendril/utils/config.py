@@ -300,20 +300,11 @@ config_options_fs = [
         "Folder for the refdocs filesystem"
     ),
     ConfigOption(
-        'MQ_SERVER',
+        'SVN_SERVER_ROOT',
         'None',
-        'Message Queue Server URL'
+        'Path to the SVN root on the SVN server'
     ),
-    ConfigOption(
-        'USE_PREFAB_SERVER',
-        'False',
-        'Use Prefab Server'
-    ),
-    ConfigOption(
-        'PREFAB_SERVER',
-        'None',
-        'Pre-assembled Datasets Server URL'
-    )
+
 ]
 
 load_config(config_options_fs)
@@ -352,6 +343,16 @@ config_options_resources = [
         "{}",
         "Name of the printer to use for printing. "
         "Tendril will use 'lp -d PRINTER_NAME to print."
+    ),
+    ConfigOption(
+        'USE_PREFAB_SERVER',
+        'False',
+        'Use Prefab Server'
+    ),
+    ConfigOption(
+        'PREFAB_SERVER',
+        'None',
+        'Pre-assembled Datasets Server URL'
     )
 ]
 
@@ -387,6 +388,16 @@ config_options_services = [
         "ENABLE_PIWIK",
         "False",
         "Whether to use Piwik for analytics."
+    ),
+    ConfigOption(
+        'MQ_SERVER',
+        'None',
+        'Message Queue Server Host'
+    ),
+    ConfigOption(
+        'MQ_SERVER_PORT',
+        '5672',
+        'Message Queue Server Host'
     ),
 ]
 
