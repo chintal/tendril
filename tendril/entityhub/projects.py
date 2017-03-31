@@ -30,8 +30,12 @@ from tendril.utils.vcs import get_path_revision
 
 logger = log.get_logger(__name__, log.DEFAULT)
 
+projects = {}
+
 
 def is_project_folder(folder):
+    if folder in projects.values():
+        return True
     try:
         conffile.ConfigsFile(folder)
     except conffile.NoGedaProjectError:

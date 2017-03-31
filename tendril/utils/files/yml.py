@@ -37,7 +37,7 @@ from tendril.utils.fsutils import get_concatenated_fd
 
 
 def load(f):
-    if isinstance(f, str):
+    if isinstance(f, basestring):
         filepaths = []
         if os.path.exists(f) and os.path.isfile(f):
             filepaths.append(f)
