@@ -45,7 +45,6 @@ from tendril.dox.gedaproject import get_docs_list
 from tendril.utils import log
 from tendril.utils.config import WARM_UP_CACHES
 from tendril.utils.config import PROJECTS_ROOT
-from tendril.utils.fsutils import register_for_changes
 
 from . import projects
 from . import serialnos
@@ -141,9 +140,10 @@ class ModulePrototypeBase(PrototypeBase):
         raise NotImplementedError
 
     def _register_for_changes(self):
-        register_for_changes(self.projfolder, self._reload)
+        pass
 
     def reload(self):
+        # TODO Signal all other threads to reload.
         self._reload()
 
     def _reload(self):

@@ -509,6 +509,8 @@ class CacheBase(object):
             try:
                 copyfile(temp_fs, temp_fs.unsyspath(temppath),
                          self.cache_fs, filepath)
+            except (KeyboardInterrupt, SystemExit):
+                raise
             except:
                 logger.warning("Unable to write cache file "
                                "{0}".format(filepath))

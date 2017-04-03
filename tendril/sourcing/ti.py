@@ -191,6 +191,8 @@ class VendorTI(VendorBase):
             return None, 'NODEVICE'
         try:
             return self._get_search_vpnos(device, value, footprint)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception:
             logger.error(traceback.format_exc())
             logger.error('Fatal Error searching for : ' + ident)
@@ -251,6 +253,8 @@ class VendorTI(VendorBase):
         pno = product_link.text.strip()
         try:
             product = TIElnPart(pno, vendor=self)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
             return None
         if product.vqtyavail > 0:

@@ -31,7 +31,7 @@ import acquire
 from db.controller import get_inventorylocationcode
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.INFO)
+logger = log.get_logger(__name__, log.DEFAULT)
 
 inventory_locations = []
 

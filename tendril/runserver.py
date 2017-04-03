@@ -21,10 +21,11 @@ See the COPYING, README, and INSTALL files for more information
 
 from tendril.frontend.app import app
 from tendril.frontend.startup.init_app import init_app
-
+import stacktracer
+stacktracer.trace_start("trace.html")
 
 init_app(app)
+app.use_x_sendfile = False
 
 if __name__ == '__main__':
-    app.use_x_sendfile = False
     app.run(debug=True, host='0.0.0.0')

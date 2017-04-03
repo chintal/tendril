@@ -223,7 +223,7 @@ class ConfigOption(object):
     def value(self):
         try:
             return getattr(LOCAL_CONFIG, self.name)
-        except:
+        except AttributeError:
             pass
         try:
             return getattr(INSTANCE_CONFIG, self.name)

@@ -20,15 +20,34 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+import atexit
 from flask import Flask
-
 from tendril.frontend.startup.warmup import warm_up_caches
+
+import traceback
+import signal
+prev_handler = signal.getsignal(signal.SIGINT)
+
+
+def new_int_handler(*args):
+    print(" ----- KEYBOARD INTERRUPT ----- ")
+    traceback.print_stack()
+    prev_handler(*args)
+
+signal.signal(signal.SIGINT, new_int_handler)
+
+
+def exit_handler():
+    print(" ----- EXITING ----- ")
+
+atexit.register(exit_handler)
 
 
 # Warm up caches
 warm_up_caches()
 
 
+print(" ----- STARTING UP ----- ")
 # This is the WSGI compliant web application object
 app = Flask(__name__)
 
