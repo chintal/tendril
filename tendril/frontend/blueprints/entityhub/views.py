@@ -25,6 +25,7 @@ import json
 from future.utils import viewitems
 from flask import render_template
 from flask import abort, flash
+from flask import redirect, url_for
 from flask import jsonify
 from flask_user import login_required
 
@@ -113,6 +114,15 @@ def cables(cblname=None):
                  }
         return render_template('entityhub_cable_detail.html', stage=stage,
                                pagetitle=cblname + " Cable Details")
+
+
+@blueprint.route('/cards/<cardname>/reload')
+@login_required
+def reload_card(cardname):
+    prototypes = get_prototype_lib()
+    prototype = prototypes[cardname]
+    prototype.reload()
+    return redirect(url_for(".cards", cardname=cardname))
 
 
 @blueprint.route('/cards/<cardname>')

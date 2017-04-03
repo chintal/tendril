@@ -143,6 +143,9 @@ class ModulePrototypeBase(PrototypeBase):
     def _register_for_changes(self):
         register_for_changes(self.projfolder, self._reload)
 
+    def reload(self):
+        self._reload()
+
     def _reload(self):
         # Not handled :
         #   - Name changes
@@ -154,6 +157,8 @@ class ModulePrototypeBase(PrototypeBase):
         self._status = None
         self._strategy = None
         self._changelog = None
+        self.ident = self._modulename
+        self.validate()
 
     def _validate(self):
         raise NotImplementedError
