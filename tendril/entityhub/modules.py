@@ -729,6 +729,7 @@ def get_module_instance(sno, ident=None, scaffold=False, session=None):
 
 
 prototypes = {}
+projectmap = {}
 
 
 def get_prototype_lib(regen=False):
@@ -743,6 +744,13 @@ def get_prototype_lib(regen=False):
     return prototypes
 
 
+def get_projectmap():
+    global projectmap
+    if not projectmap:
+        get_prototype_lib()
+    return projectmap
+
+
 def _get_prototype(ident):
     global prototypes
     if ident in prototypes.keys():
@@ -750,12 +758,22 @@ def _get_prototype(ident):
 
     try:
         prototypes[ident] = CardPrototype(ident)
+        pf = prototypes[ident].projfolder
+        if pf in projectmap.keys():
+            projectmap[pf].append(ident)
+        else:
+            projectmap[pf] = [ident]
         return
     except ModuleTypeError:
         pass
 
     try:
         prototypes[ident] = CablePrototype(ident)
+        pf = prototypes[ident].projfolder
+        if pf in projectmap.keys():
+            projectmap[pf].append(ident)
+        else:
+            projectmap[pf] = [ident]
         return
     except ModuleTypeError:
         pass
@@ -815,3 +833,23 @@ if WARM_UP_CACHES is True:
     get_pcb_lib()
     logger.info('Building Project Library')
     get_project_lib()
+
+
+import json
+from tendril.utils.connectors import mq
+from tendril.utils.config import SVN_ROOT
+
+
+def _vcs_commit_handler(data):
+    commit_info = json.loads(data)
+    repo = commit_info['repo']
+    vcsdir = os.path.join(SVN_ROOT, repo)
+    modulenames = get_projectmap()[vcsdir]
+    _ = [get_prototype(x).reload for x in modulenames]
+    return
+
+try:
+    monitor = mq.monitor_start('published_vcs_commits', _vcs_commit_handler)
+    logger.info("Started VCS Commit Monitor")
+except mq.MQServerUnavailable:
+    monitor = None

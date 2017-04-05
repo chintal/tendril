@@ -12,7 +12,6 @@ stacktracer.stop_trace()
 """
 
 
-
 import sys
 import traceback
 from pygments import highlight
