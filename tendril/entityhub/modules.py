@@ -844,8 +844,17 @@ def _vcs_commit_handler(data):
     commit_info = json.loads(data)
     repo = commit_info['repo']
     vcsdir = os.path.join(SVN_ROOT, repo)
-    modulenames = get_projectmap()[vcsdir]
-    _ = [get_prototype(x).reload for x in modulenames]
+    targets = [vcsdir]
+    lprojects, lpcbs, lcards, lcard_reporoot, lcable_projects = \
+        projects.get_projects(vcsdir)
+    targets.extend([lprojects[x] for x in lprojects.keys()])
+    modulenames = []
+    for target in targets:
+        try:
+            modulenames.extend(get_projectmap()[target])
+        except KeyError:
+            pass
+    _ = [get_prototype(x).reload() for x in modulenames]
     return
 
 try:
