@@ -223,7 +223,7 @@ class ConfigOption(object):
     def value(self):
         try:
             return getattr(LOCAL_CONFIG, self.name)
-        except:
+        except AttributeError:
             pass
         try:
             return getattr(INSTANCE_CONFIG, self.name)
@@ -816,7 +816,18 @@ config_options_execution = [
         "Whether tendril caches should be warmed up on startup. This "
         "significantly slows startup time, and therefore is only "
         "appropriate for server deployments."
-    )
+    ),
+    ConfigOption(
+        'ENABLE_THREADED_CONNECTORS',
+        "False",
+        "Whether threaded connectors to external services should be used. "
+        "These connectors only provide interfaces to allow response to "
+        "asynchronous external events, and are only appropriate for server "
+        "deployments. These threaded connectors are currently used only in "
+        "cases where a synchronous service is not viable, so disabling this "
+        "will disable all features dependent on it. On the the other hand, "
+        "these threads may introduce some unresolved instability. "
+    ),
 ]
 
 load_config(config_options_execution)

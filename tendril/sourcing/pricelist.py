@@ -146,10 +146,7 @@ class VendorPricelist(VendorBase):
         except KeyError:
             pass
         if "prices" not in self._pricelist:
-            try:
-                pass
-            except:
-                logger.error("No prices found for " + self.name)
+            logger.error("No prices found for " + self.name)
         if "pricegens" in self._pricelist:
             self._generate_insert_idents()
         if "pricecsv" in self._pricelist:

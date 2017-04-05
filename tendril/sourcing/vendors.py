@@ -36,6 +36,7 @@ from tendril.utils.db import get_session
 from tendril.utils.config import VENDOR_DEFAULT_MAXAGE
 
 from db import controller
+import maintenance
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
@@ -337,10 +338,12 @@ class VendorPartBase(object):
             )
             data_ts = vpno.updated_at.timestamp
             now = time.time()
+            # if 2 * max_age > now - data_ts > max_age >= 0:
+            #     raise DBPartDataExpired
             if now - data_ts > max_age >= 0:
-                # TODO Populate part anyway here, and use sourcing maintenance
-                # queue to refresh in the background.
-                raise DBPartDataExpired
+                maintenance.update_vpinfo(self._vendor.cname,
+                                          self._canonical_repr,
+                                          self._vpno)
             self._vqtyavail = vpno.detail.vqtyavail
             self._manufacturer = vpno.detail.manufacturer
             self._mpartno = vpno.detail.mpartno
@@ -680,12 +683,13 @@ class VendorBase(object):
         mtime = self._map.get_map_time(canonical=ident)
         if max_age > 0:
             now = time.time()
-            if not mtime or now - mtime > max_age:
+            if not mtime:
                 acquire = True
+            elif now - mtime > max_age:
+                maintenance.update_vpmap(self.cname, ident)
         elif max_age == 0 or mtime is None:
             acquire = True
         if acquire is True:
-            # TODO Pass on request to vendor maintenance queue instead
             try:
                 vpnos, strategy = self.search_vpnos(ident)
                 if not vpnos:

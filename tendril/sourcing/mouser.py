@@ -300,6 +300,8 @@ class VendorMouser(VendorBase):
                                           shell_only=True)
                 partobj.load_from_response(part.raw)
                 partobj.commit()
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
             pass
 
@@ -323,6 +325,8 @@ class VendorMouser(VendorBase):
                 return self._get_search_vpnos(device, value, footprint)
             else:
                 return None, 'FILTER_NODEVICE'
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception:
             logger.error(traceback.format_exc())
             logger.error('Fatal Error searching for : ' + ident)
@@ -334,6 +338,8 @@ class VendorMouser(VendorBase):
         try:
             if int(rpart.Availability.split()[0]) > 0:
                 ns = False
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
             pass
         return SearchPart(pno=rpart.MouserPartNumber,

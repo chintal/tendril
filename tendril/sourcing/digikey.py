@@ -434,6 +434,8 @@ class DigiKeyElnPart(VendorElnPartBase):
             m = self._regex_vqtyavail.search(text)
             qtytext = m.groupdict()['qty'].replace(',', '')
             return int(qtytext)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
             if self._regex_vqty_vai.match(text):
                 return -2
@@ -590,6 +592,8 @@ class VendorDigiKey(VendorBase):
                 return self._get_search_vpnos(device, value, footprint)
             else:
                 return None, 'FILTER_NODEVICE'
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception:
             logger.error(traceback.format_exc())
             logger.error('Fatal Error searching for : ' + ident)
@@ -1128,6 +1132,8 @@ class VendorDigiKey(VendorBase):
                         for option in options
                     ]
                 filters[header] = (fname, options)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception:
             logger.error(traceback.format_exc())
             logger.error('idx :' + str(idx))

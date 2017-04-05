@@ -19,12 +19,16 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+import atexit
+import stacktracer
+stacktracer.trace_start("trace.html")
+atexit.register(stacktracer.trace_stop)
+
 from tendril.frontend.app import app
 from tendril.frontend.startup.init_app import init_app
 
-
 init_app(app)
+app.use_x_sendfile = False
 
 if __name__ == '__main__':
-    app.use_x_sendfile = False
     app.run(debug=True, host='0.0.0.0')

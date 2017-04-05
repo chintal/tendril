@@ -45,7 +45,6 @@ from tendril.dox.gedaproject import get_docs_list
 from tendril.utils import log
 from tendril.utils.config import WARM_UP_CACHES
 from tendril.utils.config import PROJECTS_ROOT
-from tendril.utils.fsutils import register_for_changes
 
 from . import projects
 from . import serialnos
@@ -141,7 +140,11 @@ class ModulePrototypeBase(PrototypeBase):
         raise NotImplementedError
 
     def _register_for_changes(self):
-        register_for_changes(self.projfolder, self._reload)
+        pass
+
+    def reload(self):
+        # TODO Signal all other threads to reload.
+        self._reload()
 
     def _reload(self):
         # Not handled :
@@ -154,6 +157,8 @@ class ModulePrototypeBase(PrototypeBase):
         self._status = None
         self._strategy = None
         self._changelog = None
+        self.ident = self._modulename
+        self.validate()
 
     def _validate(self):
         raise NotImplementedError
@@ -724,6 +729,7 @@ def get_module_instance(sno, ident=None, scaffold=False, session=None):
 
 
 prototypes = {}
+projectmap = {}
 
 
 def get_prototype_lib(regen=False):
@@ -738,6 +744,13 @@ def get_prototype_lib(regen=False):
     return prototypes
 
 
+def get_projectmap():
+    global projectmap
+    if not projectmap:
+        get_prototype_lib()
+    return projectmap
+
+
 def _get_prototype(ident):
     global prototypes
     if ident in prototypes.keys():
@@ -745,12 +758,22 @@ def _get_prototype(ident):
 
     try:
         prototypes[ident] = CardPrototype(ident)
+        pf = prototypes[ident].projfolder
+        if pf in projectmap.keys():
+            projectmap[pf].append(ident)
+        else:
+            projectmap[pf] = [ident]
         return
     except ModuleTypeError:
         pass
 
     try:
         prototypes[ident] = CablePrototype(ident)
+        pf = prototypes[ident].projfolder
+        if pf in projectmap.keys():
+            projectmap[pf].append(ident)
+        else:
+            projectmap[pf] = [ident]
         return
     except ModuleTypeError:
         pass
@@ -810,3 +833,32 @@ if WARM_UP_CACHES is True:
     get_pcb_lib()
     logger.info('Building Project Library')
     get_project_lib()
+
+
+import json
+from tendril.utils.connectors import mq
+from tendril.utils.config import SVN_ROOT
+
+
+def _vcs_commit_handler(data):
+    commit_info = json.loads(data)
+    repo = commit_info['repo']
+    vcsdir = os.path.join(SVN_ROOT, repo)
+    targets = [vcsdir]
+    lprojects, lpcbs, lcards, lcard_reporoot, lcable_projects = \
+        projects.get_projects(vcsdir)
+    targets.extend([lprojects[x] for x in lprojects.keys()])
+    modulenames = []
+    for target in targets:
+        try:
+            modulenames.extend(get_projectmap()[target])
+        except KeyError:
+            pass
+    _ = [get_prototype(x).reload() for x in modulenames]
+    return
+
+try:
+    monitor = mq.monitor_start('published_vcs_commits', _vcs_commit_handler)
+    logger.info("Started VCS Commit Monitor")
+except mq.MQServerUnavailable:
+    monitor = None

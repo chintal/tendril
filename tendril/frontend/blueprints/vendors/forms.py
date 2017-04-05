@@ -67,7 +67,7 @@ class SourcingIdentSearch(Form):
             try:
                 Decimal(field.data.strip())
                 raise ValidationError("Include Units")
-            except ValidationError:
+            except (ValidationError, KeyboardInterrupt, SystemExit):
                 raise
             except:
                 pass
