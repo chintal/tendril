@@ -29,37 +29,15 @@ from numbers import Number
 import re
 
 
-def parse_frequency(string):
-    rex = re.compile(r'^((?P<number>\d+(.\d+)*)(?P<order>[mkMG])?Hz)$')
-    try:
-        rdict = rex.search(string).groupdict()
-        num = Decimal(rdict['number'])
-        order = rdict['order']
-        if order == 'm':
-            return num / 1000
-        elif order == 'k':
-            return num * 1000
-        elif order == 'M':
-            return num * 1000000
-        elif order == 'G':
-            return num * 1000000000
-        elif order is None:
-            return num
-    except:
-        raise ValueError
-
-
 class Frequency(NumericalUnitBase):
-    def __init__(self, value):
-        _ostrs = ['mHz', 'Hz', 'kHz', 'MHz', 'GHz']
-        _dostr = 'Hz'
-        _parse_func = parse_frequency
-        super(Frequency, self).__init__(value, _ostrs, _dostr, _parse_func)
+    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[mkMG]?Hz)(?P<residual>)$")  # noqa
+    _ostrs = ['mHz', 'Hz', 'kHz', 'MHz', 'GHz']
+    _dostr = 'Hz'
+    _allow_nOr = False
 
     def __rdiv__(self, other):
         if isinstance(other, Percentage):
-            other = other.value / 100
-            return TimeSpan(other / self._value)
+            other = other.value
         if isinstance(other, Number):
             if not isinstance(other, Decimal):
                 other = Decimal(other)
@@ -70,36 +48,13 @@ class Frequency(NumericalUnitBase):
         return self.__rdiv__(other)
 
 
-def parse_time(string):
-    # TODO integrate with unitbase core parser
-    rex = re.compile(r'^((?P<number>\d+(.\d+)*)(?P<order>[fpnum])?s)$')
-    try:
-        rdict = rex.search(string).groupdict()
-        num = Decimal(rdict['number'])
-        order = rdict['order']
-        if order == 'f':
-            return num / 1000000000000000
-        elif order == 'p':
-            return num / 1000000000000
-        elif order == 'n':
-            return num / 1000000000
-        elif order == 'u':
-            return num / 1000000
-        elif order == 'm':
-            return num / 1000
-        elif order is None:
-            return num
-    except:
-        raise ValueError("String parsing for timespan is only implemented "
-                         "for seconds and smaller. Use TimeDelta constructs "
-                         "if your times are longer.")
-
-
 class TimeSpan(NumericalUnitBase):
+    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[fpnum]?s)(?P<residual>)$")  # noqa
+    _ostrs = ['fs', 'ps', 'ns', 'us', 'ms', 's']
+    _dostr = 's'
+    _allow_nOr = False
+
     def __init__(self, value):
-        _ostrs = ['fs', 'ps', 'ns', 'us', 'ms', 's']
-        _dostr = 's'
-        _parse_func = parse_time
         if isinstance(value, TimeDelta):
             if value.years != 0 or value.months != 0:
                 raise ValueError(
@@ -113,7 +68,7 @@ class TimeSpan(NumericalUnitBase):
             raise TypeError(
                 "Can't construct timespan object from {0}".format(value)
             )
-        super(TimeSpan, self).__init__(value, _ostrs, _dostr, _parse_func)
+        super(TimeSpan, self).__init__(value)
 
     def __repr__(self):
         if self._value >= 60:
@@ -129,8 +84,7 @@ class TimeSpan(NumericalUnitBase):
 
     def __rdiv__(self, other):
         if isinstance(other, Percentage):
-            other = other.value / 100
-            return Frequency(other / self._value)
+            other = other.value
         if isinstance(other, Number):
             if not isinstance(other, Decimal):
                 other = Decimal(other)

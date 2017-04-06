@@ -55,12 +55,6 @@ from tendril.utils.config import BASE_CURRENCY
 from tendril.utils.config import BASE_CURRENCY_SYMBOL
 
 from tendril.utils import www
-
-# from six.moves.urllib.request import Request
-# from six.moves.urllib.parse import urlencode
-
-import json
-import codecs
 import numbers
 
 from .unitbase import TypedComparisonMixin

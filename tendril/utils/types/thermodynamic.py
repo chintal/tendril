@@ -16,64 +16,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from decimal import Decimal
-from decimal import InvalidOperation
+import re
+from decimal import Decimal as D
 from .unitbase import NumericalUnitBase
 
 
-def parse_temperature(value):
-    num_val = Decimal(value[:-1].strip())
-    ostr = value[-1:]
-    if ostr == 'C':
-        return num_val + Decimal('273.14')
-    elif ostr == 'K':
-        return num_val
-    elif ostr == 'F':
-        return ((num_val - 32) * 5) / 9 + Decimal('273.14')
-    else:
-        raise ValueError('Temperature unit incorrect or not specified!')
-
-
 class Temperature(NumericalUnitBase):
-    def __init__(self, value):
-        _ostrs = ['C', 'F', 'K']
-        _dostr = 'K'
-        _parse_func = parse_temperature
-        super(Temperature, self).__init__(value, _ostrs, _dostr, _parse_func)
+    _regex_std = re.compile(r'^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>(mK)?[CFK]?)(?P<residual>)$')  # noqa
+    _orders = [('C', lambda x: x + D('273.14')),
+               ('F', lambda x: ((x - D('32')) * D('5')) / D('9') + D('273.14')),
+               ('K', 1),
+               ('mK', D('0.001'))]
+    _dostr = 'K'
+    _allow_nOr = False
 
     def __repr__(self):
         return str(self._value) + self._dostr
 
 
-def parse_power(value):
-    value = value.strip()
-
-    try:
-        num_val = Decimal(value[:-1])
-        ostr = value[-1:]
-    except InvalidOperation:
-        num_val = Decimal(value[:-2])
-        ostr = value[-2:]
-
-    if ostr == 'W':
-        return num_val
-    elif ostr == 'mW':
-        return num_val / 1000
-    elif ostr == 'uW':
-        return num_val / 1000000
-    elif ostr == 'nW':
-        return num_val / 1000000000
-    elif ostr == 'kW':
-        return num_val * 1000
-    elif ostr == 'MW':
-        return num_val * 1000
-    else:
-        raise ValueError
-
-
 class ThermalDissipation(NumericalUnitBase):
-    def __init__(self, value):
-        _ostrs = ['nW', 'uW', 'mW', 'W', 'kW', 'MW']
-        _dostr = 'W'
-        _parse_func = parse_power
-        super(ThermalDissipation, self).__init__(value, _ostrs, _dostr, _parse_func)
+    _regex_std = re.compile(r'^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[numkM]?W)(?P<residual>)$')  # noqa
+    _ostrs = ['nW', 'uW', 'mW', 'W', 'kW', 'MW']
+    _dostr = 'W'
+    _allow_nOr = False
