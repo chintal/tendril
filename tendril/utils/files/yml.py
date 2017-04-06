@@ -37,6 +37,11 @@ except ImportError:
 
 from tendril.utils.fsutils import get_concatenated_fd
 
+try:
+  basestring
+except NameError:
+  basestring = str
+
 
 class YamlReaderError(Exception):
     pass
@@ -91,15 +96,15 @@ def data_merge(a, b):
 def load_yamls(filepaths):
     if not len(filepaths):
         return
-    data = [oload(x, Loader=Loader) for x in filepaths]
     rval = None
-    for d in data:
-        rval = data_merge(rval, d)
+    for filepath in filepaths:
+        with open(filepath, 'r') as f:
+            rval = data_merge(rval, oload(f, Loader=Loader))
     return rval
 
 
-def load(f, method='concat'):
-    if isinstance(f, string_types):
+def load(f, method='merge'):
+    if isinstance(f, basestring):
         filepaths = []
         if os.path.exists(f) and os.path.isfile(f):
             filepaths.append(f)
