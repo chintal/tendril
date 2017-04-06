@@ -49,7 +49,7 @@ class Inductance(NumericalUnitBase):
 
 
 class Voltage(NumericalUnitBase):
-    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[fpnumkM]?V?)(?P<residual>[\d]*)$")  # noqa
+    _regex_std = re.compile(r"^(?P<numerical>[-+]?[\d]+\.?[\d]*)\s?(?P<order>[fpnumkM]?V?)(?P<residual>[\d]*)$")  # noqa
     _ostrs = ['fV', 'pV', 'nV', 'uV', 'mV', 'V', 'kV', 'MV']
     _dostr = 'V'
 
@@ -67,7 +67,7 @@ class DiodeVoltageDC(VoltageDC):
 
 
 class Current(NumericalUnitBase):
-    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[fpnum]?A?)(?P<residual>[\d]*)$")  # noqa
+    _regex_std = re.compile(r"^(?P<numerical>[-+]?[\d]+\.?[\d]*)\s?(?P<order>[fpnum]?A?)(?P<residual>[\d]*)$")  # noqa
     _ostrs = ['fA', 'pA', 'nA', 'uA', 'mA', 'A']
     _dostr = 'A'
 
@@ -81,20 +81,20 @@ class CurrentDC(Current):
 
 
 class Charge(NumericalUnitBase):
-    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[fpnum]?C?)(?P<residual>[\d]*)$")  # noqa
+    _regex_std = re.compile(r"^(?P<numerical>[-+]?[\d]+\.?[\d]*)\s?(?P<order>[fpnum]?C?)(?P<residual>[\d]*)$")  # noqa
     _ostrs = ['fC', 'pC', 'nC', 'uC', 'mC', 'C']
     _dostr = 'C'
 
 
 class VoltageGain(GainBase):
-    _regex_std = re.compile(r'^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>(V/V)?(dB)?)(?P<residual>)$')  # noqa
+    _regex_std = re.compile(r'^(?P<numerical>[-+]?[\d]+\.?[\d]*)\s?(?P<order>(V/V)?(dB)?)(?P<residual>)$')  # noqa
     _gtype = (Voltage, Voltage)
     _orders = [('V/V', 1), ('dB', lambda x: 10 ** (x/20))]
     _dostr = 'V/V'
 
 
 class PowerRatio(NumericalUnitBase):
-    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>dBm)(?P<residual>)$")  # noqa
+    _regex_std = re.compile(r"^(?P<numerical>[-+]?[\d]+\.?[\d]*)\s?(?P<order>dBm)(?P<residual>)$")  # noqa
     _ostrs = ['dBm']
     _dostr = 'dBm'
 

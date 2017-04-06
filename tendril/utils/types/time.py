@@ -49,7 +49,7 @@ class Frequency(NumericalUnitBase):
 
 
 class TimeSpan(NumericalUnitBase):
-    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[fpnum]?s)(?P<residual>)$")  # noqa
+    _regex_std = re.compile(r"^(?P<numerical>[-+]?[\d]+\.?[\d]*)\s?(?P<order>[fpnum]?s)(?P<residual>)$")  # noqa
     _ostrs = ['fs', 'ps', 'ns', 'us', 'ms', 's']
     _dostr = 's'
     _allow_nOr = False

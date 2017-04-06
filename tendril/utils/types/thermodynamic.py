@@ -22,7 +22,7 @@ from .unitbase import NumericalUnitBase
 
 
 class Temperature(NumericalUnitBase):
-    _regex_std = re.compile(r'^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>(mK)?[CFK]?)(?P<residual>)$')  # noqa
+    _regex_std = re.compile(r'^(?P<numerical>[-+]?[\d]+\.?[\d]*)\s?(?P<order>(mK)?[CFK]?)(?P<residual>)$')  # noqa
     _orders = [('C', lambda x: x + D('273.14')),
                ('F', lambda x: ((x - D('32')) * D('5')) / D('9') + D('273.14')),
                ('K', 1),
@@ -35,7 +35,7 @@ class Temperature(NumericalUnitBase):
 
 
 class ThermalDissipation(NumericalUnitBase):
-    _regex_std = re.compile(r'^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[numkM]?W)(?P<residual>)$')  # noqa
+    _regex_std = re.compile(r'^(?P<numerical>[-+]?[\d]+\.?[\d]*)\s?(?P<order>[numkM]?W)(?P<residual>)$')  # noqa
     _ostrs = ['nW', 'uW', 'mW', 'W', 'kW', 'MW']
     _dostr = 'W'
     _allow_nOr = False
