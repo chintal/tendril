@@ -74,8 +74,6 @@ def parse_length(value):
 
 
 class Length(NumericalUnitBase):
-    def __init__(self, value):
-        _ostrs = ['um', 'mm', 'm', 'km']
-        _dostr = 'm'
-        _parse_func = parse_length
-        super(Length, self).__init__(value, _ostrs, _dostr, _parse_func)
+    _ostrs = ['um', 'mm', 'm', 'km']
+    _dostr = 'm'
+    _parse_func = parse_length

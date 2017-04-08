@@ -44,8 +44,10 @@ while the older ones still need to be migrated to this form.
 
 from math import log10
 from math import floor
+from math import pow
 from decimal import Decimal
 from fractions import Fraction
+import re
 import six
 import numbers
 
@@ -120,9 +122,12 @@ class UnitBase(object):
     This class supports no arithmetic operations.
 
     """
-    def __init__(self, value, _dostr, _parse_func):
+    _dostr = None
+    _parse_func = None
+
+    def __init__(self, value):
         if isinstance(value, (six.text_type, six.string_types)):
-            value = _parse_func(value)
+            value = self._parse_func(value)
         elif isinstance(value, numbers.Number):
             if isinstance(value, Fraction):
                 value = float(value)
@@ -130,7 +135,6 @@ class UnitBase(object):
                 value = Decimal(value)
 
         self._value = value
-        self._dostr = _dostr
 
     # def __float__(self):
     #     return float(self._value)
@@ -144,27 +148,6 @@ class UnitBase(object):
         :return: The core value of the Unit instance, in it's canonical unit.
         """
         return self._value
-
-    def __add__(self, other):
-        raise NotImplementedError
-
-    def __radd__(self, other):
-        raise NotImplementedError
-
-    def __mul__(self, other):
-        raise NotImplementedError
-
-    def __div__(self, other):
-        raise NotImplementedError
-
-    def __rmul__(self, other):
-        raise NotImplementedError
-
-    def __sub__(self, other):
-        raise NotImplementedError
-
-    def _cmpkey(self):
-        raise NotImplementedError
 
     def __repr__(self):
         return str(self._value) + self._dostr
@@ -186,22 +169,18 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
     to the spirit of the architecture.
 
     :param value: The core value to be stored.
-    :param _orders: The recognized orders / units for the Unit.
-    :param _dostr: The canonical unit / order string to use.
-    :param _parse_func: The function used to parse string values into an
-                        actual value in the canonical unit.
 
     .. seealso:: :class:`UnitBase`
 
-    .. rubric:: The `orders` Parameter
+    .. rubric:: The `_orders` / `_ostrs` Class Variables
 
-    The `orders` parameter can either be a list of strings or a
-    list of tuples.
+    Supported units can be provided as a list of strings (`_ostrs`) or a
+    list of tuples (`_orders`).
 
-    - In case it is a `list` of `str`, it is assumed that each string
+    - In case `_ostrs` is provided, it is assumed that each string
       represents a unit value 1000 times smaller than the next.
-    - In case it is a `list` of `tuple`, it is assumed that the first
-      element of the tuple is the string representation of the order,
+    - In case `_orders` is provided, it is assumed that the first
+      element of each tuple is the string representation of the order,
       and the second element is the multipicative factor relative to
       the default order string.
     - In both cases, note that first order within which the unit value's
@@ -220,17 +199,63 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
         __cmpkey
 
     """
-    def __init__(self, value, _orders, _dostr, _parse_func):
-        super(NumericalUnitBase, self).__init__(value, _dostr, _parse_func)
-        if _orders is not None and isinstance(_orders, list):
-            if isinstance(_orders[0], str):
-                doidx = _orders.index(_dostr)
-                self._orders = [(ostr, Decimal(str(10 ** (3 * idx - doidx))))
-                                for idx, ostr in enumerate(_orders)]
-                self._ostrs = _orders
-            if isinstance(_orders[0], tuple):
-                self._orders = _orders
-                self._ostrs = [order[0] for order in _orders]
+    _orders = None
+    _ostrs = None
+    _osuffix = None
+
+    _parse_func = None
+    _regex_std = None
+    _allow_nOr = True
+
+    _order_type = None
+    _order_dict = None
+
+    def __init__(self, value):
+        if not self._orders:
+            doidx = self._ostrs.index(self._dostr)
+            self._orders = [(ostr, (3 * (idx - doidx)))
+                            for idx, ostr in enumerate(self._ostrs)]
+            self._order_type = 0
+        elif not self._ostrs:
+            self._ostrs = [order[0] for order in self._orders]
+            self._order_type = 1
+        if not self._order_dict:
+            self._order_dict = {o[0]: o[1] for o in self._orders}
+        if self._parse_func is None:
+            self._parse_func = self._standard_parser
+        super(NumericalUnitBase, self).__init__(value)
+
+    def _standard_parser(self, value):
+        if not self._regex_std:
+            raise Exception("Standard parser requires a defined regex")
+        match = self._regex_std.match(value)
+        n = Decimal(match.group('numerical'))
+        r = match.group('residual')
+        if r:
+            if not self._allow_nOr:
+                raise ValueError("nOr structure not allowed for this unit")
+            r = Decimal(r)
+            n += r/10
+        o = match.group('order')
+        if self._osuffix and not o.endswith(self._osuffix):
+            o += self._osuffix
+        try:
+            if self._order_type:
+                f = self._order_dict[o]
+                if isinstance(f, numbers.Number):
+                    return n * f
+                else:
+                    return f(n)
+            else:
+                exp = self._order_dict[o]
+                if exp >= 0:
+                    return n * (10 ** exp)
+                else:
+                    # TODO Significant error in precision here
+                    return n / (10 ** abs(exp))
+        except KeyError:
+            raise ValueError('Order unrecognized : {0} for {1}'
+                             ''.format(o, self.__class__))
 
     def __float__(self):
         return float(self._value)
@@ -269,25 +294,27 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
         Multiplication with all other Types / Classes is not supported.
         """
         if isinstance(other, numbers.Number):
-            if isinstance(self, Percentage):
-                return self.__class__(other * self.value / 100)
             if isinstance(self, GainBase):
                 return self.__class__(other * self.value)
             if isinstance(other, Decimal):
                 return self.__class__(self.value * other)
             return self.__class__(self.value * Decimal(other))
-        if isinstance(other, Percentage):
-            return self.__class__(self.value * other.value / 100)
         if isinstance(other, GainBase):
             if isinstance(self, GainBase):
                 if self._gtype != other._gtype:
                     raise TypeError("Gain is of a different type.")
                 return self.__class__(self.value * other.value)
-            if other._gtype and not isinstance(self, other._gtype):
+            if other._gtype and not isinstance(self, other._gtype[1]):
                 raise TypeError("Gain is of a different type.")
-            return self.__class__(self.value * other.value)
+            if isinstance(self, other._gtype[0]):
+                return self.__class__(self.value * other.value)
+            else:
+                return other._gtype[0](self.value * other.value)
         else:
             return NotImplemented
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def __div__(self, other):
         """
@@ -323,9 +350,6 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
 
     def __rtruediv__(self, other):
         return self.__rdiv__(other)
-
-    def __rmul__(self, other):
-        return self.__mul__(other)
 
     def __sub__(self, other):
         """
@@ -364,6 +388,8 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
 
     @property
     def natural_repr(self):
+        if self._order_type == 1:
+            return self._value, self._dostr
         ostr = self._dostr
         value = self._value
         done = False
@@ -424,30 +450,6 @@ class DummyUnit(UnitBase):
 
     Does not support any arithmetic operations.
     """
-    def __init__(self, value=None):
-        super(DummyUnit, self).__init__(value, None, None)
-
-    def __add__(self, other):
-        return NotImplemented
-
-    def __radd__(self, other):
-        return NotImplemented
-
-    def __mul__(self, other):
-        return NotImplemented
-
-    def __div__(self, other):
-        return NotImplemented
-
-    def __rmul__(self, other):
-        return NotImplemented
-
-    def __sub__(self, other):
-        return NotImplemented
-
-    def __cmp__(self, other):
-        raise NotImplementedError
-
     def __repr__(self):
         return "Dummy Unit"
 
@@ -458,19 +460,6 @@ def parse_none(value):
     requires / supports no parsing.
     """
     return value
-
-
-def parse_percent(value):
-    """
-    A parse function for use by the :class:`Percentage` Type and its
-    subclasses.
-    """
-    value = value.strip()
-    if value.endswith('%'):
-        return Decimal(value[:-1])
-    if value.endswith('pc'):
-        return Decimal(value[:-2])
-    return Decimal(value)
 
 
 class Percentage(NumericalUnitBase):
@@ -484,19 +473,15 @@ class Percentage(NumericalUnitBase):
     Only the standard :class:`NumericalUnitBase` Arithmetic is supported by
     this class at this time.
     """
-    def __init__(self, value):
-        _ostrs = ['%']
-        _dostr = '%'
-        _parse_func = parse_percent
-        super(Percentage, self).__init__(value, _ostrs, _dostr, _parse_func)
+    _orders = [('%', Decimal('0.01')), ('pc', Decimal('0.01')), ('', 1)]
+    _dostr = ''
+    _allow_nOr = False
+    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>(pc)?%?)(?P<residual>)$")  # noqa
 
 
 class GainBase(NumericalUnitBase):
     _inverse_class = None
-
-    def __init__(self, value, _orders, _dostr, _parse_func, gtype=None):
-        super(GainBase, self).__init__(value, _orders, _dostr, _parse_func)
-        self._gtype = gtype
+    _gtype = None
 
     def __rdiv__(self, other):
         """
@@ -510,6 +495,8 @@ class GainBase(NumericalUnitBase):
         """
         if isinstance(other, numbers.Number):
             if not self._inverse_class:
+                if not self._gtype[0] == self._gtype[1]:
+                    raise TypeError
                 inv_cls = self.__class__
             else:
                 inv_cls = self._inverse_class

@@ -25,6 +25,8 @@ Docstring for yml
 import os
 from yaml import load as oload
 from yaml import dump as odump
+from six import string_types
+from six import integer_types
 
 try:
     from yaml import CLoader as Loader
@@ -35,8 +37,73 @@ except ImportError:
 
 from tendril.utils.fsutils import get_concatenated_fd
 
+try:
+  basestring
+except NameError:
+  basestring = str
 
-def load(f):
+
+class YamlReaderError(Exception):
+    pass
+
+
+def data_merge(a, b):
+    """
+    From https://github.com/ImmobilienScout24/yamlreader/blob/master/src/main/python/yamlreader/yamlreader.py
+    merges b into a and return merged result based on
+    http://stackoverflow.com/questions/7204805/python-dictionaries-of-dictionaries-merge
+    and extended to also merge arrays and to replace the content of keys
+    with the same name.
+
+    NOTE: tuples and arbitrary objects are not handled as it is totally
+    ambiguous what should happen
+    """
+    key = None
+
+    try:
+        if a is None or isinstance(a, (string_types, float, integer_types)):
+            # border case for first run or if a is a primitive
+            a = b
+        elif isinstance(a, list):
+            # lists can be only appended
+            if isinstance(b, list):
+                # merge lists
+                a.extend(b)
+            else:
+                # append to list
+                a.append(b)
+        elif isinstance(a, dict):
+            # dicts must be merged
+            if isinstance(b, dict):
+                for key in b:
+                    if key in a:
+                        a[key] = data_merge(a[key], b[key])
+                    else:
+                        a[key] = b[key]
+            else:
+                raise YamlReaderError(
+                    'Cannot merge non-dict "%s" into dict "%s"' % (b, a))
+        else:
+            raise YamlReaderError('NOT IMPLEMENTED "%s" into "%s"' % (b, a))
+    except TypeError as e:
+        raise YamlReaderError(
+            'TypeError "%s" in key "%s" when merging "%s" into "%s"' % (
+            e, key, b, a))
+
+    return a
+
+
+def load_yamls(filepaths):
+    if not len(filepaths):
+        return
+    rval = None
+    for filepath in filepaths:
+        with open(filepath, 'r') as f:
+            rval = data_merge(rval, oload(f, Loader=Loader))
+    return rval
+
+
+def load(f, method='merge'):
     if isinstance(f, basestring):
         filepaths = []
         if os.path.exists(f) and os.path.isfile(f):
@@ -49,7 +116,10 @@ def load(f):
                               if os.path.isfile(x) and x.endswith('.yaml')])
         if not len(filepaths):
             raise IOError("YAML file not found : {0}".format(f))
-        return oload(get_concatenated_fd(filepaths), Loader=Loader)
+        if method == 'concat':
+            return oload(get_concatenated_fd(filepaths), Loader=Loader)
+        elif method == 'merge':
+            return load_yamls(filepaths)
     else:
         return oload(f, Loader=Loader)
 
