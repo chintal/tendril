@@ -29,8 +29,8 @@ from unitbase import parse_none
 
 
 class Resistance(NumericalUnitBase):
-    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[mEKMG])(?P<residual>[\d]*)$")  # noqa
-    _ostrs = ['m', 'E', 'K', 'M']
+    _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[umEKMGT])(?P<residual>[\d]*)$")  # noqa
+    _ostrs = ['u', 'm', 'E', 'K', 'M', 'G', 'T']
     _dostr = 'E'
 
 
