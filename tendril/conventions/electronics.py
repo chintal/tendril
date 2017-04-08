@@ -367,7 +367,13 @@ def parse_led(value):
 res_ostrs = ['m', 'E', 'K', 'M', 'G']
 
 
+from tendril.utils.types.electromagnetic import Resistance
+
+
 def normalize_resistance(res):
+    # TODO DEPRECATE THIS
+    if isinstance(res, Resistance):
+        return str(res)
     res = Decimal(res)
     ostr_idx = 1
     while res < 1:

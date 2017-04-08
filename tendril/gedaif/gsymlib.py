@@ -46,9 +46,9 @@ from tendril.conventions.electronics import DEVICE_CLASSES
 from tendril.conventions.electronics import construct_resistor
 from tendril.conventions.electronics import construct_capacitor
 
-from tendril.conventions.electronics import parse_capacitance
+# from tendril.conventions.electronics import parse_capacitance
 from tendril.conventions.electronics import parse_capacitor
-from tendril.conventions.electronics import parse_resistance
+# from tendril.conventions.electronics import parse_resistance
 from tendril.conventions.electronics import parse_resistor
 from tendril.conventions.electronics import normalize_resistance
 
@@ -785,14 +785,14 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
             capacitance = Capacitance(capacitance)
         except ValueError:
             raise NoGedaSymbolException(capacitance)
-    if isinstance(capacitance, Capacitance):
-        capacitance = capacitance._value
+    if not isinstance(capacitance, Capacitance):
+        capacitance = Capacitance(capacitance)
     if footprint[0:3] == "MY-":
         footprint = footprint[3:]
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
             cap, volt = parse_capacitor(symbol.value)
-            sym_capacitance = parse_capacitance(cap)
+            sym_capacitance = Capacitance(cap)
             if capacitance == sym_capacitance:
                 return symbol
     raise NoGedaSymbolException
@@ -806,21 +806,21 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
             resistance = Resistance(resistance)
         except ValueError:
             raise NoGedaSymbolException(resistance)
-    if isinstance(resistance, Resistance):
-        resistance = resistance._value
+    if not isinstance(resistance, Resistance):
+        resistance = Resistance(resistance)
     if footprint[0:3] == "MY-":
         footprint = footprint[3:]
     if device == 'RES THRU':
         resistances = iec60063.gen_vals(iec60063.get_series('E24'),
                                         iec60063.res_ostrs)
-        if resistance in [parse_resistance(x) for x in resistances]:
+        if resistance in [Resistance(x) for x in resistances]:
             return construct_resistor(normalize_resistance(resistance), '0.25W')  # noqa
         else:
             raise NoGedaSymbolException(resistance, device)
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
             res, watt = parse_resistor(symbol.value)
-            sym_resistance = parse_resistance(res)
+            sym_resistance = Resistance(res)
             if resistance == sym_resistance:
                 return symbol.value
     raise NoGedaSymbolException(resistance)
