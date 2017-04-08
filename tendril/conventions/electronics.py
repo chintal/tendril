@@ -364,11 +364,6 @@ def parse_led(value):
         return None
 
 
-from tendril.utils.types.electromagnetic import parse_resistance  # noqa
-from tendril.utils.types.electromagnetic import parse_capacitance  # noqa
-from tendril.utils.types.electromagnetic import parse_current  # noqa
-from tendril.utils.types.electromagnetic import parse_voltage  # noqa
-
 res_ostrs = ['m', 'E', 'K', 'M', 'G']
 
 
