@@ -22,10 +22,7 @@ Electronics Conventions Module documentation (:mod:`conventions.electronics`)
 import logging
 import re
 
-from decimal import Decimal
-
 from tendril.utils.types.electromagnetic import Resistance
-from tendril.utils.types.electromagnetic import Voltage
 
 
 DEVICE_CLASSES_DOC = [
@@ -267,6 +264,8 @@ def parse_ident(ident, generic=False):
 
 
 def construct_resistor(resistance, wattage=None):
+    if isinstance(resistance, Resistance):
+        resistance = str(resistance)
     if wattage is not None:
         value = '/'.join([resistance, wattage])
     else:
@@ -368,21 +367,6 @@ def parse_led(value):
 
 
 res_ostrs = ['m', 'E', 'K', 'M', 'G']
-
-
-def normalize_resistance(res):
-    # TODO DEPRECATE THIS
-    if isinstance(res, Resistance):
-        return str(res)
-    res = Decimal(res)
-    ostr_idx = 1
-    while res < 1:
-        res *= 1000
-        ostr_idx -= 1
-    while res >= 1000:
-        res /= 1000
-        ostr_idx += 1
-    return str(res) + res_ostrs[ostr_idx]
 
 
 def check_for_std_val(ident):

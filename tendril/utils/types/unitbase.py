@@ -42,24 +42,22 @@ while the older ones still need to be migrated to this form.
 
 """
 
-from math import log10
-from math import floor
-from math import pow
-from decimal import Decimal
-from fractions import Fraction
 import re
 import six
 import numbers
+
+from math import log10
+from math import floor
+from decimal import Decimal
+from fractions import Fraction
+
+from . import ParseException
 
 
 def round_to_n(x, n):
     if x:
         return round(x, -int(floor(log10(x))) + (n - 1))
     return 0
-
-
-class ParseException(Exception):
-    pass
 
 
 class TypedComparisonMixin(object):

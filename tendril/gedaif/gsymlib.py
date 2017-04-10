@@ -45,14 +45,10 @@ from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import DEVICE_CLASSES
 from tendril.conventions.electronics import construct_resistor
 from tendril.conventions.electronics import construct_capacitor
-
-# from tendril.conventions.electronics import parse_capacitance
 from tendril.conventions.electronics import parse_capacitor
-# from tendril.conventions.electronics import parse_resistance
 from tendril.conventions.electronics import parse_resistor
-from tendril.conventions.electronics import normalize_resistance
 
-from tendril.utils.types.unitbase import ParseException
+from tendril.utils.types import ParseException
 from tendril.utils.types.lengths import Length
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Capacitance
@@ -817,7 +813,7 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
         resistances = iec60063.gen_vals(iec60063.get_series('E24'),
                                         iec60063.res_ostrs)
         if resistance in [Resistance(x) for x in resistances]:
-            return construct_resistor(normalize_resistance(resistance), '0.25W')  # noqa
+            return construct_resistor(resistance, '0.25W')  # noqa
         else:
             raise NoGedaSymbolException(resistance, device)
     for symbol in gsymlib:
