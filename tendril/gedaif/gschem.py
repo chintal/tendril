@@ -20,13 +20,8 @@ gEDA gschem module documentation (:mod:`gedaif.gschem`)
 """
 
 import os
-import re
 import subprocess
-from collections import deque
 
-import tendril.utils.log
-
-logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
 
 from tendril.utils.files import pdf
 
@@ -34,7 +29,13 @@ from tendril.utils.config import GEDA_SCHEME_DIR
 from tendril.utils.config import USE_SYSTEM_GAF_BIN
 from tendril.utils.config import GAF_BIN_ROOT
 
-import sym2eps
+try:
+    import sym2eps
+except ImportError:
+    sym2eps = None
+
+import tendril.utils.log
+logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
 
 
 def conv_gsch2pdf(schpath, docfolder):
@@ -67,7 +68,7 @@ def conv_gsch2png(schpath, outfolder, include_extension=False):
     outpath = os.path.join(outfolder, schfname + '.png')
     epspath = os.path.join(outfolder, schfname + '.eps')
 
-    if USE_SYSTEM_GAF_BIN:
+    if USE_SYSTEM_GAF_BIN and sym2eps:
         try:
             sym2eps.convert(schpath, epspath)
         except RuntimeError:
