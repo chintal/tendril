@@ -58,6 +58,10 @@ def round_to_n(x, n):
     return 0
 
 
+class ParseException(Exception):
+    pass
+
+
 class TypedComparisonMixin(object):
     """
     This mixin allows implementing comparison operators in a Python 3
@@ -127,7 +131,10 @@ class UnitBase(object):
 
     def __init__(self, value):
         if isinstance(value, (six.text_type, six.string_types)):
-            value = self._parse_func(value)
+            try:
+                value = self._parse_func(value)
+            except Exception as e:
+                raise ParseException(e)
         elif isinstance(value, numbers.Number):
             if isinstance(value, Fraction):
                 value = float(value)
