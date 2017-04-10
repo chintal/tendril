@@ -52,6 +52,7 @@ from tendril.utils.types import ParseException
 from tendril.utils.types.lengths import Length
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Capacitance
+from tendril.utils.types.thermodynamic import ThermalDissipation
 
 from gschem import conv_gsch2png
 
@@ -796,8 +797,6 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
 
 
 def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
-    # TODO This should return a symbol instead, and usages should be adapted
-    # accordingly to make consistent with find_capacitor
     if footprint[0:3] == "MY-":
         footprint = footprint[3:]
     if isinstance(resistance, str):
@@ -806,22 +805,25 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
         except ParseException:
             tident = ident_transform(device, resistance, footprint)
             symbol = get_symbol(tident)
-            return symbol.value
+            return symbol
     if not isinstance(resistance, Resistance):
         resistance = Resistance(resistance)
-    if device == 'RES THRU':
-        resistances = iec60063.gen_vals(iec60063.get_series('E24'),
-                                        iec60063.res_ostrs)
-        if resistance in [Resistance(x) for x in resistances]:
-            return construct_resistor(resistance, '0.25W')  # noqa
-        else:
-            raise NoGedaSymbolException(resistance, device)
+    if wattage and not isinstance(wattage, ThermalDissipation):
+        wattage = ThermalDissipation(wattage)
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
-            res, watt = parse_resistor(symbol.value)
+            try:
+                res, watt = parse_resistor(symbol.value)
+            except TypeError:
+                continue
             sym_resistance = Resistance(res)
             if resistance == sym_resistance:
-                return symbol.value
+                if wattage:
+                    sym_wattage = ThermalDissipation(watt)
+                    if wattage == sym_wattage:
+                        return symbol
+                else:
+                    return symbol
     raise NoGedaSymbolException(resistance)
 
 
