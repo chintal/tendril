@@ -70,3 +70,4 @@ doc/_build
 
 *.pyc
 *~
+!/tendril/utils/files/gschem.py

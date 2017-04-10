@@ -58,6 +58,10 @@ def round_to_n(x, n):
     return 0
 
 
+class ParseException(Exception):
+    pass
+
+
 class TypedComparisonMixin(object):
     """
     This mixin allows implementing comparison operators in a Python 3
@@ -127,7 +131,10 @@ class UnitBase(object):
 
     def __init__(self, value):
         if isinstance(value, (six.text_type, six.string_types)):
-            value = self._parse_func(value)
+            try:
+                value = self._parse_func(value)
+            except Exception as e:
+                raise ParseException(e)
         elif isinstance(value, numbers.Number):
             if isinstance(value, Fraction):
                 value = float(value)
@@ -294,11 +301,13 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
         Multiplication with all other Types / Classes is not supported.
         """
         if isinstance(other, numbers.Number):
-            if isinstance(self, GainBase):
+            if isinstance(self, FactorBase):
                 return self.__class__(other * self.value)
             if isinstance(other, Decimal):
                 return self.__class__(self.value * other)
             return self.__class__(self.value * Decimal(other))
+        if isinstance(other, Percentage):
+            return self.__class__(self.value * other.value)
         if isinstance(other, GainBase):
             if isinstance(self, GainBase):
                 if self._gtype != other._gtype:
@@ -337,6 +346,8 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
                 return self.__class__(self.value / other)
             else:
                 return self.__class__(self.value / Decimal(other))
+        elif isinstance(other, Percentage):
+            return self.__class__(self.value / other.value)
         elif isinstance(other, self.__class__):
             return self.value / other.value
         else:
@@ -462,7 +473,11 @@ def parse_none(value):
     return value
 
 
-class Percentage(NumericalUnitBase):
+class FactorBase(NumericalUnitBase):
+    pass
+
+
+class Percentage(FactorBase):
     """
     A base Unit class which provides support for Types that are essentially
     percentages.
@@ -479,7 +494,7 @@ class Percentage(NumericalUnitBase):
     _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>(pc)?%?)(?P<residual>)$")  # noqa
 
 
-class GainBase(NumericalUnitBase):
+class GainBase(FactorBase):
     _inverse_class = None
     _gtype = None
 

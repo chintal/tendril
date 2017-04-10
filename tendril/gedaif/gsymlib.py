@@ -52,6 +52,7 @@ from tendril.conventions.electronics import parse_capacitor
 from tendril.conventions.electronics import parse_resistor
 from tendril.conventions.electronics import normalize_resistance
 
+from tendril.utils.types.unitbase import ParseException
 from tendril.utils.types.lengths import Length
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Capacitance
@@ -801,15 +802,17 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
 def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
     # TODO This should return a symbol instead, and usages should be adapted
     # accordingly to make consistent with find_capacitor
+    if footprint[0:3] == "MY-":
+        footprint = footprint[3:]
     if isinstance(resistance, str):
         try:
             resistance = Resistance(resistance)
-        except ValueError:
-            raise NoGedaSymbolException(resistance)
+        except ParseException:
+            tident = ident_transform(device, resistance, footprint)
+            symbol = get_symbol(tident)
+            return symbol.value
     if not isinstance(resistance, Resistance):
         resistance = Resistance(resistance)
-    if footprint[0:3] == "MY-":
-        footprint = footprint[3:]
     if device == 'RES THRU':
         resistances = iec60063.gen_vals(iec60063.get_series('E24'),
                                         iec60063.res_ostrs)

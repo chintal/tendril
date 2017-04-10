@@ -19,16 +19,19 @@ Electronics Conventions Module documentation (:mod:`conventions.electronics`)
 =============================================================================
 """
 
-from decimal import Decimal
-
 import logging
 import re
+
+from decimal import Decimal
+
+from tendril.utils.types.electromagnetic import Resistance
+from tendril.utils.types.electromagnetic import Voltage
 
 
 DEVICE_CLASSES_DOC = [
     ('RES SMD', 'SMD Resistors'),
     ('RES THRU', 'THRU Resistors'),
-    ('RES POWER', 'Off-PCB power resistors for direct mounting onto heatsinks'),  # noqa
+    ('RES POWER', 'Off-PCB power resistors for direct mounting onto heatsinks'),
     ('RES ARRAY THRU', 'THRU Resistor Arrays'),
     ('RES ARRAY SMD', 'SMD Resistor Arrays'),
     ('POT TRIM', 'Trimpots'),
@@ -365,9 +368,6 @@ def parse_led(value):
 
 
 res_ostrs = ['m', 'E', 'K', 'M', 'G']
-
-
-from tendril.utils.types.electromagnetic import Resistance
 
 
 def normalize_resistance(res):
