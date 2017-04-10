@@ -76,4 +76,4 @@ def parse_length(value):
 class Length(NumericalUnitBase):
     _ostrs = ['um', 'mm', 'm', 'km']
     _dostr = 'm'
-    _parse_func = parse_length
+    _parse_func = staticmethod(parse_length)
