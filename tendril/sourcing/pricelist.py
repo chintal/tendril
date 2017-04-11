@@ -216,10 +216,9 @@ class VendorPricelist(VendorBase):
                                                     start=generator['start'],
                                                     end=generator['end'])
                         for rvalue in rvalues:
-                            values.append(
-                                construct_resistor(rvalue,
-                                                   generator['wattage'])
-                            )
+                            values.append(construct_resistor(
+                                resistance=rvalue, wattage=generator['wattage']
+                            ))
                     else:
                         raise ValueError
             if 'values' in pricegen.keys():
@@ -239,10 +238,9 @@ class VendorPricelist(VendorBase):
                                                     start=generator['start'],
                                                     end=generator['end'])
                         for cvalue in cvalues:
-                            values.append(
-                                construct_capacitor(cvalue,
-                                                    generator['voltage'])
-                            )
+                            values.append(construct_capacitor(
+                                capacitance=cvalue, voltage=generator['voltage']
+                            ))
                     else:
                         raise ValueError
             if 'values' in pricegen.keys():

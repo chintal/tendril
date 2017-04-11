@@ -22,8 +22,6 @@ Electronics Conventions Module documentation (:mod:`conventions.electronics`)
 import logging
 import re
 
-from tendril.utils.types.electromagnetic import Resistance
-
 
 DEVICE_CLASSES_DOC = [
     ('RES SMD', 'SMD Resistors'),
@@ -262,39 +260,102 @@ def parse_ident(ident, generic=False):
     # TODO Check Generators?
     return device, value, footprint
 
+from copy import copy
+from collections import namedtuple
 
-def construct_resistor(resistance, wattage=None):
-    if isinstance(resistance, Resistance):
-        resistance = str(resistance)
-    if wattage is not None:
-        value = '/'.join([resistance, wattage])
-    else:
-        value = resistance
+from tendril.utils.types.electromagnetic import Resistance
+from tendril.utils.types.electromagnetic import Capacitance
+from tendril.utils.types.electromagnetic import Voltage
+from tendril.utils.types.thermodynamic import ThermalDissipation
+from tendril.utils.types.unitbase import Tolerance
+from tendril.utils.types.unitbase import NumericalUnitBase
+from tendril.utils.types import ParseException
+
+
+def _jellybean_parser(value, tparts, ttype):
+    tparts = copy(tparts)
+    rparts = {}
+    sparts = value.split('/')
+
+    while len(sparts):
+        part = sparts.pop(0)
+        handled = False
+        while not handled and len(tparts):
+            pname, ptype, prequired = tparts.pop(0)
+            try:
+                rparts[pname] = ptype(part)
+                handled = True
+            except ParseException as e:
+                if prequired:
+                    raise e
+                else:
+                    rparts[pname] = None
+    if len(tparts):
+        for pname, ptype, prequired in tparts:
+            rparts[pname] = None
+
+    return ttype(**rparts)
+
+
+def _jellybean_constructor(tparts, **kwargs):
+    rparts = []
+    for pname, ptype, prequired in tparts:
+        part = kwargs.pop(pname)
+        if part:
+            if issubclass(ptype, NumericalUnitBase):
+                cpart = ptype(part)
+                # TODO Fix precision issue for Numerical Unit Base
+                if cpart != ptype(part):
+                    raise ValueError
+            elif not isinstance(part, ptype):
+                part = ptype(part)
+            rparts.append(str(part))
+    return '/'.join(rparts)
+
+
+_r_parts = [('resistance', Resistance, True),
+            ('wattage', ThermalDissipation, False),
+            ('tolerance', Tolerance, False),
+            ('tc', str, False)]
+
+Resistor = namedtuple('Resistor', ' '.join([x[0] for x in _r_parts]))
+
+
+def parse_resistor(value):
+    return _jellybean_parser(value, _r_parts, Resistor)
+
+
+def construct_resistor(resistance, wattage=None, tolerance=None, tc=None):
+    return _jellybean_constructor(_r_parts,
+                                  resistance=resistance, wattage=wattage,
+                                  tolerance=tolerance, tc=tc)
+
+
+_c_parts = [('capacitance', Capacitance, True),
+            ('voltage', Voltage, False),
+            ('tolerance', Tolerance, False),
+            ('tcc', str, False)]
+
+Capacitor = namedtuple('Capacitor', ' '.join([x[0] for x in _c_parts]))
+
+
+def parse_capacitor(value):
+    return _jellybean_parser(value, _c_parts, Capacitor)
+
+
+def construct_capacitor(capacitance, voltage=None, tolerance=None, tcc=None):
+    return _jellybean_constructor(_c_parts,
+                                  capacitance=capacitance, voltage=voltage,
+                                  tolerance=tolerance, tcc=tcc)
+
+
+def parse_inductor(value):
+    rex = re.compile(r'^(?P<inductance>\d+(.\d+)*[pnum]H)$')
     try:
-        cresistance, cwattage = parse_resistor(value)
-        if cresistance != resistance:
-            raise ValueError
-        if cwattage != wattage:
-            raise ValueError
+        rdict = rex.search(value).groupdict()
+        return rdict['inductance']
     except AttributeError:
-        raise ValueError
-    return value
-
-
-def construct_capacitor(capacitance, voltage):
-    if voltage is not None:
-        value = '/'.join([capacitance, voltage])
-    else:
-        value = capacitance
-    try:
-        ccapacitance, cvoltage = parse_capacitor(value)
-        if ccapacitance != capacitance:
-            raise ValueError
-        if cvoltage != voltage:
-            raise ValueError
-    except AttributeError:
-        raise ValueError
-    return value
+        return None
 
 
 def construct_inductor(inductance):
@@ -308,6 +369,15 @@ def construct_inductor(inductance):
     return value
 
 
+def parse_crystal(value):
+    rex = re.compile(r'^(?P<frequency>\d+(.\d+)*[KM]Hz)$')
+    try:
+        rdict = rex.search(value).groupdict()
+        return rdict['frequency']
+    except AttributeError:
+        return None
+
+
 def construct_crystal(frequency):
     value = frequency
     try:
@@ -317,42 +387,6 @@ def construct_crystal(frequency):
     except AttributeError:
         raise ValueError
     return value
-
-
-def parse_resistor(value):
-    rex = re.compile(r'^(?P<resistance>\d+(.\d+)*[mEKM])(/(?P<wattage>\d+(.\d+)*W))*$')  # noqa
-    try:
-        rdict = rex.search(value).groupdict()
-        return rdict['resistance'], rdict['wattage']
-    except AttributeError:
-        return None
-
-
-def parse_capacitor(value):
-    rex = re.compile(r'^(?P<capacitance>\d+(.\d+)*[pnum]F)(/(?P<voltage>\d+(.\d+)*V(DC|AC)*))*$')  # noqa
-    try:
-        rdict = rex.search(value).groupdict()
-        return rdict['capacitance'], rdict['voltage']
-    except AttributeError:
-        return None
-
-
-def parse_inductor(value):
-    rex = re.compile(r'^(?P<inductance>\d+(.\d+)*[pnum]H)$')
-    try:
-        rdict = rex.search(value).groupdict()
-        return rdict['inductance']
-    except AttributeError:
-        return None
-
-
-def parse_crystal(value):
-    rex = re.compile(r'^(?P<frequency>\d+(.\d+)*[KM]Hz)$')
-    try:
-        rdict = rex.search(value).groupdict()
-        return rdict['frequency']
-    except AttributeError:
-        return None
 
 
 def parse_led(value):
@@ -366,20 +400,24 @@ def parse_led(value):
         return None
 
 
-res_ostrs = ['m', 'E', 'K', 'M', 'G']
+_std_checkers = [
+    ('RES', parse_resistor),
+    ('CAP', parse_capacitor),
+    ('CRYSTAL', parse_crystal),
+    ('LED', parse_led)
+]
 
 
 def check_for_std_val(ident):
     device, value, footprint = parse_ident(ident)
     vals = None
-    if device.startswith('RES'):
-        vals = parse_resistor(value)
-    if device.startswith('CAP'):
-        vals = parse_capacitor(value)
-    if device.startswith('CRYSTAL'):
-        vals = parse_crystal(value)
-    if device.startswith('LED'):
-        vals = parse_led(value)
+    for prefix, checker in _std_checkers:
+        if device.startswith(prefix):
+            try:
+                vals = parse_resistor(value)
+                break
+            except ParseException:
+                pass
     if vals is not None:
         return True
     return False

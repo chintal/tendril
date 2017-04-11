@@ -492,6 +492,10 @@ class Percentage(FactorBase):
     _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>(pc)?%?)(?P<residual>)$")  # noqa
 
 
+class Tolerance(Percentage):
+    pass
+
+
 class GainBase(FactorBase):
     _inverse_class = None
     _gtype = None

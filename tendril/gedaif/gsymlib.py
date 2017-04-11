@@ -496,7 +496,8 @@ class GSymGeneratorFile(object):
                             )
                             for rvalue in rvalues:
                                 pval = construct_resistor(
-                                    rvalue, generator['wattage']
+                                    resistance=rvalue,
+                                    wattage=generator['wattage']
                                 )
                                 values.append(pval)
                                 if giseries is not None:
@@ -555,7 +556,8 @@ class GSymGeneratorFile(object):
                             )
                             for cvalue in cvalues:
                                 pval = construct_capacitor(
-                                    cvalue, generator['voltage']
+                                    capacitance=cvalue,
+                                    voltage=generator['voltage']
                                 )
                                 values.append(pval)
                                 if giseries is not None:
@@ -789,8 +791,8 @@ def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
         footprint = footprint[3:]
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
-            cap, volt = parse_capacitor(symbol.value)
-            sym_capacitance = Capacitance(cap)
+            capacitor = parse_capacitor(symbol.value)
+            sym_capacitance = capacitor.capacitance
             if capacitance == sym_capacitance:
                 return symbol
     raise NoGedaSymbolException
@@ -813,13 +815,13 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
     for symbol in gsymlib:
         if symbol.device == device and symbol.footprint == footprint:
             try:
-                res, watt = parse_resistor(symbol.value)
+                resistor = parse_resistor(symbol.value)
             except TypeError:
                 continue
-            sym_resistance = Resistance(res)
+            sym_resistance = resistor.resistance
             if resistance == sym_resistance:
                 if wattage:
-                    sym_wattage = ThermalDissipation(watt)
+                    sym_wattage = resistor.wattage
                     if wattage == sym_wattage:
                         return symbol
                 else:

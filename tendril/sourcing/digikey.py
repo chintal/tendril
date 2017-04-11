@@ -1276,19 +1276,25 @@ class VendorDigiKey(VendorBase):
                 ('resistance', "Resistance (Ohms)", 'equals', Resistance),
                 ('wattage', "Power (Watts)", 'contains', ThermalDissipation)
             )
-            lvalues = parse_resistor(value)
+            # TODO Simplify and support extension
+            resistor = parse_resistor(value)
+            lvalues = [resistor.resistance, resistor.wattage]
         elif devtype == 'resistor_array':
             loptions = (
                 ('resistance', "Resistance (Ohms)", 'equals', Resistance),
                 ('wattage', "Power Per Element", 'tequals', ThermalDissipation)
             )
-            lvalues = parse_resistor(value)
+            # TODO Simplify and support extension
+            resistor = parse_resistor(value)
+            lvalues = [resistor.resistance, resistor.wattage]
         elif devtype == 'capacitor':
             loptions = (
                 ('capacitance', "Capacitance", 'equals', Capacitance),
                 ('voltage', "Voltage - Rated", 'equals', Voltage)
             )
-            lvalues = parse_capacitor(value)
+            # TODO Simplify and support extension
+            capacitor = parse_capacitor(value)
+            lvalues = [capacitor.capacitance, capacitor.voltage]
         elif devtype == 'crystal':
             loptions = (
                 ('frequency', "Frequency", 'equals', Frequency),

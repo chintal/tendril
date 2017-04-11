@@ -76,11 +76,9 @@ class ValueSeries(object):
 
     def get_type_value(self, value):
         if self._stype == 'capacitor':
-            capacitance, voltage = electronics.parse_capacitor(value)
-            return self._typeclass(capacitance)
+            return electronics.parse_capacitor(value).capacitance
         if self._stype == 'resistor':
-            resistance, wattage = electronics.parse_resistor(value)
-            return self._typeclass(resistance)
+            return electronics.parse_resistor(value).resistance
 
     def get_closest_value(self, target, heuristic=None):
         if heuristic == '+':
