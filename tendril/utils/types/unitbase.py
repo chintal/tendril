@@ -305,7 +305,7 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
                 return self.__class__(self.value * other)
             return self.__class__(self.value * Decimal(other))
         if isinstance(other, Percentage):
-            return self.__class__(self.value * other.value)
+            return self.__class__(self.value * other.value / 100)
         if isinstance(other, GainBase):
             if isinstance(self, GainBase):
                 if self._gtype != other._gtype:
@@ -345,7 +345,7 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
             else:
                 return self.__class__(self.value / Decimal(other))
         elif isinstance(other, Percentage):
-            return self.__class__(self.value / other.value)
+            return self.__class__(self.value / other.value * 100)
         elif isinstance(other, self.__class__):
             return self.value / other.value
         else:
@@ -486,8 +486,8 @@ class Percentage(FactorBase):
     Only the standard :class:`NumericalUnitBase` Arithmetic is supported by
     this class at this time.
     """
-    _orders = [('%', Decimal('0.01')), ('pc', Decimal('0.01')), ('', 1)]
-    _dostr = ''
+    _orders = [('%', Decimal('1')), ('pc', Decimal('1')), ('', 100)]
+    _dostr = '%'
     _allow_nOr = False
     _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>(pc)?%?)(?P<residual>)$")  # noqa
 

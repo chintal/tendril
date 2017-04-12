@@ -43,16 +43,22 @@ from tendril.conventions.electronics import ident_transform
 from tendril.conventions.electronics import fpismodlen
 from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import DEVICE_CLASSES
-from tendril.conventions.electronics import construct_resistor
-from tendril.conventions.electronics import construct_capacitor
+from tendril.conventions.electronics import jb_capacitor_defs
+from tendril.conventions.electronics import jb_resistor_defs
 from tendril.conventions.electronics import parse_capacitor
 from tendril.conventions.electronics import parse_resistor
+from tendril.conventions.electronics import construct_capacitor
+from tendril.conventions.electronics import construct_resistor
+from tendril.conventions.electronics import jb_resistor
+from tendril.conventions.electronics import jb_capacitor
+from tendril.conventions.electronics import match_capacitor
+from tendril.conventions.electronics import match_resistor
+
 
 from tendril.utils.types import ParseException
 from tendril.utils.types.lengths import Length
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Capacitance
-from tendril.utils.types.thermodynamic import ThermalDissipation
 
 from gschem import conv_gsch2png
 
@@ -487,6 +493,7 @@ class GSymGeneratorFile(object):
                     except KeyError:
                         pass
                 if 'generators' in gendata.keys():
+                    dcomponents = jb_resistor_defs()
                     for generator in gendata['generators']:
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
@@ -494,10 +501,18 @@ class GSymGeneratorFile(object):
                                 generator['series'], iec60063.res_ostrs,
                                 start=generator['start'], end=generator['end']
                             )
+                            components = {}
+                            for dcomponent in dcomponents:
+                                if dcomponent.code in generator.keys():
+                                    try:
+                                        dcomponent.typeclass(generator[dcomponent.code])  # noqa
+                                        components[dcomponent.code] = generator[dcomponent.code]  # noqa
+                                    except:
+                                        raise ValueError
                             for rvalue in rvalues:
                                 pval = construct_resistor(
                                     resistance=rvalue,
-                                    wattage=generator['wattage']
+                                    **components
                                 )
                                 values.append(pval)
                                 if giseries is not None:
@@ -547,6 +562,7 @@ class GSymGeneratorFile(object):
                     except KeyError:
                         pass
                 if 'generators' in gendata.keys():
+                    dcomponents = jb_capacitor_defs()
                     for generator in gendata['generators']:
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
@@ -554,10 +570,18 @@ class GSymGeneratorFile(object):
                                 generator['series'], iec60063.cap_ostrs,
                                 start=generator['start'], end=generator['end']
                             )
+                            components = {}
+                            for dcomponent in dcomponents:
+                                if dcomponent.code in generator.keys():
+                                    try:
+                                        dcomponent.typeclass(generator[dcomponent.code])  # noqa
+                                        components[dcomponent.code] = generator[dcomponent.code]  # noqa
+                                    except:
+                                        raise ValueError
                             for cvalue in cvalues:
                                 pval = construct_capacitor(
                                     capacitance=cvalue,
-                                    voltage=generator['voltage']
+                                    **components
                                 )
                                 values.append(pval)
                                 if giseries is not None:
@@ -573,11 +597,11 @@ class GSymGeneratorFile(object):
                 if 'custom_series' in gendata.keys():
                     from tendril.conventions.series import CustomValueSeries
                     for name, series in viewitems(gendata['custom_series']):
-                        if series['detail'].pop('type') != 'resistor':
-                            raise ValueError('Expected a resistor series')
+                        if series['detail'].pop('type') != 'capacitor':
+                            raise ValueError('Expected a capacitor series')
                         vals = series['values']
                         tsymbol = GedaSymbol(self._sympath)
-                        iseries = CustomValueSeries(name, 'resistor',
+                        iseries = CustomValueSeries(name, 'capacitor',
                                                     device=tsymbol.device,
                                                     footprint=tsymbol.footprint)
                         for type_val, val in viewitems(vals):
@@ -777,14 +801,6 @@ def get_latest_symbols(n=10, include_virtual=False):
         tlib = gsymlib
     slib = sorted(tlib, key=lambda y: y.last_updated, reverse=True)
     return slib[:n]
-
-
-from tendril.conventions.electronics import construct_capacitor
-from tendril.conventions.electronics import construct_resistor
-from tendril.conventions.electronics import jb_resistor
-from tendril.conventions.electronics import jb_capacitor
-from tendril.conventions.electronics import match_capacitor
-from tendril.conventions.electronics import match_resistor
 
 
 # TODO Use a unified find_jellybean function?
