@@ -445,7 +445,12 @@ config_options_geda = [
         'MAKE_GSYMLIB_IMG_CACHE',
         "True",
         "Whether or not to generate the gsymlib image cache."
-    )
+    ),
+    ConfigOption(
+        'EDA_HARMONIZE_IDENTS',
+        'True',
+        'Whether to harmonize idents by default.'
+    ),
 ]
 
 load_config(config_options_geda)

@@ -53,6 +53,8 @@ from tendril.conventions.electronics import jb_resistor
 from tendril.conventions.electronics import jb_capacitor
 from tendril.conventions.electronics import match_capacitor
 from tendril.conventions.electronics import match_resistor
+from tendril.conventions.electronics import bestmatch_capacitor
+from tendril.conventions.electronics import bestmatch_resistor
 
 
 from tendril.utils.types import ParseException
@@ -819,24 +821,26 @@ def find_capacitor(device, footprint,
                               tolerance=tolerance, tcc=tcc,
                               context={'device': device,
                                        'footprint': footprint})
-    best_score = 0
-    best_symbol = None
+    candidates = []
     for symbol in gsymlib:
         # TODO Don't search _everything_ here
-        # TODO Handle special capacitors?
+        # TODO Handle special resistors?
         if symbol.device == device and symbol.footprint == footprint:
             try:
                 scapacitor = parse_capacitor(symbol.value)
             except ParseException:
                 continue
             symscore = match_capacitor(tcapacitor, scapacitor)
-            if symscore > best_score:
-                best_score = symscore
-                best_symbol = symbol
-    if best_score == 0:
+            if symscore:
+                candidates.append((symbol, symscore))
+
+    if not len(candidates):
         raise NoGedaSymbolException(capacitance)
-    else:
-        return best_symbol
+
+    candidates = sorted(candidates, key=lambda c: c[1], reverse=True)
+    maxscore = candidates[0][1]
+    candidates = [x for x in candidates if x[1] == maxscore]
+    return bestmatch_capacitor(tcapacitor, candidates)
 
 
 def find_resistor(device, footprint,
@@ -852,8 +856,7 @@ def find_resistor(device, footprint,
             return symbol
     tresistor = jb_resistor(resistance, wattage=wattage,
                             tolerance=tolerance, tc=tc)
-    best_score = 0
-    best_symbol = None
+    candidates = []
     for symbol in gsymlib:
         # TODO Don't search _everything_ here
         # TODO Handle special resistors?
@@ -863,13 +866,16 @@ def find_resistor(device, footprint,
             except ParseException:
                 continue
             symscore = match_resistor(tresistor, sresistor)
-            if symscore > best_score:
-                best_score = symscore
-                best_symbol = symbol
-    if best_score == 0:
+            if symscore:
+                candidates.append((symbol, symscore))
+
+    if not len(candidates):
         raise NoGedaSymbolException(resistance)
-    else:
-        return best_symbol
+
+    candidates = sorted(candidates, key=lambda c: c[1], reverse=True)
+    maxscore = candidates[0][1]
+    candidates = [x for x in candidates if x[1] == maxscore]
+    return bestmatch_resistor(tresistor, candidates)
 
 
 def export_gsymlib_audit():

@@ -282,29 +282,56 @@ def _jellybean_compare(tcomponents, p1, p2):
         p1v = getattr(p1, component.code)
         p2v = getattr(p2, component.code)
         if p1v is not None:
+            if not isinstance(p1v, component.typeclass):
+                p1v = component.typeclass(p1v)
             if p2v is None:
                 # TODO Decide how this should be handled.
                 return 0
+            if not isinstance(p2v, component.typeclass):
+                p2v = component.typeclass(p2v)
             if component.criteria == 'EQUAL':
                 if p1v != p2v:
                     return 0
                 else:
                     score += 2
             elif component.criteria == 'ATLEAST':
-                if p1v >= p2v:
+                if p1v > p2v:
                     return 0
                 elif p1v == p2v:
                     score += 2
                 else:
                     score += 1
             elif component.criteria == 'ATMOST':
-                if p1v <= p2v:
+                if p1v < p2v:
                     return 0
                 elif p1v == p2v:
                     score += 2
                 else:
                     score += 1
     return score
+
+
+def _jellybean_bestmatch(tcomponents, target, candidates):
+    if len(candidates) == 1:
+        return candidates[0][0]
+    candidates = [c[0] for c in candidates]
+    scores = [0] * len(candidates)
+    for idx, candidate in enumerate(candidates):
+        for component in tcomponents:
+            code = component.code
+            if component.criteria == 'EQUAL':
+                continue
+            if not isinstance(component.typeclass, NumericalUnitBase):
+                continue
+            elif component.criteria == 'ATLEAST':
+                f = getattr(candidate, code) / getattr(target, code)
+            elif component.criteria == 'ATMOST':
+                f = getattr(target, code) / getattr(component, code)
+            else:
+                raise Exception
+            scores[idx] += f
+    candidates = sorted(zip(candidates, scores), key=lambda y: y[1])
+    return candidates[0][0]
 
 
 def _jellybean_packer(ttype, tcomponents, tcontext, **kwargs):
@@ -420,6 +447,10 @@ def match_resistor(tresistor, sresistor):
     return _jellybean_compare(jb_resistor_defs(), tresistor, sresistor)
 
 
+def bestmatch_resistor(tresistor, candidates):
+    return _jellybean_bestmatch(jb_resistor_defs(), tresistor, candidates)
+
+
 def parse_resistor(value, context=None):
     return _jellybean_parser(Resistor, jb_resistor_defs(), context, value)
 
@@ -433,7 +464,7 @@ def construct_resistor(resistance, wattage=None, tolerance=None, tc=None):
 _c_parts = [jb_component('capacitance', Capacitance, True, None, 'EQUAL'),
             jb_component('voltage', Voltage, False, None, 'ATLEAST'),
             jb_component('tolerance', Tolerance, False, None, 'ATMOST'),
-            jb_component('tcc', str, False, None, 'ATMOST')]
+            jb_component('tcc', str, False, None, 'EQUAL')]
 
 Capacitor = namedtuple('Capacitor', ' '.join([x[0] for x in _c_parts]))
 
@@ -451,6 +482,10 @@ def jb_capacitor(capacitance,
 
 def match_capacitor(tcapacitor, scapacitor):
     return _jellybean_compare(jb_capacitor_defs(), tcapacitor, scapacitor)
+
+
+def bestmatch_capacitor(tcapacitor, candidates):
+    return _jellybean_bestmatch(jb_capacitor_defs(), tcapacitor, candidates)
 
 
 def parse_capacitor(value, context=None):
@@ -524,14 +559,61 @@ _std_checkers = [
 
 def check_for_std_val(ident):
     device, value, footprint = parse_ident(ident)
+    return check_for_jb_component(device, value, footprint)
+
+
+def check_for_jb_component(device, value, footprint):
     vals = None
+    prefix = None
     for prefix, checker in _std_checkers:
+        if not device:
+            return False
         if device.startswith(prefix):
             try:
-                vals = parse_resistor(value)
+                vals = checker(value)
                 break
             except ParseException:
                 pass
     if vals is not None:
-        return True
+        return prefix
     return False
+
+
+def jb_harmonize(item):
+    ident = ident_transform(item.data['device'],
+                            item.data['value'],
+                            item.data['footprint'])
+    prefix = check_for_std_val(ident)
+    if not prefix:
+        return item
+    else:
+        if item.data['footprint'].startswith('MY-'):
+            item.data['footprint'] = item.data['footprint'][3:]
+        context = {'device': item.data['device'],
+                   'footprint': item.data['footprint']}
+        if prefix == 'RES':
+            params = parse_resistor(item.data['value'], context)
+            from tendril.gedaif.gsymlib import find_resistor
+            from tendril.gedaif.gsymlib import NoGedaSymbolException
+            try:
+                resistor = find_resistor(item.data['device'],
+                                         item.data['footprint'],
+                                         **params._asdict())
+                item.data['value'] = resistor.value
+            except NoGedaSymbolException:
+                pass
+            return item
+        elif prefix == 'CAP':
+            params = parse_capacitor(item.data['value'], context)
+            from tendril.gedaif.gsymlib import find_capacitor
+            from tendril.gedaif.gsymlib import NoGedaSymbolException
+            try:
+                capacitor = find_capacitor(item.data['device'],
+                                           item.data['footprint'],
+                                           **params._asdict())
+                item.data['value'] = capacitor.value
+            except NoGedaSymbolException:
+                pass
+            return item
+        else:
+            return item
