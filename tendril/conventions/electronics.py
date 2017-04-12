@@ -22,6 +22,17 @@ Electronics Conventions Module documentation (:mod:`conventions.electronics`)
 import logging
 import re
 
+from copy import copy
+from collections import namedtuple
+
+from tendril.utils.types.electromagnetic import Resistance
+from tendril.utils.types.electromagnetic import Capacitance
+from tendril.utils.types.electromagnetic import Voltage
+from tendril.utils.types.thermodynamic import ThermalDissipation
+from tendril.utils.types.unitbase import Tolerance
+from tendril.utils.types.unitbase import NumericalUnitBase
+from tendril.utils.types import ParseException
+
 
 DEVICE_CLASSES_DOC = [
     ('RES SMD', 'SMD Resistors'),
@@ -260,91 +271,194 @@ def parse_ident(ident, generic=False):
     # TODO Check Generators?
     return device, value, footprint
 
-from copy import copy
-from collections import namedtuple
 
-from tendril.utils.types.electromagnetic import Resistance
-from tendril.utils.types.electromagnetic import Capacitance
-from tendril.utils.types.electromagnetic import Voltage
-from tendril.utils.types.thermodynamic import ThermalDissipation
-from tendril.utils.types.unitbase import Tolerance
-from tendril.utils.types.unitbase import NumericalUnitBase
-from tendril.utils.types import ParseException
+jb_component = namedtuple('jb_component',
+                          'code typeclass required get_default criteria')
 
 
-def _jellybean_parser(value, tparts, ttype):
-    tparts = copy(tparts)
+def _jellybean_compare(tcomponents, p1, p2):
+    score = 0
+    for component in tcomponents:
+        p1v = getattr(p1, component.code)
+        p2v = getattr(p2, component.code)
+        if p1v is not None:
+            if p2v is None:
+                # TODO Decide how this should be handled.
+                return 0
+            if component.criteria == 'EQUAL':
+                if p1v != p2v:
+                    return 0
+                else:
+                    score += 2
+            elif component.criteria == 'ATLEAST':
+                if p1v >= p2v:
+                    return 0
+                elif p1v == p2v:
+                    score += 2
+                else:
+                    score += 1
+            elif component.criteria == 'ATMOST':
+                if p1v <= p2v:
+                    return 0
+                elif p1v == p2v:
+                    score += 2
+                else:
+                    score += 1
+    return score
+
+
+def _jellybean_packer(ttype, tcomponents, tcontext, **kwargs):
+    """
+    Pack components for a jellybean part into a structured form. Also applies
+    defaults when needed and supported at this stage.
+    
+    :param ttype: 
+    :param tcomponents: 
+    :param kwargs: 
+    :return: 
+    """
+    for component in tcomponents:
+        v = kwargs.get(component.code, None)
+        if v is None:
+            if component.required:
+                raise ParseException
+            elif component.get_default is not None:
+                default = component.get_default(tcontext)
+                kwargs[component.code] = default
+            else:
+                kwargs[component.code] = None
+        v = kwargs.get(component.code, None)
+        if v is not None and not isinstance(v, component.typeclass):
+            kwargs[component.code] = component.typeclass(v)
+
+    return ttype(**kwargs)
+
+
+def _jellybean_parser(ttype, tcomponents, tcontext, value):
+    """
+    Parses the standard form of the value for a jellybean part. Returns the 
+    components in a structured form, constructed by _jellybean_packer where 
+    defaults are applied.
+    
+    :param ttype: 
+    :param tcomponents: 
+    :param tcontext: 
+    :param value: 
+    :return: 
+    """
     rparts = {}
     sparts = value.split('/')
 
     while len(sparts):
         part = sparts.pop(0)
         handled = False
-        while not handled and len(tparts):
-            pname, ptype, prequired = tparts.pop(0)
+        while not handled and len(tcomponents):
+            component = tcomponents.pop(0)
             try:
-                rparts[pname] = ptype(part)
+                rparts[component.code] = component.typeclass(part)
                 handled = True
             except ParseException as e:
-                if prequired:
+                if component.required:
                     raise e
                 else:
-                    rparts[pname] = None
-    if len(tparts):
-        for pname, ptype, prequired in tparts:
-            rparts[pname] = None
+                    rparts[component.code] = None
 
-    return ttype(**rparts)
+    if len(tcomponents):
+        for component in tcomponents:
+            if component.required:
+                raise ParseException
+            else:
+                rparts[component.code] = None
+
+    return _jellybean_packer(ttype, tcomponents, tcontext, **rparts)
 
 
-def _jellybean_constructor(tparts, **kwargs):
+def _jellybean_constructor(tcomponents, **kwargs):
+    """
+    Construct a valid value string from components for jellybean parts. The  
+    provided structured forms can be provided directly as kwargs.
+    
+    :param tcomponents: 
+    :param kwargs: 
+    :return: 
+    """
     rparts = []
-    for pname, ptype, prequired in tparts:
-        part = kwargs.pop(pname)
+    for component in tcomponents:
+        part = kwargs.pop(component.code)
         if part:
-            if issubclass(ptype, NumericalUnitBase):
-                cpart = ptype(part)
+            if issubclass(component.typeclass, NumericalUnitBase):
+                cpart = component.typeclass(part)
                 # TODO Fix precision issue for Numerical Unit Base
-                if cpart != ptype(part):
+                if cpart != component.typeclass(part):
                     raise ValueError
-            elif not isinstance(part, ptype):
-                part = ptype(part)
+            elif not isinstance(part, component.typeclass):
+                part = component.typeclass(part)
             rparts.append(str(part))
     return '/'.join(rparts)
 
 
-_r_parts = [('resistance', Resistance, True),
-            ('wattage', ThermalDissipation, False),
-            ('tolerance', Tolerance, False),
-            ('tc', str, False)]
+_r_parts = [jb_component('resistance', Resistance, True, None, 'EQUAL'),
+            jb_component('wattage', ThermalDissipation, False, None, 'ATLEAST'),
+            jb_component('tolerance', Tolerance, False, None, 'ATMOST'),
+            jb_component('tc', str, False, None, 'EQUAL')]
 
 Resistor = namedtuple('Resistor', ' '.join([x[0] for x in _r_parts]))
 
 
-def parse_resistor(value):
-    return _jellybean_parser(value, _r_parts, Resistor)
+def jb_resistor_defs():
+    return copy(_r_parts)
+
+
+def jb_resistor(resistance, wattage=None, tolerance=None, tc=None,
+                context=None):
+    return _jellybean_packer(Resistor, jb_resistor_defs(), tcontext=context,
+                             resistance=resistance, wattage=wattage,
+                             tolerance=tolerance, tc=tc)
+
+
+def match_resistor(tresistor, sresistor):
+    return _jellybean_compare(jb_resistor_defs(), tresistor, sresistor)
+
+
+def parse_resistor(value, context=None):
+    return _jellybean_parser(Resistor, jb_resistor_defs(), context, value)
 
 
 def construct_resistor(resistance, wattage=None, tolerance=None, tc=None):
-    return _jellybean_constructor(_r_parts,
+    return _jellybean_constructor(jb_resistor_defs(),
                                   resistance=resistance, wattage=wattage,
                                   tolerance=tolerance, tc=tc)
 
 
-_c_parts = [('capacitance', Capacitance, True),
-            ('voltage', Voltage, False),
-            ('tolerance', Tolerance, False),
-            ('tcc', str, False)]
+_c_parts = [jb_component('capacitance', Capacitance, True, None, 'EQUAL'),
+            jb_component('voltage', Voltage, False, None, 'ATLEAST'),
+            jb_component('tolerance', Tolerance, False, None, 'ATMOST'),
+            jb_component('tcc', str, False, None, 'ATMOST')]
 
 Capacitor = namedtuple('Capacitor', ' '.join([x[0] for x in _c_parts]))
 
 
-def parse_capacitor(value):
-    return _jellybean_parser(value, _c_parts, Capacitor)
+def jb_capacitor_defs():
+    return copy(_c_parts)
+
+
+def jb_capacitor(capacitance,
+                 voltage=None, tolerance=None, tcc=None, context=None):
+    return _jellybean_packer(Capacitor, jb_capacitor_defs(), tcontext=context,
+                             capacitance=capacitance, voltage=voltage,
+                             tolerance=tolerance, tcc=tcc)
+
+
+def match_capacitor(tcapacitor, scapacitor):
+    return _jellybean_compare(jb_capacitor_defs(), tcapacitor, scapacitor)
+
+
+def parse_capacitor(value, context=None):
+    return _jellybean_parser(Capacitor, jb_capacitor_defs(), context, value)
 
 
 def construct_capacitor(capacitance, voltage=None, tolerance=None, tcc=None):
-    return _jellybean_constructor(_c_parts,
+    return _jellybean_constructor(jb_capacitor_defs(),
                                   capacitance=capacitance, voltage=voltage,
                                   tolerance=tolerance, tcc=tcc)
 

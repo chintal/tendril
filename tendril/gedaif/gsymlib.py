@@ -779,26 +779,52 @@ def get_latest_symbols(n=10, include_virtual=False):
     return slib[:n]
 
 
-def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
+from tendril.conventions.electronics import construct_capacitor
+from tendril.conventions.electronics import construct_resistor
+from tendril.conventions.electronics import jb_resistor
+from tendril.conventions.electronics import jb_capacitor
+from tendril.conventions.electronics import match_capacitor
+from tendril.conventions.electronics import match_resistor
+
+
+# TODO Use a unified find_jellybean function?
+def find_capacitor(device, footprint,
+                   capacitance, voltage=None, tolerance=None, tcc=None):
+    if footprint[0:3] == "MY-":
+        footprint = footprint[3:]
     if isinstance(capacitance, str):
         try:
             capacitance = Capacitance(capacitance)
-        except ValueError:
-            raise NoGedaSymbolException(capacitance)
-    if not isinstance(capacitance, Capacitance):
-        capacitance = Capacitance(capacitance)
-    if footprint[0:3] == "MY-":
-        footprint = footprint[3:]
+        except ParseException:
+            tident = ident_transform(device, capacitance, footprint)
+            symbol = get_symbol(tident)
+            return symbol
+    tcapacitor = jb_capacitor(capacitance, voltage=voltage,
+                              tolerance=tolerance, tcc=tcc,
+                              context={'device': device,
+                                       'footprint': footprint})
+    best_score = 0
+    best_symbol = None
     for symbol in gsymlib:
+        # TODO Don't search _everything_ here
+        # TODO Handle special capacitors?
         if symbol.device == device and symbol.footprint == footprint:
-            capacitor = parse_capacitor(symbol.value)
-            sym_capacitance = capacitor.capacitance
-            if capacitance == sym_capacitance:
-                return symbol
-    raise NoGedaSymbolException
+            try:
+                scapacitor = parse_capacitor(symbol.value)
+            except ParseException:
+                continue
+            symscore = match_capacitor(tcapacitor, scapacitor)
+            if symscore > best_score:
+                best_score = symscore
+                best_symbol = symbol
+    if best_score == 0:
+        raise NoGedaSymbolException(capacitance)
+    else:
+        return best_symbol
 
 
-def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
+def find_resistor(device, footprint,
+                  resistance, wattage=None, tolerance=None, tc=None):
     if footprint[0:3] == "MY-":
         footprint = footprint[3:]
     if isinstance(resistance, str):
@@ -808,25 +834,26 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
             tident = ident_transform(device, resistance, footprint)
             symbol = get_symbol(tident)
             return symbol
-    if not isinstance(resistance, Resistance):
-        resistance = Resistance(resistance)
-    if wattage and not isinstance(wattage, ThermalDissipation):
-        wattage = ThermalDissipation(wattage)
+    tresistor = jb_resistor(resistance, wattage=wattage,
+                            tolerance=tolerance, tc=tc)
+    best_score = 0
+    best_symbol = None
     for symbol in gsymlib:
+        # TODO Don't search _everything_ here
+        # TODO Handle special resistors?
         if symbol.device == device and symbol.footprint == footprint:
             try:
-                resistor = parse_resistor(symbol.value)
-            except TypeError:
+                sresistor = parse_resistor(symbol.value)
+            except ParseException:
                 continue
-            sym_resistance = resistor.resistance
-            if resistance == sym_resistance:
-                if wattage:
-                    sym_wattage = resistor.wattage
-                    if wattage == sym_wattage:
-                        return symbol
-                else:
-                    return symbol
-    raise NoGedaSymbolException(resistance)
+            symscore = match_resistor(tresistor, sresistor)
+            if symscore > best_score:
+                best_score = symscore
+                best_symbol = symbol
+    if best_score == 0:
+        raise NoGedaSymbolException(resistance)
+    else:
+        return best_symbol
 
 
 def export_gsymlib_audit():
