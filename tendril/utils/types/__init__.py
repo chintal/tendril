@@ -128,3 +128,7 @@ Data Structures / Composite Types
    tendril.utils.types.unitbase
 
 """
+
+
+class ParseException(Exception):
+    pass

@@ -86,10 +86,10 @@
   \multicolumn{11}{|c|}{\cellcolor[gray]{0.8}\normalsize\textbf{BOM}}\tabularnewline\hline
   %{ for line in obom.lines %}
   %{ if line.refdeslist|count > 4 %}
-  \rowcolor[gray]{0.98}\multicolumn{1}{|c|}{%{{loop.index%}}.} & \multicolumn{7}{l}{%{{line.ident%}}} & \multicolumn{3}{r|}{%{{line.quantity%}}} \\*\hline
+  \rowcolor[gray]{0.98}\multicolumn{1}{|c|}{%{{loop.index%}}.} & \multicolumn{7}{l}{%{{line.ident|escape_latex%}}} & \multicolumn{3}{r|}{%{{line.quantity%}}} \\*\hline
   %{ for refdes in line.refdeslist %} & %{{refdes%}} %{ if loop.last %} %{set llen = loop.index%9 %} %{ if llen == 0 %} %{set llen = 9 %} %{endif%} \\\hline %{ elif loop.index is divisibleby 9 %} \\*\cline{2-10}  %{ endif %} %{ endfor %}   
   %{ else %}
-  \multicolumn{1}{|c|}{\cellcolor[gray]{0.98} %{{loop.index%}}.} & \multicolumn{%{{9-line.refdeslist|count%}}}{l|}{\cellcolor[gray]{0.98}\parbox{%{{0.07*(9-line.refdeslist|count)%}}\textwidth}{%{{line.ident%}}}} & %{ for refdes in line.refdeslist %} %{{refdes%}} & %{ endfor %} \multicolumn{1}{r|}{\cellcolor[gray]{0.9} %{{line.quantity%}}} \\\hline
+  \multicolumn{1}{|c|}{\cellcolor[gray]{0.98} %{{loop.index%}}.} & \multicolumn{%{{9-line.refdeslist|count%}}}{l|}{\cellcolor[gray]{0.98}\parbox{%{{0.07*(9-line.refdeslist|count)%}}\textwidth}{%{{line.ident|escape_latex%}}}} & %{ for refdes in line.refdeslist %} %{{refdes%}} & %{ endfor %} \multicolumn{1}{r|}{\cellcolor[gray]{0.9} %{{line.quantity%}}} \\\hline
   %{ endif %} 
   %{ endfor %} 
  \end{tabularx}
@@ -127,7 +127,7 @@
       \hline
       \textbf{Component} & \textbf{Refdes} & \textbf{Ident} & \textbf{Fillstatus} & \textbf{Remarks} \\\hline
       %{ for element in motif.elements %}
-	%{{ element.motif|escape_latex %}} & %{{ element.refdes %}} & %{{ element.ident %}} & %{ if element.fillstatus != 'unknown' %}%{{ element.fillstatus %}}%{ endif %} & \\\hline
+	%{{ element.motif|escape_latex %}} & %{{ element.refdes %}} & %{{ element.ident|escape_latex %}} & %{ if element.fillstatus != 'unknown' %}%{{ element.fillstatus %}}%{ endif %} & \\\hline
       %{ endfor %}
     \end{tabularx}
   %{ endif %}

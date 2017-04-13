@@ -48,8 +48,10 @@ import warnings
 
 from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import ident_transform
+from tendril.conventions.electronics import jb_harmonize
 from tendril.gedaif.bomparser import MotifAwareBomParser
 from tendril.gedaif.conffile import ConfigsFile
+from tendril.utils.config import EDA_HARMONIZE_IDENTS
 
 from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import EntityBomBase
@@ -363,6 +365,9 @@ class EntityElnBom(EntityBomBase):
             tgroup.insert_eln_comp(comp)
             skip = True
         if not skip:
+            # TODO Add support for controlling harmonization within configs
+            if EDA_HARMONIZE_IDENTS:
+                item = jb_harmonize(item)
             tgroup.insert(item)
 
     def populate_bom(self, use_cached=True):

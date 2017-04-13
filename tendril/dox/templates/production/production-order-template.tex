@@ -78,7 +78,7 @@
   {%{{ loop.index %}}.} & \parbox{0.60\textwidth}{ \vspace{.3\baselineskip} {\bfseries\ttfamily %{{ desc %}}} \\ {\small Delta BOM card modification} \vspace{.2\baselineskip}} & {\tt %{{ qty %}}} & \\\hline
   %{ endfor %} 
   %{ for card in stage.cards %}
-  {%{{ loop.index %}}.} & \parbox{0.60\textwidth}{ \vspace{.3\baselineskip} {\bfseries\ttfamily %{{ card.ident %}}} \\ {\small %{{ card.desc %}}} \vspace{.2\baselineskip}} & {\tt %{{ card.qty %}}} & \\\hline
+  {%{{ loop.index %}}.} & \parbox{0.60\textwidth}{ \vspace{.3\baselineskip} {\bfseries\ttfamily %{{ card.ident|escape_latex %}}} \\ {\small %{{ card.desc %}}} \vspace{.2\baselineskip}} & {\tt %{{ card.qty %}}} & \\\hline
   %{ endfor %} 
 \end{tabularx}
 \small

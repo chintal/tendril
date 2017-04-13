@@ -43,16 +43,21 @@ from tendril.conventions.electronics import ident_transform
 from tendril.conventions.electronics import fpismodlen
 from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import DEVICE_CLASSES
-from tendril.conventions.electronics import construct_resistor
-from tendril.conventions.electronics import construct_capacitor
-
-# from tendril.conventions.electronics import parse_capacitance
+from tendril.conventions.electronics import jb_capacitor_defs
+from tendril.conventions.electronics import jb_resistor_defs
 from tendril.conventions.electronics import parse_capacitor
-# from tendril.conventions.electronics import parse_resistance
 from tendril.conventions.electronics import parse_resistor
-from tendril.conventions.electronics import normalize_resistance
+from tendril.conventions.electronics import construct_capacitor
+from tendril.conventions.electronics import construct_resistor
+from tendril.conventions.electronics import jb_resistor
+from tendril.conventions.electronics import jb_capacitor
+from tendril.conventions.electronics import match_capacitor
+from tendril.conventions.electronics import match_resistor
+from tendril.conventions.electronics import bestmatch_capacitor
+from tendril.conventions.electronics import bestmatch_resistor
 
-from tendril.utils.types.unitbase import ParseException
+
+from tendril.utils.types import ParseException
 from tendril.utils.types.lengths import Length
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Capacitance
@@ -490,6 +495,7 @@ class GSymGeneratorFile(object):
                     except KeyError:
                         pass
                 if 'generators' in gendata.keys():
+                    dcomponents = jb_resistor_defs()
                     for generator in gendata['generators']:
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
@@ -497,9 +503,18 @@ class GSymGeneratorFile(object):
                                 generator['series'], iec60063.res_ostrs,
                                 start=generator['start'], end=generator['end']
                             )
+                            components = {}
+                            for dcomponent in dcomponents:
+                                if dcomponent.code in generator.keys():
+                                    try:
+                                        dcomponent.typeclass(generator[dcomponent.code])  # noqa
+                                        components[dcomponent.code] = generator[dcomponent.code]  # noqa
+                                    except:
+                                        raise ValueError
                             for rvalue in rvalues:
                                 pval = construct_resistor(
-                                    rvalue, generator['wattage']
+                                    resistance=rvalue,
+                                    **components
                                 )
                                 values.append(pval)
                                 if giseries is not None:
@@ -549,6 +564,7 @@ class GSymGeneratorFile(object):
                     except KeyError:
                         pass
                 if 'generators' in gendata.keys():
+                    dcomponents = jb_capacitor_defs()
                     for generator in gendata['generators']:
                         self._igen.append(generator)
                         if generator['std'] == 'iec60063':
@@ -556,9 +572,18 @@ class GSymGeneratorFile(object):
                                 generator['series'], iec60063.cap_ostrs,
                                 start=generator['start'], end=generator['end']
                             )
+                            components = {}
+                            for dcomponent in dcomponents:
+                                if dcomponent.code in generator.keys():
+                                    try:
+                                        dcomponent.typeclass(generator[dcomponent.code])  # noqa
+                                        components[dcomponent.code] = generator[dcomponent.code]  # noqa
+                                    except:
+                                        raise ValueError
                             for cvalue in cvalues:
                                 pval = construct_capacitor(
-                                    cvalue, generator['voltage']
+                                    capacitance=cvalue,
+                                    **components
                                 )
                                 values.append(pval)
                                 if giseries is not None:
@@ -574,11 +599,11 @@ class GSymGeneratorFile(object):
                 if 'custom_series' in gendata.keys():
                     from tendril.conventions.series import CustomValueSeries
                     for name, series in viewitems(gendata['custom_series']):
-                        if series['detail'].pop('type') != 'resistor':
-                            raise ValueError('Expected a resistor series')
+                        if series['detail'].pop('type') != 'capacitor':
+                            raise ValueError('Expected a capacitor series')
                         vals = series['values']
                         tsymbol = GedaSymbol(self._sympath)
-                        iseries = CustomValueSeries(name, 'resistor',
+                        iseries = CustomValueSeries(name, 'capacitor',
                                                     device=tsymbol.device,
                                                     footprint=tsymbol.footprint)
                         for type_val, val in viewitems(vals):
@@ -780,28 +805,46 @@ def get_latest_symbols(n=10, include_virtual=False):
     return slib[:n]
 
 
-def find_capacitor(capacitance, footprint, device='CAP CER SMD', voltage=None):
+# TODO Use a unified find_jellybean function?
+def find_capacitor(device, footprint,
+                   capacitance, voltage=None, tolerance=None, tcc=None):
+    if footprint[0:3] == "MY-":
+        footprint = footprint[3:]
     if isinstance(capacitance, str):
         try:
             capacitance = Capacitance(capacitance)
-        except ValueError:
-            raise NoGedaSymbolException(capacitance)
-    if not isinstance(capacitance, Capacitance):
-        capacitance = Capacitance(capacitance)
-    if footprint[0:3] == "MY-":
-        footprint = footprint[3:]
+        except ParseException:
+            tident = ident_transform(device, capacitance, footprint)
+            symbol = get_symbol(tident)
+            return symbol
+    tcapacitor = jb_capacitor(capacitance, voltage=voltage,
+                              tolerance=tolerance, tcc=tcc,
+                              context={'device': device,
+                                       'footprint': footprint})
+    candidates = []
     for symbol in gsymlib:
+        # TODO Don't search _everything_ here
+        # TODO Handle special resistors?
         if symbol.device == device and symbol.footprint == footprint:
-            cap, volt = parse_capacitor(symbol.value)
-            sym_capacitance = Capacitance(cap)
-            if capacitance == sym_capacitance:
-                return symbol
-    raise NoGedaSymbolException
+            try:
+                scapacitor = parse_capacitor(symbol.value)
+            except ParseException:
+                continue
+            symscore = match_capacitor(tcapacitor, scapacitor)
+            if symscore:
+                candidates.append((symbol, symscore))
+
+    if not len(candidates):
+        raise NoGedaSymbolException(capacitance)
+
+    candidates = sorted(candidates, key=lambda c: c[1], reverse=True)
+    maxscore = candidates[0][1]
+    candidates = [x for x in candidates if x[1] == maxscore]
+    return bestmatch_capacitor(tcapacitor, candidates)
 
 
-def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
-    # TODO This should return a symbol instead, and usages should be adapted
-    # accordingly to make consistent with find_capacitor
+def find_resistor(device, footprint,
+                  resistance, wattage=None, tolerance=None, tc=None):
     if footprint[0:3] == "MY-":
         footprint = footprint[3:]
     if isinstance(resistance, str):
@@ -810,23 +853,29 @@ def find_resistor(resistance, footprint, device='RES SMD', wattage=None):
         except ParseException:
             tident = ident_transform(device, resistance, footprint)
             symbol = get_symbol(tident)
-            return symbol.value
-    if not isinstance(resistance, Resistance):
-        resistance = Resistance(resistance)
-    if device == 'RES THRU':
-        resistances = iec60063.gen_vals(iec60063.get_series('E24'),
-                                        iec60063.res_ostrs)
-        if resistance in [Resistance(x) for x in resistances]:
-            return construct_resistor(normalize_resistance(resistance), '0.25W')  # noqa
-        else:
-            raise NoGedaSymbolException(resistance, device)
+            return symbol
+    tresistor = jb_resistor(resistance, wattage=wattage,
+                            tolerance=tolerance, tc=tc)
+    candidates = []
     for symbol in gsymlib:
+        # TODO Don't search _everything_ here
+        # TODO Handle special resistors?
         if symbol.device == device and symbol.footprint == footprint:
-            res, watt = parse_resistor(symbol.value)
-            sym_resistance = Resistance(res)
-            if resistance == sym_resistance:
-                return symbol.value
-    raise NoGedaSymbolException(resistance)
+            try:
+                sresistor = parse_resistor(symbol.value)
+            except ParseException:
+                continue
+            symscore = match_resistor(tresistor, sresistor)
+            if symscore:
+                candidates.append((symbol, symscore))
+
+    if not len(candidates):
+        raise NoGedaSymbolException(resistance)
+
+    candidates = sorted(candidates, key=lambda c: c[1], reverse=True)
+    maxscore = candidates[0][1]
+    candidates = [x for x in candidates if x[1] == maxscore]
+    return bestmatch_resistor(tresistor, candidates)
 
 
 def export_gsymlib_audit():

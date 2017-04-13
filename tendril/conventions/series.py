@@ -56,18 +56,18 @@ class ValueSeries(object):
             device = self._device
         if footprint is None:
             footprint = self._footprint
-
+        # TODO Handle other parameters such as wattage, voltage
         if self._stype == 'resistor':
             if isinstance(value, (str, Resistance)):
                 try:
-                    return gsymlib.find_resistor(value, footprint, device)
+                    return gsymlib.find_resistor(device, footprint, value)
                 except (gsymlib.NoGedaSymbolException, InvalidOperation):
                     pass
 
         if self._stype == 'capacitor':
             if isinstance(value, (str, Capacitance)):
                 try:
-                    return gsymlib.find_capacitor(value, footprint, device)
+                    return gsymlib.find_capacitor(device, footprint, value)
                 except (gsymlib.NoGedaSymbolException, InvalidOperation):
                     pass
 
@@ -76,11 +76,9 @@ class ValueSeries(object):
 
     def get_type_value(self, value):
         if self._stype == 'capacitor':
-            capacitance, voltage = electronics.parse_capacitor(value)
-            return self._typeclass(capacitance)
+            return electronics.parse_capacitor(value).capacitance
         if self._stype == 'resistor':
-            resistance, wattage = electronics.parse_resistor(value)
-            return self._typeclass(resistance)
+            return electronics.parse_resistor(value).resistance
 
     def get_closest_value(self, target, heuristic=None):
         if heuristic == '+':
