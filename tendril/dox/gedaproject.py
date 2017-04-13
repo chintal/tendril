@@ -317,7 +317,7 @@ def gen_configsdoc(projfolder, namebase, force=False):
 def gen_schpdf(projfolder, namebase, force=False):
     """
     Generates a PDF file of all the project schematics listed in the
-    gEDA project file. This function does not ise jinja2 and latex. It
+    gEDA project file. This function does not use jinja2 and latex. It
     relies on :func:`tendril.gedaif.gschem.conv_gsch2pdf` instead.
 
     :param projfolder: The gEDA project folder.

@@ -19,18 +19,25 @@ gEDA gschem module documentation (:mod:`gedaif.gschem`)
 =======================================================
 """
 
-
 import re
 from collections import deque
 
 from tendril.utils.types.cartesian import CartesianPoint
 from tendril.utils.types.cartesian import CartesianLineSegment
+from tendril.utils.fsutils import VersionedOutputFile
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEBUG)
+
+try:
+  basestring
+except NameError:
+  basestring = str
 
 
 rex_vstring = re.compile(ur'^v (?P<gsch_ver>\d+) (?P<file_ver>\d+)$')
 
+# TODO Constuct regular expressions from parameter definitions
+# and/or use partial regexes instead?
 rex_el_line = re.compile(ur'^L (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<x2>-?\d+) (?P<y2>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>\d+) (?P<dashstyle>-?\d+) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+)$')  # noqa
 rex_el_picture = re.compile(ur'^G (?P<x1>-?\d+) (?P<y1>-?\d+) (?P<width>\d+) (?P<height>\d+) (?P<angle>\d+) (?P<mirrored>[01]) (?P<embedded>[01])$')  # noqa
 rex_el_box = re.compile(ur'^B (?P<x>-?\d+) (?P<y>-?\d+) (?P<boxwidth>-?\d+) (?P<boxheight>-?\d+) (?P<color>\d+) (?P<width>\d+) (?P<capstyle>[012]) (?P<dashstyle>[01234]) (?P<dashlength>-?\d+) (?P<dashspace>-?\d+) (?P<filltype>[01234]) (?P<fillwidth>-?\d+) (?P<angle1>-?\d+) (?P<pitch1>-?\d+) (?P<angle2>-?\d+) (?P<pitch2>-?\d+)$')  # noqa
@@ -170,45 +177,110 @@ class GschElementBase(object):
     def write_out(self, f):
         raise NotImplementedError
 
+    def _write_elements(self, f):
+        if len(self._elements):
+            f.write('{\n')
+            for element in self._elements:
+                element.write_out(f)
+            f.write('}\n')
+
 
 class GschElementComponent(GschElementBase):
     def __init__(self, parent=None, lines=None, **kwargs):
         super(GschElementComponent, self).__init__(parent, lines, **kwargs)
+
+    def write_out(self, f):
+        params = (self.x, self.y, self.selectable,
+                  self.angle, self.mirror, self.basename)
+        f.write('C {0} {1} {2} {3} {4} {5}\n'.format(*params))
+        self._write_elements(f)
 
 
 class GschElementNet(GschElementBase):
     def __init__(self, parent=None, lines=None, **kwargs):
         super(GschElementNet, self).__init__(parent, lines, **kwargs)
 
+    def write_out(self, f):
+        params = (self.x1, self.y1, self.x2, self.y2, self.color)
+        f.write('N {0} {1} {2} {3} {4}\n'.format(*params))
+        self._write_elements(f)
+
 
 class GschElementBus(GschElementBase):
     def __init__(self, parent=None, lines=None, **kwargs):
         super(GschElementBus, self).__init__(parent, lines, **kwargs)
+
+    def write_out(self, f):
+        p = (self.x1, self.y1, self.x2, self.y2, self.color, self.ripperdir)
+        f.write('U {0} {1} {2} {3} {4} {5}\n'.format(*p))
+        self._write_elements(f)
 
 
 class GschElementPin(GschElementBase):
     def __init__(self, parent=None, lines=None, **kwargs):
         super(GschElementPin, self).__init__(parent, lines, **kwargs)
 
+    def write_out(self, f):
+        # TODO Untested
+        p = (self.x1, self.y1, self.x2, self.y2, self.color,
+             self.pintype, self.whichend)
+        f.write('P {0} {1} {2} {3} {4} {5} {6}\n'.format(*p))
+        self._write_elements(f)
+
 
 class GschElementLine(GschElementBase):
     def __init__(self, parent=None, lines=None, **kwargs):
         super(GschElementLine, self).__init__(parent, lines, **kwargs)
+
+    def write_out(self, f):
+        p = (self.x1, self.y1, self.x2, self.y2, self.color, self.width,
+             self.capstyle, self.dashstyle, self.dashlength, self.dashspace)
+        f.write('L {0} {1} {2} {3} {4} {5} {6} {7} {8} {9}\n'.format(*p))
+        self._write_elements(f)
 
 
 class GschElementBox(GschElementBase):
     def __init__(self, parent=None, lines=None, **kwargs):
         super(GschElementBox, self).__init__(parent, lines, **kwargs)
 
+    def write_out(self, f):
+        # TODO Untested
+        p = (self.x, self.y, self.boxwidth, self.boxheight,
+             self.color, self.width, self.capstyle,
+             self.dashstyle, self.dashlength, self.dashspace,
+             self.filltype, self.fillwidth,
+             self.angle1, self.pitch1, self.angle2, self.pitch2)
+        f.write('B {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} '
+                '{12} {13} {14} {15}\n'.format(*p))
+        self._write_elements(f)
+
 
 class GschElementCircle(GschElementBase):
     def __init__(self, parent=None, lines=None, **kwargs):
         super(GschElementCircle, self).__init__(parent, lines, **kwargs)
 
+    def write_out(self, f):
+        # TODO Untested
+        p = (self.x, self.y, self.radius, self.color, self.width, self.capstyle,
+             self.dashstyle, self.dashlength, self.dashspace,
+             self.filltype, self.fillwidth,
+             self.angle1, self.pitch1, self.angle2, self.pitch2)
+        f.write('V {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} '
+                '{12} {13} {14}\n'.format(*p))
+        self._write_elements(f)
+
 
 class GschElementArc(GschElementBase):
     def __init__(self, parent=None, lines=None, **kwargs):
         super(GschElementArc, self).__init__(parent, lines, **kwargs)
+
+    def write_out(self, f):
+        # TODO Untested
+        p = (self.x, self.y, self.radius, self.startangle, self.sweepangle,
+             self.color, self.width, self.capstyle,
+             self.dashstyle, self.dashlength, self.dashspace)
+        f.write('A {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n'.format(*p))
+        self._write_elements(f)
 
 
 class GschElementText(GschElementBase):
@@ -219,6 +291,14 @@ class GschElementText(GschElementBase):
         self._lines = []
         for i in range(int(self.num_lines)):
             self._lines.append(lines.popleft())
+
+    def write_out(self, f):
+        params = (self.x, self.y, self.color, self.size,
+                  self.visibility, self.show_name_value, self.angle,
+                  self.alignment, self.num_lines)
+        f.write('T {0} {1} {2} {3} {4} {5} {6} {7} {8}\n'.format(*params))
+        f.writelines(self._lines)
+        self._write_elements(f)
 
 
 class GschElementPicture(GschElementBase):
@@ -265,6 +345,9 @@ class GschFile(object):
         line = None
         while not line:
             line = lines.popleft()
+        # TODO
+        # Consider refactor that allows the details of the format to reside
+        # within the object classes instead.
         if line.startswith('L'):
             return GschElementLine(parent, lines=lines,
                                    **rex_el_line.match(line).groupdict())
@@ -325,4 +408,17 @@ class GschFile(object):
             targets[block_level].add_element(element)
 
     def write_out(self, f):
-        raise NotImplementedError
+        vf = None
+        if isinstance(f, basestring):
+            vf = VersionedOutputFile(f)
+            f = vf.as_file()
+
+        # Header
+        f.write('v {0} {1}\n'.format(self._gschver, self._filever))
+
+        # Write Elements
+        for element in self._elements:
+            element.write_out(f)
+
+        if vf:
+            vf.close()
