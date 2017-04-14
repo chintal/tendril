@@ -22,9 +22,8 @@ gEDA gschem module documentation (:mod:`gedaif.gschem`)
 import os
 import subprocess
 
-
 from tendril.utils.files import pdf
-
+from tendril.utils.files import gschem as gschf
 from tendril.utils.config import GEDA_SCHEME_DIR
 from tendril.utils.config import USE_SYSTEM_GAF_BIN
 from tendril.utils.config import GAF_BIN_ROOT
@@ -36,6 +35,11 @@ except ImportError:
 
 import tendril.utils.log
 logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
+
+
+def rewrite_schematic(inpath, obom, outpath):
+    f = gschf.GschFile(inpath)
+    f.write_out(outpath)
 
 
 def conv_gsch2pdf(schpath, docfolder):
