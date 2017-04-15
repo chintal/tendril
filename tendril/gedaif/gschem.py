@@ -39,6 +39,9 @@ logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
 
 def rewrite_schematic(inpath, obom, outpath):
     f = gschf.GschFile(inpath)
+    # Replace value strings with whatever the bom says
+
+    # TODO Handle DNPs and fillstatus changes?
     f.write_out(outpath)
 
 
