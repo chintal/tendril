@@ -46,14 +46,14 @@ logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
 rex_titleblocks = re.compile(r"^S-TITLE-A\d.sym$")
 
 
-def rewrite_schematic(inpath, prototype, gpf, outpath):
+def rewrite_schematic(inpath, obom, gpf, outpath):
     fbase = os.path.split(inpath)[1]
     f = gschf.GschFile(inpath)
     # Replace value strings with whatever the bom says
     for c in f.components:
         # TODO Review possibility of reconstructing from the BOM instead
         # of the relatively more expensive OBOM parsing.
-        item = prototype.obom.get_item_for_refdes(c.refdes)
+        item = obom.get_item_for_refdes(c.refdes)
         if not item:
             result = c.set_attribute('fillstatus', 'DNP')
             if not result:
@@ -69,11 +69,14 @@ def rewrite_schematic(inpath, prototype, gpf, outpath):
     if len(tbs):
         tb = tbs[0]
         tb._selectable = 1
-        tb.set_attribute('PN', prototype.projectname)
-        tb.set_attribute('CN', prototype.ident)
-        tb.set_attribute('MAINTAINER', prototype.configs.maintainer)
+        tb.set_attribute('PN', obom.descriptor.pcbname)
+        tb.set_attribute('CN', obom.descriptor.configname)
+        tb.set_attribute('MAINTAINER',
+                         obom.descriptor.configurations.maintainer)
         tb.set_attribute('DGR',
-                         prototype.configs.file_groups.get(fbase, 'default'))
+                         obom.descriptor.configurations.file_groups.get(
+                             fbase, 'default')
+                         )
         tb.set_attribute('NP', len(gpf.schfiles))
         tb.set_attribute('P', gpf.schfiles.index(fbase) + 1)
 

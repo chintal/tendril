@@ -832,7 +832,7 @@ def fill_prototype_lib():
         prototype.validate()
 
 
-if WARM_UP_CACHES is True:
+def prep_persistance():
     logger.info('Building Prototype Library')
     get_prototype_lib()
     logger.info('Filling Prototype Library')
@@ -841,6 +841,17 @@ if WARM_UP_CACHES is True:
     get_pcb_lib()
     logger.info('Building Project Library')
     get_project_lib()
+
+    try:
+        _m = mq.monitor_start('published_vcs_commits', _vcs_commit_handler)
+        logger.info("Started VCS Commit Monitor")
+    except mq.MQServerUnavailable:
+        _m = None
+    return _m
+
+
+if WARM_UP_CACHES is True:
+    monitor = prep_persistance()
 
 
 import json
@@ -864,9 +875,3 @@ def _vcs_commit_handler(data):
             pass
     _ = [get_prototype(x).reload() for x in modulenames]
     return
-
-try:
-    monitor = mq.monitor_start('published_vcs_commits', _vcs_commit_handler)
-    logger.info("Started VCS Commit Monitor")
-except mq.MQServerUnavailable:
-    monitor = None
