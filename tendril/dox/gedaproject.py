@@ -314,10 +314,10 @@ def gen_configsdoc(projfolder, namebase, force=False):
     pass
 
 
-def gen_schpdf(projfolder, namebase, force=False):
+def gen_schpdf(projfolder, namebase, configname=None, force=False):
     """
     Generates a PDF file of all the project schematics listed in the
-    gEDA project file. This function does not ise jinja2 and latex. It
+    gEDA project file. This function does not use jinja2 and latex. It
     relies on :func:`tendril.gedaif.gschem.conv_gsch2pdf` instead.
 
     :param projfolder: The gEDA project folder.
@@ -340,7 +340,13 @@ def gen_schpdf(projfolder, namebase, force=False):
     configfile = conffile.ConfigsFile(projfolder)
     docfolder = get_project_doc_folder(projfolder)
 
-    schpdfpath = path.join(docfolder, namebase + '-schematic.pdf')
+    # TODO Consider converting all configurations in one go instead?
+    if configname is None:
+        schpdfpath = path.join(docfolder, namebase + '-schematic.pdf')
+    else:
+        docfolder = path.join(docfolder, 'confdocs')
+        pdfname = configname + '-conf-schematic.pdf'
+        schpdfpath = path.join(docfolder, pdfname)
     outf_mtime = fsutils.get_file_mtime(schpdfpath, fs=refdoc_fs)
 
     if not force and outf_mtime is not None and outf_mtime > sch_mtime:
@@ -353,13 +359,25 @@ def gen_schpdf(projfolder, namebase, force=False):
 
     if configfile.rawconfig is not None:
         workspace_outpath = workspace_fs.getsyspath(schpdfpath)
-        workspace_folder = workspace_fs.getsyspath(path.dirname(schpdfpath))
-        workspace_fs.makedir(path.dirname(schpdfpath),
-                             recursive=True, allow_recreate=True)
+        workspace_folder = workspace_fs.getsyspath(docfolder)
+        workspace_fs.makedir(docfolder, recursive=True, allow_recreate=True)
         pdffiles = []
+        prototype = None
+        if configname is not None:
+            tfolder = path.join(docfolder, configname)
+            workspace_tfolder = workspace_fs.getsyspath(tfolder)
+            workspace_fs.makedir(tfolder, recursive=False, allow_recreate=True)
+            from tendril.entityhub.modules import get_module_prototype
+            prototype = get_module_prototype(configname)
         for schematic in gpf.schfiles:
             schfile = os.path.normpath(projfolder + '/schematic/' + schematic)
-            pdffile = gschem.conv_gsch2pdf(schfile, workspace_folder)
+            if configname is not None:
+                tschfile = path.join(workspace_tfolder, schematic)
+                gschem.rewrite_schematic(schfile, prototype, gpf, tschfile)
+                pdffile = gschem.conv_gsch2pdf(tschfile, workspace_tfolder)
+                os.remove(tschfile)
+            else:
+                pdffile = gschem.conv_gsch2pdf(schfile, workspace_folder)
             pdffiles.append(pdffile)
         pdf.merge_pdf(pdffiles, workspace_outpath)
         for pdffile in pdffiles:
@@ -484,7 +502,8 @@ def gen_confpdf(projfolder, configname, namebase, force=False):
 
     pdffiles = [gen_confbom(projfolder, configname, force),
                 gen_confdoc(projfolder, configname, force),
-                gen_schpdf(projfolder, namebase, force)]
+                gen_schpdf(projfolder, namebase,
+                           configname=configname, force=force)]
 
     for p in pdffiles:
         if p and not workspace_fs.exists(p):
@@ -1052,6 +1071,10 @@ def get_docs_list(projfolder, cardname=None):
                 ExposedDocument(cardname + ' Reference BOM',
                                 path.join(project_doc_folder,
                                           'confdocs', cardname + '-bom.pdf'),
+                                refdoc_fs),
+                ExposedDocument(cardname + ' Schematic (Configured)',
+                                path.join(project_doc_folder, 'confdocs',
+                                          namebase + '-conf-schematic.pdf'),
                                 refdoc_fs),
                 ExposedDocument(cardname + ' Schematic (Full)',
                                 path.join(project_doc_folder,

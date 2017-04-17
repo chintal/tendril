@@ -276,7 +276,7 @@ jb_component = namedtuple('jb_component',
                           'code typeclass required get_default criteria')
 
 
-def _jellybean_compare(tcomponents, p1, p2):
+def _jellybean_match(tcomponents, p1, p2):
     score = 0
     for component in tcomponents:
         p1v = getattr(p1, component.code)
@@ -444,7 +444,7 @@ def jb_resistor(resistance, wattage=None, tolerance=None, tc=None,
 
 
 def match_resistor(tresistor, sresistor):
-    return _jellybean_compare(jb_resistor_defs(), tresistor, sresistor)
+    return _jellybean_match(jb_resistor_defs(), tresistor, sresistor)
 
 
 def bestmatch_resistor(tresistor, candidates):
@@ -481,7 +481,7 @@ def jb_capacitor(capacitance,
 
 
 def match_capacitor(tcapacitor, scapacitor):
-    return _jellybean_compare(jb_capacitor_defs(), tcapacitor, scapacitor)
+    return _jellybean_match(jb_capacitor_defs(), tcapacitor, scapacitor)
 
 
 def bestmatch_capacitor(tcapacitor, candidates):

@@ -306,6 +306,14 @@ class PCBPrototype(EDAProjectPrototype):
 
 class EDAModulePrototypeBase(ModulePrototypeBase):
     @property
+    def projectname(self):
+        raise NotImplementedError
+
+    @property
+    def rprojfolder(self):
+        return os.path.relpath(self.projfolder, PROJECTS_ROOT)
+
+    @property
     def desc(self):
         return self.configs.description(self.ident)
 
