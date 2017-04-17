@@ -34,6 +34,8 @@
 \rohead{\tt %{{stage.company%}}\hspace{0.1in}\includegraphics[width=0.12in]{%{{stage.logo%}}}}      %% Top right on even pages
 \rehead{\tt \configname  Reference BOM}    							    %% Top right on odd pages
 \chead{}                       									    %% Top center
+\refoot{\tt\footnotesize Generated %{{stage.render_ts%}}}
+\lofoot{\tt\footnotesize Generated %{{stage.render_ts%}}}
 \rofoot{\tt Page \thepage\ of \pageref{LastPage}}
 \lefoot{\tt Page \thepage\ of \pageref{LastPage}}
 \cfoot{}
@@ -99,7 +101,7 @@
 \section{Motifs}
 %{ for motif in stage.bom.motifs %}
   %{ if motif %}
-  \subsection{%{{ motif.refdes %}}}
+  \subsection{%{{ motif.refdes|escape_latex %}}}
     %{{ motif.desc %}}
     \subsubsection*{Provided Design Inputs}
     \begin{tabularx}{1.0\textwidth}{|X|>{\centering\arraybackslash}p{0.15\textwidth}|>{\centering\arraybackslash}p{0.15\textwidth}|>{\centering\arraybackslash}p{0.2\textwidth}|}
