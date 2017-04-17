@@ -695,6 +695,11 @@ config_options_company = [
         "The path to the company logo, relative to INSTANCE_ROOT"
     ),
     ConfigOption(
+        'COMPANY_SQUARE_LOGO_PATH',
+        "None",
+        "The path to a square company logo, relative to INSTANCE_ROOT"
+    ),
+    ConfigOption(
         'COMPANY_BLACK_LOGO_PATH',
         "None",
         "The path to the company logo for use on a black background, "

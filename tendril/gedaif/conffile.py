@@ -56,6 +56,10 @@ class ConfigsFile(ConfigBase):
         super(ConfigsFile, self).validate()
 
     @property
+    def maintainer(self):
+        return self._configdata.get('maintainer', None)
+
+    @property
     def projectname(self):
         if self.pcbname is not None:
             return self.pcbname

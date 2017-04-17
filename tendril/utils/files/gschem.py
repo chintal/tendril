@@ -43,7 +43,8 @@ except NameError:
   basestring = str
 
 
-rex_vstring = re.compile(ur'^v (?P<gsch_ver>\d+) (?P<file_ver>\d+)$')
+rex_vstring = re.compile(r'^v (?P<gsch_ver>\d+) (?P<file_ver>\d+)$')
+rex_attribute = re.compile(r"^\s*(?P<name>[\S]+)\s*=(?P<value>[\S ]+)$")
 
 
 map_color = {0: 'BACKGROUND_COLOR',
@@ -141,6 +142,10 @@ embedded = GschParam('embedded', int, map_embedded, None)
 filename = GschParam('filename', str, None, None)
 
 
+class GschFakeLines(deque):
+    pass
+
+
 class GschElementBase(object):
     code = None
     params = []
@@ -154,6 +159,7 @@ class GschElementBase(object):
             setattr(self, '_' + param.name, v)
         self._parent = parent
         self._elements = []
+        self._attributes = None
         self._get_multiline(lines)
 
     def add_element(self, element):
@@ -169,26 +175,42 @@ class GschElementBase(object):
         return self._parent
 
     @property
-    def active_point(self):
-        return []
+    def attributes(self):
+        if self._attributes is None:
+            self._attributes = {}
+            for element in self._elements:
+                if isinstance(element, GschElementText) and \
+                                len(element._lines) == 1:
+                    m = rex_attribute.match(element._lines[0])
+                    if m:
+                        self._attributes[m.group('name')] = m.group('value')
+        return self._attributes
 
-    @property
-    def active_points(self):
-        rval = self.active_point
-        for element in self._elements:
-            rval += element.active_points
-        return rval
+    def get_attribute(self, name):
+        if name in self.attributes.keys():
+            return self.attributes[name]
+        else:
+            return None
 
-    @property
-    def passive_line(self):
-        return []
+    def remove_attribute(self, name):
+        for e in self._elements:
+            if isinstance(e, GschElementText) and len(e._lines) == 1:
+                m = rex_attribute.match(e._lines[0])
+                if m and m.group('name') == name:
+                    self._elements.remove(e)
+                    self._attributes = None
 
-    @property
-    def passive_lines(self):
-        rval = self.passive_line
-        for element in self._elements:
-            rval += element.passive_lines
-        return rval
+    def set_attribute(self, name, value):
+        result = False
+        for e in self._elements:
+            if isinstance(e, GschElementText) and len(e._lines) == 1:
+                m = rex_attribute.match(e._lines[0])
+                if m and m.group('name') == name:
+                    if getattr(e, '_visibility', False):
+                        result = True
+                    e._lines = ["{0}={1}\n".format(name, value)]
+                    self._attributes = None
+        return result
 
     @property
     def _params(self):
@@ -215,6 +237,22 @@ class GschElementBase(object):
 class GschElementComponent(GschElementBase):
     code = 'C'
     params = [x, y, selectable, angle, mirror, basename]
+
+    @property
+    def refdes(self):
+        return self.get_attribute('refdes')
+
+    @property
+    def value(self):
+        return self.get_attribute('value')
+
+    @value.setter
+    def value(self, value):
+        self.set_attribute('value', value)
+
+    @property
+    def basename(self):
+        return getattr(self, '_basename', None)
 
 
 class GschElementNet(GschElementBase):
@@ -301,6 +339,41 @@ class GschFile(object):
         self.fpath = fpath
         self._elements = []
         self._load_file()
+
+    @property
+    def components(self):
+        return self._component_generator()
+
+    def _component_generator(self):
+        for e in self._elements:
+            if isinstance(e, GschElementComponent) and e.refdes:
+                yield e
+
+    def get_component(self, refdes):
+        for e in self.components:
+            if e.refdes == refdes:
+                return e
+
+    def remove_component(self, refdes):
+        for e in self.components:
+            if e.refdes == refdes:
+                self._elements.remove(e)
+
+    @property
+    def meta_components(self):
+        return self._meta_component_generator()
+
+    def _meta_component_generator(self):
+        for e in self._elements:
+            if isinstance(e, GschElementComponent) and not e.refdes:
+                yield e
+
+    def get_meta_components(self, regex):
+        rval = []
+        for e in self.meta_components:
+            if regex.match(e.basename):
+                rval.append(e)
+        return rval
 
     def add_element(self, element):
         self._elements.append(element)

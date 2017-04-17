@@ -362,18 +362,18 @@ def gen_schpdf(projfolder, namebase, configname=None, force=False):
         workspace_folder = workspace_fs.getsyspath(docfolder)
         workspace_fs.makedir(docfolder, recursive=True, allow_recreate=True)
         pdffiles = []
-        obom = None
+        prototype = None
         if configname is not None:
             tfolder = path.join(docfolder, configname)
             workspace_tfolder = workspace_fs.getsyspath(tfolder)
             workspace_fs.makedir(tfolder, recursive=False, allow_recreate=True)
-            bom = boms_electronics.import_pcb(projfolder)
-            obom = bom.create_output_bom(configname)
+            from tendril.entityhub.modules import get_module_prototype
+            prototype = get_module_prototype(configname)
         for schematic in gpf.schfiles:
             schfile = os.path.normpath(projfolder + '/schematic/' + schematic)
             if configname is not None:
                 tschfile = path.join(workspace_tfolder, schematic)
-                gschem.rewrite_schematic(schfile, obom, tschfile)
+                gschem.rewrite_schematic(schfile, prototype, gpf, tschfile)
                 pdffile = gschem.conv_gsch2pdf(tschfile, workspace_tfolder)
                 os.remove(tschfile)
             else:
