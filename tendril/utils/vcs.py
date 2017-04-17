@@ -43,6 +43,16 @@ def get_path_revision(p):
     return c.info()['commit_revision']
 
 
+def get_file_revision(p):
+    c = svn.local.LocalClient(p)
+    return c.info()['entry_revision']
+
+
+def get_path_wcroot(p):
+    c = svn.local.LocalClient(p)
+    return c.info()['wcinfo_wcroot_abspath']
+
+
 def get_path_repository(p):
     """
     Get the VCS repository for the file at path ``p``.
