@@ -34,7 +34,12 @@ from collections import deque
 from collections import namedtuple
 
 from tendril.utils.fsutils import VersionedOutputFile
-from tendril.utils import log
+
+try:
+    from tendril.utils import log
+except ImportError:
+    import logging as log
+
 logger = log.get_logger(__name__, log.DEBUG)
 
 try:

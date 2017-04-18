@@ -353,7 +353,17 @@ config_options_resources = [
         'PREFAB_SERVER',
         'None',
         'Pre-assembled Datasets Server URL'
-    )
+    ),
+    ConfigOption(
+        'MQ_SERVER',
+        'None',
+        'Message Queue Server Host'
+    ),
+    ConfigOption(
+        'MQ_SERVER_PORT',
+        '5672',
+        'Message Queue Server Host'
+    ),
 ]
 
 load_config(config_options_resources)
@@ -388,16 +398,6 @@ config_options_services = [
         "ENABLE_PIWIK",
         "False",
         "Whether to use Piwik for analytics."
-    ),
-    ConfigOption(
-        'MQ_SERVER',
-        'None',
-        'Message Queue Server Host'
-    ),
-    ConfigOption(
-        'MQ_SERVER_PORT',
-        '5672',
-        'Message Queue Server Host'
     ),
 ]
 
@@ -736,7 +736,8 @@ config_options_company = [
     ConfigOption(
         'INSTANCE_FOLDER_SOURCES',
         '"https://github.com/chintal/tendril-instance-cookiecutter"',
-        'The location of the sources of the tendril instance folder used by the instance'
+        'The location of the sources of the tendril instance folder used by '
+        'the instance'
     ),
     ConfigOption(
         'INSTANCE_DOCUMENTATION_PATH',

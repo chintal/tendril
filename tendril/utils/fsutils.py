@@ -63,7 +63,10 @@ from six.moves.xmlrpc_client import Fault
 from datetime import datetime
 from collections import namedtuple
 
-from tendril.utils import log
+try:
+    from tendril.utils import log
+except ImportError:
+    import logging as log
 
 try:
     from six.moves import cStringIO as StringIO
@@ -71,7 +74,6 @@ except ImportError:
     from six import StringIO
 
 logger = log.get_logger(__name__, log.INFO)
-log.logging.getLogger('watchdog.observers.inotify_buffer').setLevel(log.WARNING)
 
 if tempfile.tempdir is None:
     tempfile.tempdir = tempfile.mkdtemp()
