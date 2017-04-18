@@ -454,6 +454,16 @@ class ConfigBase(object):
                       DeprecationWarning)
         return self.configuration_sjlist(configname)
 
+    def maintainer(self, configname=None):
+        if configname is not None:
+            for configuration in self.configurations:
+                if configuration['configname'] == configname:
+                    try:
+                        return configuration['maintainer']
+                    except KeyError:
+                        pass
+        return self._configdata.get('maintainer', None)
+
     def description(self, configname=None):
         if configname is None:
             return self._configdata['desc']

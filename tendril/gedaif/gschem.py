@@ -72,7 +72,9 @@ def rewrite_schematic(inpath, obom, gpf, outpath):
         tb.set_attribute('PN', obom.descriptor.pcbname)
         tb.set_attribute('CN', obom.descriptor.configname)
         tb.set_attribute('MAINTAINER',
-                         obom.descriptor.configurations.maintainer)
+                         obom.descriptor.configurations.maintainer(
+                             obom.descriptor.configname)
+                         )
         tb.set_attribute('DGR',
                          obom.descriptor.configurations.file_groups.get(
                              fbase, 'default')
