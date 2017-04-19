@@ -27,7 +27,7 @@ install_requirements = [
     'SQLAlchemy',
     'sqlalchemy_utils',
     'alembic',
-    'svn',
+    'svn>=0.3.44',
     'fs',
     'paramiko',
     'pyyaml',

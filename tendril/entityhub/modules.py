@@ -23,6 +23,7 @@ Docstring for modules
 """
 
 import os
+import json
 from copy import copy
 from copy import deepcopy
 
@@ -42,9 +43,10 @@ from tendril.boms.validate import get_dict_val
 from tendril.boms.costingbase import NoStructureHereException
 from tendril.dox.gedaproject import get_docs_list
 
-from tendril.utils import log
+from tendril.utils.connectors import mq
 from tendril.utils.config import WARM_UP_CACHES
 from tendril.utils.config import PROJECTS_ROOT
+from tendril.utils.config import SVN_ROOT
 
 from . import projects
 from . import serialnos
@@ -52,6 +54,7 @@ from .db.controller import SerialNoNotFound
 from .entitybase import EntityBase
 from .prototypebase import PrototypeBase
 
+from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
@@ -850,15 +853,6 @@ def prep_persistance():
     return _m
 
 
-if WARM_UP_CACHES is True:
-    monitor = prep_persistance()
-
-
-import json
-from tendril.utils.connectors import mq
-from tendril.utils.config import SVN_ROOT
-
-
 def _vcs_commit_handler(data):
     commit_info = json.loads(data)
     repo = commit_info['repo']
@@ -875,3 +869,8 @@ def _vcs_commit_handler(data):
             pass
     _ = [get_prototype(x).reload() for x in modulenames]
     return
+
+
+if WARM_UP_CACHES is True:
+    monitor = prep_persistance()
+
