@@ -89,7 +89,7 @@ class Charge(NumericalUnitBase):
 class VoltageGain(GainBase):
     _regex_std = re.compile(r'^(?P<numerical>[-+]?[\d]+\.?[\d]*)\s?(?P<order>(V/V)?(dB)?)(?P<residual>)$')  # noqa
     _gtype = (Voltage, Voltage)
-    _orders = [('V/V', 1), ('dB', lambda x: 10 ** (x/20))]
+    _orders = [('', 1), ('V/V', 1), ('dB', lambda x: 10 ** (x/20))]
     _dostr = 'V/V'
 
 

@@ -768,21 +768,16 @@ load_config(config_options_inventory)
 
 config_options_vendors = [
     ConfigOption(
-        'VENDOR_MAP_FOLDER',
-        "os.path.join(INSTANCE_ROOT, 'sourcing', 'maps')",
-        "The folder in which vendor maps should be dumped"
-    ),
-    ConfigOption(
         'VENDOR_DEFAULT_MAXAGE',
         "-1",
         "The maximum age in seconds after which sourcing information is "
         "considered stale. Set to -1 for no checks. The continuous background "
-        "update is pretty unwieldy."
+        "update is pretty unwieldy at present."
     ),
     ConfigOption(
-        'OCTOPART_API_KEY',
-        "None",
-        "The OctoPart API Key to use for vendors based on the OctoPart API."
+        'VENDOR_MAP_FOLDER',
+        "os.path.join(INSTANCE_ROOT, 'sourcing', 'maps')",
+        "The folder in which vendor maps should be dumped"
     ),
     ConfigOption(
         'VENDOR_MAP_AUDIT_FOLDER',
@@ -799,6 +794,26 @@ config_options_vendors = [
         'CUSTOMSDEFAULTS_FOLDER',
         "os.path.join(INSTANCE_ROOT, 'sourcing', 'customs')",
         "The folder in which customs defaults are located."
+    ),
+    ConfigOption(
+        'OCTOPART_API_KEY',
+        "None",
+        "The OctoPart API Key to use for vendors based on the OctoPart API."
+    ),
+    ConfigOption(
+        'MOUSER_API_KEY',
+        'None',
+        'The Mouser API Key to use for Mouser Electronics.'
+    ),
+    ConfigOption(
+        'ARROW_API_KEY',
+        'None',
+        'The Arrow API Key to use for Arrow Electronics.'
+    ),
+    ConfigOption(
+        'ARROW_API_USERNAME',
+        'None',
+        'The username to use with the Arrow API'
     ),
     ConfigOption(
         'VENDORS_DATA',
