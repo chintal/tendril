@@ -491,7 +491,7 @@ class EntityElnBom(EntityBomBase):
                 logger.error("Motif not defined : " + key)
                 continue
             for item in motif.get_line_gen():
-                item_group = self.find_tgroup(item)
+                item_group = self.find_tgroup(item).groupname
                 if item_group == 'unknown' or item_group in outgroups and \
                         item.data['fillstatus'] != 'DNP':
                     outbom.insert_component(EntityElnComp(item))
