@@ -104,6 +104,7 @@ class CachedBomParser(object):
     def get_bom_file(self):
         if not os.path.exists(self._cache_folder):
             os.makedirs(self._cache_folder)
+            os.chmod(self._cache_folder, 0o777)
 
         bom_mtime = fsutils.get_file_mtime(self._cached_bom_path)
         source_folder = os.path.join(self.projectfolder, self._basefolder)
@@ -116,6 +117,7 @@ class CachedBomParser(object):
             self.generate_bom_file(self._temp_bom_path,
                                    **self._generator_args)
             shutil.copy(self._temp_bom_path, self._cached_bom_path)
+            os.chmod(self._cached_bom_path, 0o666)
             return open(self._cached_bom_path, 'r')
 
     def get_lines(self):

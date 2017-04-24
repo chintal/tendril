@@ -138,6 +138,7 @@ from suds.transport.http import HttpTransport
 
 from fs.opener import fsopendir
 from fs.utils import copyfile
+from fs.osfs import OSFS
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.config import MAX_AGE_DEFAULT
 from tendril.utils import log
@@ -509,6 +510,9 @@ class CacheBase(object):
             try:
                 copyfile(temp_fs, temp_fs.unsyspath(temppath),
                          self.cache_fs, filepath)
+                if isinstance(self.cache_fs, OSFS):
+                    # TODO Refine permissions
+                    os.chmod(self.cache_fs.getsyspath(filepath), 0o666)
             except (KeyboardInterrupt, SystemExit):
                 raise
             except:
@@ -620,7 +624,9 @@ _proxy_dict = _get_proxy_dict()
 #: should be used whenever cached :mod:`requests` responses are desired.
 #: The cache is stored in the directory defined by
 #: :data:`tendril.utils.config.REQUESTS_CACHE`.
-requests_cache = FileCache(REQUESTS_CACHE)
+#: This cache uses very weak permissions. These should probably be
+#: fine tuned.
+requests_cache = FileCache(REQUESTS_CACHE, filemode=0o666, dirmode=0o777)
 
 
 def _get_requests_cache_adapter(heuristic):
