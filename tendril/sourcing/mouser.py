@@ -177,6 +177,8 @@ from tendril.conventions.electronics import parse_ident
 from tendril.utils import www
 from tendril.utils import log
 
+from tendril.utils.config import MOUSER_API_KEY
+
 from .vendors import VendorBase
 from .vendors import VendorElnPartBase
 from .vendors import VendorPrice
@@ -260,6 +262,9 @@ class VendorMouser(VendorBase):
     _api_endpoint = 'http://www.mouser.in/service/searchapi.asmx?WSDL'
 
     def __init__(self, apikey=None, **kwargs):
+        if not apikey:
+            raise Exception('Mouser needs an API KEY to be '
+                            'specified in the tendril config')
         self._api_key = apikey
         self._client = self._build_api_client()
         super(VendorMouser, self).__init__(**kwargs)
@@ -559,22 +564,10 @@ class VendorMouser(VendorBase):
         raise NotImplementedError
 
 
-def __get_api_key():
-    from tendril.utils.config import VENDORS_DATA
-    vopts = None
-    for v in VENDORS_DATA:
-        if v['name'] == 'mouser':
-            vopts = v
-            break
-    if vopts is not None:
-        return vopts['apikey']
-    return None
-
-
 dvobj = VendorMouser(name='mouser', dname='Mouser Electronics, Inc',
                      pclass='electronics', mappath=None,
                      currency_code='USD', currency_symbol='US$',
-                     apikey=__get_api_key())
+                     apikey=MOUSER_API_KEY)
 
 
 def __analyze_categories(devices):
@@ -584,28 +577,28 @@ def __analyze_categories(devices):
         try:
             d, v, f = parse_ident(ident)
         except IndexError:
-            print "Malformed Ident {0}".format(ident)
+            print("Malformed Ident {0}".format(ident))
             continue
         if not d:
-            print "Device Not Extracted for {0}".format(ident)
+            print("Device Not Extracted for {0}".format(ident))
             continue
         if d not in devices:
             continue
         if d not in dvobj._devices:
             continue
         if not v:
-            print "Value Not Extracted for {0}".format(ident)
+            print("Value Not Extracted for {0}".format(ident))
             continue
         # print "Searching for {0}".format(v)
         r = dvobj.api_client.service.SearchByKeyword(
             keyword=v, records=50, startingRecord=0, searchOptions=4
         )
         if not r.NumberOfResult:
-            print " No results for {0}".format(v)
+            print(" No results for {0}".format(v))
             continue
         for part in r.Parts[0]:
             if part.Category not in catstrings:
-                print "Found new category : {0}".format(part.Category)
+                print("Found new category : {0}".format(part.Category))
                 catstrings[part.Category] = []
             catstrings[part.Category].append(v)
     return catstrings
