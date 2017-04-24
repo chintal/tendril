@@ -48,7 +48,11 @@ rex_titleblocks = re.compile(r"^S-TITLE-A\d.sym$")
 
 def rewrite_schematic(inpath, obom, gpf, outpath):
     fbase = os.path.split(inpath)[1]
-    f = gschf.GschFile(inpath)
+    try:
+        f = gschf.GschFile(inpath)
+    except:
+        print("Error parsing file {0}".format(inpath))
+        raise
     # Replace value strings with whatever the bom says
     for c in f.components:
         # TODO Review possibility of reconstructing from the BOM instead

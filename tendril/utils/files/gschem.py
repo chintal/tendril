@@ -157,18 +157,30 @@ class GschElementBase(object):
 
     def __init__(self, parent, lines, *args):
         for idx, arg in enumerate(args):
-            param = self.params[idx]
+            try:
+                param = self.params[idx]
+            except IndexError:
+                print("Error parsing line : {0} {1}\n Using {2} Params :"
+                      "".format(self.code, args, self.__class__))
+                for pdef in self.params:
+                    print(pdef)
+                raise
             v = param.parser(arg)
             if param.options is not None and v not in param.options.keys():
                 raise ValueError
             setattr(self, '_' + param.name, v)
         self._parent = parent
         self._elements = []
+        self._embedded_elements = []
         self._attributes = None
+        self._embed = False
         self._get_multiline(lines)
 
     def add_element(self, element):
-        self._elements.append(element)
+        if self.embed:
+            self._embedded_elements.append(element)
+        else:
+            self._elements.append(element)
 
     def _get_multiline(self, lines):
         self._lines = []
@@ -181,6 +193,7 @@ class GschElementBase(object):
 
     @property
     def attributes(self):
+        # TODO Handle Embedded Elements as well
         if self._attributes is None:
             self._attributes = {}
             for element in self._elements:
@@ -192,12 +205,14 @@ class GschElementBase(object):
         return self._attributes
 
     def get_attribute(self, name):
+        # TODO Handle Embedded Elements as well
         if name in self.attributes.keys():
             return self.attributes[name]
         else:
             return None
 
     def remove_attribute(self, name):
+        # TODO Handle Embedded Elements as well
         for e in self._elements:
             if isinstance(e, GschElementText) and len(e._lines) == 1:
                 m = rex_attribute.match(e._lines[0])
@@ -206,6 +221,7 @@ class GschElementBase(object):
                     self._attributes = None
 
     def set_attribute(self, name, value):
+        # TODO Handle Embedded Elements as well
         result = False
         for e in self._elements:
             if isinstance(e, GschElementText) and len(e._lines) == 1:
@@ -225,11 +241,19 @@ class GschElementBase(object):
         params = ' '.join(self._params)
         f.write('{0} {1}\n'.format(self.code, params))
         self._write_lines(f)
+        self._write_embedded_elements(f)
         self._write_elements(f)
 
     def _write_lines(self, f):
         if getattr(self, '_num_lines', 0):
             f.writelines(self._lines)
+
+    def _write_embedded_elements(self, f):
+        if len(self._embedded_elements):
+            f.write('[\n')
+            for element in self._embedded_elements:
+                element.write_out(f)
+            f.write(']\n')
 
     def _write_elements(self, f):
         if len(self._elements):
@@ -237,6 +261,21 @@ class GschElementBase(object):
             for element in self._elements:
                 element.write_out(f)
             f.write('}\n')
+
+    @property
+    def is_embedded(self):
+        return False
+
+    @property
+    def embed(self):
+        return self._embed
+
+    @embed.setter
+    def embed(self, value):
+        if self.is_embedded:
+            self._embed = value
+        else:
+            raise Exception
 
 
 class GschElementComponent(GschElementBase):
@@ -259,6 +298,10 @@ class GschElementComponent(GschElementBase):
     def basename(self):
         return getattr(self, '_basename', None)
 
+    @property
+    def is_embedded(self):
+        return self.basename.startswith('EMBEDDED')
+
 
 class GschElementNet(GschElementBase):
     code = 'N'
@@ -272,7 +315,7 @@ class GschElementBus(GschElementBase):
 
 class GschElementPin(GschElementBase):
     code = 'P'
-    params = [x1, y1, x2, y2, pintype, whichend]
+    params = [x1, y1, x2, y2, color, pintype, whichend]
 
 
 class GschElementLine(GschElementBase):
@@ -398,6 +441,7 @@ class GschFile(object):
         code = parts[0]
         params = parts[1:]
         if code not in self.codes.keys():
+            print("Error parsing line : '{0}'".format(line))
             raise AttributeError(line)
         return self.codes[code](parent, lines, *params)
 
@@ -408,14 +452,31 @@ class GschFile(object):
         block_level = 0
         targets = {0: self}
         element = None
+        ntarget = None
         while len(lines):
+            if lines[0].strip() == '[':
+                if not element or not element.is_embedded:
+                    raise Exception
+                block_level += 1
+                targets[block_level] = element
+                targets[block_level].embed = True
+                lines.popleft()
+            if lines[0].strip() == ']':
+                targets[block_level].embed = False
+                ntarget = targets[block_level]
+                block_level -= 1
+                lines.popleft()
             if lines[0].strip() == '{':
                 if not element:
                     raise Exception
                 block_level += 1
-                targets[block_level] = element
+                if ntarget:
+                    targets[block_level] = ntarget
+                    ntarget = None
+                else:
+                    targets[block_level] = element
                 lines.popleft()
-            elif lines[0].strip() == '}':
+            if lines[0].strip() == '}':
                 block_level -= 1
                 lines.popleft()
             if not len(lines):
