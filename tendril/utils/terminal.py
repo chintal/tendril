@@ -62,9 +62,15 @@ def get_terminal_width():
     return get_terminal_size()[0]
 
 
-def render_hline():
+def colortext(string, color):
+    return ''.join([color, string, colorama.Fore.RESET])
+
+
+def render_hline(color=None):
     width = get_terminal_width()
     hline = '-' * width
+    if color:
+        hline = colortext(hline, color)
     print(hline)
 
 

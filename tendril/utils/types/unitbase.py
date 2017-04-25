@@ -49,6 +49,7 @@ import numbers
 from math import log10
 from math import floor
 from decimal import Decimal
+from decimal import InvalidOperation
 from fractions import Fraction
 
 from . import ParseException
@@ -132,8 +133,8 @@ class UnitBase(object):
             try:
                 value = self._parse_func(value)
             except Exception as e:
-                raise ParseException(e)
-        elif isinstance(value, numbers.Number):
+                raise ParseException(value, e)
+        if isinstance(value, numbers.Number):
             if isinstance(value, Fraction):
                 value = float(value)
             if not isinstance(value, Decimal):
@@ -214,6 +215,7 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
 
     _order_type = None
     _order_dict = None
+    _has_bare_order = False
 
     def __init__(self, value):
         if not self._orders:
@@ -228,6 +230,11 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
             self._order_dict = {o[0]: o[1] for o in self._orders}
         if self._parse_func is None:
             self._parse_func = self._standard_parser
+        if not self._has_bare_order:
+            try:
+                value = Decimal(value)
+            except InvalidOperation:
+                pass
         super(NumericalUnitBase, self).__init__(value)
 
     def _standard_parser(self, value):
@@ -486,6 +493,7 @@ class Percentage(FactorBase):
     Only the standard :class:`NumericalUnitBase` Arithmetic is supported by
     this class at this time.
     """
+    _has_bare_order = True
     _orders = [('%', Decimal('1')), ('pc', Decimal('1')), ('', 100)]
     _dostr = '%'
     _allow_nOr = False

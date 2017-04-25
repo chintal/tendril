@@ -56,6 +56,7 @@ DEFAULT = logging.WARNING
 def init():
     logging.basicConfig(level=logging.DEBUG)
     silence = [
+        logging.getLogger('watchdog.observers.inotify_buffer'),
         logging.getLogger('requests.packages.urllib3.connectionpool'),
         logging.getLogger('passlib.registry'),
         logging.getLogger('passlib.utils.compat'),
