@@ -261,7 +261,7 @@ class VendorMouser(VendorBase):
     _url_base = 'http://www.mouser.com/'
     _api_endpoint = 'http://www.mouser.in/service/searchapi.asmx?WSDL'
 
-    def __init__(self, apikey=None, **kwargs):
+    def __init__(self, apikey=MOUSER_API_KEY, **kwargs):
         if not apikey:
             raise Exception('Mouser needs an API KEY to be '
                             'specified in the tendril config')
