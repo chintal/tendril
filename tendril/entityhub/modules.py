@@ -854,6 +854,27 @@ def prep_persistance():
 
 
 def _vcs_commit_handler(data):
+    # TODO
+    # This piece of code is extremely dangerous, and creates very real
+    # scope for race conditions resulting in potential data loss, data
+    # mangling, and other unpredicatable outcomes. Utilization of the
+    # module / prototype library needs to be protected across the codebase
+    # and updates in between transactions should be avoided. How this
+    # can / should be implemented is currently unknown.
+    #
+    # One possible solution may be to include threading locks within each
+    # module, and anything using the module should also claim the lock.
+    # This seems like it could break all manner of stuff, not to mention
+    # would be very difficult to implement.
+    #
+    # A workable solution may be to allow transactions which care about
+    # validity of the data to claim a counting lock on the prototype, and
+    # updates should be delayed until all such locks are released.
+    #
+    # As of this writing, the prototypes are almost exclusively read-only
+    # in their usage. In the rare cases where they need to be modified,
+    # they are first copied using deepcopy. This should be explicitly
+    # verified across the codebase.
     commit_info = json.loads(data)
     repo = commit_info['repo']
     vcsdir = os.path.join(SVN_ROOT, repo)
