@@ -22,6 +22,7 @@ See the COPYING, README, and INSTALL files for more information
 import os
 import arrow
 import json
+import warnings
 from collections import namedtuple
 
 from tendril.utils.fsutils import TEMPDIR
@@ -232,7 +233,9 @@ class TestBase(RunnableTest):
             measurement.do_measurement()
     
     def result_str(self):
-        raise NotImplementedError
+        warnings.warn("'result_str' Not Implemented for {0}"
+                      "".format(self.__class__))
+        return ""
     
     def display_test_result(self):
         if self.passed is True:
