@@ -64,7 +64,15 @@ class VendorPartRetrievalError(Exception):
     pass
 
 
+class VendorPartInaccessibleError(Exception):
+    pass
+
+
 class VendorPartPricingError(Exception):
+    pass
+
+
+class VendorPartAvailabilityError(Exception):
     pass
 
 
@@ -295,7 +303,13 @@ class VendorPartBase(object):
                     self.load_from_db(max_age, s)
                     return
                 except DBPartDataUnusable:
-                    self._get_data()
+                    try:
+                        self._get_data()
+                    except VendorPartInaccessibleError:
+                        # Part cannot be accessed directly.
+                        # TODO Map must be updated instead.
+                        self.load_from_db(-1, s)
+                        return
                     try:
                         self.commit(s)
                     except NoResultFound:
@@ -359,8 +373,8 @@ class VendorPartBase(object):
             return vpno
         except NoResultFound:
             raise DBPartDataUnavailable
-        except AttributeError:
-            raise DBPartDataIncomplete
+        except AttributeError as e:
+            raise DBPartDataIncomplete(e)
 
     def _get_data(self):
         raise NotImplementedError
@@ -519,8 +533,8 @@ class VendorPartBase(object):
         return rprice, rnextprice
 
     def __repr__(self):
-        return '<{0} {1} {2}>'.format(
-            self.__class__, self.vpno,  str(self._vpartdesc)
+        return '<{0} {1} {2}>'.format(self.__class__, self.vpno,
+                                      self._vpartdesc.encode('ascii', 'replace')
         )
 
 
@@ -1110,13 +1124,13 @@ class VendorBase(object):
         vendor part number (``pno``).
 
         """
-        vpnos = []
+        vpnos = set()
+        rparts = []
         for part in parts:
-            if part.pno in vpnos:
-                parts.pop(part)
-            else:
-                vpnos.append(part.pno)
-        return parts
+            if part.pno not in vpnos:
+                vpnos.add(part.pno)
+                rparts.append(part)
+        return rparts
 
     def _process_results(self, parts, value, footprint):
         """

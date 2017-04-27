@@ -20,6 +20,7 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import arrow
+from copy import copy
 
 from sqlalchemy.sql import exists
 from sqlalchemy.orm.exc import MultipleResultsFound
@@ -359,7 +360,7 @@ def set_map_vpnos(vendor=None, ident=None, vpnos=None,
                   mtype=None, session=None):
     vpmap = get_map(vendor=vendor, ident=ident, session=session)
     session.add(vpmap)
-
+    vpnos = copy(vpnos)
     # TODO Figure out why removal during the first pass breaks.
     vpnos_removal = []
     for vpno in vpmap.vpnos:
@@ -438,7 +439,7 @@ def populate_vendors():
                 logger.info("Creating vendor entry for : " + vendor['name'])
                 obj = SourcingVendor(name=vendor['name'],
                                      dname=vendor['dname'],
-                                     type=vendor['type'],
+                                     type=vendor['vtype'],
                                      mapfile_base=vendor['name'],
                                      pclass=vendor['pclass'],
                                      status='active')

@@ -811,7 +811,7 @@ config_options_vendors = [
         'The Arrow API Key to use for Arrow Electronics.'
     ),
     ConfigOption(
-        'ARROW_API_USERNAME',
+        'ARROW_API_LOGIN',
         'None',
         'The username to use with the Arrow API'
     ),
