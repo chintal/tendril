@@ -29,10 +29,10 @@ from future.utils import viewitems
 import iec60063
 import customs
 
-from .vendors import VendorBase
-from .vendors import VendorPartBase
-from .vendors import VendorPrice
-from .vendors import SourcingInfo
+from .vendorbase import VendorBase
+from .vendorbase import VendorPartBase
+from .vendorbase import VendorPrice
+from .vendorbase import SourcingInfo
 
 from tendril.conventions.electronics import ident_transform
 from tendril.conventions.electronics import construct_resistor

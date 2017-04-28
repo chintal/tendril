@@ -178,11 +178,11 @@ from tendril.utils.db import get_session
 from tendril.utils.config import ARROW_API_KEY
 from tendril.utils.config import ARROW_API_LOGIN
 
-from .vendors import VendorBase
-from .vendors import VendorElnPartBase
-from .vendors import VendorPrice
-from .vendors import SearchPart
-from .vendors import VendorPartInaccessibleError
+from .vendorbase import VendorBase
+from .vendorbase import VendorElnPartBase
+from .vendorbase import VendorPrice
+from .vendorbase import SearchPart
+from .vendorbase import VendorPartInaccessibleError
 from .db import controller
 
 from tendril.utils import log

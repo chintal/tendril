@@ -199,12 +199,12 @@ from tendril.utils.types.electromagnetic import Voltage
 from tendril.utils.types.thermodynamic import ThermalDissipation
 from tendril.utils.types.time import Frequency
 from . import customs
-from .vendors import SearchPart
-from .vendors import SearchResult
-from .vendors import VendorBase
-from .vendors import VendorElnPartBase
-from .vendors import VendorPrice
-from .vendors import VendorPartRetrievalError
+from .vendorbase import SearchPart
+from .vendorbase import SearchResult
+from .vendorbase import VendorBase
+from .vendorbase import VendorElnPartBase
+from .vendorbase import VendorPrice
+from .vendorbase import VendorPartRetrievalError
 
 
 logger = log.get_logger(__name__, log.DEFAULT)

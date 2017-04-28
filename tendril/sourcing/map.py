@@ -29,7 +29,8 @@ from future.utils import iteritems
 
 from tendril.gedaif import gsymlib
 
-from . import vendors
+from .vendorbase import VendorElnPartBase
+from .vendorbase import VendorPartRetrievalError
 from .electronics import vendor_list
 
 from .db import controller
@@ -119,7 +120,7 @@ def export_vendor_map_audit(vendor_obj, max_age=-1):
         for vpno in mapobj.get_all_partnos(ident):
             try:
                 vp = vendor_obj.get_vpart(vpno, ident, max_age)
-            except vendors.VendorPartRetrievalError:
+            except VendorPartRetrievalError:
                 logger.error(
                     "Permanent Retrieval Error while getting part {0} from "
                     "{1}. Removing from Map.".format(vpno, vendor_obj.name)
@@ -130,7 +131,7 @@ def export_vendor_map_audit(vendor_obj, max_age=-1):
                 logger.error("Unhandled Error while getting part {0} from {1}"
                              "".format(vpno, vendor_obj.name))
                 raise
-            if isinstance(vp, vendors.VendorElnPartBase):
+            if isinstance(vp, VendorElnPartBase):
                 row = [vp.ident, vp.vpno, vp.mpartno, vp.package, vp.vpartdesc,
                        vp.manufacturer, vp.vqtyavail, vp.abs_moq]
             else:

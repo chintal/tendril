@@ -28,11 +28,11 @@ from future.utils import viewitems
 import splinter
 
 import selenium.common.exceptions
-from .vendors import VendorBase
-from .vendors import VendorPrice
-from .vendors import VendorPartBase
-from .vendors import SourcingInfo
-from .vendors import VendorPartRetrievalError
+from .vendorbase import VendorBase
+from .vendorbase import VendorPrice
+from .vendorbase import VendorPartBase
+from .vendorbase import SourcingInfo
+from .vendorbase import VendorPartRetrievalError
 
 from tendril.utils import fsutils
 from tendril.utils.terminal import TendrilProgressBar

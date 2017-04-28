@@ -179,11 +179,11 @@ from tendril.utils import log
 
 from tendril.utils.config import MOUSER_API_KEY
 
-from .vendors import VendorBase
-from .vendors import VendorElnPartBase
-from .vendors import VendorPrice
-from .vendors import SearchPart
-from .vendors import SearchResult
+from .vendorbase import VendorBase
+from .vendorbase import VendorElnPartBase
+from .vendorbase import VendorPrice
+from .vendorbase import SearchPart
+from .vendorbase import SearchResult
 
 logger = log.get_logger(__name__, log.DEFAULT)
 

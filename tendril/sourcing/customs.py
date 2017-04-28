@@ -21,7 +21,8 @@ See the COPYING, README, and INSTALL files for more information
 
 import os
 
-import vendors
+from .vendorbase import VendorInvoice
+from .vendorbase import VendorInvoiceLine
 from tendril.gedaif import gsymlib
 from tendril.utils.types import currency
 from tendril.utils.config import CUSTOMSDEFAULTS_FOLDER
@@ -152,7 +153,7 @@ class CustomsClassifier(object):
 hs_classifier = CustomsClassifier()
 
 
-class CustomsInvoice(vendors.VendorInvoice):
+class CustomsInvoice(VendorInvoice):
     def __init__(self, vendor, inv_yaml, working_folder=None):
         vendor_defaults_file = os.path.join(CUSTOMSDEFAULTS_FOLDER,
                                             vendor._name + '.yaml')
@@ -391,7 +392,7 @@ class DutyComponent(object):
         )
 
 
-class CustomsInvoiceLine(vendors.VendorInvoiceLine):
+class CustomsInvoiceLine(VendorInvoiceLine):
     def __init__(self, invoice, ident, vpno, unitp, qty, idx=None, desc=None):
         if idx is None:
             idx = max(invoice.idxs) + 1

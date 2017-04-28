@@ -38,8 +38,8 @@ this seems to include a number of `Premier Farnell brands
 from tendril.utils import www
 from tendril.utils import log
 
-from .vendors import VendorBase
-from .vendors import VendorElnPartBase
+from .vendorbase import VendorBase
+from .vendorbase import VendorElnPartBase
 
 logger = log.get_logger(__name__, log.DEFAULT)
 

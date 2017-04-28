@@ -134,7 +134,7 @@ def get_vpno_obj(vendor=None, ident=None, vpno=None,
 @with_db
 def populate_vpart_detail(vpno=None, vpart=None, session=None):
     assert isinstance(vpno, VendorPartNumber)
-    from ..vendors import VendorPartBase
+    from ..vendorbase import VendorPartBase
     assert isinstance(vpart, VendorPartBase)
 
     try:
@@ -161,7 +161,7 @@ def populate_vpart_detail(vpno=None, vpart=None, session=None):
 @with_db
 def populate_vpart_detail_eln(vpno=None, vpart=None, session=None):
     assert isinstance(vpno, VendorPartNumber)
-    from ..vendors import VendorElnPartBase
+    from ..vendorbase import VendorElnPartBase
     assert isinstance(vpart, VendorElnPartBase)
 
     try:
@@ -188,7 +188,7 @@ def clear_vpart_prices(vpno=None, session=None):
 @with_db
 def populate_vpart_prices(vpno=None, vpart=None, session=None):
     assert isinstance(vpno, VendorPartNumber)
-    from ..vendors import VendorPartBase
+    from ..vendorbase import VendorPartBase
     assert isinstance(vpart, VendorPartBase)
     tprices = [(x.moq, str(x.unit_price.source_value), x.oqmultiple)
                for x in vpart.prices]

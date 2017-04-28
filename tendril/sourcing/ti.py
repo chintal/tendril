@@ -30,11 +30,11 @@ import urlparse
 import HTMLParser
 import traceback
 
-from .vendors import VendorBase
-from .vendors import VendorElnPartBase
-from .vendors import VendorPrice
-from .vendors import SearchResult
-from .vendors import SearchPart
+from .vendorbase import VendorBase
+from .vendorbase import VendorElnPartBase
+from .vendorbase import VendorPrice
+from .vendorbase import SearchResult
+from .vendorbase import SearchPart
 
 from tendril.utils import www
 from tendril.conventions.electronics import parse_ident
