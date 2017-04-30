@@ -36,7 +36,7 @@ def init_vendors():
             logger.error('Vendor Type not defined for {0}'
                          ''.format(vendor['name']))
             continue
-        module_name = '.{0}'.format(vtype.lower())
+        module_name = '.vendors.{0}'.format(vtype.lower())
         module = importlib.import_module(module_name, __package__)
         class_name = 'Vendor{0}'.format(vtype)
         cls = getattr(module, class_name)

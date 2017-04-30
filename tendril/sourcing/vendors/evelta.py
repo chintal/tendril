@@ -46,7 +46,7 @@ from tendril.conventions.electronics import parse_ident
 from tendril.conventions.electronics import parse_resistor
 from tendril.conventions.electronics import parse_capacitor
 
-from .db import controller
+from tendril.sourcing.db import controller
 from tendril.utils.db import get_session
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)

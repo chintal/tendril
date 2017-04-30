@@ -28,7 +28,7 @@ Arrow Vendor Module (:mod:`tendril.sourcing.arrow`)
 This module can be imported by itself to provide limited but potentially
 useful functionality.
 
->>> from tendril.sourcing import arrow
+>>> from sourcing.vendors import arrow
 
 .. rubric:: Search
 
@@ -183,7 +183,7 @@ from .vendorbase import VendorElnPartBase
 from .vendorbase import VendorPrice
 from .vendorbase import SearchPart
 from .vendorbase import VendorPartInaccessibleError
-from .db import controller
+from tendril.sourcing.db import controller
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)

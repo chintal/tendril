@@ -19,26 +19,24 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-import arrow
 from copy import copy
 
-from sqlalchemy.sql import exists
+import arrow
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
-
-from tendril.utils.db import with_db
-from tendril.utils.db import get_session
+from sqlalchemy.sql import exists
 
 from model import SourcingVendor
+from model import VendorElnPartDetail
+from model import VendorPartDetail
 from model import VendorPartMap
 from model import VendorPartNumber
-from model import VendorPartDetail
-from model import VendorElnPartDetail
 from model import VendorPrice
-
-from tendril.utils.config import VENDORS_DATA
-
 from tendril.utils import log
+from tendril.utils.config import VENDORS_DATA
+from tendril.utils.db import get_session
+from tendril.utils.db import with_db
+
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
@@ -134,7 +132,7 @@ def get_vpno_obj(vendor=None, ident=None, vpno=None,
 @with_db
 def populate_vpart_detail(vpno=None, vpart=None, session=None):
     assert isinstance(vpno, VendorPartNumber)
-    from ..vendorbase import VendorPartBase
+    from tendril.sourcing.vendors.vendorbase import VendorPartBase
     assert isinstance(vpart, VendorPartBase)
 
     try:
@@ -161,7 +159,7 @@ def populate_vpart_detail(vpno=None, vpart=None, session=None):
 @with_db
 def populate_vpart_detail_eln(vpno=None, vpart=None, session=None):
     assert isinstance(vpno, VendorPartNumber)
-    from ..vendorbase import VendorElnPartBase
+    from tendril.sourcing.vendors.vendorbase import VendorElnPartBase
     assert isinstance(vpart, VendorElnPartBase)
 
     try:
@@ -188,7 +186,7 @@ def clear_vpart_prices(vpno=None, session=None):
 @with_db
 def populate_vpart_prices(vpno=None, vpart=None, session=None):
     assert isinstance(vpno, VendorPartNumber)
-    from ..vendorbase import VendorPartBase
+    from tendril.sourcing.vendors.vendorbase import VendorPartBase
     assert isinstance(vpart, VendorPartBase)
     tprices = [(x.moq, str(x.unit_price.source_value), x.oqmultiple)
                for x in vpart.prices]

@@ -68,11 +68,11 @@ import wallet
 from tendril.entityhub import serialnos
 from tendril.utils.config import COMPANY_GOVT_POINT
 from tendril.utils.db import with_db
+from tendril.utils.files import pdf
+from tendril.utils.files import yml as yaml
 from tendril.utils.fsutils import get_tempname
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.terminal import TendrilProgressBar
-from tendril.utils.files import pdf
-from tendril.utils.files import yml as yaml
 
 
 def gen_declaration(invoice, target_folder, copyt, serialno):
@@ -903,7 +903,7 @@ def get_customs_invoice(serialno):
         from tendril.sourcing import pricelist
         invoice_class = pricelist.AnalogDevicesInvoice
     elif inv_format == 'digikey':
-        from tendril.sourcing import digikey
+        from tendril.sourcing.vendors import digikey
         invoice_class = digikey.DigiKeyInvoice
     else:
         raise ValueError('Unrecognized Customs Invoice Format : ' +

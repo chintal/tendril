@@ -24,7 +24,7 @@ Digi-Key Vendor Module (:mod:`tendril.sourcing.digikey`)
 This module can be imported by itself to provide limited but potentially
 useful functionality.
 
->>> from tendril.sourcing import digikey
+>>> from tendril.sourcing.vendors import digikey
 
 .. rubric:: Search
 
@@ -197,11 +197,10 @@ from tendril.utils.types import ParseException
 from tendril.utils.types.electromagnetic import Capacitance
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Voltage
-from tendril.utils.types.electromagnetic import VoltageAC
 from tendril.utils.types.thermodynamic import ThermalDissipation
 from tendril.utils.types.time import Frequency
 
-from . import customs
+from tendril.sourcing import customs
 from .vendorbase import SearchPart
 from .vendorbase import SearchResult
 from .vendorbase import VendorBase

@@ -21,14 +21,14 @@ See the COPYING, README, and INSTALL files for more information
 
 import os
 
-from .vendorbase import VendorInvoice
-from .vendorbase import VendorInvoiceLine
+from tendril.sourcing.vendors.vendorbase import VendorInvoice
+from tendril.sourcing.vendors.vendorbase import VendorInvoiceLine
 from tendril.gedaif import gsymlib
-from tendril.utils.types import currency
-from tendril.utils.config import CUSTOMSDEFAULTS_FOLDER
-
-from tendril.utils.files import yml as yaml
 from tendril.utils import log
+from tendril.utils.config import CUSTOMSDEFAULTS_FOLDER
+from tendril.utils.files import yml as yaml
+from tendril.utils.types import currency
+
 logger = log.get_logger(__name__, log.DEFAULT)
 
 

@@ -22,26 +22,24 @@
 Docstring for map
 """
 
-import os
 import csv
+import os
+
 import six
 from future.utils import iteritems
 
+from tendril.sourcing.vendors.vendorbase import VendorElnPartBase
+from tendril.sourcing.vendors.vendorbase import VendorPartRetrievalError
+from tendril.entityhub import projects
 from tendril.gedaif import gsymlib
-
-from .vendorbase import VendorElnPartBase
-from .vendorbase import VendorPartRetrievalError
+from tendril.utils import config
+from tendril.utils import fsutils
+from tendril.utils import log
+from tendril.utils.db import get_session
+from tendril.utils.terminal import TendrilProgressBar
+from .db import controller
 from .electronics import vendor_list
 
-from .db import controller
-
-from tendril.entityhub import projects
-from tendril.utils.db import get_session
-from tendril.utils import fsutils
-from tendril.utils import config
-from tendril.utils.terminal import TendrilProgressBar
-
-from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 

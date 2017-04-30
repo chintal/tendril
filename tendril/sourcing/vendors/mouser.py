@@ -28,7 +28,7 @@ Mouser Vendor Module (:mod:`tendril.sourcing.mouser`)
 This module can be imported by itself to provide limited but potentially
 useful functionality.
 
->>> from tendril.sourcing import mouser
+>>> from tendril.sourcing.vendors import mouser
 
 .. rubric:: Search
 

@@ -19,33 +19,31 @@ Pricelist Vendor Module (:mod:`tendril.sourcing.pricelist`)
 ===========================================================
 """
 
+import codecs
+import csv
 import os
 import re
-import csv
-import codecs
-import arrow
-from future.utils import viewitems
 
 import iec60063
-import customs
+from future.utils import viewitems
 
+import arrow
+from tendril.sourcing import customs
+from tendril.conventions.electronics import construct_capacitor
+from tendril.conventions.electronics import construct_resistor
+from tendril.conventions.electronics import ident_transform
+from tendril.utils import log
+from tendril.utils.config import INSTANCE_ROOT
+from tendril.utils.config import PRICELISTVENDORS_FOLDER
+from tendril.utils.config import VENDOR_DEFAULT_MAXAGE
+from tendril.utils.files import yml as yaml
+from tendril.utils.fsutils import get_file_mtime
+from tendril.utils.types import currency
+from .vendorbase import SourcingInfo
 from .vendorbase import VendorBase
 from .vendorbase import VendorPartBase
 from .vendorbase import VendorPrice
-from .vendorbase import SourcingInfo
 
-from tendril.conventions.electronics import ident_transform
-from tendril.conventions.electronics import construct_resistor
-from tendril.conventions.electronics import construct_capacitor
-
-from tendril.utils.types import currency
-from tendril.utils.config import PRICELISTVENDORS_FOLDER
-from tendril.utils.config import INSTANCE_ROOT
-from tendril.utils.config import VENDOR_DEFAULT_MAXAGE
-
-from tendril.utils.fsutils import get_file_mtime
-from tendril.utils.files import yml as yaml
-from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 

@@ -46,22 +46,19 @@ recognized projects based on the criteria specified by the command parameters.
 
 """
 
-import os
 import argparse
+import os
 
+from tendril.sourcing.vendors import csil
 from tendril.entityhub import projects
-from tendril.sourcing import csil
-
-from tendril.gedaif.conffile import NoGedaProjectError
 from tendril.gedaif import conffile
-
+from tendril.gedaif.conffile import NoGedaProjectError
+from tendril.utils import log
 from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.fsutils import in_directory
-
-from .helpers import add_project_selector_options
 from .helpers import add_base_options
+from .helpers import add_project_selector_options
 
-from tendril.utils import log
 logger = log.get_logger("genpcbpricing", log.DEFAULT)
 
 

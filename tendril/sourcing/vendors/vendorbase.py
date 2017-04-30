@@ -35,8 +35,8 @@ from tendril.utils import config
 from tendril.utils.db import get_session
 from tendril.utils.config import VENDOR_DEFAULT_MAXAGE
 
-from db import controller
-import maintenance
+from tendril.sourcing.db import controller
+from tendril.sourcing import maintenance
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
@@ -474,7 +474,7 @@ class VendorPartBase(object):
         rval = []
         for additional_cost in self._vendor.additional_costs:
             if additional_cost[0] == 'Customs':
-                from .customs import hs_classifier
+                from ..customs import hs_classifier
                 hs = hs_classifier.hs_from_ident(self._canonical_repr)
                 if hs:
                     rval.append(('Customs', hs.effective_rate))
