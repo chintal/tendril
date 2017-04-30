@@ -68,9 +68,13 @@ def init():
         logging.getLogger('pika.channel'),
         logging.getLogger('pika.heartbeat'),
         logging.getLogger('pika.connection'),
+        logging.getLogger('pika.adapters.base_connection'),
+        logging.getLogger('pika.adapters.blocking_connection'),
+        logging.getLogger('pika.adapters.select_connection')
     ]
     for logger in silence:
         logger.setLevel(logging.WARNING)
+    logging.getLogger('pika.connection').setLevel(logging.ERROR)
 
 
 def get_logger(name, level=None):

@@ -61,6 +61,10 @@ def round_to_n(x, n):
     return 0
 
 
+def remove_exponent(num):
+    return num.to_integral() if num == num.to_integral() else num.normalize()
+
+
 class TypedComparisonMixin(object):
     """
     This mixin allows implementing comparison operators in a Python 3
@@ -453,6 +457,21 @@ class NumericalUnitBase(TypedComparisonMixin, UnitBase):
         if neg is True:
             num = '-' + num
         return num + unit
+
+    def fmt_repr(self, fmt):
+        num, unit = self.natural_repr
+        parts = []
+        idx = 0
+        if '%v' in fmt:
+            fmt = fmt.replace('%v', '{' + str(idx) + '}')
+            # TODO Consider applying remove_exponent across the board
+            parts.append(remove_exponent(num))
+            idx += 1
+        if '%u' in fmt:
+            fmt = fmt.replace('%u', '{' + str(idx) + '}')
+            parts.append(unit)
+            idx += 1
+        return fmt.format(*parts)
 
     def __repr__(self):
         num, unit = self.natural_repr

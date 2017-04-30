@@ -754,8 +754,10 @@ class VendorBase(object):
                 nbprice = nnbprice
                 effprice = neffprice
             elif nubprice.unit_price.native_value < \
-                    ubprice.unit_price.native_value * 0.5:
-                urationale = "UP Decrease > 40%"
+                    ubprice.unit_price.native_value * 0.2:
+                # TODO This used to be 40%. Evelta threw this out the window.
+                # Figure out a better way to handle sparse price breaks.
+                urationale = "UP Decrease > 80%"
                 olduprice = ubprice
                 oqty = nbprice.moq
                 ubprice = nubprice
@@ -764,11 +766,12 @@ class VendorBase(object):
         return SourcingInfo(self, candidate, oqty, nbprice,
                             ubprice, effprice, urationale, olduprice)
 
-    def get_optimal_pricing(self, ident, rqty, get_all=False):
+    def get_optimal_pricing(self, ident, rqty, get_all=False, relax_moq=False):
         candidate_names = self.get_vpnos(ident)
 
         candidates = [self.get_vpart(x, ident=ident) for x in candidate_names]
-        candidates = [x for x in candidates if x.abs_moq <= rqty]
+        if not relax_moq:
+            candidates = [x for x in candidates if x.abs_moq <= rqty]
         candidates = [x for x in candidates
                       if x.vqtyavail is None or
                       x.vqtyavail > rqty or

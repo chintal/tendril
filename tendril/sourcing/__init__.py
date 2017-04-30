@@ -28,7 +28,7 @@ Core Sourcing Modules
 
 .. toctree::
 
-   tendril.sourcing.vendors
+   tendril.sourcing.vendorbase
    tendril.sourcing.orders
    tendril.sourcing.customs
    tendril.sourcing.electronics

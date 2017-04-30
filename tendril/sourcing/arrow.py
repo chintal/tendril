@@ -194,6 +194,7 @@ class ArrowElnPart(VendorElnPartBase):
         super(ArrowElnPart, self).__init__(vpno, **kwargs)
 
     def _get_data(self):
+        # Arrow doesn't seem to believe in part numbers.
         raise VendorPartInaccessibleError
 
     def _load_from_response(self, part_data):
