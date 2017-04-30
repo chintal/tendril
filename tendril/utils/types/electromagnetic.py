@@ -36,7 +36,7 @@ class Resistance(NumericalUnitBase):
 
 class Capacitance(NumericalUnitBase):
     _regex_std = re.compile(r"^(?P<numerical>[\d]+\.?[\d]*)\s?(?P<order>[pnum]?F?)(?P<residual>[\d]*)$")  # noqa
-    _ostrs = ['pF', 'nF', 'uF', 'mF', 'F']
+    _ostrs = ['fF', 'pF', 'nF', 'uF', 'mF', 'F']
     _dostr = 'F'
     _osuffix = 'F'
 

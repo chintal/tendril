@@ -181,7 +181,6 @@ import traceback
 import urllib
 import urlparse
 from copy import copy
-from decimal import Decimal
 from urllib2 import HTTPError
 
 from tendril.conventions.electronics import check_for_std_val
@@ -192,12 +191,16 @@ from tendril.conventions.electronics import parse_resistor
 from tendril.utils import log
 from tendril.utils import www
 from tendril.utils.config import INSTANCE_ROOT
+
 from tendril.utils.types import currency
+from tendril.utils.types import ParseException
 from tendril.utils.types.electromagnetic import Capacitance
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Voltage
+from tendril.utils.types.electromagnetic import VoltageAC
 from tendril.utils.types.thermodynamic import ThermalDissipation
 from tendril.utils.types.time import Frequency
+
 from . import customs
 from .vendorbase import SearchPart
 from .vendorbase import SearchResult
@@ -990,102 +993,6 @@ class VendorDigiKey(VendorBase):
             return None, sr.strategy
         return sr.parts, sr.strategy
 
-    _regex_fo_res = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[kKMGT])*$')
-
-    def _tf_resistance_to_canonical(self, rstr):
-        # TODO Replace with tendril.utils.type version
-        rstr = rstr.encode('ascii', 'replace').strip()
-        if rstr == '-':
-            return
-        if rstr == '*':
-            return
-        if ',' in rstr:
-            return
-        try:
-            rparts = self._regex_fo_res.search(rstr).groupdict()
-        except AttributeError:
-            raise
-
-        rval = Decimal(rparts['num'])
-        if rparts['order'] is None:
-            do = 0
-            if rval > 1000:
-                raise ValueError
-            while 1 > rval > 0:
-                rval *= 1000
-                do += 1
-            if do == 0:
-                ostr = 'E'
-            elif do == 1:
-                ostr = 'm'
-            elif do == 2:
-                ostr = 'u'
-            else:
-                raise ValueError
-        else:
-            if rparts['order'] in ['K', 'k']:
-                ostr = 'K'
-            elif rparts['order'] == 'M':
-                ostr = 'M'
-            elif rparts['order'] == 'G':
-                ostr = 'G'
-            elif rparts['order'] == 'T':
-                ostr = 'T'
-            else:
-                raise ValueError(str(rparts))
-        vfmt = lambda d: str(d.quantize(Decimal(1))
-                             if d == d.to_integral() else d.normalize())
-        return vfmt(rval) + ostr
-
-    @staticmethod
-    def _tf_tolerance_to_canonical(tstr):
-        tstr = www.strencode(tstr).strip()
-        return tstr
-
-    _regex_fo_cap = re.compile(r'^(?P<num>\d+(.\d+)*)(?P<order>[pum]F)$')
-
-    def _tf_capacitance_to_canonical(self, cstr):
-        # TODO Replace with tendril.utils.type version
-        cstr = www.strencode(cstr).strip()
-        if cstr == '-':
-            return
-        if cstr == '*':
-            return
-
-        try:
-            cparts = self._regex_fo_cap.search(cstr).groupdict()
-        except AttributeError:
-            raise AttributeError(cstr)
-
-        cval = Decimal(cparts['num'])
-
-        ostr = cparts['order']
-        ostrs = ['fF', 'pF', 'nF', 'uF', 'mF']
-        oindex = ostrs.index(ostr)
-
-        if cparts['order'] is None:
-            raise ValueError
-        if cval >= 1000:
-            po = 0
-            while cval >= 1000:
-                cval /= 1000
-                po += 1
-            if po > 0:
-                for i in range(po):
-                    oindex += 1
-        else:
-            do = 0
-            while 0 < cval < 1:
-                cval *= 1000
-                do += 1
-            if do > 0:
-                for i in range(do):
-                    oindex -= 1
-
-        vfmt = lambda d: str(d.quantize(Decimal(1))
-                             if d == d.to_integral() else d.normalize())
-        return vfmt(cval) + ostrs[oindex]
-
     @staticmethod
     def _tf_option_base(ostr):
         ostr = www.strencode(ostr).strip()
@@ -1095,12 +1002,24 @@ class VendorDigiKey(VendorBase):
             return
         return ostr
 
+    @staticmethod
+    def _tf_voltage(s):
+        s = s.split()[0].strip()
+        try:
+            return Voltage(s)
+        except ParseException:
+            # TODO Allow AC Voltage ratings.
+            # (Figure out handling of comparisons)
+            # s = s.rstrip('AC')
+            # return VoltageAC(s)
+            return None
+
     @property
     def _filter_otf(self):
         return {
-            'Resistance (Ohms)': self._tf_resistance_to_canonical,
-            'Capacitance': self._tf_capacitance_to_canonical,
-            'Tolerance': self._tf_tolerance_to_canonical,
+            'Resistance (Ohms)': Resistance,
+            'Capacitance': Capacitance,
+            'Voltage - Rated': self._tf_voltage,
             'base': self._tf_option_base,
         }
 
@@ -1121,15 +1040,14 @@ class VendorDigiKey(VendorBase):
                             o.attrs['value']) for o in optionsoup]
                 fname = fvalueselects[idx].attrs['name']
                 fname = fname.encode('ascii', 'replace').strip()
+                options = [
+                    (self._filter_otf['base'](option[0]), option[1])
+                    for option in options
+                ]
                 if header in self._filter_otf.keys():
                     options = [
                         (self._filter_otf[header](option[0]), option[1])
-                        for option in options
-                    ]
-                else:
-                    options = [
-                        (self._filter_otf['base'](option[0]), option[1])
-                        for option in options
+                        for option in options if option[0] is not None
                     ]
                 filters[header] = (fname, options)
         except (KeyboardInterrupt, SystemExit):

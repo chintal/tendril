@@ -77,6 +77,8 @@ class TypedComparisonMixin(object):
     """
     def _compare(self, other, method):
         if self.__class__ != other.__class__:
+            if other is None:
+                return method(self._cmpkey(), 0)
             if not isinstance(other, numbers.Number) or other != 0:
                 raise TypeError(
                     "Comparison of : " + repr(self) + ", " + repr(other)

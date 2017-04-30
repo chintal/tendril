@@ -539,7 +539,8 @@ class VendorPartBase(object):
 
 
 class VendorElnPartBase(VendorPartBase):
-    def __init__(self, vpno, ident, vendor, max_age, shell_only=False):
+    def __init__(self, vpno, ident, vendor,
+                 max_age=VENDOR_DEFAULT_MAXAGE, shell_only=False):
         self._package = None
         self._datasheet = None
         super(VendorElnPartBase, self).__init__(vpno, ident, vendor, max_age,
