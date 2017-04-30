@@ -996,11 +996,18 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _tf_option_base(ostr):
         ostr = www.strencode(ostr).strip()
-        if ostr == '-':
-            return
-        if ostr == '*':
+        if ostr in ['-', '*']:
             return
         return ostr
+
+    @staticmethod
+    def _tf_resistance(s):
+        # TODO Simplify this once the order strings are corrected
+        try:
+            return Resistance(s.replace('k', 'K'))
+        except ParseException:
+            # TODO Handle multiple resistances
+            return None
 
     @staticmethod
     def _tf_voltage(s):
@@ -1014,12 +1021,22 @@ class VendorDigiKey(VendorBase):
             # return VoltageAC(s)
             return None
 
+    @staticmethod
+    def _tf_wattage(s):
+        s = s.split()[0].strip().rstrip(',')
+        try:
+            return ThermalDissipation(s)
+        except ParseException:
+            raise
+
     @property
     def _filter_otf(self):
         return {
-            'Resistance (Ohms)': Resistance,
+            'Resistance (Ohms)': self._tf_resistance,
             'Capacitance': Capacitance,
             'Voltage - Rated': self._tf_voltage,
+            'Power (Watts)': self._tf_wattage,
+            'Power Per Element': self._tf_wattage,
             'base': self._tf_option_base,
         }
 
@@ -1093,7 +1110,7 @@ class VendorDigiKey(VendorBase):
         extraparams_fp = None
         if footprint == '1206-4':
             footprint = '1206'
-            extraparams_fp = [('Number of Resistors', '4')]
+            # extraparams_fp = [('Number of Resistors', '4')]
         return footprint, extraparams_fp
 
     @property
@@ -1192,7 +1209,7 @@ class VendorDigiKey(VendorBase):
         if devtype == 'resistor':
             loptions = (
                 ('resistance', "Resistance (Ohms)", 'equals', Resistance),
-                ('wattage', "Power (Watts)", 'contains', ThermalDissipation)
+                ('wattage', "Power (Watts)", 'equals', ThermalDissipation)
             )
             # TODO Simplify and support extension
             resistor = parse_resistor(value)
@@ -1200,7 +1217,7 @@ class VendorDigiKey(VendorBase):
         elif devtype == 'resistor_array':
             loptions = (
                 ('resistance', "Resistance (Ohms)", 'equals', Resistance),
-                ('wattage', "Power Per Element", 'tequals', ThermalDissipation)
+                ('wattage', "Power Per Element", 'equals', ThermalDissipation)
             )
             # TODO Simplify and support extension
             resistor = parse_resistor(value)
