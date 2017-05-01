@@ -35,19 +35,42 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 
 class InventoryReaderBase(object):
-    def __init__(self, location, tfpath):
-        self.location = location
+    def __init__(self, tfpath):
         self._tfpath = tfpath
-        self.tf = None
         if os.path.isfile(tfpath):
-            self.tf = transforms.TransformFile(self._tfpath)
+            self._tf = transforms.TransformFile(self._tfpath)
         else:
             logger.warning("Transform File missing : " + self._tfpath)
+            self._tf = None
+
+    @property
+    def row_gen(self):
+        return self._row_gen()
+
+    @property
+    def tf(self):
+        return self._tf
+
+    @property
+    def tf_row_gen(self):
+        return self._tf_row_gen()
+
+    def _row_gen(self):
+        raise NotImplementedError
+
+    def _tf_row_gen(self):
+        if not self.tf:
+            raise LookupError
+        for row in self.row_gen:
+            yield (self.tf.get_canonical_repr(row[0]), row[1])
+
+    def close(self):
+        pass
 
 
 class InventoryDBReader(InventoryReaderBase):
     def __init__(self, location, tfpath):
-        super(InventoryDBReader, self).__init__(location, tfpath)
+        super(InventoryDBReader, self).__init__(tfpath)
 
 
 class StockXlsReader(InventoryReaderBase):
@@ -56,7 +79,7 @@ class StockXlsReader(InventoryReaderBase):
 
             :type xlf: utils.ooutils.XLFile
             """
-        super(StockXlsReader, self).__init__(location, tfpath)
+        super(StockXlsReader, self).__init__(tfpath)
 
         self.sheetname = sname
         assert isinstance(xlf, libreoffice.XLFile)
@@ -69,8 +92,6 @@ class StockXlsReader(InventoryReaderBase):
         self._colident = 0
         self._colqty = -1
         self._skip_to_header()
-        self.row_gen = self._row_gen()
-        self.tf_row_gen = self._tf_row_gen()
 
     def _skip_to_header(self):
         for row in self._csvreader:
@@ -116,14 +137,9 @@ class StockXlsReader(InventoryReaderBase):
                                  "".format(row[self._colident],
                                            row[self._colqty]))
                     qty = 0
-            yield (row[self._colident],
-                   qty)
-        self._csvfile.close()
+            yield (row[self._colident], qty)
 
-    def _tf_row_gen(self):
-        for row in self.row_gen:
-            yield (self.tf.get_canonical_repr(row[0]),
-                   row[1])
+    def close(self):
         self._csvfile.close()
 
 

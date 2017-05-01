@@ -124,6 +124,7 @@ class InventoryLocation(object):
         try:
             for (ident, qty) in self._reader.tf_row_gen:
                 self._lines.append(InventoryLine(ident, qty, self))
+            self._reader.close()
         except ContextualReprNotRecognized:
             logger.error("Inventory has unrecognized components.")
             raise ContextualReprNotRecognized
