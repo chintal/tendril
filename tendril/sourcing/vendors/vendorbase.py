@@ -352,8 +352,8 @@ class VendorPartBase(object):
             )
             data_ts = vpno.updated_at.timestamp
             now = time.time()
-            # if 2 * max_age > now - data_ts > max_age >= 0:
-            #     raise DBPartDataExpired
+            if max_age == 0:
+                raise DBPartDataExpired
             if now - data_ts > max_age >= 0:
                 maintenance.update_vpinfo(self._vendor.cname,
                                           self._canonical_repr,

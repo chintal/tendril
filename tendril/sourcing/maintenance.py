@@ -36,7 +36,7 @@ def update_vpinfo(vendor, ident, vpno):
             message = json.dumps({'vendor': vendor,
                                   'ident': ident,
                                   'vpno': vpno})
-            mq_publish(channel, 'maintenance_sourcing_vpinfo', message)
+            mq_publish(channel, 'maintenance_vendor_vpinfo', message)
     except MQServerUnavailable:
         return
 
@@ -47,6 +47,6 @@ def update_vpmap(vendor, ident):
             channel = connection.channel()
             message = json.dumps({'vendor': vendor,
                                   'ident': ident})
-            mq_publish(channel, 'maintenance_sourcing_vpmap', message)
+            mq_publish(channel, 'maintenance_vendor_vpmap', message)
     except MQServerUnavailable:
         return
