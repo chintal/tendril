@@ -34,6 +34,10 @@ from tendril.utils.files import libreoffice
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
+class MasterNotAvailable(Exception):
+    pass
+
+
 class InventoryReaderBase(object):
     def __init__(self, tfpath):
         self._tfpath = tfpath

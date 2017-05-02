@@ -106,11 +106,30 @@ class InventoryLocation(object):
         self._get_code()
 
         self._reader = reader
+        self._is_valid = False
         if reader is not None:
-            self._load_from_reader()
+            self._get_data()
 
     def _get_code(self):
         self._code = get_inventorylocationcode(self._dname)
+
+    def _get_data(self):
+        self._is_valid = False
+        try:
+            self._load_from_reader()
+            self._is_valid = True
+        except acquire.MasterNotAvailable:
+            raise
+
+    @property
+    def is_valid(self):
+        # TODO Build in some kind of backoff here
+        if not self._is_valid:
+            try:
+                self._get_data()
+            except acquire.MasterNotAvailable:
+                pass
+        return self._is_valid
 
     @property
     def name(self):
@@ -219,11 +238,15 @@ def init_inventory_locations(regen=True):
                     "until the transform is manually verified."
                 )
                 acquire.gen_canonical_transform(idx)
+            except acquire.MasterNotAvailable:
+                pass
 
 
 def get_total_availability(ident):
     total_avail = 0
     for location in inventory_locations:
+        if not location.is_valid:
+            continue
         lqty = location.get_ident_qty(ident)
         if lqty is not None:
             total_avail += lqty
@@ -233,6 +256,8 @@ def get_total_availability(ident):
 def get_total_reservations(ident):
     total_reserve = 0
     for location in inventory_locations:
+        if not location.is_valid:
+            continue
         lqty = location.get_reserve_qty(ident)
         if lqty is not None:
             total_reserve += lqty
@@ -245,6 +270,8 @@ def reserve_items(ident, qty, earmark, die_if_not=True):
     if fpiswire_ident(ident) and not isinstance(qty, Length):
         qty = Length(str(qty) + 'm')
     for location in inventory_locations:
+        if not location.is_valid:
+            continue
         lqty = location.get_ident_qty(ident)
         if lqty is not None:
             if lqty > qty:
@@ -320,6 +347,8 @@ def get_inventory_stage(ident):
     inv_loc_status = {}
     inv_loc_transform = {}
     for loc in inventory_locations:
+        if not loc.is_valid:
+            continue
         qty = loc.get_ident_qty(ident) or 0
         reserve = loc.get_reserve_qty(ident) or 0
         inv_loc_status[loc._code] = (loc.name, qty, reserve, qty - reserve)

@@ -399,6 +399,11 @@ config_options_services = [
         "False",
         "Whether to use Piwik for analytics."
     ),
+    ConfigOption(
+        "TALLY_HOST",
+        "None",
+        "Tally hostname"
+    ),
 ]
 
 load_config(config_options_services)
