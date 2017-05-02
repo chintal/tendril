@@ -119,16 +119,13 @@ class InventoryLocation(object):
             self._load_from_reader()
             self._is_valid = True
         except acquire.MasterNotAvailable:
-            raise
+            pass
 
     @property
     def is_valid(self):
         # TODO Build in some kind of backoff here
         if not self._is_valid:
-            try:
-                self._get_data()
-            except acquire.MasterNotAvailable:
-                pass
+            self._get_data()
         return self._is_valid
 
     @property
@@ -238,8 +235,6 @@ def init_inventory_locations(regen=True):
                     "until the transform is manually verified."
                 )
                 acquire.gen_canonical_transform(idx)
-            except acquire.MasterNotAvailable:
-                pass
 
 
 def get_total_availability(ident):
