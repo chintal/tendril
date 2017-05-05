@@ -27,7 +27,7 @@ from .unitbase import NumericalUnitBase
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
-lrex = re.compile(r'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr) *$)|((?P<um>[-+]?\d*\.*\d+) *um *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|((?P<mil>[-+]?\d*\.*\d+) *mil *$)|((?P<cmil>[-+]?\d*\.*\d+) *cmil *$)|((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$)',  # noqa
+lrex = re.compile(r'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr|meter|metre) *$)|((?P<um>[-+]?\d*\.*\d+) *um *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|((?P<mil>[-+]?\d*\.*\d+) *mil *$)|((?P<cmil>[-+]?\d*\.*\d+) *cmil *$)|((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$)|((?P<feet>[-+]?\d*\.*\d+) *(ft|feet) *$)',  # noqa
                   re.IGNORECASE)
 
 
@@ -60,6 +60,11 @@ def parse_length(value):
     inch = match.group('in')
     if inch is not None:
         _olength = Decimal(inch) * Decimal('25.4') / Decimal('1000')
+        return _olength
+
+    feet = match.group('feet')
+    if feet is not None:
+        _olength = Decimal(feet) * 12 * Decimal('25.4') / Decimal('1000')
         return _olength
 
     mil = match.group('mil')

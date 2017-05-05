@@ -415,6 +415,11 @@ config_options_services = [
         "Tally hostname"
     ),
     ConfigOption(
+        "TALLY_PORT",
+        "9002",
+        "Tally port"
+    ),
+    ConfigOption(
         "TALLY_CACHE",
         "os.path.join(SHAREDCACHE_ROOT, 'tally')",
         "Tally cache folder"
