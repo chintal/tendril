@@ -300,6 +300,11 @@ config_options_fs = [
         "Folder for the refdocs filesystem"
     ),
     ConfigOption(
+        'SHAREDCACHE_ROOT',
+        "os.path.join(INSTANCE_ROOT, 'cache', 'shared')",
+        "Folder for the shared cache filesystem"
+    ),
+    ConfigOption(
         'SVN_SERVER_ROOT',
         'None',
         'Path to the SVN root on the SVN server'
@@ -326,6 +331,11 @@ config_constants_fs = [
         "'refdocs'",
         "Prefix for refdocs in the expose hierarchy"
     ),
+    ConfigConstant(
+        'SHAREDCACHE_PREFIX',
+        "'sharedcache'",
+        "Prefix for sharedcache in the expose hierarchy"
+    )
 ]
 
 load_constants(config_constants_fs)
@@ -404,6 +414,11 @@ config_options_services = [
         "None",
         "Tally hostname"
     ),
+    ConfigOption(
+        "TALLY_CACHE",
+        "os.path.join(SHAREDCACHE_ROOT, 'tally')",
+        "Tally cache folder"
+    )
 ]
 
 load_config(config_options_services)
