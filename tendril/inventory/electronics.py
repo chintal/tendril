@@ -37,10 +37,11 @@ inventory_locations = []
 
 
 class InventoryLine(object):
-    def __init__(self, ident, qty=None, parent=None):
+    def __init__(self, ident, qty=None, parent=None, ctx=None):
         self._ident = ident
         self._qty = qty
         self._parent = parent
+        self._ctx = ctx
         self._reservations = []
 
     @property
@@ -138,8 +139,8 @@ class InventoryLocation(object):
 
     def _load_from_reader(self):
         try:
-            for (ident, qty) in self._reader.tf_row_gen:
-                self._lines.append(InventoryLine(ident, qty, self))
+            for (ident, qty, ctx) in self._reader.tf_row_gen:
+                self._lines.append(InventoryLine(ident, qty, self, ctx))
             self._reader.close()
         except ContextualReprNotRecognized:
             logger.error("Inventory has unrecognized components.")

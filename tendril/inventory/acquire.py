@@ -23,6 +23,7 @@ import csv
 import datetime
 import os
 import re
+from copy import copy
 
 from tendril.entityhub import transforms
 from tendril.gedaif import gsymlib
@@ -66,7 +67,7 @@ class InventoryReaderBase(object):
         if not self.tf:
             raise LookupError
         for row in self.row_gen:
-            yield (self.tf.get_canonical_repr(row[0]), row[1])
+            yield (self.tf.get_canonical_repr(row[0]), row[1], row[2])
 
     def close(self):
         pass
@@ -141,30 +142,24 @@ class StockXlsReader(InventoryReaderBase):
                                  "".format(row[self._colident],
                                            row[self._colqty]))
                     qty = 0
-            yield (row[self._colident], qty)
+            yield (row[self._colident], qty, None)
 
     def close(self):
         self._csvfile.close()
 
 
-def get_stockxlsreader(xlpath, sname, location, tfpath):
-    xlf = libreoffice.get_xlf(xlpath)
-    reader = StockXlsReader(xlf, sname, location, tfpath)
-    return reader
-
-
 def get_reader(elec_inven_data_idx):
-    sdict = config.ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx]
+    sdict = copy(config.ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx])
     reader = None
-    if sdict['type'] == 'QuazarStockXLS':
-        fpath = sdict['fpath']
-        if not os.path.isabs(fpath):
-            fpath = config.get_svn_path(fpath)
-        sname = sdict['sname']
-        location = sdict['location']
-        tfpath = sdict['tfpath']
-        reader = get_stockxlsreader(fpath, sname, location, tfpath)
-
+    invtype = sdict.pop('type')
+    if invtype == 'QuazarStockXLS':
+        if not os.path.isabs(sdict['fpath']):
+            sdict['fpath'] = config.get_svn_path(sdict['fpath'])
+        sdict['xlf'] = libreoffice.get_xlf(sdict.pop('fpath'))
+        reader = StockXlsReader(**sdict)
+    elif invtype == 'TallyStock':
+        from tendril.utils.connectors.tally.stock import InventoryTallyReader
+        reader = InventoryTallyReader(**sdict)
     if reader is not None:
         return reader
     else:
@@ -174,41 +169,43 @@ def get_reader(elec_inven_data_idx):
 
 
 def gen_canonical_transform(elec_inven_data_idx, regen=True):
-    sdict = config.ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx]
-    if sdict['type'] == 'QuazarStockXLS':
-        fpath = sdict['fpath']
-        if not os.path.isabs(fpath):
-            fpath = config.get_svn_path(fpath)
-        sname = sdict['sname']
-        location = sdict['location']
-        tfpath = sdict['tfpath']
-
-        rdr = get_stockxlsreader(fpath, sname, location, tfpath)
-
-        outp = tfpath
-        outf = fsutils.VersionedOutputFile(outp)
-        outw = csv.writer(outf)
-        outw.writerow(
-            ('Current', 'gEDA Current', 'Ideal', 'Status', 'In Symlib')
-        )
-        for line in rdr.row_gen:
-            if regen and rdr.tf.has_contextual_repr(line[0]):
-                if gsymlib.is_recognized(rdr.tf.get_canonical_repr(line[0])):
-                    in_symlib = 'YES'
-                else:
-                    in_symlib = ''
-                outw.writerow((line[0],
-                               rdr.tf.get_canonical_repr(line[0]),
-                               rdr.tf.get_ideal_repr(line[0]),
-                               rdr.tf.get_status(line[0]),
-                               in_symlib,))
+    sdict = copy(config.ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx])
+    invtype = sdict.pop('type')
+    reader = None
+    if invtype == 'QuazarStockXLS':
+        if not os.path.isabs(sdict['fpath']):
+            sdict['fpath'] = config.get_svn_path(sdict['fpath'])
+        sdict['xlf'] = libreoffice.get_xlf(sdict.pop('fpath'))
+        reader = StockXlsReader(**sdict)
+    elif invtype == 'TallyStock':
+        from tendril.utils.connectors.tally.stock import InventoryTallyReader
+        reader = InventoryTallyReader(**sdict)
+    if not reader:
+        return
+    outp = sdict['tfpath']
+    outf = fsutils.VersionedOutputFile(outp)
+    outw = csv.writer(outf)
+    outw.writerow(
+        ('Current', 'gEDA Current', 'Ideal', 'Status', 'In Symlib')
+    )
+    for line in reader.row_gen:
+        if regen and reader.tf.has_contextual_repr(line[0]):
+            if gsymlib.is_recognized(reader.tf.get_canonical_repr(line[0])):
+                in_symlib = 'YES'
             else:
-                if gsymlib.is_recognized(line[0]):
-                    in_symlib = True
-                else:
-                    in_symlib = False
-                outw.writerow((line[0], line[0], line[0], 'NEW', in_symlib))
-        outf.close()
+                in_symlib = ''
+            outw.writerow((line[0],
+                           reader.tf.get_canonical_repr(line[0]),
+                           reader.tf.get_ideal_repr(line[0]),
+                           reader.tf.get_status(line[0]),
+                           in_symlib,))
+        else:
+            if gsymlib.is_recognized(line[0]):
+                in_symlib = True
+            else:
+                in_symlib = False
+            outw.writerow((line[0], line[0], line[0], 'NEW', in_symlib))
+    outf.close()
 
 
 if __name__ == "__main__":

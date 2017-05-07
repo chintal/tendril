@@ -27,7 +27,7 @@ from .unitbase import NumericalUnitBase
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
-lrex = re.compile(r'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr|meter|metre) *$)|((?P<um>[-+]?\d*\.*\d+) *um *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|((?P<mil>[-+]?\d*\.*\d+) *mil *$)|((?P<cmil>[-+]?\d*\.*\d+) *cmil *$)|((?P<in>[-+]?\d*\.*\d+) *(in|inch) *$)|((?P<feet>[-+]?\d*\.*\d+) *(ft|feet) *$)',  # noqa
+lrex = re.compile(r'^((?P<m>[-+]?\d*\.*\d+) *(m|mtr|meter|metre) *$)|((?P<um>[-+]?\d*\.*\d+) *um *$)|((?P<cm>[-+]?\d*\.*\d+) *cm *$)|((?P<mm>[-+]?\d*\.*\d+) *mm *$)|((?P<mil>[-+]?\d*\.*\d+) *mil *$)|((?P<cmil>[-+]?\d*\.*\d+) *cmil *$)|((?P<in>[-+]?\d*\.*\d+) *(in|inch|Inch) *$)|((?P<feet>[-+]?\d*\.*\d+) *(ft|feet|Feet) *$)',  # noqa
                   re.IGNORECASE)
 
 
