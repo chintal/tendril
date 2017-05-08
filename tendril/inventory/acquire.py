@@ -53,6 +53,10 @@ class InventoryReaderBase(object):
         return self._row_gen()
 
     @property
+    def tf_path(self):
+        return self._tfpath
+
+    @property
     def tf(self):
         return self._tf
 
@@ -170,20 +174,10 @@ def get_reader(elec_inven_data_idx):
 
 def gen_canonical_transform(elec_inven_data_idx, regen=True):
     # TODO Support Unified Transforms?
-    sdict = copy(config.ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx])
-    invtype = sdict.pop('type')
-    reader = None
-    if invtype == 'QuazarStockXLS':
-        if not os.path.isabs(sdict['fpath']):
-            sdict['fpath'] = config.get_svn_path(sdict['fpath'])
-        sdict['xlf'] = libreoffice.get_xlf(sdict.pop('fpath'))
-        reader = StockXlsReader(**sdict)
-    elif invtype == 'TallyStock':
-        from tendril.utils.connectors.tally.stock import InventoryTallyReader
-        reader = InventoryTallyReader(**sdict)
+    reader = get_reader(elec_inven_data_idx)
     if not reader:
         return
-    outp = sdict['tfpath']
+    outp = reader.tf_path
     outf = fsutils.VersionedOutputFile(outp)
     outw = csv.writer(outf)
     outw.writerow(
