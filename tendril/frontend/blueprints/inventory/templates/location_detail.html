@@ -40,7 +40,6 @@
             <table id="loc_status_table" class="responsive cleantable" data-paging='true'>
                 <thead>
                 <tr>
-                    <th></th>
                     <th class="min-tablet">Idx</th>
                     <th class="all">Canonical Representation</th>
                     <th class="min-desktop">Contextual Representation</th>
@@ -51,26 +50,23 @@
                 </thead>
                 <tbody>
                 {% for line in stage.loc.lines %}
-                    <tr {% if line.context %} data-content="
-                        <div class='dtchildslider'>
-                        <table class='embedtable'>
-                        {% for k, v in line.context|dictsort %}{% if v %}
-                            <tr>
-                                <td class='ctxinfohead'> {{ k|upper }}: </td>
-                                <td class='ctxinfo'>
-                                    {% if v is iterable and v is not string %}
-                                    {% for item in v %}<div>{{item}}</div>{% endfor %}
-                                    {% else %} {{v}} {% endif %}
-                                </td>
-                            </tr>
-                        {% endif %}{% endfor %}
-                        </table></div>" {% endif %}>
-                        <td {% if line.context %}class="details-control"{% endif %}></td>
+                    <tr>
                         <td> {{ loop.index }} </td>
                         <td> {{ line.ident }} </td>
                         <td>
-                            <!-- Tooltips are far too slow -->
-                            {{ stage.loc._reader.tf.get_contextual_repr(line.ident) }}
+                            {% if line.context %}
+                            <span data-tooltip aria-haspopup="true"
+                                  class="has-tip"
+                                  title="{% for k, v in line.context|dictsort %}
+                                  {% if v %}
+                                  <div class='ctxtip'>
+                                  <div class='subhead'> {{k|upper}} </div>
+                                  {% if v is iterable and v is not string %}
+                                      {% for item in v %}<div>{{item}}</div>{% endfor %}
+                                  {% else %} {{v}} {% endif %}
+                                  </div> {% endif %} {% endfor %}">
+                            {% endif %}  {{ stage.loc._reader.tf.get_contextual_repr(line.ident) }}
+                            {% if line.context %} </span> {% endif %}
                         </td>
                         <td class="text-center"> {% if line._qty == 0 or not line._qty %}-{% else %}{{line._qty}}{% endif %} </td>
                         <td class="text-center"> {% if line.reserved_qty == 0 or not line.reserved_qty %}-{% else %}{{line.reserved_qty}}{% endif %} </td>
