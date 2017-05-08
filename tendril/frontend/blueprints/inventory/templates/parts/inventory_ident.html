@@ -146,7 +146,21 @@
                 {% for code, row in inv_transform|dictsort %}
                     <tr>
                         <td> <a href="/inventory/transform/{{ code }}">{{ row.0 }}</a> </td>
-                        <td> {{ row.1 or '' }} </td>
+                        <td>
+                            {% if row.2 %}
+                            <span data-tooltip aria-haspopup="true"
+                                  class="has-tip"
+                                  title="{% for k, v in row.2|dictsort %}
+                                  {% if v %}
+                                  <div class='ctxtip'>
+                                  <div class='subhead'> {{k|upper}} </div>
+                                  {% if v is iterable and v is not string %}
+                                      {% for item in v %}<div>{{item}}</div>{% endfor %}
+                                  {% else %} {{v}} {% endif %}
+                                  </div> {% endif %} {% endfor %}">
+                            {% endif %}  {{ row.1 or '' }}
+                            {% if row.2 %} </span> {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>

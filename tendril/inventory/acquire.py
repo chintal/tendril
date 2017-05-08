@@ -169,6 +169,7 @@ def get_reader(elec_inven_data_idx):
 
 
 def gen_canonical_transform(elec_inven_data_idx, regen=True):
+    # TODO Support Unified Transforms?
     sdict = copy(config.ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx])
     invtype = sdict.pop('type')
     reader = None

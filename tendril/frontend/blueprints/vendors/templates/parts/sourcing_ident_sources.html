@@ -90,17 +90,25 @@
                     <div class="sinfo-price-native {% if loop.index == selrow[0] %}chosen-price{% endif %} small-6 columns">
                         <span data-tooltip aria-haspopup="true"
                               class="has-tip {% if loop.index == selrow[0] %}chosen-price{% endif %}"
-                              title="<table>
-                              <tr><td>Vendor Price</td><td>{{ up.unit_price.source_string|unicode }}</td></tr>
+                              title="<div class='ctxtip'>
+                              <div class='subhead'>Vendor Price</div>
+                              {{ up.unit_price.source_string|unicode }}
+                              </div>
                               {% if up.is_foreign %}
-                              <tr><td>Exchange Rate</td><td>{{ up.exch_rate|unicode }}</td></tr>
+                              <div class='ctxtip'>
+                              <div class='subhead'>Exchange Rate</div>
+                              {{ up.exch_rate|unicode }}
+                              </div>
                               {% endif %}
                               {% if ap %}
                               {% for apc in ap %}
-                              <tr><td>{{apc.0}} ({{apc.1}}%)</td><td>{{ apc.2.native_string|unicode }}</td></tr>
+                              <div class='ctxtip'>
+                              <div class='subhead'>{{apc.0}} ({{apc.1}}%)</div>
+                              {{ apc.2.native_string|unicode }}
+                              </div>
                               {% endfor %}
                               {% endif %}
-                              </table>">
+                              </div>">
                             {{ ep.unit_price.native_string|unicode  or '' }}
                         </span>
                     </div>

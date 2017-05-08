@@ -49,10 +49,10 @@
                         <td> {{ loop.index }} </td>
                         <td> {{ ident }} </td>
                         {% for loc in stage.locs %}
-                            <td class="text-center"> {{ loc.get_ident_qty(ident) or '-' }} </td>
+                            <td class="text-center"> {% if loc.get_ident_qty(ident) == 0 or not loc.get_ident_qty(ident) %}-{% else %}{{loc.get_ident_qty(ident)}}{% endif %} </td>
                         {% endfor %}
-                        <td class="text-center"> {{ stage.inv.get_total_reservations(ident) or '-' }} </td>
-                        <td class="text-center"> {{ stage.inv.get_total_availability(ident) or '-' }} </td>
+                        <td class="text-center"> {% if stage.inv.get_total_reservations(ident) == 0 or not stage.inv.get_total_reservations(ident) %}-{% else %}{{stage.inv.get_total_reservations(ident)}}{% endif %} </td>
+                        <td class="text-center"> {% if stage.inv.get_total_availability(ident) == 0 or not stage.inv.get_total_availability(ident) %}-{% else %}{{stage.inv.get_total_availability(ident)}}{% endif %} </td>
                     </tr>
                 {% endfor %}
 

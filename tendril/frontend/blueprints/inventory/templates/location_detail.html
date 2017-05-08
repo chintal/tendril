@@ -37,9 +37,10 @@
 <div class="small-12 columns" data-magellan-destination="locstatus">
 <a name="locstatus"></a>
         <div class="small-12 columns">
-            <table id="loc_status_table" class="display" data-paging='false'>
+            <table id="loc_status_table" class="responsive cleantable" data-paging='true'>
                 <thead>
                 <tr>
+                    <th></th>
                     <th class="min-tablet">Idx</th>
                     <th class="all">Canonical Representation</th>
                     <th class="min-desktop">Contextual Representation</th>
@@ -50,13 +51,30 @@
                 </thead>
                 <tbody>
                 {% for line in stage.loc.lines %}
-                    <tr>
+                    <tr {% if line.context %} data-content="
+                        <div class='dtchildslider'>
+                        <table class='embedtable'>
+                        {% for k, v in line.context|dictsort %}{% if v %}
+                            <tr>
+                                <td class='ctxinfohead'> {{ k|upper }}: </td>
+                                <td class='ctxinfo'>
+                                    {% if v is iterable and v is not string %}
+                                    {% for item in v %}<div>{{item}}</div>{% endfor %}
+                                    {% else %} {{v}} {% endif %}
+                                </td>
+                            </tr>
+                        {% endif %}{% endfor %}
+                        </table></div>" {% endif %}>
+                        <td {% if line.context %}class="details-control"{% endif %}></td>
                         <td> {{ loop.index }} </td>
                         <td> {{ line.ident }} </td>
-                        <td> {{ stage.loc._reader.tf.get_contextual_repr(line.ident) }} </td>
-                        <td class="text-center"> {{ line._qty or '-' }} </td>
-                        <td class="text-center"> {{ line.reserved_qty or '-' }} </td>
-                        <td class="text-center"> {{ line.avail_qty or '-' }} </td>
+                        <td>
+                            <!-- Tooltips are far too slow -->
+                            {{ stage.loc._reader.tf.get_contextual_repr(line.ident) }}
+                        </td>
+                        <td class="text-center"> {% if line._qty == 0 or not line._qty %}-{% else %}{{line._qty}}{% endif %} </td>
+                        <td class="text-center"> {% if line.reserved_qty == 0 or not line.reserved_qty %}-{% else %}{{line.reserved_qty}}{% endif %} </td>
+                        <td class="text-center"> {% if line.avail_qty == 0 or not line.avail_qty %}-{% else %}{{line.avail_qty}}{% endif %} </td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -67,10 +85,29 @@
                 var table = $('#loc_status_table').DataTable({
                     /* Disable initial sort */
                     "aaSorting": [],
+                    "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+                    columnDefs:[{orderable: false, targets: [0]}],
                     {% include 'parts/datatable_defaults.html' %}
                 });
                 table.buttons().container()
                     .appendTo( '#loc_status_table_wrapper .small-12.medium-6.columns:eq(0)' );
+            $('#loc_status_table tbody').on('click', 'td.details-control', function () {
+                var tr = $(this).closest('tr');
+                var row = table.row( tr );
+                if ( row.child.isShown() ) {
+                    // This row is already open - close it
+                    $('div.dtchildslider', row.child()).slideUp( function () {
+                        row.child.hide();
+                        tr.removeClass('shown');
+                    });
+                }
+                else {
+                    // Open this row
+                    row.child( tr.attr('data-content'), 'no-padding').show();
+                    tr.addClass('shown');
+                    $('div.dtchildslider', row.child()).slideDown();
+                }
+            });
             });
         </script>
 </div>

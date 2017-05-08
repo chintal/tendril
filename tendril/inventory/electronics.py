@@ -97,6 +97,10 @@ class InventoryLine(object):
         return self.ident + '\t' + str(self._qty) + '\t' + \
             str(self.reserved_qty)
 
+    @property
+    def context(self):
+        return self._ctx
+
 
 class InventoryLocation(object):
     def __init__(self, name, dname, reader):
@@ -210,6 +214,11 @@ class InventoryLocation(object):
     @property
     def lines(self):
         return self._lines
+
+    def get_line_context(self, ident):
+        for line in self._lines:
+            if line.ident == ident:
+                return line.context
 
 
 def init_inventory_locations(regen=True):
@@ -348,8 +357,9 @@ def get_inventory_stage(ident):
         qty = loc.get_ident_qty(ident) or 0
         reserve = loc.get_reserve_qty(ident) or 0
         inv_loc_status[loc._code] = (loc.name, qty, reserve, qty - reserve)
-        inv_loc_transform[loc._code] = (loc.name,
-                                        loc.tf.get_contextual_repr(ident))
+        contextual_repr = loc.tf.get_contextual_repr(ident)
+        inv_loc_transform[loc._code] = (loc.name, contextual_repr,
+                                        loc.get_line_context(ident))
     inv_total_reservations = get_total_reservations(ident)
     inv_total_quantity = get_total_availability(ident)
     inv_total_availability = inv_total_quantity - inv_total_reservations
