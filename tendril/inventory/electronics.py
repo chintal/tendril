@@ -52,7 +52,10 @@ class InventoryLine(object):
     def avail_qty(self):
         try:
             if fpiswire_ident(self._ident):
-                return Length(str(self._qty) + 'm') - self.reserved_qty
+                qty = self._qty
+                if not isinstance(qty, Length):
+                    qty = Length(str(self._qty) + 'm')
+                return qty - self.reserved_qty
             else:
                 return self._qty - self.reserved_qty
         except AttributeError:
