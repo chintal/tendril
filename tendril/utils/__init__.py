@@ -72,3 +72,6 @@ Tendril application code.
     tendril.utils.www
 
 """
+
+from pkgutil import extend_path
+__path__ = extend_path(__path__, 'tendril.utils')
