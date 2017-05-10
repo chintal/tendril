@@ -31,31 +31,111 @@
 </div>
 
 <div class="small-12 columns">
-    <a href="/inventory/location/{{ stage.loc._code }}"><div class="small-12 columns button radius secondary"> Go to Status </div></a>
+    <a href="/inventory/location/{{ stage.loc._code }}">
+        <div class="small-12 columns button radius secondary">
+            Go to Status
+        </div>
+    </a>
 </div>
 
-<script>
-    function edit_form(row){
-        rval = '<div><form method="POST"><fieldset><legend>Edit Transform Row</legend>';
-        rval += '{{ stage.form.hidden_tag() }}';
-        rval += '<div class="large-4 small-12 columns">';
-        rval += '<label>Contextual Representation<input type="text" name="contextual" value="';
-        rval += row.data()[1] + '" readonly></label>';
-        rval += '</div>';
-        rval += '<div class="large-4 small-12 columns">';
-        rval += '<label>Canonical Representation<input type="text" id="canonical_' + row.index();
-        rval += '" list="json-identlist" autocomplete="off" name="canonical" value="';
-        rval += row.data()[2] + '"></label>';
-        rval += '</div>';
-        rval += '<div class="large-1 small-5 columns">';
-        rval += '<label>Status<input type="text" name="status" value="REVIEW"'
-        rval += '{% if not current_user.has_roles('inventory_admin') %}readonly{% endif %} list="statuslist"></label>';
-        rval += '</div>';
-        rval += '<div class="large-1 small-5 columns">';
-        rval += '<input type="submit" class="button small expand radius" value="Submit">';
-        rval += '</div>';
-        rval += '</fieldset></form></div>';
-        return rval;
+<script type="text/javascript">
+    function update_transform(data_id) {
+        form = $('form#xform_update_' + data_id);
+        loading = $('div#xform_loading_' + data_id);
+        form.hide();
+        loading.show();
+        var values = {};
+        $.each(form.serializeArray(), function(i, field) {
+            values[field.name] = field.value;
+        });
+        $.post('{{request.path}}/update_transform', values).done(function(result) {
+            if (!result['success']){
+                alert("Transform Update Failed. Server rejected update!");
+            }
+            else{
+                $('#contextual_' + data_id).val = result['contextual'];
+                $('#canonical_' + data_id).val = result['canonical'];
+                $('#status_' + data_id).val = result['status'];
+                var tr = form.closest('tr').prev('tr');
+                console.log(tr);
+                tr.find('td.td_contextual')[0].innerHTML = result['contextual'];
+                tr.find('td.td_canonical')[0].innerHTML = result['canonical'];
+
+                var stcells = tr.find('td.td_status');
+                console.log(stcells);
+                stcells[0].innerHTML = result['status'];
+                if (result['status'] == 'NEW'){
+                    stcells.removeClass('resultcell-pass');
+                    stcells.removeClass('resultcell-yellow');
+                    stcells.addClass('resultcell-fail');
+                }
+                else if (result['status'] == 'OK'){
+                    stcells.removeClass('resultcell-fail');
+                    stcells.removeClass('resultcell-yellow');
+                    stcells.addClass('resultcell-pass');
+                }
+                else{
+                    stcells.removeClass('resultcell-fail');
+                    stcells.removeClass('resultcell-pass');
+                    stcells.addClass('resultcell-yellow');
+                }
+
+                var slcells = tr.find('td.td_symlib');
+                console.log(slcells);
+                if (result['in_symlib']){
+                    slcells[0].innerHTML = 'Yes';
+                    slcells.addClass('resultcell-pass');
+                    slcells.removeClass('resultcell-fail');
+                }
+                else{
+                    slcells[0].innerHTML = 'No';
+                    slcells.addClass('resultcell-fail');
+                    slcells.removeClass('resultcell-pass');
+                }
+
+                tr.find('td.details-control').trigger('click');
+            }
+            loading.hide();
+            form.show();
+        }).fail(function() {
+            alert("Transform Update Failed. Could not connect to server!");
+            loading.hide();
+            form.show();
+        });
+
+    }
+
+    function edit_form(row, data_id){
+        rv = '<div class="xform-update">';
+        rv += '<div class="text-center" style="display: none" id="xform_loading_'+data_id+'"><img width="40" height="40" src="/static/images/loading.gif"></div>';
+        rv += '<form id="xform_update_' + data_id + '" method="POST"><fieldset>';
+        rv += '<legend>Edit Transform Row</legend>{{stage.form.hidden_tag()}}';
+        rv += '<div class="large-4 small-12 columns">';
+        rv += '<label>Contextual Representation<input ';
+        rv += 'id="contextual_' + data_id + '" type="text" name="contextual" ';
+        rv += 'value="' + row.data()[1] + '" readonly></label>';
+        rv += '</div><div class="large-4 small-12 columns">';
+        rv += '<label>Canonical Representation<input type="text" id="canonical_';
+        rv += row.index() + '" list="json-identlist" autocomplete="off" ';
+        rv += 'name="canonical" value="' + row.data()[2] + '"></label></div>';
+        rv += '<div class="large-1 small-5 columns">';
+        rv += '<label>Status<input id="status_' + data_id + '" type="text" ';
+        rv += 'name="status" value="REVIEW"'
+        rv += '{% if not current_user.has_roles('inventory_admin') %}readonly{% endif %} list="statuslist"></label>';
+        rv += '</div><div class="large-1 small-5 columns">';
+        rv += '<input id="submit_' + data_id + '" type="submit" class="button ';
+        rv += 'small expand radius update-xform-submit" value="Submit">';
+        rv += '</div></fieldset></form></div>';
+        return rv;
+    }
+
+    function create_xform_update_child(row, data_id){
+        row.child( edit_form(row, data_id) ).show();
+        $('form#xform_update_' + data_id).submit(function(e) {
+            e.preventDefault();
+            data_id = $(this).attr('id').split('_').pop();
+            update_transform(data_id);
+        });
     }
 </script>
 
@@ -74,21 +154,21 @@
                 </thead>
                 <tbody>
                 {% for key in stage.tf.names %}
-                    <tr>
+                    <tr data-id="{{ loop.index }}">
                         <td class="details-control"></td>
-                        <td> {{ key }} </td>
-                        <td> {{ stage.tf.get_canonical_repr(key) }} </td>
+                        <td class="td_contextual"> {{ key }} </td>
+                        <td class="td_canonical"> {{ stage.tf.get_canonical_repr(key) }} </td>
                         {% set status = stage.tf.get_status(key) %}
-                        <td class="text-center
+                        <td class="text-center td_status
                             {% if status=='NEW' %} resultcell-fail
                             {% elif status=='OK' %} resultcell-pass
                             {% else %} resultcell-yellow {% endif %}
                         "> {{ status }} </td>
                         <td
                             {% if stage.tf.get_canonical_repr(key) in stage.gsymlib_idents %}
-                                class="resultcell-pass"> Yes
+                                class="td_symlib resultcell-pass"> Yes
                             {% else %}
-                                class="resultcell-fail"> No
+                                class="td_symlib resultcell-fail"> No
                             {% endif %}
                         </td>
                     </tr>
@@ -102,7 +182,8 @@
                     /* Disable initial sort */
                     "order": [[ 1, "asc" ]],
                     "columnDefs":[
-                        {"width": "8em", "targets": [3,4]},
+                        {width: "8em", "targets": [3,4]},
+                        {orderable: false, targets: [0]},
                     ],
                     {% include 'parts/datatable_defaults.html' %}
                 });
@@ -149,7 +230,7 @@
                     }
                     else {
                         // Open this row
-                        row.child( edit_form(row) ).show();
+                        create_xform_update_child(row, data_id);
                         tr.addClass('shown');
                     }
                     $(document).foundation('reflow');
