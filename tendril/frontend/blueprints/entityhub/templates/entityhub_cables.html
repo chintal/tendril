@@ -30,7 +30,7 @@
 
 <ul id="card-container" class="small-block-grid-1 medium-block-grid-2 large-block-grid-3" data-equalizer>
     {% for cable in stage.cables %}
-    <li class="card-instance" data-status="{{ cable.status }}" data-series="{{ cable.configs.snoseries }}" data-title="{{ cable.ident }}">
+    <li class="card-instance" data-status="{{ cable.status }}" data-series="{{ cable.configs.snoseries }}" data-title="{{ cable.ident|lower }}" >
         <a href="{{ cable.ident }}">
             <ul class="pricing-table active-tb shadow mrgn-20-top">
                 <li class="title autoscale"> {{ cable.ident }} </li>
