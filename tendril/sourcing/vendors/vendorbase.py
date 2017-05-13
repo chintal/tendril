@@ -691,7 +691,9 @@ class VendorBase(object):
 
     def get_all_vparts(self, max_age=VENDOR_DEFAULT_MAXAGE):
         for ident, vpno in self.get_all_vpnos():
-            yield self.get_vpart(vpartno=vpno, ident=ident, max_age=max_age)
+            vpart = self.get_vpart(vpartno=vpno, ident=ident, max_age=max_age)
+            if vpart:
+                yield vpart
 
     def get_vpnos(self, ident, max_age=VENDOR_DEFAULT_MAXAGE):
         acquire = False

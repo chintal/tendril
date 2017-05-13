@@ -208,9 +208,20 @@ from .vendorbase import VendorElnPartBase
 from .vendorbase import VendorPrice
 from .vendorbase import VendorPartRetrievalError
 
-
 logger = log.get_logger(__name__, log.DEFAULT)
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+
+
+class DigiKeyParseError(Exception):
+    pass
+
+
+class DigiKeyPricingTableNotFound(DigiKeyParseError):
+    pass
+
+
+class DigiKeyPartUnusable(VendorPartRetrievalError):
+    pass
 
 
 class DigiKeyElnPart(VendorElnPartBase):
@@ -244,7 +255,7 @@ class DigiKeyElnPart(VendorElnPartBase):
         if self._vparturl:
             return self._vparturl
         else:
-            return 'http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail?name=' \
+            return 'https://www.digikey.com/products/en?keywords=' \
                     + urllib.quote_plus(self.vpno)
 
     def _get_data(self):
@@ -265,8 +276,15 @@ class DigiKeyElnPart(VendorElnPartBase):
             logger.error("Unable to open DigiKey product page : " + self.vpno)
             raise VendorPartRetrievalError
 
-        for price in self._get_prices(soup):
-            self.add_price(price)
+        excl = self._get_exclusion_criteria(soup)
+        if excl:
+            raise DigiKeyPartUnusable(excl)
+
+        try:
+            for price in self._get_prices(soup):
+                self.add_price(price)
+        except DigiKeyPricingTableNotFound:
+            logger.error("No prices parsed for : " + self.vpno)
 
         try:
             self.overview_table = self._get_overview_table(soup)
@@ -283,6 +301,20 @@ class DigiKeyElnPart(VendorElnPartBase):
         self.vqtyavail = self._get_vqtyavail()
         self.vpartdesc = self._get_vpartdesc()
 
+    @staticmethod
+    def _get_exclusion_criteria(soup):
+        rv = []
+        beablock = soup.find('div', {'class': 'product-details-feedback'})
+        if beablock is not None:
+            # TODO Handle alternatives?
+            obs = beablock.find('li', {'id': 'obsoleteStockMsg'})
+            if obs and obs.text == 'Obsolete item.':
+                rv.append('Obsolete Item')
+            disc = beablock.find('li', {'id': 'dkcDiscontinuedMsg'})
+            if disc and disc.text == 'Digi-Key has discontinued this item.':
+                rv.append('Discontinued Item')
+        return rv
+
     def _get_prices(self, soup):
         """
         Given the BS4 parsed soup of the Digi-Key product page, this function
@@ -297,6 +329,8 @@ class DigiKeyElnPart(VendorElnPartBase):
         """
         pricingtable = soup.find('table', id='product-dollars')
         prices = []
+        if not pricingtable:
+            raise DigiKeyPricingTableNotFound(self.vpno)
         try:
             for row in pricingtable.findAll('tr'):
                 cells = row.findAll('td')
@@ -324,8 +358,8 @@ class DigiKeyElnPart(VendorElnPartBase):
                         VendorPrice(moq, price, self._vendor.currency)
                     )
         except AttributeError:
-            logger.error(
-                "Pricing table not found or other error for " + self.vpno
+            raise DigiKeyParseError(
+                "Unhandled error parsing pricing table for  " + self.vpno
             )
         return prices
 
@@ -639,13 +673,15 @@ class VendorDigiKey(VendorBase):
         ``success`` parameter is set to ``False``, and its ``strategy``
         parameter is set as listed below :
 
-        +----------------------------------------+-----------------------+
-        | Listed as Obsolete on the Product Page | ``OBSOLETE_NOTAVAIL`` |
-        +----------------------------------------+-----------------------+
-        | No Part Number Found                   | ``NO_PNO_CELL``       |
-        +----------------------------------------+-----------------------+
-        | Product Details Table Not Found        | ``NO_PDTABLE``        |
-        +----------------------------------------+-----------------------+
+        +------------------------------------+---------------------------+
+        | Listed as Obsolete                 | ``OBSOLETE_NOTAVAIL``     |
+        +------------------------------------+---------------------------+
+        | Listed as Disconntiued             | ``DISCONTINUED_NOTAVAIL`` |
+        +------------------------------------+---------------------------+
+        | No Part Number Found               | ``NO_PNO_CELL``           |
+        +------------------------------------+---------------------------+
+        | Product Details Table Not Found    | ``NO_PDTABLE``            |
+        +------------------------------------+---------------------------+
 
         .. todo::
             The current approach of handling catergories and subcategories
@@ -659,8 +695,13 @@ class VendorDigiKey(VendorBase):
         """
         beablock = soup.find('div', {'class': 'product-details-feedback'})
         if beablock is not None:
-            if beablock.text == u'\nObsolete item; call Digi-Key for more information.\n':  # noqa
+            # TODO Handle alternatives?
+            obs = beablock.find('li', {'id': 'obsoleteStockMsg'})
+            if obs and obs.text == 'Obsolete item.':
                 return SearchResult(False, None, 'OBSOLETE_NOTAVAIL')
+            disc = beablock.find('li', {'id': 'dkcDiscontinuedMsg'})
+            if disc and disc.text == 'Digi-Key has discontinued this item.':
+                return SearchResult(False, None, 'DISCONTINUED_NOTAVAIL')
         pdtable = soup.find('table', {'id': 'product-details'})
         if pdtable is not None:
             pno_meta = pdtable.find('meta', {'itemprop': 'productID'})
