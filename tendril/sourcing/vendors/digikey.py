@@ -170,6 +170,8 @@ Manufacturer
 Price Break
 
 
+.. todo:: Consider migration to DigiKey API.
+
 """
 
 import codecs
@@ -242,6 +244,10 @@ class DigiKeyElnPart(VendorElnPartBase):
                        sourcing infrastructure. This is required
                        for use with the Tendril database.
         :type vendor: :class:`VendorDigiKey`
+        
+        TODO:
+            - Handle when "Discontinued at digikey" shows up on a part 
+              actually available. AT24CM02-SSHD-TCT-ND
 
         """
         if vendor is None:
@@ -265,10 +271,13 @@ class DigiKeyElnPart(VendorElnPartBase):
 
         """
         try:
-            soup = self._vendor.get_soup(self.vparturl)
+            soup, url = self.get_productpage_soup(self.vpno,
+                                                  self.vparturl)
+            self._vparturl = url
         except HTTPError as e:
             if e.code == 404:
-                logger.error("Got 404 opening DigiKey product page : " + self.vpno)
+                logger.error("Got 404 opening DigiKey product page : " +
+                             self.vpno)
                 raise VendorPartRetrievalError
             else:
                 raise
@@ -276,7 +285,7 @@ class DigiKeyElnPart(VendorElnPartBase):
             logger.error("Unable to open DigiKey product page : " + self.vpno)
             raise VendorPartRetrievalError
 
-        excl = self._get_exclusion_criteria(soup)
+        excl = self._vendor.get_productpage_exclusion_criteria(soup)
         if excl:
             raise DigiKeyPartUnusable(excl)
 
@@ -301,19 +310,50 @@ class DigiKeyElnPart(VendorElnPartBase):
         self.vqtyavail = self._get_vqtyavail()
         self.vpartdesc = self._get_vpartdesc()
 
-    @staticmethod
-    def _get_exclusion_criteria(soup):
-        rv = []
-        beablock = soup.find('div', {'class': 'product-details-feedback'})
-        if beablock is not None:
-            # TODO Handle alternatives?
-            obs = beablock.find('li', {'id': 'obsoleteStockMsg'})
-            if obs and obs.text == 'Obsolete item.':
-                rv.append('Obsolete Item')
-            disc = beablock.find('li', {'id': 'dkcDiscontinuedMsg'})
-            if disc and disc.text == 'Digi-Key has discontinued this item.':
-                rv.append('Discontinued Item')
-        return rv
+    def _get_cat_soups(self, idxlist):
+        caturls = [x.attrs['href'] for x in
+                   idxlist.findAll('a', attrs={'class': 'catfilterlink'})]
+        new_urls = [urlparse.urljoin(self._vendor.url_base, u)
+                    for u in caturls]
+        return [(self._vendor.get_soup(u), u) for u in new_urls]
+
+    def get_productpage_soup(self, vpno, url):
+        soup = self._vendor.get_soup(url)
+        if soup.find('table', id='product-details'):
+            return soup, url
+
+        soups = [(soup, url)]
+
+        idxlist = soup.find('div', id='productIndexList')
+        if not idxlist:
+            idxlist = soup.find('ul', id='catfiltersubid')
+        if idxlist:
+            soups = self._get_cat_soups(idxlist)
+
+        rows = []
+        for soup, url in soups:
+            proddetail = soup.find('table', id='product-details')
+            if proddetail is not None:
+                rpno = proddetail.find('meta', {'itemprop': 'productID'})
+                rpno = rpno.attrs['content'][4:].strip()
+                if rpno == vpno:
+                    return soup, url
+            table = soup.find('table', id='productTable')
+            if table is not None:
+                rows.extend(
+                    table.find_all('tr',
+                                   {'itemtype': 'http://schema.org/Product'})
+                )
+            if not table and not proddetail:
+                raise DigiKeyParseError("Another category page found?")
+        for row in rows:
+            rpno = row.find('meta', {'itemprop': 'productid'})
+            rpno = rpno.attrs['content'][4:].strip()
+            if rpno == vpno:
+                purl = row.find('a', {'itemprop': 'url'}).attrs['href']
+                purl = urlparse.urljoin(self._vendor.url_base, purl)
+                return self._vendor.get_soup(purl), purl
+        raise DigiKeyParseError("Expected an exact match here")
 
     def _get_prices(self, soup):
         """
@@ -659,15 +699,8 @@ class VendorDigiKey(VendorBase):
         return device, value, footprint
 
     @staticmethod
-    def _process_product_page(soup):
+    def get_productpage_exclusion_criteria(soup):
         """
-        Given the BS4 parsed soup of a Digi-Key product page, returns a
-        :class:`.vendors.SearchResult` instance, whose ``parts`` variable
-        includes a list of exactly one :class:`.vendors.SearchPart`
-        instance, with relevant data parsed from the page contained
-        within it. The ``strategy`` for the returned result is set to
-        ``EXACT_MATCH``.
-
         In case any of the following exclusion criteria are met, the
         part is not returned within the :class:`.vendors.SearchResult`, its
         ``success`` parameter is set to ``False``, and its ``strategy``
@@ -678,11 +711,51 @@ class VendorDigiKey(VendorBase):
         +------------------------------------+---------------------------+
         | Listed as Disconntiued             | ``DISCONTINUED_NOTAVAIL`` |
         +------------------------------------+---------------------------+
-        | No Part Number Found               | ``NO_PNO_CELL``           |
+        | Value Added Packaging not Available| ``VAPACKAGING_NOTAVAIL``  |
         +------------------------------------+---------------------------+
         | Product Details Table Not Found    | ``NO_PDTABLE``            |
         +------------------------------------+---------------------------+
 
+        :param soup: 
+        :return: 
+        """
+        rv = []
+        beablock = soup.find('div', {'class': 'product-details-feedback'})
+        if beablock is not None:
+            # TODO Handle alternatives?
+            obs = beablock.find('li', {'id': 'obsoleteStockMsg'})
+            if obs and obs.text == 'Obsolete item.':
+                rv.append('OBSOLETE_NOTAVAIL')
+            disc = beablock.find('li', {'id': 'dkcDiscontinuedMsg'})
+            if disc and disc.text == 'Digi-Key has discontinued this item.':
+                rv.append('DISCONTINUED_NOTAVAIL')
+            vana = beablock.find('li', {'id': 'valueAddNotAvailableMsg'})
+            if vana and vana.text == """Value add packaging not available; alternate packaging exists.""":  # noqa
+                rv.append('VAPACKAGING_NOTAVAIL')
+        return rv
+
+    def _process_product_page(self, soup):
+        """
+        Given the BS4 parsed soup of a Digi-Key product page, returns a
+        :class:`.vendors.SearchResult` instance, whose ``parts`` variable
+        includes a list of exactly one :class:`.vendors.SearchPart`
+        instance, with relevant data parsed from the page contained
+        within it. The ``strategy`` for the returned result is set to
+        ``EXACT_MATCH``.
+
+        In case any of the direct or processed exclusion criteria are met, 
+        the part is not returned within the :class:`.vendors.SearchResult`, 
+        its ``success`` parameter is set to ``False``, and its ``strategy``
+        parameter is set as listed below :
+
+        +------------------------------------+---------------------------+
+        | Predefined Exclusion Criteria      | return value of the func  |
+        +------------------------------------+---------------------------+
+        | No Part Number Found               | ``NO_PNO_CELL``           |
+        +------------------------------------+---------------------------+
+        | Product Details Table Not Found    | ``NO_PDTABLE``            |
+        +------------------------------------+---------------------------+
+        
         .. todo::
             The current approach of handling catergories and subcategories
             can result in these seemingly 'exact match' results to be put
@@ -693,15 +766,9 @@ class VendorDigiKey(VendorBase):
             instantiating a full digikey part instance.
 
         """
-        beablock = soup.find('div', {'class': 'product-details-feedback'})
-        if beablock is not None:
-            # TODO Handle alternatives?
-            obs = beablock.find('li', {'id': 'obsoleteStockMsg'})
-            if obs and obs.text == 'Obsolete item.':
-                return SearchResult(False, None, 'OBSOLETE_NOTAVAIL')
-            disc = beablock.find('li', {'id': 'dkcDiscontinuedMsg'})
-            if disc and disc.text == 'Digi-Key has discontinued this item.':
-                return SearchResult(False, None, 'DISCONTINUED_NOTAVAIL')
+        exclusion_criteria = self.get_productpage_exclusion_criteria(soup)
+        if len(exclusion_criteria):
+            return SearchResult(False, None, exclusion_criteria[0])
         pdtable = soup.find('table', {'id': 'product-details'})
         if pdtable is not None:
             pno_meta = pdtable.find('meta', {'itemprop': 'productID'})
