@@ -61,6 +61,22 @@
                     </div>
                 </div>
             </fieldset>
+            <fieldset>
+                <legend>
+                    Indent Generation
+                </legend>
+                {{ form.indents.hidden_tag() }}
+                <div class="row">
+                    <div class="small-12 columns">
+                        {{ forms.render_switch(form.indents.generate, checked=True) }}
+                    </div>
+                    {% for sopt in form.indents.split %}
+                    <div class="small-12 columns indent-split-opt">
+                        {{ forms.render_switch(sopt) }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </fieldset>
         </div>
         <div class="small-12 large-7 columns" data-equalizer-watch="fmain">
             <fieldset class="component-rows" id="component-rows">
@@ -241,6 +257,19 @@
                 $("#prod_order_sno-sno")[0].readOnly = true;
             } else {
                 $("#prod_order_sno-sno")[0].readOnly = false;
+            }
+        });
+
+        <!-- Indent Generation Form Elements -->
+        $("#indents-generate").change(function(event) {
+            var checkbox = event.target;
+            if (checkbox.checked) {
+                $('input[name=indents-split]').removeAttr('disabled');
+                $('.indent-split-opt').show();
+            }
+            else{
+                $("input[name=indents-split]").attr('disabled', 'disabled');
+                $('.indent-split-opt').hide();
             }
         });
 

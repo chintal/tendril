@@ -26,6 +26,7 @@ Docstring for forms
 from flask_wtf import Form
 from wtforms.fields import StringField
 from wtforms.fields import SelectField
+from wtforms.fields import RadioField
 from wtforms.fields import BooleanField
 from wtforms.fields import FieldList
 from wtforms.fields import FormField
@@ -124,6 +125,16 @@ class DeltaOrderForm(Form):
             raise ValidationError("S.No. not recognized.")
 
 
+class IndentGenerationForm(Form):
+    generate = BooleanField(label="Also Generate Indent(s)", default=True)
+    split = RadioField('Indent Split', default='combined',
+                       choices=[
+                           ('combined', 'Single Combined Indent'),
+                           ('perident', 'One Indent per Module Type'),
+                           ('perinstance', 'One Indent per Module Instance')
+                       ])
+
+
 class CreateProductionOrderForm(Form):
     user = StringField(label='Ordered By',
                        validators=[InputRequired(), user_auth_check])
@@ -151,6 +162,7 @@ class CreateProductionOrderForm(Form):
 
     modules = FieldList(FormField(ModuleQtyForm), min_entries=1)
     deltas = FieldList(FormField(DeltaOrderForm), min_entries=1)
+    indents = FormField(IndentGenerationForm)
 
     def __init__(self, auth_roles=None, admin_roles=None, *args, **kwargs):
         if auth_roles is not None:
