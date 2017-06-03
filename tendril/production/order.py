@@ -23,309 +23,35 @@ Docstring for order
 """
 
 import os
+
 import arrow
-from copy import deepcopy
+from six import iteritems
+
+from tendril.boms.outputbase import CompositeOutputBom
 
 from tendril.dox import docstore
+from tendril.dox.production import gen_production_order
+from tendril.dox.production import get_production_order_manifest_set
+
 from tendril.entityhub import serialnos
-
-from tendril.entityhub.modules import get_module_instance
-from tendril.entityhub.modules import get_module_prototype
-
-from tendril.boms.outputbase import DeltaOutputBom
-from tendril.boms.outputbase import CompositeOutputBom
-from tendril.entityhub.snomap import SerialNumberMap
-
 from tendril.entityhub.db.controller import SerialNoNotFound
 from tendril.entityhub.entitybase import EntityNotFound
-from tendril.entityhub.modules import ModuleInstanceTypeMismatchError
-
-from tendril.dox.production import gen_production_order
-from tendril.dox.production import gen_delta_pcb_am
-from tendril.dox.production import gen_pcb_am
-from tendril.dox.production import get_production_order_manifest_set
+from tendril.entityhub.snomap import SerialNumberMap
 
 from tendril.inventory.indent import InventoryIndent
 
 from tendril.utils.db import get_session
-from tendril.utils.terminal import TendrilProgressBar
-from tendril.utils.terminal import DummyProgressBar
 from tendril.utils.files import yml as yaml
+from tendril.utils.terminal import DummyProgressBar
+from tendril.utils.terminal import TendrilProgressBar
+
+from . import NothingToProduceError
+from .actions import DeltaProductionAction
+from .actions import CardProductionAction
 
 
 class ProductionOrderNotFound(EntityNotFound):
     pass
-
-
-class DeltaValidationError(Exception):
-    pass
-
-
-class NothingToProduceError(Exception):
-    pass
-
-
-class ProductionActionBase(object):
-    def __init__(self, *args, **kwargs):
-        self._is_done = None
-        self._scaffold = False
-        self._session = kwargs.get('session')
-        self.setup(*args, **kwargs)
-
-    def set_session(self, session):
-        self._session = session
-
-    def unset_session(self):
-        self._session = None
-
-    @property
-    def scaffold(self):
-        return self._scaffold
-
-    @scaffold.setter
-    def scaffold(self, value):
-        self._scaffold = value
-
-    def setup(self, *args, **kwargs):
-        raise NotImplementedError
-
-    def commit(self, outfolder=None, indent_sno=None, prod_ord_sno=None,
-               register=False, pb_class=None, stacked_pb=False, leaf_pb=True,
-               session=None):
-        raise NotImplementedError
-
-    @property
-    def obom(self):
-        raise NotImplementedError
-
-    @property
-    def ident(self):
-        raise NotImplementedError
-
-    @property
-    def refdes(self):
-        raise NotImplementedError
-
-    @property
-    def modules(self):
-        return [get_module_instance(x, self.ident,
-                                    scaffold=self._scaffold,
-                                    session=self._session)
-                for x in self.refdes]
-
-    @property
-    def order_lines(self):
-        raise NotImplementedError
-
-
-class DeltaProductionAction(ProductionActionBase):
-    def __init__(self, delta_order, force=False):
-        self._sno = None
-        self._original = None
-        self._target = None
-        self._orig_modulename = None
-        self._target_modulename = None
-        super(DeltaProductionAction, self).__init__(delta_order, force)
-
-    def setup(self, delta_order, force):
-        self._sno = delta_order['sno']
-        self._orig_modulename = delta_order['orig-cardname']
-        self._target_modulename = delta_order['target-cardname']
-        if self._orig_modulename == self._target_modulename:
-            raise DeltaValidationError
-        try:
-            try:
-                self._original = get_module_instance(
-                        self._sno, self._orig_modulename,
-                        session=self._session,
-                        scaffold=force
-                )
-                self._target = get_module_prototype(self._target_modulename)
-                self._is_done = False
-            except ModuleInstanceTypeMismatchError:
-                self._target = get_module_instance(
-                        self._sno, self._target_modulename,
-                        session=self._session,
-                        scaffold=force
-                )
-                self._original = get_module_prototype(self._orig_modulename)
-                self._is_done = True
-        except:
-            # TODO a second delta on the same serial number will
-            # make the first one fail. The entire delta architecture
-            # may need to be thought through. Additionally, this
-            # structure only handles deltas between cardnames, and
-            # will go to hell in a handbasket if there are any
-            # temporal changes to cards.
-            raise DeltaValidationError
-
-    def _generate_docs(self, manifestsfolder, indent_sno=None, prod_ord_sno=None,
-                       register=False, session=None):
-        dmpath = gen_delta_pcb_am(
-                self._orig_modulename, self._target_modulename,
-                outfolder=manifestsfolder, sno=self._sno,
-                indentsno=indent_sno, productionorderno=prod_ord_sno
-        )
-        if register is True:
-            docstore.register_document(serialno=self._sno, docpath=dmpath,
-                                       doctype='DELTA ASSEMBLY MANIFEST',
-                                       session=session)
-
-    def commit(self, outfolder=None, indent_sno=None, prod_ord_sno=None,
-               register=False, pb_class=None, stacked_pb=False, leaf_pb=True,
-               session=None):
-        if self._is_done is True:
-            raise NothingToProduceError
-        self._generate_docs(outfolder, indent_sno, prod_ord_sno,
-                            register, session)
-        if register is True:
-            serialnos.set_serialno_efield(
-                sno=self._sno, efield=self._target_modulename,
-                session=session
-            )
-            serialnos.link_serialno(
-                child=self._sno, parent=prod_ord_sno, session=session
-            )
-            self._original = get_module_prototype(self._orig_modulename)
-            self._target = get_module_instance(self._sno,
-                                               self._target_modulename,
-                                               session=session)
-            self._is_done = True
-
-    @property
-    def delta_bom(self):
-        original_obom = self._original.obom
-        target_obom = self._target.obom
-        delta_obom = DeltaOutputBom(original_obom, target_obom)
-        return delta_obom.additions_bom
-
-    @property
-    def obom(self):
-        return self.delta_bom
-
-    @property
-    def ident(self):
-        return '{0} -> {1}'.format(self._original.ident, self._target.ident)
-
-    @property
-    def refdes(self):
-        return [self._sno]
-
-    @property
-    def modules(self):
-        return [get_module_instance(x, self._target_modulename,
-                                    session=self._session)
-                for x in self.refdes]
-
-    @property
-    def order_lines(self):
-        target_prototype = get_module_prototype(self._target_modulename)
-        ctx = target_prototype.strategy
-        ctx['ident'] = self._target_modulename
-        ctx['is_delta'] = True
-        ctx['desc'] = self.ident
-        ctx['sno'] = self._sno
-        return [ctx]
-
-    def __repr__(self):
-        if self._is_done is True:
-            done = 'DONE'
-        elif self._is_done is False:
-            done = 'NOT DONE'
-        else:
-            done = 'NOT DEFINED'
-        return '<DeltaProductionAction {0} {1} {2}>'.format(
-            self.ident, self.refdes, done
-        )
-
-
-class CardProductionAction(ProductionActionBase):
-    def __init__(self, *args, **kwargs):
-        self._ident = None
-        self._qty = None
-        self._prototype = None
-        self._snos = None
-        super(CardProductionAction, self).__init__(*args, **kwargs)
-
-    def setup(self, card, qty, snofunc):
-        self._ident = card
-        self._prototype = get_module_prototype(card)
-        self._qty = qty
-        self._snos = []
-        for idx in range(self._qty):
-            # Registration is dependent on the snofunc, and consequently
-            # the state of the corresponding snomap.
-            self._snos.append(snofunc(self.ident))
-
-    def _generate_am(self, manifestsfolder, sno, prod_ord_sno, indent_sno,
-                     verbose=True, register=False, session=None):
-        ampath = gen_pcb_am(self._ident, manifestsfolder, sno,
-                            productionorderno=prod_ord_sno,
-                            indentsno=indent_sno, scaffold=self.scaffold,
-                            verbose=verbose, session=session)
-        if register is True:
-            docstore.register_document(serialno=sno, docpath=ampath,
-                                       doctype='ASSEMBLY MANIFEST',
-                                       verbose=verbose, session=session)
-
-    def commit(self, outfolder=None, indent_sno=None, prod_ord_sno=None,
-               register=False, pb_class=None, stacked_pb=False, leaf_pb=True,
-               session=None):
-        # Serial numbers will already have been written in.
-        if self._prototype.strategy['genmanifest'] is True:
-
-            if pb_class is None:
-                pb_class = TendrilProgressBar
-            if leaf_pb is True:
-                pb = pb_class(max=len(self.refdes))
-                verbose = False
-            else:
-                pb = None
-                verbose = True
-
-            msg = "Generating Manifests and Linking for {0}".format(self.ident)
-            print(msg)
-
-            for card in self.modules:
-                self._generate_am(
-                    outfolder, card.refdes, prod_ord_sno, indent_sno,
-                    verbose=verbose, register=register, session=session
-                )
-                if register is True:
-                    serialnos.link_serialno(
-                        child=card.refdes, parent=prod_ord_sno,
-                        verbose=verbose, session=session
-                    )
-                if leaf_pb is True:
-                    pb.next(note=card.refdes)
-            if leaf_pb is True:
-                pb.finish()
-
-    @property
-    def obom(self):
-        obom = self._prototype.bom.create_output_bom(self.ident)
-        obom.multiply(self._qty)
-        return obom
-
-    @property
-    def ident(self):
-        return self._ident
-
-    @property
-    def refdes(self):
-        return self._snos
-
-    @property
-    def order_lines(self):
-        rval = []
-        base_ctx = self._prototype.strategy
-        base_ctx['ident'] = self.ident
-        base_ctx['is_delta'] = False
-        for card in self.modules:
-            ctx = deepcopy(base_ctx)
-            ctx['sno'] = card.refdes
-            rval.append(ctx)
-        return rval
 
 
 class ProductionOrder(object):
@@ -349,6 +75,8 @@ class ProductionOrder(object):
         self._yaml_data = None
         self._ordered_by = None
 
+        self._force = None
+
         try:
             self.load(session=session)
             self._defined = True
@@ -363,8 +91,8 @@ class ProductionOrder(object):
         # containers only.
         self._force = force
         if self._defined is True and self._force is False:
-            raise Exception("This production order instance seems to be already "
-                            "done. You can't 'create' it again.")
+            raise Exception("This production order instance seems to be "
+                            "already defined. You can't 'create' it again.")
         if order_yaml_path is not None:
             self._order_yaml_path = order_yaml_path
             with open(self._order_yaml_path, 'r') as f:
@@ -393,8 +121,8 @@ class ProductionOrder(object):
     def process(self, session=None, **kwargs):
         force = self._force
         if self._defined is True and force is False:
-            raise Exception("This production order instance seems to be already "
-                            "done. You can't 'create' it again.")
+            raise Exception("This production order instance seems to be "
+                            "already defined. You can't 'create' it again.")
 
         if session is None:
             with get_session() as session:
@@ -592,8 +320,10 @@ class ProductionOrder(object):
         self._deltas = self._yaml_data.get('deltas', [])
         self._sourcing_order_snos = self._yaml_data.get('sourcing_orders', [])
         self._root_order_snos = self._yaml_data.get('root_orders', [])
-        self._last_generated_at = self._yaml_data.get('last_generated_at', None)
-        self._first_generated_at = self._yaml_data.get('first_generated_at', None)
+        self._last_generated_at = self._yaml_data.get('last_generated_at',
+                                                      None)
+        self._first_generated_at = self._yaml_data.get('first_generated_at',
+                                                       None)
         self._ordered_by = self._yaml_data.get('ordered_by', None)
         self._sno = self._yaml_data.get('prod_order_sno', self._sno)
 
@@ -605,7 +335,7 @@ class ProductionOrder(object):
         self._load_snomap_legacy()
 
     def _load_from_db(self, session):
-        raise ProductionOrderNotFound
+        raise NotImplementedError
 
     def load_from_db(self, session=None):
         if not session:
@@ -619,7 +349,7 @@ class ProductionOrder(object):
         # production order, it'll overwrite whatever came before.
         try:
             self.load_from_db(session=session)
-        except ProductionOrderNotFound:
+        except (ProductionOrderNotFound, NotImplementedError):
             pass
         self._load_legacy()
 
@@ -631,7 +361,7 @@ class ProductionOrder(object):
     def card_actions(self):
         # This first len(..) bit is a litte dicey.
         if not len(self._card_actions):
-            for card, qty in self.card_orders.iteritems():
+            for card, qty in iteritems(self.card_orders):
                 self._card_actions.append(
                     CardProductionAction(card, qty, self._snomap.get_sno)
                 )
@@ -719,7 +449,7 @@ class ProductionOrder(object):
 
     @property
     def root_orders(self):
-        pass
+        return None
 
     @property
     def root_order_snos(self):
@@ -752,8 +482,8 @@ class ProductionOrder(object):
         return
 
     def make_labels(self, label_manager=None, include_all_indents=False,
-                    include_main_indent=False,
-                    pb_class=None, stacked_pb=False, leaf_pb=True):
+                    include_main_indent=False, pb_class=None, leaf_pb=True,
+                    **kwargs):
         cards = self.cards
         deltas = self.deltas
 

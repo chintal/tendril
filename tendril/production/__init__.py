@@ -21,3 +21,7 @@
 """
 Docstring for __init__.py
 """
+
+
+class NothingToProduceError(Exception):
+    pass
