@@ -1026,7 +1026,7 @@ class VendorDigiKey(VendorBase):
         params = []
         parts = form.findAll('input')
         for part in parts:
-            params.append((part.attrs['name'], part.attrs['value']))
+            params.append((part.attrs['name'], part.attrs['value'].encode('utf-8')))
 
         target = urlparse.urljoin(self._url_base,
                                   form.attrs['action'])
