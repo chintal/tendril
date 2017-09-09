@@ -28,7 +28,7 @@ install_requirements = [
     'sqlalchemy_utils',
     'alembic',
     'svn>=0.3.44',
-    'fs',
+    'fs==0.5.4',
     'paramiko',
     'pyyaml',
     'progress',
@@ -43,6 +43,7 @@ install_requirements = [
     'pyhull',
     'cachetools',   # sourcing.vendors.VendorBase._partcache
     'jsonpickle',   # tendril-server-prefab interfaces
+    'pika',
 
     # Flask Dependencies (to be pruned?)
     'jsmin',
@@ -65,8 +66,7 @@ install_requirements = [
 
     # Extracted Modules
     'driver2200087',
-    'iec60063',
-    'tendril-gedaif-sym2eps'
+    'iec60063'
 ]
 
 test_requirements = [

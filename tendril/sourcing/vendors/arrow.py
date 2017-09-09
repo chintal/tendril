@@ -268,6 +268,12 @@ class VendorArrow(VendorBase):
     _url_base = 'http://www.arrow.com/'
     _api_endpoint = 'http://api.arrow.com/itemservice/v3/en'
 
+    _ident_blacklist = [
+        'IC SMD AD7734BRUZ TSSOP28',
+        'IC THRU DUAL PA96CE TO3-8-2',
+        'IC SMD DAC5672AIPFB TQFP48-7',
+    ]
+
     def __init__(self, apikey=ARROW_API_KEY, apilogin=ARROW_API_LOGIN,
                  sourcecd='NAC', **kwargs):
         if not apikey or not apilogin:
@@ -368,6 +374,8 @@ class VendorArrow(VendorBase):
         return self._manufacturer_codes
 
     def search_vpnos(self, ident):
+        if ident in self._ident_blacklist:
+            return None, 'BLACKLIST'
         parts, strategy = self._search_vpnos(ident)
         if parts is None:
             return None, strategy

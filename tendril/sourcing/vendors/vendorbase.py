@@ -586,6 +586,7 @@ class VendorBase(object):
     _invoiceclass = VendorInvoice
     _type = 'BASE'
     _url_base = None
+    _ident_blacklist = []
 
     def __init__(self, name, dname, pclass, mappath=None,
                  currency_code=config.BASE_CURRENCY,
@@ -696,6 +697,8 @@ class VendorBase(object):
                 yield vpart
 
     def get_vpnos(self, ident, max_age=VENDOR_DEFAULT_MAXAGE):
+        if ident in self._ident_blacklist:
+            return []
         acquire = False
         mtime = self._map.get_map_time(canonical=ident)
         if max_age > 0:
@@ -726,9 +729,12 @@ class VendorBase(object):
     def get_vpart(self, vpartno, ident=None, max_age=VENDOR_DEFAULT_MAXAGE):
         idx = (vpartno, ident)
         if idx not in self._partcache.keys():
-            part = self._partclass(vpartno, ident=ident,
-                                   vendor=self, max_age=max_age)
-            self._partcache[idx] = part
+            try:
+                part = self._partclass(vpartno, ident=ident,
+                                       vendor=self, max_age=max_age)
+                self._partcache[idx] = part
+            except VendorPartRetrievalError:
+                return None
         return self._partcache[idx]
 
     @staticmethod
@@ -773,6 +779,8 @@ class VendorBase(object):
         candidate_names = self.get_vpnos(ident)
 
         candidates = [self.get_vpart(x, ident=ident) for x in candidate_names]
+        while None in candidates:
+            candidates.remove(None)
         if not relax_moq:
             candidates = [x for x in candidates if x.abs_moq <= rqty]
         candidates = [x for x in candidates

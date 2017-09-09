@@ -54,4 +54,6 @@ def rpc(method, **kwargs):
         raise PrefabServerUnavailable
     except requests.exceptions.ReadTimeout:
         raise PrefabServerUnavailable
+    if 'result' not in response.keys():
+        return {}
     return jsonpickle.decode(response['result'])

@@ -241,6 +241,10 @@ def ident_transform(device, value, footprint, tf=None, generic=False):
         return tf.get_canonical(tf)
 
 
+class MalformedIdentError(ValueError):
+    pass
+
+
 def parse_ident(ident, generic=False):
     """
 
@@ -264,7 +268,10 @@ def parse_ident(ident, generic=False):
         footprint = None
         value = ' '.join(parts)
     if value is None:
-        footprint = parts[-1]
+        try:
+            footprint = parts[-1]
+        except IndexError:
+            raise MalformedIdentError(ident)
         value = ' '.join(parts[:-1])
     # TODO Parse Value for Special Devices?
     # TODO Obtain gEDA symbol for fancier verification?

@@ -39,6 +39,8 @@ import argparse
 from tendril.gedaif import gsymlib
 from tendril.entityhub import supersets
 from tendril.conventions.status import print_status
+from tendril.conventions.electronics import parse_ident
+from tendril.conventions.electronics import MalformedIdentError
 
 from .helpers import add_base_options
 
@@ -60,7 +62,27 @@ def _get_parser():
     add_base_options(parser)
     parser.add_argument(
         '-s', '--search', metavar='SEARCH STRING', type=str,
-        help='Search string.'
+        help='Ident search string.'
+    )
+    parser.add_argument(
+        '--device', metavar='DEVICE', type=str,
+        help='Filter by Device'
+    )
+    parser.add_argument(
+        '--footprint', metavar='FOOTPRINT', type=str,
+        help='Filter by Footprint'
+    )
+    parser.add_argument(
+        '--manufacturer', metavar='MANUFACTURER', type=str,
+        help='Filter by Manufacturer'
+    )
+    parser.add_argument(
+        '--vendor', metavar='VENDOR', type=str,
+        help='Filter by Vendor'
+    )
+    parser.add_argument(
+        '-z', '--used', action='store_true', default=False,
+        help='Show only symbols with known uses.'
     )
     parser.add_argument(
         '-x', '--regex', action='store_true', default=False,
@@ -76,9 +98,9 @@ def _get_parser():
     )
     parser.add_argument(
         '-p', '--pricing', action='store_true', default=False,
-        help='Print symbol pricing information. Provides pricing for the '
-             'lowest guideline compliant quantity unless otherwise specified '
-             'using -q.'
+        help='Print symbol pricing information. Provides pricing for '
+             'the lowest guideline compliant quantity unless otherwise '
+             'specified using -q.'
     )
     parser.add_argument(
         '-q', '--quantity', action='store', default=1, type=int,
@@ -103,6 +125,8 @@ def render_symbol(symbol, verbose=False, inclusion=False, pricing=False):
     print(detailformat.format('Description', symbol.description))
     if symbol.datasheet_url:
         print(detailformat.format('Datasheet', symbol.datasheet_url))
+    if symbol.manufacturer:
+        print(detailformat.format('Manufacturer', symbol.manufacturer))
     print(detailformat.format('Path', symbol.fpath))
     if pricing:
         if pricing == 1:
@@ -143,35 +167,103 @@ def render_symbol(symbol, verbose=False, inclusion=False, pricing=False):
     terminal.render_hline()
 
 
+def prefilter_idents(idents, args):
+    if not args.device and not args.footprint \
+            and not args.search and not args.used:
+        return idents
+    dcmp = fcmp = scmp = None
+    d = f = v = None
+    nidents = []
+    if args.regex:
+        if args.device:
+            dregex = re.compile(args.device)
+            dcmp = lambda x: dregex.search(x)
+        if args.footprint:
+            fregex = re.compile(args.footprint)
+            fcmp = lambda x: fregex.search(x)
+        if args.search:
+            sregex = re.compile(args.search)
+            scmp = lambda x: sregex.search(x)
+    else:
+        if args.device:
+            dcmp = lambda x: args.device in x
+        if args.footprint:
+            fcmp = lambda x: args.footprint in x
+        if args.search:
+            scmp = lambda x: args.search in x
+
+    for i in idents:
+        if args.device or args.footprint:
+            try:
+                d, v, f = parse_ident(i)
+            except MalformedIdentError:
+                continue
+        if dcmp:
+            if not d or not dcmp(d):
+                continue
+        if fcmp:
+            if not f or not fcmp(f):
+                continue
+        if scmp and not scmp(i):
+            continue
+        if args.used:
+            if not len(supersets.get_symbol_inclusion(i).keys()):
+                continue
+        nidents.append(i)
+    return nidents
+
+
+def get_and_postfilter_symbols(idents, args):
+    mcmp = vcmp = None
+    if args.regex:
+        if args.manufacturer:
+            mregex = re.compile(args.manufacturer)
+            mcmp = lambda x: mregex.search(x)
+        if args.vendor:
+            vregex = re.compile(args.vendor)
+            vcmp = lambda x: vregex.search(x)
+    else:
+        if args.manufacturer:
+            mcmp = lambda x: args.manufacturer in x
+        if args.vendor:
+            vcmp = lambda x: args.vendor in x
+    for i in idents:
+        s = gsymlib.get_symbol(i)
+        if mcmp:
+            if not s.manufacturer or not mcmp(s.manufacturer):
+                continue
+        if vcmp:
+            if not s.vendors:
+                continue
+            found = False
+            for v in s.vendors:
+                if vcmp(v):
+                    found = True
+                    break
+            if not found:
+                continue
+        yield s
+
+
 def main():
     """
     The tendril-gedaif script entry point.
     """
     parser = _get_parser()
     args = parser.parse_args()
-    done = False
+
     verbose = args.verbose or args.pricing or args.utilization
     idents = gsymlib.gsymlib_idents
-    if args.search:
-        if args.regex:
-            rex = re.compile(args.search)
-            ridents = [ident for ident in idents if rex.search(ident)]
-        else:
-            ridents = [ident for ident in idents if args.search in ident]
-        rsymbols = [gsymlib.get_symbol(ident) for ident in ridents]
-        if len(rsymbols):
-            terminal.render_hline()
-        if args.pricing is True:
-            pricing = args.quantity
-        else:
-            pricing = False
-        for symbol in rsymbols:
-            render_symbol(symbol, verbose, args.utilization, pricing)
-        if not verbose:
-            terminal.render_hline()
-        done = True
-    if not done:
-        parser.print_help()
+    if args.pricing is True:
+        pricing = args.quantity
+    else:
+        pricing = False
+
+    idents = prefilter_idents(idents, args)
+    for symbol in get_and_postfilter_symbols(idents, args):
+        render_symbol(symbol, verbose, args.utilization, pricing)
+    if not verbose:
+        terminal.render_hline()
 
 
 if __name__ == '__main__':

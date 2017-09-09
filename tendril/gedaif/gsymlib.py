@@ -93,6 +93,8 @@ class EDASymbolBase(object):
         self._description = None
         self._package = None
         self._datasheet = None
+        self._manufacturer = None
+        self._vendors = None
         self._indicative_sourcing_info = None
         self._last_updated = None
 
@@ -216,6 +218,25 @@ class EDASymbolBase(object):
         for source in self.indicative_sourcing_info:
             if source.vpart.datasheet is not None:
                 return source.vpart.datasheet
+
+    @property
+    def manufacturer(self):
+        # TODO Seems to be a very inefficient implementation.
+        # See about speeding this up.
+        if self._manufacturer is not None:
+            return self._manufacturer
+        for source in self.indicative_sourcing_info:
+            if source.vpart.manufacturer is not None:
+                return source.vpart.manufacturer
+
+    @property
+    def vendors(self):
+        if self._vendors is not None:
+            return self._vendors
+        _vendors = []
+        for source in self.indicative_sourcing_info:
+            _vendors.append(source.vobj.name)
+        self._vendors = list(set(_vendors))
 
     @property
     def sym_ok(self):

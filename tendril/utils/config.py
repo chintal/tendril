@@ -445,6 +445,12 @@ config_options_geda = [
         "to have a version of gEDA that includes the `gaf` tool."
     ),
     ConfigOption(
+        "GEDA_HAS_GAF",
+        "True",
+        "Whether you have a version of gEDA which includes the gaf utility. "
+        "If it doesn't, we'll try to use gschem instead."
+    ),
+    ConfigOption(
         'GAF_BIN_ROOT',
         "None",
         "If system gEDA binaries are not to be used, specify the path to the "

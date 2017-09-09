@@ -250,15 +250,8 @@ class TendrilProgressBar(WindowsMixin, _BaseBar):
         return self._term_width
 
     def next(self, n=1, note=None):
-        if n > 0:
-            now = time()
-            dt = (now - self._ts) / n
-            self._dt.append(dt)
-            self._ts = now
-
-        self.index += n
         self._note = str(note)
-        self.update()
+        super(_BaseBar, self).next(n)
 
     def writeln(self, line):
         if self.file.isatty():
@@ -290,15 +283,8 @@ class DummyProgressBar(WindowsMixin, _BaseBar):
         return self._term_width
 
     def next(self, n=1, note=None):
-        if n > 0:
-            now = time()
-            dt = (now - self._ts) / n
-            self._dt.append(dt)
-            self._ts = now
-
-        self.index += n
         self._note = str(note)
-        self.update()
+        super(_BaseBar, self).next(n)
 
     def update(self):
         message = self.message % self

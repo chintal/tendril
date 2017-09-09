@@ -70,7 +70,8 @@ def init():
         logging.getLogger('pika.connection'),
         logging.getLogger('pika.adapters.base_connection'),
         logging.getLogger('pika.adapters.blocking_connection'),
-        logging.getLogger('pika.adapters.select_connection')
+        logging.getLogger('pika.adapters.select_connection'),
+        logging.getLogger('urllib3.connectionpool')
     ]
     for logger in silence:
         logger.setLevel(logging.WARNING)

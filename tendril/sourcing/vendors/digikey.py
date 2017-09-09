@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (C) 2015 Chintalagiri Shashank
 #
 # This file is part of Tendril.
@@ -1109,11 +1110,22 @@ class VendorDigiKey(VendorBase):
 
     @staticmethod
     def _tf_resistance(s):
-        # TODO Simplify this once the order strings are corrected
+        if s.endswith('Ohms'):
+            s = s[:-4]
+        s = s.replace('µ', 'u')
+        s = s.replace('k', 'K')
         try:
-            return Resistance(s.replace('k', 'K'))
+            return Resistance(s)
         except ParseException:
             # TODO Handle multiple resistances
+            return None
+
+    @staticmethod
+    def _tf_capacitance(s):
+        s = s.replace('µ', 'u')
+        try:
+            return Capacitance(s)
+        except ParseException:
             return None
 
     @staticmethod
@@ -1139,8 +1151,9 @@ class VendorDigiKey(VendorBase):
     @property
     def _filter_otf(self):
         return {
+            'Resistance': self._tf_resistance,
             'Resistance (Ohms)': self._tf_resistance,
-            'Capacitance': Capacitance,
+            'Capacitance': self._tf_capacitance,
             'Voltage - Rated': self._tf_voltage,
             'Power (Watts)': self._tf_wattage,
             'Power Per Element': self._tf_wattage,
@@ -1315,7 +1328,7 @@ class VendorDigiKey(VendorBase):
     def _get_value_options(devtype, value):
         if devtype == 'resistor':
             loptions = (
-                ('resistance', "Resistance (Ohms)", 'equals', Resistance),
+                ('resistance', "Resistance", 'equals', Resistance),
                 ('wattage', "Power (Watts)", 'equals', ThermalDissipation)
             )
             # TODO Simplify and support extension
@@ -1349,12 +1362,10 @@ class VendorDigiKey(VendorBase):
     @staticmethod
     def _process_value_options(filters, loptions, lvalues):
         lparams = []
-
         for lidx, loption in enumerate(loptions):
             if lvalues[lidx] is None:
                 continue
             dkopcode = None
-
             for option in filters[loption[1]][1]:
                 if loption[2] == 'equals':
                     if option[0] == lvalues[lidx]:
@@ -1459,7 +1470,11 @@ class VendorDigiKey(VendorBase):
             else:
                 extraparams = extraparams_fp
         params.extend(self._process_extraparams(filters, extraparams))
-        searchurl = searchurlbase + '?' + urllib.urlencode(params)
+        # Horribly ugly hack
+        nparams = []
+        for k, v in params:
+            nparams.append((k, v.encode('utf-8')))
+        searchurl = searchurlbase + '?' + urllib.urlencode(nparams)
         soup = self.get_soup(searchurl)
         if soup is None:
             return None, 'URL_FAIL'

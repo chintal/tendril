@@ -30,15 +30,11 @@ from tendril.utils.files import pdf
 from tendril.utils.files import gschem as gschf
 from tendril.utils.config import GEDA_SCHEME_DIR
 from tendril.utils.config import USE_SYSTEM_GAF_BIN
+from tendril.utils.config import GEDA_HAS_GAF
 from tendril.utils.config import GAF_BIN_ROOT
 from tendril.utils.config import PROJECTS_ROOT
 from tendril.utils.config import COMPANY_SQUARE_LOGO_PATH
 from tendril.utils.config import INSTANCE_ROOT
-
-try:
-    import sym2eps
-except ImportError:
-    sym2eps = None
 
 import tendril.utils.log
 logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
@@ -112,16 +108,20 @@ def conv_gsch2pdf(schpath, docfolder):
     pspath = os.path.join(docfolder, schfname + '.ps')
     pdfpath = os.path.join(docfolder, schfname + '.pdf')
     # TODO fix this
-    if USE_SYSTEM_GAF_BIN:
-        gschem_pscmd = "gschem -o" + pspath + \
-                       " -s" + GEDA_SCHEME_DIR + '/print.scm ' + schpath
+    if not GEDA_HAS_GAF:
+        util = "gschem"
+        if not USE_SYSTEM_GAF_BIN:
+            util = os.path.join(GAF_BIN_ROOT, util)
+        gschem_pscmd = util + " -o" + pspath + " -s" + \
+            GEDA_SCHEME_DIR + '/print.scm ' + schpath
         subprocess.call(gschem_pscmd.split(' '))
         pdf.conv_ps2pdf(pspath, pdfpath)
         os.remove(pspath)
     else:
-        gaf_pdfcmd = [os.path.join(GAF_BIN_ROOT, 'gaf'),
-                      'export', '-o', pdfpath, '-c',
-                      schpath]
+        util = "gaf"
+        if not USE_SYSTEM_GAF_BIN:
+            util = os.path.join(GAF_BIN_ROOT, util)
+        gaf_pdfcmd = [util, 'export', '-o', pdfpath, '-c', schpath]
         subprocess.call(gaf_pdfcmd)
     return pdfpath
 
@@ -134,30 +134,14 @@ def conv_gsch2png(schpath, outfolder, include_extension=False):
         schfname = os.path.split(schpath)[1]
 
     outpath = os.path.join(outfolder, schfname + '.png')
-    epspath = os.path.join(outfolder, schfname + '.eps')
 
-    if USE_SYSTEM_GAF_BIN and sym2eps:
-        try:
-            sym2eps.convert(schpath, epspath)
-        except RuntimeError:
-            logger.error(
-                "SYM2EPS Segmentation Fault on symbol : " + schpath
-            )
-        gschem_pngcmd = [
-            "convert", epspath, "-transparent", "white", outpath
-        ]
-        subprocess.call(gschem_pngcmd)
-        try:
-            os.remove(epspath)
-        except OSError:
-            logger.warning("Temporary .eps file not found to remove : " +
-                           epspath)
+    if not GEDA_HAS_GAF:
+        pass
     else:
-        gaf_pngcmd = [
-            os.path.join(GAF_BIN_ROOT, 'gaf'),
-            'export', '-c', '-o', outpath,
-            schpath
-        ]
+        util = 'gaf'
+        if not USE_SYSTEM_GAF_BIN:
+            util = os.path.join(GAF_BIN_ROOT, util)
+        gaf_pngcmd = [util, 'export', '-c', '-o', outpath, schpath]
         subprocess.call(gaf_pngcmd)
     return outpath
 
