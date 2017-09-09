@@ -199,7 +199,7 @@ class EDASymbolBase(object):
         from tendril.inventory.guidelines import electronics_qty
         from tendril.sourcing.electronics import get_sourcing_information
         from tendril.sourcing.electronics import SourcingException
-        if fpiswire(self.device):
+        if fpiswire(self.device) and not isinstance(qty, Length):
             iqty = Length(qty)
         else:
             iqty = qty
@@ -795,6 +795,8 @@ def is_recognized(ident):
 
 
 def get_symbol(ident, case_insensitive=False, get_all=False):
+    if ident.strip() == '':
+        raise NoGedaSymbolException("Ident cannot be left blank")
     if case_insensitive is False:
         if ident in index.keys():
             if not get_all:

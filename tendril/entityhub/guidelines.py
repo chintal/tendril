@@ -24,6 +24,7 @@ from decimal import Decimal
 from tendril.conventions.electronics import parse_ident
 from tendril.conventions.electronics import check_for_std_val
 from tendril.conventions.electronics import fpiswire
+from tendril.conventions.electronics import MalformedIdentError
 
 from tendril.utils.types.lengths import Length
 from tendril.utils.files import yml as yaml
@@ -112,7 +113,6 @@ class QtyGuidelines(object):
             qty_typeclass = Length
         else:
             qty_typeclass = int
-
         oqty_min = self._get_guideline_param(
             'oqty_min', gldict, default=1, typeclass=qty_typeclass
         )
@@ -141,7 +141,11 @@ class QtyGuidelines(object):
             excess_min_pc, excess_min_qty, excess_max_qty
 
     def get_guideline(self, ident):
-        device, value, footprint = parse_ident(ident)
+        try:
+            device, value, footprint = parse_ident(ident)
+        except MalformedIdentError:
+            # TODO Emit a warning here
+            return self._get_full_guideline(self._default)
         if ident in self._idents.keys():
             gldict = self._idents[ident]
         elif device in self._devices.keys():
@@ -155,7 +159,6 @@ class QtyGuidelines(object):
             is_std_val = check_for_std_val(ident)
             if not is_std_val:
                 gldict = self._default
-
         return self._get_full_guideline(gldict, device)
 
     def get_compliant_qty(self, ident, qty,

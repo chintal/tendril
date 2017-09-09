@@ -557,6 +557,7 @@ class WWWCachedFetcher(CacheBase):
 
         """
         logger.debug('Getting url content : {0}'.format(url))
+        time.sleep(1)
         return urlopen(url).read()
 
     def fetch(self, url, max_age=MAX_AGE_DEFAULT, getcpath=False):

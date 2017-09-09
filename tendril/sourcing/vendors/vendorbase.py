@@ -729,12 +729,9 @@ class VendorBase(object):
     def get_vpart(self, vpartno, ident=None, max_age=VENDOR_DEFAULT_MAXAGE):
         idx = (vpartno, ident)
         if idx not in self._partcache.keys():
-            try:
-                part = self._partclass(vpartno, ident=ident,
-                                       vendor=self, max_age=max_age)
-                self._partcache[idx] = part
-            except VendorPartRetrievalError:
-                return None
+            part = self._partclass(vpartno, ident=ident,
+                                   vendor=self, max_age=max_age)
+            self._partcache[idx] = part
         return self._partcache[idx]
 
     @staticmethod
@@ -777,10 +774,12 @@ class VendorBase(object):
 
     def get_optimal_pricing(self, ident, rqty, get_all=False, relax_moq=False):
         candidate_names = self.get_vpnos(ident)
-
-        candidates = [self.get_vpart(x, ident=ident) for x in candidate_names]
-        while None in candidates:
-            candidates.remove(None)
+        candidates = []
+        for name in candidate_names:
+            try:
+                candidates.append(self.get_vpart(name, ident=ident))
+            except VendorPartRetrievalError:
+                continue
         if not relax_moq:
             candidates = [x for x in candidates if x.abs_moq <= rqty]
         candidates = [x for x in candidates

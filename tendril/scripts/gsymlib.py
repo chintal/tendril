@@ -34,6 +34,7 @@ Simple search tools for searching the gEDA symbol library.
 """
 
 import re
+import csv
 import argparse
 
 from tendril.gedaif import gsymlib
@@ -106,6 +107,11 @@ def _get_parser():
         '-q', '--quantity', action='store', default=1, type=int,
         help='Retrieve information for a different quantity.'
     )
+    parser.add_argument(
+        '--csv', action='store', metavar='FILENAME', default=None,
+        help='Generate CSV output instead of human readable '
+             'terminal text. Prov'
+    )
     return parser
 
 
@@ -167,13 +173,35 @@ def render_symbol(symbol, verbose=False, inclusion=False, pricing=False):
     terminal.render_hline()
 
 
+def output_symbol(writer, symbol, inclusion=False, pricing=False):
+    writer.writerow([symbol.ident])
+    if pricing:
+        raise NotImplementedError("Pricing output to CSV not yet implemented")
+    if inclusion:
+        inclusion_data = supersets.get_symbol_inclusion(symbol.ident)
+        incl_projects = sorted(inclusion_data.keys(),
+                               key=lambda x: inclusion_data[x][2])
+        if not len(inclusion_data):
+            return
+        else:
+            for project in incl_projects:
+                ldata = inclusion_data[project]
+                if not ldata[4]:
+                    qtystr = str(ldata[3])
+                else:
+                    qtystr = '{0}-{1}'.format(ldata[3], ldata[4])
+                pdesc = ldata[0]
+                pstatus = ldata[2]
+                writer.writerow(['', qtystr, project, pstatus])
+
+
 def prefilter_idents(idents, args):
     if not args.device and not args.footprint \
             and not args.search and not args.used:
-        return idents
+        for ident in idents:
+            yield ident
     dcmp = fcmp = scmp = None
-    d = f = v = None
-    nidents = []
+    d = f = None
     if args.regex:
         if args.device:
             dregex = re.compile(args.device)
@@ -193,7 +221,7 @@ def prefilter_idents(idents, args):
             scmp = lambda x: args.search in x
 
     for i in idents:
-        if args.device or args.footprint:
+        if dcmp or fcmp:
             try:
                 d, v, f = parse_ident(i)
             except MalformedIdentError:
@@ -209,8 +237,7 @@ def prefilter_idents(idents, args):
         if args.used:
             if not len(supersets.get_symbol_inclusion(i).keys()):
                 continue
-        nidents.append(i)
-    return nidents
+        yield i
 
 
 def get_and_postfilter_symbols(idents, args):
@@ -228,7 +255,10 @@ def get_and_postfilter_symbols(idents, args):
         if args.vendor:
             vcmp = lambda x: args.vendor in x
     for i in idents:
-        s = gsymlib.get_symbol(i)
+        try:
+            s = gsymlib.get_symbol(i)
+        except gsymlib.NoGedaSymbolException:
+            continue
         if mcmp:
             if not s.manufacturer or not mcmp(s.manufacturer):
                 continue
@@ -253,17 +283,28 @@ def main():
     args = parser.parse_args()
 
     verbose = args.verbose or args.pricing or args.utilization
-    idents = gsymlib.gsymlib_idents
+    idents = sorted(gsymlib.gsymlib_idents)
     if args.pricing is True:
         pricing = args.quantity
     else:
         pricing = False
 
     idents = prefilter_idents(idents, args)
-    for symbol in get_and_postfilter_symbols(idents, args):
-        render_symbol(symbol, verbose, args.utilization, pricing)
-    if not verbose:
-        terminal.render_hline()
+
+    # TODO Consider replacing this with branching partial functions instead
+    if not args.csv:
+        for symbol in get_and_postfilter_symbols(idents, args):
+            render_symbol(symbol, verbose, args.utilization, pricing)
+        if not verbose:
+            terminal.render_hline()
+    else:
+        if args.utilization and pricing:
+            print("Including both pricing and inclusion is not supported "
+                  "in the CSV output")
+        with open(args.csv, 'wb') as csvfile:
+            writer = csv.writer(csvfile)
+            for symbol in get_and_postfilter_symbols(idents, args):
+                output_symbol(writer, symbol, args.utilization, pricing)
 
 
 if __name__ == '__main__':
