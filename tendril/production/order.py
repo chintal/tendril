@@ -130,6 +130,20 @@ class ProductionOrder(object):
         else:
             return self._process(session=session, **kwargs)
 
+    def _process_indents(self, indent_sno=None, cobom=None, outfolder=None,
+                         register=False, force=False, session=None):
+        # Assume Indent is non-empty.
+        # Create indent
+        indent = InventoryIndent(indent_sno, verbose=False, session=session)
+        indent.create(cobom, title="FOR {0}".format(self.serialno),
+                      desc=None, indent_type='production',
+                      requested_by=self._ordered_by, force=force)
+        indent.define_auth_chain(prod_order_sno=self.serialno,
+                                 session=session, prod_order_scaffold=True)
+        indent.process(outfolder=outfolder, register=register,
+                       verbose=False, session=session)
+        self._indents.append(indent)
+
     def _process(self, outfolder=None, manifestsfolder=None,
                  label_manager=None, register=False, force=False,
                  pb_class=None, stacked_pb=False, leaf_pb=True,
@@ -199,18 +213,11 @@ class ProductionOrder(object):
         pb.next(note="Constructing Composite Output BOM")
         cobom = CompositeOutputBom(self.bomlist)
 
-        # Assume Indent is non-empty.
-        # Create indent
-        pb.next(note="Creating Indent")
-        indent = InventoryIndent(indent_sno, verbose=False, session=session)
-        indent.create(cobom, title="FOR {0}".format(self.serialno),
-                      desc=None, indent_type='production',
-                      requested_by=self._ordered_by, force=force)
-        indent.define_auth_chain(prod_order_sno=self.serialno,
-                                 session=session, prod_order_scaffold=True)
-        indent.process(outfolder=outfolder, register=register,
-                       verbose=False, session=session)
-        self._indents.append(indent)
+        pb.next(note="Creating Indent(s)")
+        self._process_indents(
+            indent_sno=indent_sno, cobom=cobom, outfolder=outfolder,
+            register=register, force=force, session=session
+        )
 
         pb.next(note="Generating Production Order Document")
         # Make production order doc
