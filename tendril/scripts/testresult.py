@@ -68,7 +68,7 @@ def main():
                 serialno=args.serialno, session=s
         )
         for suite in suites:
-            suite.finish()
+            suite.render_cli()
 
 
 if __name__ == '__main__':
