@@ -136,11 +136,12 @@ DEVICE_CLASSES_DOC = [
     ('FUSE HOLDER', 'Fuse Holders'),
     ('FUSE', 'Fuses'),
     ('FAN', 'Fans'),
-    ('SOCKET POWER', 'Power Sockets'),
     ('POWER CORD', 'Power Cords'),
     ('USB CABLE', 'USB Cables'),
     ('RTD', 'Temperature Dependent Resistors'),
+    ('SOCKET POWER', 'Power Sockets'),
     ('SOCKET ZIF', 'Zero Insertion Force IC Sockets'),
+    ('SOCKET SPECIAL', 'Specialized Sockets'),
     ('LIGHT PIPE', 'Light Pipes'),
 ]
 
@@ -150,7 +151,7 @@ DEVICE_CLASSES = [x[0] for x in DEVICE_CLASSES_DOC]
 nofp_strs = {"PCB", "PCB EDGE", "CONN", "MODULE", "CRYSTAL OSC", "HEAT SINK",
              "SOCKET POWER", "FUSE", "SWITCH PUSHBTN",
              "SWITCH ROCKER", "TRANSFORMER HEAVY", "CRIMP", "THIMBLE",
-             "CABLE MARKER", "POWER CORD", "USB CABLE"}
+             "CABLE MARKER", "POWER CORD", "USB CABLE", "SOCKET SPECIAL"}
 
 nofp_pattern = r"^(?:%s)" % '|'.join(nofp_strs)
 rex_nofp = re.compile(nofp_pattern)
