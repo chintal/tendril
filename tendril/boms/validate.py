@@ -140,6 +140,29 @@ class MangledFileError(ValidationError):
         }
 
 
+class RequiredColumnMissingError(ValidationError):
+    msg = "Required Column Missing"
+
+    def __init__(self, policy, missing_column):
+        super(RequiredColumnMissingError, self).__init__(policy)
+        self._missing_column = missing_column
+
+    def __repr__(self):
+        return "<Required Column Missing {0} {1}>".format(
+            self._policy.context, self._missing_column
+        )
+
+    def render(self):
+        return {
+            'is_error': self.policy.is_error,
+            'group': self.msg,
+            'headline': "Required Column Missing",
+            'detail': "{0}, Required Columns {1}"
+                      "".format(self._policy.context.render(), 
+                                self._policy.required_columns),
+        }
+
+
 class ContextualConfigError(ValidationError):
     msg = "Incorrect Configuration"
 
@@ -434,6 +457,22 @@ class ConfigSJPolicy(ValidationPolicy):
     def __init__(self, context):
         super(ConfigSJPolicy, self).__init__(context)
         self.is_error = False
+
+
+class ColumnsRequiredPolicy(ValidationPolicy):
+    def __init__(self, context, required_columns):
+        super(ColumnsRequiredPolicy, self).__init__(context)
+        self.is_error = False
+        self._required_columns = required_columns
+
+    @property
+    def required_columns(self):
+        return self._required_columns
+
+    def check(self, columns):
+        for cname in self._required_columns:
+            if cname not in columns:
+                raise RequiredColumnMissingError(self, cname)
 
 
 class BomMotifPolicy(ValidationPolicy):

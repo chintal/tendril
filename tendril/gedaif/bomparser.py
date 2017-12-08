@@ -30,6 +30,8 @@ from tendril.boms.validate import ValidationContext
 from tendril.boms.validate import ErrorCollector
 from tendril.boms.validate import BomMotifPolicy
 from tendril.boms.validate import BomMotifUnrecognizedError
+from tendril.boms.validate import ColumnsRequiredPolicy
+from tendril.boms.validate import RequiredColumnMissingError
 
 import projfile
 
@@ -130,15 +132,19 @@ class CachedBomParser(object):
 
 class GedaBomParser(CachedBomParser):
     _basefolder = 'schematic'
+    _expected_columns = ()
 
     def __init__(self, projectfolder, use_cached=True, backend=None):
         super(GedaBomParser, self).__init__(projectfolder,
                                             use_cached=use_cached,
                                             backend=backend)
         self._gpf = projfile.GedaProjectFile(self.projectfolder)
+        self._column_policy = ColumnsRequiredPolicy(self._validation_context,
+                                                    self._expected_columns)
         self.bom_reader = None
         self.columns = []
         self.schpaths = []
+        self._columns_ok = True
         self.prep_bom()
 
     def _get_temp_schematic(self):
@@ -213,6 +219,11 @@ class GedaBomParser(CachedBomParser):
     def prep_bom(self):
         self.bom_reader = self.get_bom_file()
         self.columns = self.bom_reader.readline().rstrip().split('\t')
+        try:
+            self._column_policy.check(self.columns)
+        except RequiredColumnMissingError as e:
+            self._validation_errors.add(e)
+            self._columns_ok = False
         self.line_gen = self.get_lines()
 
     def get_lines(self):
@@ -229,12 +240,15 @@ class GedaBomParser(CachedBomParser):
 
 
 class MotifAwareBomParser(GedaBomParser):
+    _expected_columns = ('motif', )
+
     def __init__(self, projectfolder, **kwargs):
         super(MotifAwareBomParser, self).__init__(projectfolder, **kwargs)
         self._motifs = []
         # self._motifconfigs = self._gpf.configsfile.configdata['motiflist']
         self.motif_gen = None
         self._motif_policy = BomMotifPolicy(self._validation_context)
+        self._enable_motifs = not self._columns_ok
 
     def get_motif(self, motifst):
         motifst = motifst.split(':')[0]
@@ -249,7 +263,7 @@ class MotifAwareBomParser(GedaBomParser):
     def get_lines(self):
         for line in self.bom_reader:
             bomline = BomLine(line, self.columns)
-            if bomline.data['motif'] != 'unknown':
+            if self._enable_motifs and bomline.data['motif'] != 'unknown':
                 try:
                     motif = self.get_motif(bomline.data['motif'])
                     motif.add_element(bomline)
