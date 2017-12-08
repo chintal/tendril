@@ -132,7 +132,7 @@ def main():
                 continue
             targets = [projfolder]
             if args.recurse:
-                lprojects, lpcbs, lcards, lcard_reporoot = \
+                lprojects, lpcbs, lcards, lcard_reporoot, cable_projects = \
                     projects.get_projects(projfolder)
                 targets.extend([lprojects[x] for x in lprojects.keys()])
             for target in targets:
