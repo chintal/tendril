@@ -23,7 +23,11 @@ import csv
 import datetime
 import os
 import re
+from six import iteritems
 from copy import copy
+from requests.structures import CaseInsensitiveDict
+from decimal import Decimal
+from decimal import DecimalException
 
 from tendril.entityhub import transforms
 from tendril.gedaif import gsymlib
@@ -31,6 +35,19 @@ from tendril.utils import config
 from tendril.utils import fsutils
 from tendril.utils import log
 from tendril.utils.files import libreoffice
+from tendril.utils.connectors.tally.stock import TallyUnit
+from tendril.utils.connectors.tally.stock import get_master
+from tendril.utils.connectors.tally.stock import get_position
+
+try:
+    from tendril.utils.types.lengths import Length
+    from tendril.utils.types.mass import Mass
+    from tendril.utils.types import ParseException
+except ImportError:
+    ParseException = DecimalException
+    Length = Decimal
+    Mass = Decimal
+
 
 logger = log.get_logger(__name__, log.DEFAULT)
 
@@ -80,6 +97,109 @@ class InventoryReaderBase(object):
 class InventoryDBReader(InventoryReaderBase):
     def __init__(self, location, tfpath):
         super(InventoryDBReader, self).__init__(tfpath)
+
+
+# Tally Reader Helper Functions
+def _strip_unit(value, baseunit):
+    return value.rstrip(baseunit.name)
+
+
+def _rewrite_mass(value, baseunit):
+    if isinstance(baseunit, TallyUnit):
+        uname = baseunit.name
+    else:
+        uname = baseunit
+    if uname.strip() == 'gm':
+        value = value.replace(' gm', ' g')
+    elif uname.strip() == 'Kg':
+        value = value.replace(' Kg', ' kg')
+    return value
+
+
+class InventoryTallyReader(InventoryReaderBase):
+    def __init__(self, sname=None, location=None, company_name=None,
+                 godown_name=None, tfpath=''):
+        self._location = location
+        self._sname = sname
+        self._company_name = company_name
+        self._godown_name = godown_name
+        super(InventoryTallyReader, self).__init__(tfpath)
+
+    _typeclass = CaseInsensitiveDict({
+        'qty': (int, _strip_unit),
+        'Pc':  (int, _strip_unit),
+        'gm': (Mass, _rewrite_mass),
+        'Kg': (Mass, _rewrite_mass),
+        'ft': (Length, None),
+        'cm': (Length, None),
+        'Inch': (Length, None),
+        'Feet': (Length, None),
+        'meter': (Length, None),
+        'mtr': (Length, None),
+    })
+
+    def _parse_quantity(self, value, item):
+        masteritem = get_master(self._company_name).stockitems[item.name]
+        additionalunits = masteritem.additionalunits
+        baseunit = item.baseunits
+        if not value:
+            return 0
+        if additionalunits:
+            value = value.split('=')[0]
+        value = value.strip()
+        if baseunit.issimpleunit:
+            unitname = baseunit.name.strip()
+            if self._typeclass[unitname][1]:
+                value = self._typeclass[unitname][1](value, baseunit)
+            return self._typeclass[unitname][0](value)
+        else:
+            # Very ugly hacks
+            uparts = baseunit.name.split(' of ')
+            assert len(uparts) == 2
+            uparts[1] = uparts[1].split()[1]
+            if self._typeclass[uparts[0]][0] == self._typeclass[uparts[1]][0]:
+                vparts = value.split(' ')
+                plen = len(vparts) / 2
+                assert plen * 2 == len(vparts)
+                vpart0 = ' '.join(vparts[0:plen])
+                if self._typeclass[uparts[0]][1]:
+                    vpart0 = self._typeclass[uparts[0]][1](vpart0, uparts[0])
+                rv = self._typeclass[uparts[0]][0](vpart0)
+                vpart1 = ' '.join(vparts[plen:])
+                if self._typeclass[uparts[1]][1]:
+                    vpart1 = self._typeclass[uparts[1]][1](vpart1, uparts[1])
+                rv += self._typeclass[uparts[1]][0](vpart1)
+                return rv
+        raise ValueError
+
+    def _row_gen(self):
+        position = get_position(self._company_name)
+        for name, item in iteritems(position.stockitems):
+            imaster = get_master(self._company_name).stockitems[name]
+            try:
+                # TODO Needs a godown filter here if the XML tags ever surface
+                qty = self._parse_quantity(item.closingbalance, item)
+                meta = {'godowns': [x.name for x in imaster.godowns],
+                        'path': ' / '.join(imaster.parent.path) if imaster.parent else None}  # noqa
+                yield name, qty, meta
+            except (ParseException, ValueError):
+                pass
+
+    def dump(self):
+        position = get_position(self._company_name)
+        idx = 0
+        for name, item in iteritems(position.stockitems):
+            idx += 1
+            try:
+                qstring = '{3:4} {0:>10} {1:40} {2}'.format(
+                    self._parse_quantity(item.closingbalance, item),
+                    item.name, item.baseunits, idx
+                )
+                print(qstring)
+            except (ParseException, ValueError, AssertionError) as e:
+                master = get_master(self._company_name).stockitems[name]
+                print(name, item.closingbalance, item.baseunits,
+                      item.baseunits.issimpleunit, master.additionalunits, e)
 
 
 class StockXlsReader(InventoryReaderBase):
