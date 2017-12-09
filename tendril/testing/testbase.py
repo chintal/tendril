@@ -22,6 +22,7 @@ See the COPYING, README, and INSTALL files for more information
 import os
 import arrow
 import json
+import warnings
 from collections import namedtuple
 
 from tendril.utils.fsutils import TEMPDIR
@@ -232,7 +233,9 @@ class TestBase(RunnableTest):
             measurement.do_measurement()
     
     def result_str(self):
-        raise NotImplementedError
+        warnings.warn("'result_str' Not Implemented for {0}"
+                      "".format(self.__class__))
+        return ""
     
     def display_test_result(self):
         if self.passed is True:
@@ -240,7 +243,7 @@ class TestBase(RunnableTest):
         else:
             result = Fore.RED + '[FAILED]' + Fore.RESET
         width = terminal.get_terminal_width()
-        hline = '-' * 80
+        hline = '-' * width
         print Fore.YELLOW + hline + Fore.RESET
         fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
         print Fore.BLUE + self.result_str() + Fore.RESET
@@ -318,6 +321,9 @@ class TestBase(RunnableTest):
                      'graphs_data': graphs_data,
                      }
         return test_dict
+
+    def render_cli(self):
+        self.display_test_result()
 
     @property
     def passfailonly(self):
@@ -476,6 +482,11 @@ class TestSuiteBase(RunnableTest):
             'tests': [x.render_dox() for x in self._tests]
         }
         return suite_dict
+
+    def render_cli(self):
+        self.display_test_suite_result()
+        for test in self._tests:
+            test.render_cli()
 
     def finish(self):
         for test in self._tests:
