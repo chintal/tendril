@@ -24,6 +24,7 @@ from __future__ import print_function
 import os
 import arrow
 import json
+import warnings
 from collections import namedtuple
 from six.moves import input
 
@@ -235,8 +236,10 @@ class TestBase(RunnableTest):
             measurement.do_measurement()
 
     def result_str(self):
-        raise NotImplementedError
-
+        warnings.warn("'result_str' Not Implemented for {0}"
+                      "".format(self.__class__))
+        return ""
+    
     def display_test_result(self):
         if self.passed is True:
             result = terminal.colortext('[PASSED]', Fore.GREEN)
@@ -245,8 +248,12 @@ class TestBase(RunnableTest):
         terminal.render_hline(Fore.YELLOW)
         print(terminal.colortext(self.result_str(), Fore.BLUE))
         width = terminal.get_terminal_width()
-        print("{0:<" + str(width - 10) + "} {1:>9}".format(
-            terminal.colortext(self.desc or 'None', Fore.YELLOW), result)
+        hline = '-' * width
+        print Fore.YELLOW + hline + Fore.RESET
+        fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
+        print Fore.BLUE + self.result_str() + Fore.RESET
+        print fstring.format(
+            Fore.YELLOW, (self.desc or 'None'), Fore.WHITE, result
         )
         print(self.title)
         print(repr(self))
@@ -315,6 +322,9 @@ class TestBase(RunnableTest):
                      'graphs_data': graphs_data,
                      }
         return test_dict
+
+    def render_cli(self):
+        self.display_test_result()
 
     @property
     def passfailonly(self):
@@ -467,6 +477,11 @@ class TestSuiteBase(RunnableTest):
             'tests': [x.render_dox() for x in self._tests]
         }
         return suite_dict
+
+    def render_cli(self):
+        self.display_test_suite_result()
+        for test in self._tests:
+            test.render_cli()
 
     def finish(self):
         for test in self._tests:
