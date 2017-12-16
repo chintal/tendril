@@ -424,7 +424,7 @@ def gen_masterdoc(projfolder, namebase, force=False):
 
     """
     gpf = projfile.GedaProjectFile(projfolder)
-    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.configsfile.schfolder)
 
     docfolder = get_project_doc_folder(projfolder)
     masterdocfile = path.join(docfolder, namebase + '-masterdoc.pdf')
