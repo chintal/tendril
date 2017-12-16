@@ -375,7 +375,7 @@ def gen_schpdf(projfolder, namebase, configname=None, force=False):
             bf = '/'
         else:
             bf = '/schematic/'
-        for schematic in gpf.schpaths:
+        for schematic in gpf.schfiles:
             schfile = os.path.normpath(projfolder + bf + schematic)
             if configname is not None:
                 tschfile = path.join(workspace_tfolder, schematic)
