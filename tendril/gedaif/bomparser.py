@@ -248,7 +248,7 @@ class MotifAwareBomParser(GedaBomParser):
         # self._motifconfigs = self._gpf.configsfile.configdata['motiflist']
         self.motif_gen = None
         self._motif_policy = BomMotifPolicy(self._validation_context)
-        self._enable_motifs = not self._columns_ok
+        self._enable_motifs = self._columns_ok
 
     def get_motif(self, motifst):
         motifst = motifst.split(':')[0]

@@ -282,7 +282,6 @@ def get_reader(elec_inven_data_idx):
         sdict['xlf'] = libreoffice.get_xlf(sdict.pop('fpath'))
         reader = StockXlsReader(**sdict)
     elif invtype == 'TallyStock':
-        from tendril.utils.connectors.tally.stock import InventoryTallyReader
         reader = InventoryTallyReader(**sdict)
     if reader is not None:
         return reader

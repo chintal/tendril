@@ -19,22 +19,19 @@ gEDA Project File module documentation (:mod:`gedaif.projfile`)
 ===============================================================
 """
 
-import tendril.gedaif.conffile
+from . import conffile
 import os
 
 
 class GedaProjectFile(object):
 
     def __init__(self, projectfolder):
+        self._projectfolder = projectfolder
         self.schfiles = []
         self.pcbfile = None
-
-        self.configsfile = tendril.gedaif.conffile.ConfigsFile(projectfolder)
-
-        self.schfolder = os.path.join(os.path.abspath(projectfolder),
-                                      'schematic')
-        projfilepath = os.path.join(self.schfolder,
-                                    self.configsfile.configdata['projfile'])
+        self.configsfile = conffile.ConfigsFile(self._projectfolder)
+        projfilepath = os.path.join(self.configsfile.schfolder,
+                                    self.configsfile.projectfile)
         with open(projfilepath, 'r') as f:
             for line in f:
                 line = self.strip_line(line)
@@ -52,8 +49,9 @@ class GedaProjectFile(object):
 
     @property
     def schpaths(self):
-        return [os.path.join(self.schfolder, schfile)
+        return [os.path.join(self.configsfile.schfolder, schfile)
                 for schfile in self.schfiles]
+
 
 if __name__ == "__main__":
     pass

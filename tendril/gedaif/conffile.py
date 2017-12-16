@@ -47,12 +47,31 @@ class ConfigsFile(ConfigBase):
         super(ConfigsFile, self).__init__(projectfolder)
         self.projectfile = self._configdata['projfile']
         self._cached_status = None
+        self._pcb_allowed = True
+
+    @property
+    def schfolder(self):
+        schfolder = os.path.join(self.projectfolder, 'schematic')
+        if os.path.exists(schfolder):
+            return os.path.join(schfolder, "configs.yaml")
+        else:
+            self._pcb_allowed = False
+            return self.projectfolder
 
     @property
     def _cfpath(self):
-        return os.path.join(self.projectfolder, "schematic", "configs.yaml")
+        return os.path.join(self.schfolder, "configs.yaml")
 
     def validate(self):
+        if not self._pcb_allowed and 'pcbname' in self._configdata.keys() and \
+                self._configdata['pcbname'] is not None:
+            e = ValidationError(ConfigOptionPolicy(
+                                self._validation_context,
+                                'pcbname', is_error=True)
+                                )
+            e.detail = "pcbname defined, but PCB is not supported " \
+                       "for this project."
+            self._validation_errors.add(e)
         super(ConfigsFile, self).validate()
 
     @property
@@ -78,7 +97,7 @@ class ConfigsFile(ConfigBase):
 
     @property
     def is_pcb(self):
-        if 'pcbname' in self._configdata.keys() and \
+        if self._pcb_allowed and 'pcbname' in self._configdata.keys() and \
                 self._configdata['pcbname'] is not None:
             return True
         else:
