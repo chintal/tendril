@@ -98,7 +98,9 @@ def get_projects(basefolder=None):
 
     for root, dirs, files in os.walk(basefolder):
         dirs[:] = [d for d in dirs
-                   if not d.endswith('.git') and not d.endswith('.svn')]
+                   if not d.endswith('.git')
+                   and not d.endswith('.svn')
+                   and not d == 'schematic']
         for d in dirs:
             if is_project_folder(os.path.join(root, d)):
                 lprojects[
