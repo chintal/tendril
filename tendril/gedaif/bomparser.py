@@ -168,8 +168,7 @@ class GedaBomParser(CachedBomParser):
         self._get_temp_schematic()
         cmd = ["gnetlist",
                '-g', backend,
-               '-Oattrib_file=' + os.path.join(self.projectfolder,
-                                               self._basefolder,
+               '-Oattrib_file=' + os.path.join(self._source_folder,
                                                'attribs')
                ]
         outdir, outfile = os.path.split(outpath)
