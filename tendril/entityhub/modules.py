@@ -42,6 +42,7 @@ from tendril.boms.validate import ValidationError
 from tendril.boms.validate import get_dict_val
 from tendril.boms.costingbase import NoStructureHereException
 from tendril.dox.gedaproject import get_docs_list
+from tendril.utils.types import ParseException
 
 from tendril.utils.connectors import mq
 from tendril.utils.config import WARM_UP_CACHES
@@ -511,7 +512,7 @@ class EDAModulePrototypeBase(ModulePrototypeBase):
             policy = IdentQtyPolicy(ctx, True)
             try:
                 temp = line.quantity
-            except ValueError:
+            except (ValueError, ParseException):
                 ec.add(QuantityTypeError(policy, line.ident, line.refdeslist))
 
     def _validate(self):
