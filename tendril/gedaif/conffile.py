@@ -45,18 +45,15 @@ class ConfigsFile(ConfigBase):
 
     def __init__(self, projectfolder):
         super(ConfigsFile, self).__init__(projectfolder)
+
         self.projectfile = self._configdata['projfile']
         self._cached_status = None
-        self._pcb_allowed = True
-
-    @property
-    def schfolder(self):
-        schfolder = os.path.join(self.projectfolder, 'schematic')
-        if os.path.exists(schfolder):
-            return os.path.join(schfolder, "configs.yaml")
-        else:
+        self.schfolder = os.path.join(self.projectfolder, 'schematic')
+        if not os.path.exists(self.schfolder):
             self._pcb_allowed = False
-            return self.projectfolder
+            self.schfolder = self.projectfolder
+        else:
+            self._pcb_allowed = True
 
     @property
     def _cfpath(self):
