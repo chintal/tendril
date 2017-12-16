@@ -335,7 +335,7 @@ def gen_schpdf(projfolder, namebase, configname=None, force=False):
 
     """
     gpf = projfile.GedaProjectFile(projfolder)
-    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.configsfile.schfolder)
 
     configfile = conffile.ConfigsFile(projfolder)
     docfolder = get_project_doc_folder(projfolder)
@@ -370,8 +370,13 @@ def gen_schpdf(projfolder, namebase, configname=None, force=False):
             bom = boms_electronics.import_pcb(projfolder)
             bom.configure_motifs(configname)
             obom = bom.create_output_bom(configname)
-        for schematic in gpf.schfiles:
-            schfile = os.path.normpath(projfolder + '/schematic/' + schematic)
+        # TODO This is an ugly hack. Rewrite.
+        if gpf.configsfile.schfolder == gpf.configsfile.projectfolder:
+            bf = '/'
+        else:
+            bf = '/schematic/'
+        for schematic in gpf.schpaths:
+            schfile = os.path.normpath(projfolder + bf + schematic)
             if configname is not None:
                 tschfile = path.join(workspace_tfolder, schematic)
                 gschem.rewrite_schematic(schfile, obom, gpf, tschfile)

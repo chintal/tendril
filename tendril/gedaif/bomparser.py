@@ -85,6 +85,14 @@ class CachedBomParser(object):
         self._generator_args = kwargs
 
     @property
+    def _source_folder(self):
+        sf = os.path.join(self.projectfolder, self._basefolder)
+        if os.path.exists(sf):
+            return sf
+        else:
+            return self.projectfolder
+
+    @property
     def _temp_folder(self):
         return os.path.join(fsutils.TEMPDIR, self._namebase, self._basefolder)
 
@@ -109,8 +117,7 @@ class CachedBomParser(object):
             os.chmod(self._cache_folder, 0o777)
 
         bom_mtime = fsutils.get_file_mtime(self._cached_bom_path)
-        source_folder = os.path.join(self.projectfolder, self._basefolder)
-        source_mtime = fsutils.get_folder_mtime(source_folder)
+        source_mtime = fsutils.get_folder_mtime(self._source_folder)
 
         if self._use_cached is True and bom_mtime is not None \
                 and source_mtime < bom_mtime:

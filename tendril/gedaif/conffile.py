@@ -54,7 +54,7 @@ class ConfigsFile(ConfigBase):
         schfolder = os.path.join(self.projectfolder, 'schematic')
         if os.path.exists(schfolder):
             self._pcb_allowed = True
-            return os.path.join(schfolder, "configs.yaml")
+            return schfolder
         else:
             self._pcb_allowed = False
             return self.projectfolder

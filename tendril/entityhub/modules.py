@@ -789,6 +789,7 @@ def _get_prototype(ident):
     except ModuleTypeError:
         pass
 
+    # TODO Raise a validation error here instead?
     raise ModuleTypeError("Could not determine type for ident {0}"
                           "".format(ident))
 
