@@ -176,7 +176,7 @@ def gen_confbom(projfolder, configname, force=False):
     """
 
     gpf = projfile.GedaProjectFile(projfolder)
-    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.configsfile.schfolder)
 
     docfolder = get_project_doc_folder(projfolder)
     outpath = path.join(docfolder, 'confdocs', configname + '-bom.pdf')
@@ -252,7 +252,7 @@ def gen_confdoc(projfolder, configname, force=False):
 
     """
     gpf = projfile.GedaProjectFile(projfolder)
-    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.configsfile.schfolder)
 
     docfolder = get_project_doc_folder(projfolder)
     outpath = path.join(docfolder, 'confdocs', configname + '-doc.pdf')
@@ -492,7 +492,7 @@ def gen_confpdf(projfolder, configname, namebase, force=False):
 
     """
     gpf = projfile.GedaProjectFile(projfolder)
-    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.configsfile.schfolder)
 
     docfolder = get_project_doc_folder(projfolder)
     confdocfile = path.join(docfolder, 'confdocs', configname + '.pdf')
@@ -557,7 +557,7 @@ def gen_cobom_csv(projfolder, namebase, force=False):
     """
     gpf = projfile.GedaProjectFile(projfolder)
     configfile = conffile.ConfigsFile(projfolder)
-    sch_mtime = fsutils.get_folder_mtime(gpf.schfolder)
+    sch_mtime = fsutils.get_folder_mtime(gpf.configsfile.schfolder)
 
     docfolder = get_project_doc_folder(projfolder)
     cobom_csv_path = path.join(docfolder, 'confdocs', 'conf-boms.csv')
