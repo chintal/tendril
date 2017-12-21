@@ -249,12 +249,12 @@ class TestBase(RunnableTest):
         print(terminal.colortext(self.result_str(), Fore.BLUE))
         width = terminal.get_terminal_width()
         hline = '-' * width
-        print Fore.YELLOW + hline + Fore.RESET
+        print(terminal.colortext(hline, Fore.YELLOW))
         fstring = "{0}{1:<" + str(width-10) + "}{2} {3:>9}"
-        print Fore.BLUE + self.result_str() + Fore.RESET
-        print fstring.format(
+        print(terminal.colortext(self.result_str(), Fore.BLUE))
+        print(fstring.format(
             Fore.YELLOW, (self.desc or 'None'), Fore.WHITE, result
-        )
+        ))
         print(self.title)
         print(repr(self))
 
