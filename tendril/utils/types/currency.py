@@ -152,14 +152,13 @@ class CurrencyDefinition(object):
             return 1
         apiurl = 'http://data.fixer.io/api/latest?'
         params = {'access_key': FIXER_IO_API_KEY,
-                  'base': BASE_CURRENCY,
-                  'symbols': code}
+                  'symbols': ','.join([code, BASE_CURRENCY])}
         r = requests_session.get(apiurl, params=params)
         data = r.json()
         try:
-            rate = 1 / float(data['rates'][code])
+            rate = float(data['rates'][BASE_CURRENCY]) / float(data['rates'][code])
         except KeyError:
-            raise KeyError(code)
+            raise
         return rate
 
     def __eq__(self, other):
