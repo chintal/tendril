@@ -1080,7 +1080,7 @@ def get_docs_list(projfolder, cardname=None):
                                 refdoc_fs),
                 ExposedDocument(cardname + ' Schematic (Configured)',
                                 path.join(project_doc_folder, 'confdocs',
-                                          namebase + '-conf-schematic.pdf'),
+                                          cardname + '-conf-schematic.pdf'),
                                 refdoc_fs),
                 ExposedDocument(cardname + ' Schematic (Full)',
                                 path.join(project_doc_folder,

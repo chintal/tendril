@@ -380,6 +380,11 @@ load_config(config_options_resources)
 
 config_options_services = [
     ConfigOption(
+        "FIXER_IO_API_KEY",
+        "",
+        "API Key to use with fixer.io for currency rates."
+    ),
+    ConfigOption(
         "APPENLIGHT_PRIVATE_API_KEY",
         "{}",
         "Private API key to use with appenlight, if any."

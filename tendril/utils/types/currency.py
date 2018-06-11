@@ -53,6 +53,7 @@ from cachecontrol.heuristics import ExpiresAfter
 
 from tendril.utils.config import BASE_CURRENCY
 from tendril.utils.config import BASE_CURRENCY_SYMBOL
+from tendril.utils.config import FIXER_IO_API_KEY
 
 from tendril.utils import www
 import numbers
@@ -149,8 +150,9 @@ class CurrencyDefinition(object):
 
         if BASE_CURRENCY == code:
             return 1
-        apiurl = 'http://api.fixer.io/latest?'
-        params = {'base': BASE_CURRENCY,
+        apiurl = 'http://data.fixer.io/api/latest?'
+        params = {'access_key': FIXER_IO_API_KEY,
+                  'base': BASE_CURRENCY,
                   'symbols': code}
         r = requests_session.get(apiurl, params=params)
         data = r.json()
