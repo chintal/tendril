@@ -50,6 +50,7 @@ import subprocess
 import jinja2
 import arrow
 import numpy
+import inspect
 
 from tendril.utils.config import DOX_TEMPLATE_FOLDER
 from tendril.utils.config import COMPANY_LOGO_PATH
@@ -152,7 +153,15 @@ def jinja2_pdfinit():
     :return: The jinja2 Environment.
 
     """
-    loader = jinja2.FileSystemLoader(DOX_TEMPLATE_FOLDER)
+    dox_path = os.path.split(
+        os.path.abspath(inspect.getfile(inspect.currentframe()))
+    )[0]
+
+    loader = jinja2.FileSystemLoader(
+        [DOX_TEMPLATE_FOLDER,
+         os.path.join(dox_path, 'templates')]
+    )
+    print(loader)
     renderer = jinja2.Environment(block_start_string='%{',
                                   block_end_string='%}',
                                   variable_start_string='%{{',
@@ -163,6 +172,7 @@ def jinja2_pdfinit():
     renderer.filters['format_currency'] = format_currency
     renderer.filters['escape_latex'] = escape_latex
     return renderer
+
 
 #: The jinja2 environment which application code
 #: can use to produce latex output.
@@ -220,12 +230,12 @@ def render_pdf(stage, template, outpath, remove_sources=True,
           - The current timestamp
 
     """
-    if not os.path.exists(template) \
-            and not os.path.exists(
-                os.path.join(DOX_TEMPLATE_FOLDER, template)
-            ):
-        logger.error("Template not found : " + template)
-        raise ValueError
+    # if not os.path.exists(template) \
+    #         and not os.path.exists(
+    #             os.path.join(DOX_TEMPLATE_FOLDER, template)
+    #         ):
+    #     logger.error("Template not found : " + template)
+    #     raise ValueError
     template = renderer_pdf.get_template(template)
 
     stage['logo'] = COMPANY_LOGO_PATH
@@ -248,7 +258,7 @@ def render_pdf(stage, template, outpath, remove_sources=True,
     pdflatex_cmd.append(texpath)
 
     if verbose:
-        print("Generating " + os.path.split(outpath)[1])
+        logger.info("Rendering LaTeX for " + os.path.split(outpath)[1])
 
     for i in range(3):
         # p = subprocess.Popen(pdflatex_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

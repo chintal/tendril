@@ -13,6 +13,11 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 install_requirements = [
+    # Extracted Modules
+    'tendril-utils-core',
+    'driver2200087',
+    'iec60063',
+
     # Confirmed Core Dependencies
     'argparse',
     'psycopg2',
@@ -28,7 +33,7 @@ install_requirements = [
     'sqlalchemy_utils',
     'alembic',
     'svn>=0.3.44',
-    'fs==0.5.4',
+
     'paramiko',
     'pyyaml',
     'progress',
@@ -63,10 +68,6 @@ install_requirements = [
     'versioneer',
     'watchdog',
     'scipy',       # Used for filter coefficients
-
-    # Extracted Modules
-    'driver2200087',
-    'iec60063'
 ]
 
 test_requirements = [

@@ -114,7 +114,10 @@ def conv_gsch2pdf(schpath, docfolder):
             util = os.path.join(GAF_BIN_ROOT, util)
         gschem_pscmd = util + " -o" + pspath + " -s" + \
             GEDA_SCHEME_DIR + '/print.scm ' + schpath
-        subprocess.call(gschem_pscmd.split(' '))
+        DEVNULL = open(os.devnull, 'w')
+        subprocess.call(gschem_pscmd.split(' '),
+                        stdout=DEVNULL,
+                        stderr=subprocess.STDOUT)
         pdf.conv_ps2pdf(pspath, pdfpath)
         os.remove(pspath)
     else:
@@ -122,7 +125,10 @@ def conv_gsch2pdf(schpath, docfolder):
         if not USE_SYSTEM_GAF_BIN:
             util = os.path.join(GAF_BIN_ROOT, util)
         gaf_pdfcmd = [util, 'export', '-o', pdfpath, '-c', schpath]
-        subprocess.call(gaf_pdfcmd)
+        DEVNULL = open(os.devnull, 'w')
+        subprocess.call(gaf_pdfcmd,
+                        stdout=DEVNULL,
+                        stderr=subprocess.STDOUT)
     return pdfpath
 
 
@@ -142,7 +148,10 @@ def conv_gsch2png(schpath, outfolder, include_extension=False):
         if not USE_SYSTEM_GAF_BIN:
             util = os.path.join(GAF_BIN_ROOT, util)
         gaf_pngcmd = [util, 'export', '-c', '-o', outpath, schpath]
-        subprocess.call(gaf_pngcmd)
+        DEVNULL = open(os.devnull, 'w')
+        subprocess.call(gaf_pngcmd,
+                        stdout=DEVNULL,
+                        stderr=subprocess.STDOUT)
     return outpath
 
 

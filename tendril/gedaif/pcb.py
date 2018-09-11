@@ -48,26 +48,52 @@ def conv_pcb2pdf(pcbpath, docfolder, projname):
 def conv_pcb2gbr(pcbpath, outfolder):
     pcb_folder, pcb_file = os.path.split(pcbpath)
     gbrfile = os.path.join(outfolder, os.path.splitext(pcb_file)[0])
+    DEVNULL = open(os.devnull, 'w')
     subprocess.call(['pcb', '-x', 'gerber',
                      '--gerberfile', gbrfile,
                      '--all-layers', '--verbose', '--outline',
-                     pcb_file], cwd=pcb_folder)
+                     pcb_file], cwd=pcb_folder,
+                    stdout=DEVNULL, stderr=subprocess.STDOUT)
     return outfolder
+
+
+def _call_psttoedit(args):
+    # See https://bugs.launchpad.net/ubuntu/+source/pstoedit/+bug/1785107
+    # return subprocess.call(['pstoedit'] + args)
+    try:
+        subprocess.check_output(['pstoedit'] + args, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        if 'DELAYBIND' in e.output:
+            if '-rdb' in args:
+                logger.error(
+                    "It seems that incompatible versions of ghostscript and "
+                    "pstoedit are installed on your system. This call to pstoedit "
+                    "will not result in useful output and the exception is being "
+                    "swallowed. This may lead to other subsequent bad behavior. "
+                    "We recommend you fix your library versions and retry. "
+                    "See https://bugs.launchpad.net/ubuntu/+source/pstoedit/+bug/1785107."
+                )
+                return
+            logger.warning("Found DELAYBIND warning killed pstoedit. "
+                           "Retrying with -rdb.")
+            _call_psttoedit(args + ['-rdb'])
 
 
 def conv_pcb2dxf(pcbpath, outfolder, pcbname):
     pcb_folder, pcb_file = os.path.split(pcbpath)
     dxffile = os.path.join(outfolder, pcbname + '.dxf')
     psfile = os.path.join(outfolder, pcbname + '.ps')
+    DEVNULL = open(os.devnull, 'w')
     subprocess.call(['pcb', '-x', 'ps',
                      '--psfile', psfile,
                      '--media', 'A4', '--show-legend', '--multi-file',
-                     pcb_file], cwd=pcb_folder)
+                     pcb_file], cwd=pcb_folder,
+                    stdout=DEVNULL, stderr=subprocess.STDOUT)
     psfile = os.path.join(outfolder, pcbname + '.top.ps')
     bottom_psfile = os.path.join(outfolder, pcbname + '.bottom.ps')
     bottom_dxffile = os.path.join(outfolder, pcbname + 'bottom.dxf')
-    subprocess.call(['pstoedit', '-f', 'dxf', psfile, dxffile])
-    subprocess.call(['pstoedit', '-f', 'dxf', bottom_psfile, bottom_dxffile])
+    _call_psttoedit(['-f', 'dxf', psfile, dxffile])
+    _call_psttoedit(['-f', 'dxf', bottom_psfile, bottom_dxffile])
     cleanlist = [f for f in os.listdir(outfolder) if f.endswith(".ps")]
     for f in cleanlist:
         os.remove(os.path.join(outfolder, f))

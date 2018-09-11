@@ -115,7 +115,7 @@ from tendril.utils.files import yml as yaml
 
 
 workspace_fs = temp_fs.makeopendir('workspace_gpd')
-logger = log.get_logger(__name__, log.DEFAULT)
+logger = log.get_logger(__name__, log.INFO)
 
 
 def get_project_doc_folder(projectfolder):

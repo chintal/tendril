@@ -23,6 +23,7 @@ gEDA gsymlib Module (:mod:`tendril.gedaif.gsymlib`)
 import os
 import csv
 import arrow
+import inspect
 from future.utils import viewitems
 
 import jinja2
@@ -32,7 +33,6 @@ import iec60063
 from tendril.utils.config import GEDA_SYMLIB_ROOT
 from tendril.utils.config import GEDA_SUBCIRCUITS_ROOT
 from tendril.utils.config import AUDIT_PATH
-from tendril.utils.config import TENDRIL_ROOT
 from tendril.utils.config import INSTANCE_CACHE
 from tendril.utils.config import MAKE_GSYMLIB_IMG_CACHE
 
@@ -727,7 +727,10 @@ def gen_index(symlist, upper=False):
 
 
 def _jinja_init():
-    templates_path = os.path.join(TENDRIL_ROOT, 'gedaif', 'templates')
+    gedaif_path = os.path.split(
+        os.path.abspath(inspect.getfile(inspect.currentframe()))
+    )[0]
+    templates_path = os.path.join(gedaif_path, 'templates')
     logger.debug("Loading templates from " + templates_path)
     loader = jinja2.FileSystemLoader(
         searchpath=templates_path

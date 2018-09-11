@@ -179,7 +179,8 @@ class InventoryTallyReader(InventoryReaderBase):
             try:
                 # TODO Needs a godown filter here if the XML tags ever surface
                 qty = self._parse_quantity(item.closingbalance, item)
-                meta = {'godowns': [x.name for x in imaster.godowns],
+                meta = {'name': name,
+                        'godowns': [x.name for x in imaster.godowns],
                         'path': ' / '.join(imaster.parent.path) if imaster.parent else None}  # noqa
                 yield name, qty, meta
             except (ParseException, ValueError):
