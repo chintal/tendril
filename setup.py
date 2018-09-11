@@ -15,6 +15,7 @@ def read(fname):
 install_requirements = [
     # Extracted Modules
     'tendril-utils-core',
+    'tendril-utils-www',
     'driver2200087',
     'iec60063',
 
@@ -24,9 +25,7 @@ install_requirements = [
     'arrow',
     'pillow',
     'qrcode',
-    'beautifulsoup4',
     'PyPDF2',
-    'lxml',
     'idstring',
     'jinja2',
     'SQLAlchemy',
@@ -40,10 +39,7 @@ install_requirements = [
     'colorama',
     'future',
     'mistune',
-    'cachecontrol[filecache]',  # utils.www caching for requests implementation
-    'requests',
     'appenlight-client',
-    'suds',
     'pcb-tools',
     'pyhull',
     'cachetools',   # sourcing.vendors.VendorBase._partcache
