@@ -28,7 +28,7 @@ import os
 
 from tendril.sourcing.vendors.digikey import DigiKeyInvoice
 from tendril.dox import customs
-from ..profiler import do_profile
+from tendril.devtooling.profiler import do_profile
 
 SCRIPT_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 SCRIPT_FOLDER = os.path.normpath(os.path.join(SCRIPT_PATH, os.pardir))

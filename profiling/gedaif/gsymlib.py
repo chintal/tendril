@@ -28,7 +28,7 @@ This file runs profiling on :mod:`tendril.gedaif.gsymlib`.
 import os
 import inspect
 
-from ..profiler import do_profile
+from tendril.devtooling.profiler import do_profile
 
 from tendril.gedaif import gsymlib
 

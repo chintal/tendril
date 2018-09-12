@@ -30,7 +30,7 @@ and subclasses thereof.
 import os
 import inspect
 
-from ..profiler import do_profile
+from tendril.devtooling.profiler import do_profile
 
 from tendril.sourcing.electronics import vendor_list
 from tendril.sourcing import map

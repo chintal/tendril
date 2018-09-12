@@ -20,9 +20,13 @@ See the COPYING, README, and INSTALL files for more information
 """
 
 import atexit
-import stacktracer
-stacktracer.trace_start("trace.html")
-atexit.register(stacktracer.trace_stop)
+
+try:
+    from tendril.devtooling import stacktracer
+    stacktracer.trace_start("trace.html")
+    atexit.register(stacktracer.trace_stop)
+except ImportError:
+    stacktracer = None
 
 from tendril.frontend.app import app
 from tendril.frontend.startup.init_app import init_app

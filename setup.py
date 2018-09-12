@@ -69,6 +69,7 @@ install_requirements = [
 
 test_requirements = [
     'pytest',
+    'tendril-devtooling',
 ],
 
 setup_requirements = [
