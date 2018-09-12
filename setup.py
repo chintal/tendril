@@ -12,17 +12,18 @@ import versioneer
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 install_requirements = [
     # Extracted Modules
     'tendril-utils-core',
     'tendril-utils-www',
+    'tendril-utils-types',
     'driver2200087',
     'iec60063',
 
     # Confirmed Core Dependencies
     'argparse',
     'psycopg2',
-    'arrow',
     'pillow',
     'qrcode',
     'PyPDF2',
