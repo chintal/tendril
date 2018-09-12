@@ -40,7 +40,7 @@ from tendril.utils.config import REFDOC_PREFIX
 from tendril.utils.config import DOCSTORE_PREFIX
 
 from db import controller
-from wallet import wallet_fs
+from tendril.dox.wallet import wallet_fs
 
 from tendril.utils import log
 

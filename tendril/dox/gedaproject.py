@@ -96,9 +96,9 @@ from fs import path
 from fs.errors import PermissionDeniedError
 from fs.utils import copyfile
 
-import render
-from docstore import ExposedDocument
-from docstore import refdoc_fs
+from tendril.dox import render
+from tendril.dox.docstore import ExposedDocument
+from tendril.dox.docstore import refdoc_fs
 from tendril.boms import electronics as boms_electronics
 from tendril.boms import outputbase as boms_outputbase
 from tendril.gedaif import conffile

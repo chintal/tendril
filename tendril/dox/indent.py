@@ -34,15 +34,10 @@ produce the output files after constructing the appropriate stage.
 
 """
 
-import render
 import os
 
-import docstore
-import labelmaker
-
-from tendril.entityhub import serialnos
-from tendril.utils.db import with_db
-from tendril.boms.outputbase import load_cobom_from_file
+from tendril.dox import render
+from tendril.dox import docstore
 
 
 def gen_stock_idt_from_cobom(outfolder, sno, title, carddict, cobom, verbose=True):

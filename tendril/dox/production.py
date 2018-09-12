@@ -37,8 +37,8 @@ import os
 
 from fs.utils import copyfile
 
-import docstore
-import render
+from tendril.dox import docstore
+from tendril.dox import render
 from tendril.boms.outputbase import DeltaOutputBom
 from tendril.entityhub import projects
 from tendril.entityhub import serialnos

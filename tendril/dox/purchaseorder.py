@@ -42,7 +42,7 @@ produce the output files after constructing the appropriate stage.
 
 import datetime
 
-import render
+from tendril.dox import render
 from tendril.entityhub import serialnos
 
 from tendril.utils.config import COMPANY_PO_LCO_PATH

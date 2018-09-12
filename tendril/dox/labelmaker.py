@@ -25,7 +25,7 @@ import os
 
 import qrcode
 
-import render
+from tendril.dox import render
 from tendril.utils import log
 from tendril.utils.config import COMPANY_LOGO_PATH
 from tendril.utils.config import COMPANY_NAME

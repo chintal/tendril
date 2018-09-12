@@ -46,8 +46,8 @@ from tendril.utils import vcs
 from tendril.entityhub.db.model import SerialNumber
 from tendril.entityhub.db import controller as sno_controller
 
-from render import render_pdf
-import docstore
+from tendril.dox.render import render_pdf
+from tendril.dox import docstore
 
 from tendril.utils.config import INSTANCE_ROOT
 from tendril.utils import log

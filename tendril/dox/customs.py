@@ -62,9 +62,9 @@ import os
 
 import fs
 
-import docstore
-import render
-import wallet
+from tendril.dox import docstore
+from tendril.dox import render
+from tendril.dox import wallet
 from tendril.entityhub import serialnos
 from tendril.utils.config import COMPANY_GOVT_POINT
 from tendril.utils.db import with_db

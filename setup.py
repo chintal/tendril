@@ -18,6 +18,7 @@ install_requirements = [
     'tendril-utils-core',
     'tendril-utils-www',
     'tendril-utils-types',
+    'tendril-dox-render',
     'driver2200087',
     'iec60063',
 
@@ -60,7 +61,6 @@ install_requirements = [
     'wtforms-components',
 
     # Perhaps require reconsideration
-    'matplotlib',  # Pulls in numpy!
     'splinter',    # Replace with direct selenium usage
     'versioneer',
     'watchdog',
