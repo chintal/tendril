@@ -126,7 +126,7 @@ class InventoryLocation(object):
         try:
             self._load_from_reader()
             self._is_valid = True
-        except acquire.MasterNotAvailable:
+        except self._reader.exc:
             pass
 
     @property

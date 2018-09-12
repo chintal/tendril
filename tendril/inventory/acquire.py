@@ -38,6 +38,7 @@ from tendril.utils.files import libreoffice
 from tendril.utils.connectors.tally.stock import TallyUnit
 from tendril.utils.connectors.tally.stock import get_master
 from tendril.utils.connectors.tally.stock import get_position
+from tendril.utils.connectors.tally import TallyNotAvailable
 
 try:
     from tendril.utils.types.lengths import Length
@@ -117,6 +118,8 @@ def _rewrite_mass(value, baseunit):
 
 
 class InventoryTallyReader(InventoryReaderBase):
+    exc = TallyNotAvailable
+
     def __init__(self, sname=None, location=None, company_name=None,
                  godown_name=None, tfpath=''):
         self._location = location
