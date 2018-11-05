@@ -19,6 +19,7 @@ install_requirements = [
     'tendril-utils-www>=0.1.2',
     'tendril-utils-types>=0.1.2',
     'tendril-dox-render>=0.1.2',
+    'tendril-connector-tally>=0.1.3',
     'driver2200087',
     'iec60063',
 
@@ -124,7 +125,15 @@ setup(
             'dox/templates/*.tex',
             'dox/templates/*/*.tex',
             # frontend module
-            'frontend/static/*',
+            'frontend/static/css/*.css',
+            'frontend/static/css/*/*.css',
+            'frontend/static/js/*.js',
+            'frontend/static/js/*/*.js',
+            'frontend/static/images/*.png',
+            'frontend/static/images/*.gif',
+            'frontend/static/images/*.ico',
+            'frontend/static/icons/svgs/*.svg',
+            'frontend/static/icons/foundation-icons.*',
             'frontend/templates/*/*.html',
             'frontend/blueprints/*/templates/*.html',
         ]
