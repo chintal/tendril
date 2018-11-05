@@ -125,6 +125,8 @@ setup(
             'dox/templates/*.tex',
             'dox/templates/*/*.tex',
             # frontend module
+            'frontend/static/gen/*.js',
+            'frontend/static/gen/*.css',
             'frontend/static/css/*.css',
             'frontend/static/css/*/*.css',
             'frontend/static/js/*.js',
