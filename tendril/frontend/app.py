@@ -20,6 +20,7 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
+import time
 import atexit
 from flask import Flask
 from tendril.frontend.startup.warmup import warm_up_caches
@@ -31,11 +32,16 @@ def exit_handler():
 atexit.register(exit_handler)
 
 
+print(" ----- WARMING UP ----- ")
+_start_time = time.time()
+
 # Warm up caches
 warm_up_caches()
 
+_warmup_time = time.time() - _start_time
+print(" ----- WARM UP TOOK {0} SECONDS -----".format(_warmup_time))
 
-print(" ----- STARTING UP ----- ")
+print(" ----- STARTING ----- ")
 # This is the WSGI compliant web application object
 app = Flask(__name__)
 

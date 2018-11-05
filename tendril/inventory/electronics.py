@@ -295,7 +295,7 @@ def reserve_items(ident, qty, earmark, die_if_not=True):
                        ' for ' + earmark + ' : Short by ' + str(qty))
         if die_if_not is True:
             raise ValueError("Insufficient Qty. "
-                             "Call with die_if_not=True if handled downstream"
+                             "Call with die_if_not=False if handled downstream"
                              )
     return qty
 

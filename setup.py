@@ -15,10 +15,10 @@ def read(fname):
 
 install_requirements = [
     # Extracted Modules
-    'tendril-utils-core',
-    'tendril-utils-www',
-    'tendril-utils-types',
-    'tendril-dox-render',
+    'tendril-utils-core>=0.1.4',
+    'tendril-utils-www>=0.1.2',
+    'tendril-utils-types>=0.1.2',
+    'tendril-dox-render>=0.1.2',
     'driver2200087',
     'iec60063',
 

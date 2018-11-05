@@ -52,7 +52,8 @@ def mq_connection():
     if not MQ_SERVER:
         raise MQServerNotConfigured
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters(MQ_SERVER, MQ_SERVER_PORT)
+        pika.ConnectionParameters(MQ_SERVER, MQ_SERVER_PORT,
+                                  heartbeat_interval=1200)
     )
     try:
         yield connection
@@ -96,7 +97,7 @@ class EventMonitor(threading.Thread):
         with mq_connection() as connection:
             channel = connection.channel()
             channel.exchange_declare(exchange=self._exchange,
-                                     type='fanout')
+                                     exchange_type='fanout')
 
             def _manager():
                 if self.stop_requested.isSet():

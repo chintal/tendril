@@ -164,12 +164,21 @@ class GedaBomParser(CachedBomParser):
             shutil.copy(schpath, tschpath)
             self.schpaths.append(tschpath)
 
+    def _get_attribs_file(self):
+        p = os.path.join(self._source_folder, 'attribs.tendril')
+        if os.path.exists(p):
+            return p
+        p = os.path.join(self._source_folder, 'attribs')
+        if os.path.exists(p):
+            return p
+        raise IOError("Attribs file not found for {0}"
+                      "".format(self.projectfolder))
+
     def generate_bom_file(self, outpath, backend=None):
         self._get_temp_schematic()
         cmd = ["gnetlist",
                '-g', backend,
-               '-Oattrib_file=' + os.path.join(self._source_folder,
-                                               'attribs')
+               '-Oattrib_file=' + self._get_attribs_file()
                ]
         outdir, outfile = os.path.split(outpath)
         idx_refdes = None

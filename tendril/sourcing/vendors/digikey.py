@@ -346,7 +346,8 @@ class DigiKeyElnPart(VendorElnPartBase):
                                    {'itemtype': 'http://schema.org/Product'})
                 )
             if not table and not proddetail:
-                raise DigiKeyParseError("Another category page found?")
+                raise DigiKeyParseError("Another category page found? {0}, "
+                                        "{1}".format(vpno, url))
         for row in rows:
             rpno = row.find('meta', {'itemprop': 'productid'})
             rpno = rpno.attrs['content'][4:].strip()

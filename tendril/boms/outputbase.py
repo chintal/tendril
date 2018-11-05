@@ -27,6 +27,7 @@ from tendril.conventions.electronics import parse_ident
 from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import GenericEntityBase
 from tendril.utils import log
+from tendril.utils.types import ParseException
 from tendril.utils.types.lengths import Length
 from tendril.utils.types.unitbase import NumericalUnitBase
 
@@ -115,7 +116,7 @@ class OutputBomLine(SourceableBomLineMixin):
                 elif elen > Length('1inch'):
                     elen = Length('1inch')
                 return len(self.refdeslist) * (Length(footprint) + elen)
-            except ValueError:
+            except (ValueError, ParseException):
                 logger.error(
                     "Problem parsing length for ident : " + self.ident
                 )

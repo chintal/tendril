@@ -101,6 +101,7 @@ class InventoryDBReader(InventoryReaderBase):
 
 
 # Tally Reader Helper Functions
+# TODO Move into staticmethods of the class itself
 def _strip_unit(value, baseunit):
     return value.rstrip(baseunit.name)
 
@@ -112,6 +113,8 @@ def _rewrite_mass(value, baseunit):
         uname = baseunit
     if uname.strip() == 'gm':
         value = value.replace(' gm', ' g')
+    elif uname.strip() == 'grm':
+        value = value.replace(' grm', ' g')
     elif uname.strip() == 'Kg':
         value = value.replace(' Kg', ' kg')
     return value
@@ -133,6 +136,7 @@ class InventoryTallyReader(InventoryReaderBase):
         'Pc':  (int, _strip_unit),
         'gm': (Mass, _rewrite_mass),
         'Kg': (Mass, _rewrite_mass),
+        'grm': (Mass, _rewrite_mass),
         'ft': (Length, None),
         'cm': (Length, None),
         'Inch': (Length, None),
