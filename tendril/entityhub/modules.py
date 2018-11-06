@@ -24,6 +24,7 @@ Docstring for modules
 
 import os
 import json
+import timeit
 from copy import copy
 from copy import deepcopy
 
@@ -56,7 +57,7 @@ from .entitybase import EntityBase
 from .prototypebase import PrototypeBase
 
 from tendril.utils import log
-logger = log.get_logger(__name__, log.DEFAULT)
+logger = log.get_logger(__name__, log.INFO)
 
 
 class ModuleNotRecognizedError(Exception):
@@ -838,14 +839,34 @@ def fill_prototype_lib():
 
 
 def prep_persistance():
+    build_times = []
+
     logger.info('Building Prototype Library')
+    l_start_time = timeit.default_timer()
     get_prototype_lib()
+    build_times.append(('prototypelib.build',
+                        timeit.default_timer() - l_start_time))
+
     logger.info('Filling Prototype Library')
+    l_start_time = timeit.default_timer()
     fill_prototype_lib()
+    build_times.append(('prototypelib.fill',
+                        timeit.default_timer() - l_start_time))
+
     logger.info('Building PCB Library')
+    l_start_time = timeit.default_timer()
     get_pcb_lib()
+    build_times.append(('pcblib.build',
+                        timeit.default_timer() - l_start_time))
+
     logger.info('Building Project Library')
+    l_start_time = timeit.default_timer()
     get_project_lib()
+    build_times.append(('projectlib.build',
+                        timeit.default_timer() - l_start_time))
+
+    for k, t in build_times:
+        logger.info('{0:25} : {1:>5.1f} seconds'.format(k, t))
 
     try:
         _m = mq.monitor_start('published_vcs_commits', _vcs_commit_handler)

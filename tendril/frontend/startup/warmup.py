@@ -72,4 +72,4 @@ def warm_up_caches():
     logger.info("Finished Warmup Cycle.")
     logger.info("Warmup took {0} seconds.".format(elapsed))
     for k, t in warmup_times:
-        logger.info('{0:25} : {1:>4} seconds'.format(k, t))
+        logger.info('{0:25} : {1:>5.1f} seconds'.format(k, t))
