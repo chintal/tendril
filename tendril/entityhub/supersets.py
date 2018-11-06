@@ -120,7 +120,7 @@ def get_bom_superset(regen=False):
     boms = []
     logger.info("Building superset composite BOM")
     for ident, prototype in viewitems(prototypes):
-        logger.warning("Adding {0} to superset cobom...".format(ident))
+        logger.info("Adding {0} to superset cobom...".format(ident))
         boms.append(prototype.obom)
     logger.info("Collating into superset composite BOM")
     superset_cobom = CompositeOutputBom(boms, name='ALL')

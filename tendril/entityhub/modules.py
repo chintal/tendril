@@ -833,7 +833,7 @@ def fill_prototype_lib():
     count = 0
     for k, prototype in viewitems(get_prototype_lib()):
         count += 1
-        logger.warning("{0:3}/{1:3} Validating {2}".format(count, tlen, k))
+        logger.info("{0:3}/{1:3} Validating {2}".format(count, tlen, k))
         prototype.validate()
 
 
