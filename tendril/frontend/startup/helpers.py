@@ -28,7 +28,7 @@ from tendril.frontend.app import app
 @app.context_processor
 def inject_version():
     import tendril
-    return {'tendril_version': tendril.__version__}
+    return {'tendril_version': 'TODO'}
 
 
 @app.context_processor

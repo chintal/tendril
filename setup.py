@@ -20,6 +20,7 @@ install_requirements = [
     'tendril-utils-types>=0.1.2',
     'tendril-dox-render>=0.1.2',
     'tendril-connector-tally>=0.1.3',
+    'tendril-devtooling',
     'driver2200087',
     'iec60063',
 
@@ -70,7 +71,6 @@ install_requirements = [
 
 test_requirements = [
     'pytest',
-    'tendril-devtooling',
 ],
 
 setup_requirements = [
@@ -138,6 +138,7 @@ setup(
             'frontend/static/icons/foundation-icons.*',
             'frontend/templates/*/*.html',
             'frontend/blueprints/*/templates/*.html',
+            'frontend/blueprints/*/templates/parts/*.html'
         ]
     },
     long_description=read('README.rst'),
