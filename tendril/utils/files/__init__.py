@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# Copyright (C) 2016 Chintalagiri Shashank
+# Copyright (C) 2018 Chintalagiri Shashank
 #
 # This file is part of tendril.
 #
@@ -18,6 +18,5 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Docstring for __init__.py
-"""
+from pkgutil import extend_path
+__path__ = extend_path(__path__, __name__)

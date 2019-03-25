@@ -120,7 +120,7 @@ class ProductPrototypeBase(PrototypeBase):
         self._cable_names = self._raw_data['cables']
         self._labels = self._raw_data['labels']
         # TODO Some products don't have a viable core. Allowances must be made
-        # Eg QM anf QI.
+        # Eg QM and QI.
         self._core = self._raw_data['derive_sno_from']
         self._calibformat = self._raw_data['calibformat']
         try:
@@ -308,6 +308,9 @@ class ProductPrototypeBase(PrototypeBase):
 
     def _validate(self):
         pass
+
+    def __repr__(self):
+        return "<ProductPrototype {0}>".format(self.ident)
 
 
 def get_folder_products(path):

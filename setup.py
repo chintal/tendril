@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 import os
 from setuptools import setup, find_packages
@@ -18,31 +17,28 @@ install_requirements = [
     'tendril-utils-core>=0.1.4',
     'tendril-utils-www>=0.1.2',
     'tendril-utils-types>=0.1.2',
-    'tendril-dox-render>=0.1.2',
+    'tendril-utils-files>=0.1.1',
+    'tendril-utils-db>=0.1.1',
+    'tendril-utils-terminal>=0.1.1',
+    'tendril-base>=0.1.1',
     'tendril-connector-tally>=0.1.3',
+    'tendril-conventions-status>=0.1.1',
+    'tendril-dox-render>=0.1.2',
+    'tendril-dox-labelmaker>=0.1.1',
+    'tendril-dox-wallet>=0.1.1',
     'tendril-devtooling',
     'driver2200087',
     'iec60063',
 
     # Confirmed Core Dependencies
     'argparse',
-    'psycopg2',
     'pillow',
-    'qrcode',
-    'PyPDF2',
     'idstring',
     'jinja2',
-    'SQLAlchemy',
-    'sqlalchemy_utils',
-    'alembic',
     'svn>=0.3.44',
-
     'paramiko',
     'pyyaml',
-    'progress',
-    'colorama',
     'future',
-    'mistune',
     'appenlight-client',
     'pcb-tools',
     'pyhull',

@@ -43,10 +43,10 @@ def warm_up_caches():
     from tendril.sourcing import electronics
     warmup_times.append(('sourcing.electronics', timeit.default_timer() - l_start_time))
 
-    logger.info("Warming up entityhub.directory")
+    logger.info("Warming up libraries.directory")
     l_start_time = timeit.default_timer()
-    from tendril.entityhub import directory
-    warmup_times.append(('entityhub.directory', timeit.default_timer() - l_start_time))
+    from tendril.libraries import directory
+    warmup_times.append(('libraries.directory', timeit.default_timer() - l_start_time))
 
     logger.info("Warming up entityhub.modules")
     l_start_time = timeit.default_timer()
