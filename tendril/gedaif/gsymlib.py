@@ -55,7 +55,7 @@ from tendril.conventions.electronics import match_capacitor
 from tendril.conventions.electronics import match_resistor
 from tendril.conventions.electronics import bestmatch_capacitor
 from tendril.conventions.electronics import bestmatch_resistor
-
+from tendril.conventions.electronics import check_for_std_val
 
 from tendril.utils.types import ParseException
 from tendril.utils.types.lengths import Length
@@ -921,3 +921,43 @@ def export_gsymlib_audit():
 
 class NoGedaSymbolException(Exception):
     pass
+
+
+def jb_harmonize(item):
+    # TODO This was moved out of t.conventions.electronics only to avoid 
+    # the headache of the reverse gsymlib import. The logical place for this
+    # is in the conventions layer. It should be moved back there after the 
+    # EDA library is more firmly established within libraries.
+    ident = ident_transform(item.data['device'],
+                            item.data['value'],
+                            item.data['footprint'])
+    prefix = check_for_std_val(ident)
+    if not prefix:
+        return item
+    else:
+        if item.data['footprint'].startswith('MY-'):
+            item.data['footprint'] = item.data['footprint'][3:]
+        context = {'device': item.data['device'],
+                   'footprint': item.data['footprint']}
+        if prefix == 'RES':
+            params = parse_resistor(item.data['value'], context)
+            try:
+                resistor = find_resistor(item.data['device'],
+                                         item.data['footprint'],
+                                         **params._asdict())
+                item.data['value'] = resistor.value
+            except NoGedaSymbolException:
+                pass
+            return item
+        elif prefix == 'CAP':
+            params = parse_capacitor(item.data['value'], context)
+            try:
+                capacitor = find_capacitor(item.data['device'],
+                                           item.data['footprint'],
+                                           **params._asdict())
+                item.data['value'] = capacitor.value
+            except NoGedaSymbolException:
+                pass
+            return item
+        else:
+            return item
