@@ -26,12 +26,13 @@ import shutil
 
 from tendril.conventions.motifs import create_motif_object
 from tendril.conventions.electronics import ident_transform
-from tendril.boms.validate import ValidationContext
-from tendril.boms.validate import ErrorCollector
-from tendril.boms.validate import BomMotifPolicy
-from tendril.boms.validate import BomMotifUnrecognizedError
-from tendril.boms.validate import ColumnsRequiredPolicy
-from tendril.boms.validate import RequiredColumnMissingError
+
+from tendril.validation.base import ValidationContext
+from tendril.validation.base import ErrorCollector
+from tendril.validation.motifs import BomMotifUnrecognizedError
+from tendril.validation.motifs import BomMotifPolicy
+from tendril.validation.columns import RequiredColumnMissingError
+from tendril.validation.columns import ColumnsRequiredPolicy
 
 import projfile
 

@@ -32,18 +32,18 @@ from future.utils import viewitems
 
 from tendril.boms.electronics import EntityElnBom
 from tendril.gedaif.conffile import ConfigsFile
-
-from tendril.boms.validate import ConfigOptionPolicy
-from tendril.boms.validate import ErrorCollector
-from tendril.boms.validate import IdentPolicy
-from tendril.boms.validate import IdentQtyPolicy
-from tendril.boms.validate import QuantityTypeError
-from tendril.boms.validate import ValidationContext
-from tendril.boms.validate import ValidationError
-from tendril.boms.validate import get_dict_val
 from tendril.boms.costingbase import NoStructureHereException
 from tendril.dox.gedaproject import get_docs_list
 from tendril.utils.types import ParseException
+
+from tendril.validation.base import ValidationContext
+from tendril.validation.base import ValidationError
+from tendril.validation.base import ErrorCollector
+from tendril.validation.configs import ConfigOptionPolicy
+from tendril.validation.configs import get_dict_val
+from tendril.validation.idents import IdentPolicy
+from tendril.validation.boms import QuantityTypeError
+from tendril.validation.boms import IdentQtyPolicy
 
 from tendril.utils.connectors import mq
 from tendril.utils.config import WARM_UP_CACHES
@@ -917,4 +917,3 @@ def _vcs_commit_handler(data):
 
 if WARM_UP_CACHES is True:
     monitor = prep_persistance()
-

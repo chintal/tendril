@@ -56,13 +56,12 @@ import itertools
 import warnings
 from decimal import Decimal
 
-from tendril.boms.validate import ValidationContext
-from tendril.boms.validate import ErrorCollector
-from tendril.boms.validate import ValidationError
-from tendril.boms.validate import ValidationPolicy
-from tendril.boms.validate import ConfigOptionPolicy
-
-from tendril.boms.validate import get_dict_val
+from tendril.validation.base import ValidationContext
+from tendril.validation.base import ValidationError
+from tendril.validation.base import ValidationPolicy
+from tendril.validation.base import ErrorCollector
+from tendril.validation.configs import ConfigOptionPolicy
+from tendril.validation.configs import get_dict_val
 
 from tendril.utils.files import yml as yaml
 from tendril.utils import log

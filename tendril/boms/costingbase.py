@@ -33,9 +33,9 @@ from tendril.inventory.guidelines import electronics_qty
 from tendril.utils.types.currency import CurrencyValue
 from tendril.utils.types.currency import native_currency_defn
 
-from .validate import ErrorCollector
-from .validate import ValidationPolicy
-from .validate import IdentErrorBase
+from tendril.validation.base import ValidationPolicy
+from tendril.validation.base import ErrorCollector
+from tendril.validation.idents import IdentErrorBase
 
 
 class SourcingIdentPolicy(ValidationPolicy):

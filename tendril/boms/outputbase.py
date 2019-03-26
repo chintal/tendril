@@ -26,18 +26,18 @@ from tendril.conventions.electronics import fpiswire
 from tendril.conventions.electronics import parse_ident
 from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import GenericEntityBase
-from tendril.utils import log
 from tendril.utils.types import ParseException
 from tendril.utils.types.lengths import Length
 from tendril.utils.types.unitbase import NumericalUnitBase
+
+from tendril.validation.base import ValidationContext
+from tendril.validation.base import ErrorCollector
 
 from .costingbase import SourcingIdentPolicy
 from .costingbase import SourceableBomLineMixin
 from .costingbase import CostableBom
 
-from .validate import ErrorCollector
-from .validate import ValidationContext
-
+from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 

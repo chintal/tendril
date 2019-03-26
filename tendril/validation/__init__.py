@@ -1,6 +1,9 @@
-# Copyright (C) 2015 Chintalagiri Shashank
+#!/usr/bin/env python
+# encoding: utf-8
+
+# Copyright (C) 2018 Chintalagiri Shashank
 #
-# This file is part of Tendril.
+# This file is part of tendril.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,4 +19,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from pkgutil import extend_path
-__path__ = extend_path(__path__, 'tendril')
+__path__ = extend_path(__path__, __name__)

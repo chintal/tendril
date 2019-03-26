@@ -23,10 +23,10 @@ Docstring for prototypebase
 """
 from copy import copy
 
-from tendril.boms.validate import ValidatableBase
-from tendril.boms.validate import FilePolicy
-from tendril.boms.validate import MissingFileError
-from tendril.boms.validate import MangledFileError
+from tendril.validation.base import ValidatableBase
+from tendril.validation.files import MissingFileError
+from tendril.validation.files import MangledFileError
+from tendril.validation.files import FilePolicy
 
 from tendril.utils import log
 from tendril.utils.parsers import changelog
@@ -93,19 +93,19 @@ class PrototypeBase(ValidatableBase):
     def _changelogpath(self):
         raise NotImplementedError
 
+    @property
+    def _changelog_policy(self):
+        ctx = copy(self._validation_context)
+        ctx.locality = 'ChangeLog'
+        return FilePolicy(ctx, self._changelogpath, False)
+
     def _get_changelog(self):
         try:
             self._changelog = changelog.ChangeLog(self._changelogpath)
         except changelog.ChangeLogNotFoundError:
-            ctx = copy(self._validation_context)
-            ctx.locality = 'ChangeLog'
-            policy = FilePolicy(ctx, self._changelogpath, False)
-            raise MissingFileError(policy)
+            raise MissingFileError(self._changelog_policy)
         except changelog.ChangeLogParseError:
-            ctx = copy(self._validation_context)
-            ctx.locality = 'ChangeLog'
-            policy = FilePolicy(ctx, self._changelogpath, False)
-            raise MangledFileError(policy)
+            raise MangledFileError(self._changelog_policy)
 
     def _register_for_changes(self):
         raise NotImplementedError

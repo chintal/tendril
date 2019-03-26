@@ -57,16 +57,16 @@ from tendril.entityhub.entitybase import EntityBase
 from tendril.entityhub.entitybase import EntityBomBase
 from tendril.entityhub.entitybase import EntityGroupBase
 
-from .validate import ValidationContext
-from .validate import ErrorCollector
-from .validate import ValidationError
-from .validate import BomGroupPolicy
-from .validate import ConfigMotifPolicy
-from .validate import ConfigMotifMissingError
-from .validate import ConfigGroupError
-from .validate import ConfigGroupPolicy
-from .validate import ConfigSJPolicy
-from .validate import ConfigSJUnexpectedError
+from tendril.validation.base import ValidationContext
+from tendril.validation.base import ValidationError
+from tendril.validation.base import ErrorCollector
+from tendril.validation.boms import BomGroupPolicy
+from tendril.validation.boms import ConfigGroupError
+from tendril.validation.boms import ConfigGroupPolicy
+from tendril.validation.boms import ConfigSJUnexpectedError
+from tendril.validation.boms import ConfigSJPolicy
+from tendril.validation.motifs import ConfigMotifMissingError
+from tendril.validation.motifs import ConfigMotifPolicy
 
 from .outputbase import OutputBom
 from .outputbase import OutputElnBomDescriptor

@@ -27,9 +27,9 @@ from tendril.boms.configbase import NoProjectError
 
 from tendril.conventions import status
 
-from tendril.boms.validate import ValidationError
-from tendril.boms.validate import ConfigOptionPolicy
-from tendril.boms.validate import get_dict_val
+from tendril.validation.base import ValidationError
+from tendril.validation.configs import ConfigOptionPolicy
+from tendril.validation.configs import get_dict_val
 
 
 class NoGedaProjectError(NoProjectError):

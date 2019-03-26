@@ -924,10 +924,11 @@ class NoGedaSymbolException(Exception):
 
 
 def jb_harmonize(item):
-    # TODO This was moved out of t.conventions.electronics only to avoid 
+    # TODO This was moved out of t.conventions.electronics only to avoid
     # the headache of the reverse gsymlib import. The logical place for this
-    # is in the conventions layer. It should be moved back there after the 
-    # EDA library is more firmly established within libraries.
+    # is in the conventions layer or perhaps the library layer. It should be
+    # moved back there after the EDA library is more firmly established
+    # within libraries.
     ident = ident_transform(item.data['device'],
                             item.data['value'],
                             item.data['footprint'])
