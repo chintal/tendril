@@ -26,7 +26,7 @@ import os
 
 from .projects import cards
 from .projects import get_module_snoseries
-from .products import productlib
+from tendril.libraries.products import productlib
 
 from .serialnos import get_serialno
 from .serialnos import link_serialno

@@ -35,6 +35,7 @@ from tendril.gedaif.conffile import ConfigsFile
 from tendril.boms.costingbase import NoStructureHereException
 from tendril.dox.gedaproject import get_docs_list
 from tendril.utils.types import ParseException
+from tendril.entities.prototypebase import PrototypeBase
 
 from tendril.validation.base import ValidationContext
 from tendril.validation.base import ValidationError
@@ -54,7 +55,6 @@ from . import projects
 from . import serialnos
 from .db.controller import SerialNoNotFound
 from .entitybase import EntityBase
-from .prototypebase import PrototypeBase
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)

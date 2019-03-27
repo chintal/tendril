@@ -42,7 +42,7 @@ from tendril.entityhub.modules import get_project_lib
 
 # TODO Consider migration of the next section of imports
 # to a prototype like structure
-from tendril.entityhub import products as ehproducts
+from tendril.libraries import products as product_library
 from tendril.entityhub import serialnos as ehserialnos
 from tendril.entityhub.db.controller import SeriesNotFound
 
@@ -105,7 +105,7 @@ def cables(cblname=None):
     else:
         prototype = prototypes[cblname]
         stage = {'prototype': prototype,
-                 'inclusion': ehproducts.get_module_inclusion(cblname),
+                 'inclusion': product_library.get_module_inclusion(cblname),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Modules", path="modules/"),
@@ -158,7 +158,7 @@ def cards(cardname=None):
     else:
         prototype = prototypes[cardname]
         stage = {'prototype': prototype,
-                 'inclusion': ehproducts.get_module_inclusion(cardname),
+                 'inclusion': product_library.get_module_inclusion(cardname),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Modules", path="modules/"),
@@ -296,7 +296,7 @@ def projects(projectname=None):
 @login_required
 def products(productname=None):
     if productname is None:
-        stage_products = sorted(ehproducts.productlib,
+        stage_products = sorted(product_library.productlib,
                                 key=lambda x: (x.info.status, x.name))
         lines = {}
         ptypes = {}
@@ -323,7 +323,7 @@ def products(productname=None):
         return render_template('entityhub_products.html', stage=stage,
                                pagetitle="Products")
     else:
-        stage = {'product': ehproducts.get_product_by_ident(productname),
+        stage = {'product': product_library.get_product_by_ident(productname),
                  'crumbroot': '/entityhub',
                  'breadcrumbs': [Crumb(name="Entity Hub", path=""),
                                  Crumb(name="Products", path="products/"),

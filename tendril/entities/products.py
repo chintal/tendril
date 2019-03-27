@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chintalagiri Shashank
+# Copyright (C) 2015-2019 Chintalagiri Shashank
 #
 # This file is part of Tendril.
 #
@@ -31,9 +31,8 @@ from tendril.conventions import status
 from tendril.boms.outputbase import CompositeOutputBom
 from tendril.costing.breakup import HierachicalCostingBreakup
 from tendril.validation.base import ValidatableBase
-
-from .modules import get_prototype_lib
-from .prototypebase import PrototypeBase
+from tendril.entities.prototypebase import PrototypeBase
+from tendril.entityhub.modules import get_prototype_lib
 
 from tendril.utils.files import yml as yaml
 from tendril.utils import log
@@ -313,63 +312,8 @@ class ProductPrototypeBase(PrototypeBase):
         return "<ProductPrototype {0}>".format(self.ident)
 
 
-def get_folder_products(path):
-    products = []
-
-    files = [f for f in os.listdir(path)
-             if os.path.isfile(os.path.join(path, f))]
-
-    for f in files:
-        if f.endswith('.product.yaml'):
-            products.append(ProductPrototypeBase(os.path.join(path, f)))
-
-    return products
-
-
-def gen_productlib(path=PRODUCTS_ROOT, recursive=True):
-    products = []
-    if recursive:
-        for root, dirs, files in os.walk(path):
-            products += get_folder_products(root)
-    else:
-        products = get_folder_products(path)
-    while None in products:
-        products.remove(None)
-    return products
-
-productlib = gen_productlib()
-
-
-def get_product_by_ident(ident):
-    for product in productlib:
-        if product.ident == ident:
-            return product
-    logger.error("Could not find product for ident : " + ident)
-
-
-def get_product_by_core(core):
-    for product in productlib:
-        if product.core == core:
-            return product
-    logger.error("Could not find product for core : " + core)
-
-
-def get_product_calibformat(devicetype):
-    info = get_product_by_core(devicetype)
-    if info is not None:
-        return info.calibformat
-
-
 def generate_labels(product, sno, label_manager=None):
     warnings.warn("Deprecated use of generate_labels. Use the product "
                   "prototype object's make_labels function directly instead.",
                   DeprecationWarning)
     product.make_labels(sno, label_manager)
-
-
-def get_module_inclusion(modulename):
-    rval = []
-    for p in productlib:
-        if modulename in p.module_listing.keys():
-            rval.append((p, p.module_listing[modulename]))
-    return rval

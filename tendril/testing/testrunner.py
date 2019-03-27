@@ -27,7 +27,7 @@ from collections import namedtuple
 
 from tendril.entityhub import serialnos
 from tendril.entityhub import projects
-from tendril.entityhub.products import get_product_calibformat
+from tendril.libraries.products import get_product_calibformat
 
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.gedaif.conffile import NoGedaProjectError

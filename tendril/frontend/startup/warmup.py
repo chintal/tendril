@@ -55,7 +55,7 @@ def warm_up_caches():
 
     logger.info("Warming up entityhub.products")
     l_start_time = timeit.default_timer()
-    from tendril.entityhub import products
+    from tendril.libraries import products
     warmup_times.append(('entityhub.products', timeit.default_timer() - l_start_time))
 
     logger.info("Warming up entityhub.supersets")
