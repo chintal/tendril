@@ -29,7 +29,7 @@ from tendril.utils.config import INSTANCE_ROOT
 from tendril.conventions import status
 
 from tendril.boms.outputbase import CompositeOutputBom
-from tendril.boms.costingbase import HierachicalCostingBreakup
+from tendril.costing.breakup import HierachicalCostingBreakup
 from tendril.validation.base import ValidatableBase
 
 from .modules import get_prototype_lib

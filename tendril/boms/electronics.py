@@ -68,9 +68,10 @@ from tendril.validation.boms import ConfigSJPolicy
 from tendril.validation.motifs import ConfigMotifMissingError
 from tendril.validation.motifs import ConfigMotifPolicy
 
+from tendril.costing.breakup import HierachicalCostingBreakup
+
 from .outputbase import OutputBom
 from .outputbase import OutputElnBomDescriptor
-from .costingbase import HierachicalCostingBreakup
 from .costingbase import NoStructureHereException
 
 from tendril.utils import log
