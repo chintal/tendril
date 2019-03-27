@@ -26,6 +26,7 @@ install_requirements = [
     'tendril-utils-terminal>=0.1.1',
     'tendril-utils-changelog>=0.1.2',
     'tendril-validation>=0.1.1',
+    'tendril-validation-common>=0.1.1',
     'tendril-connector-tally>=0.1.3',
     'tendril-conventions-status>=0.1.1',
     'tendril-dox-render>=0.1.2',
