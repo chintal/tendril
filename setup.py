@@ -14,7 +14,7 @@ def read(fname):
 
 install_requirements = [
     # Extracted Modules
-    'tendril-utils-core>=0.1.4',
+    'tendril-utils-core>=0.1.7',
     'tendril-utils-www>=0.1.2',
     'tendril-utils-types>=0.1.2',
     'tendril-utils-markdown>=0.1.1',
