@@ -17,11 +17,13 @@
 
 import os
 
-from tendril.entities.products import ProductPrototypeBase
-from tendril.entities.products import PRODUCTS_ROOT
-
+from tendril.entities.products.prototype import ProductPrototypeBase
+from tendril.utils.config import INSTANCE_ROOT
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
+
+
+PRODUCTS_ROOT = os.path.join(INSTANCE_ROOT, 'products')
 
 
 def get_folder_products(path):

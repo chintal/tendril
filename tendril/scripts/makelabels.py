@@ -3,7 +3,7 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 from tendril.libraries import products as product_library
-from tendril.entities import products
+from tendril.entities.products import prototype
 from tendril.entityhub.db import controller
 from tendril.entityhub import serialnos
 from tendril.utils.config import INSTANCE_ROOT
@@ -32,5 +32,5 @@ if __name__ == '__main__':
     for sno in snos:
         product = product_library.get_product_by_core(serialnos.get_serialno_efield(sno=sno))  # noqa
         if product is not None:
-            products.generate_labels(product, sno)
+            prototype.generate_labels(product, sno)
     manager.generate_pdfs(INSTANCE_ROOT, force=True)

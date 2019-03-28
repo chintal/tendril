@@ -19,30 +19,28 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-import os
 import warnings
+import importlib
 
-from tendril.dox.labelmaker import manager
-
-from tendril.utils.fsutils import import_
-from tendril.utils.config import INSTANCE_ROOT
-from tendril.conventions import status
-
-from tendril.boms.outputbase import CompositeOutputBom
 from tendril.costing.breakup import HierachicalCostingBreakup
 from tendril.validation.base import ValidatableBase
 from tendril.entities.prototypebase import PrototypeBase
+from tendril.boms.outputbase import CompositeOutputBom
 from tendril.entityhub.modules import get_prototype_lib
 
+from tendril.conventions import status
+from tendril.dox.labelmaker import manager
 from tendril.utils.files import yml as yaml
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
 
 
-PRODUCTS_ROOT = os.path.join(INSTANCE_ROOT, 'products')
-
-INSTANCE_PRODUCT_CLASSES_PATH = os.path.join(PRODUCTS_ROOT, 'infoclasses')
-INSTANCE_PRODUCT_CLASSES = import_(INSTANCE_PRODUCT_CLASSES_PATH)
+def get_product_info_class(line, infodict, *args, **kwargs):
+    modname = 'tendril.entities.products.infoclasses.{0}'.format(line)
+    mod = importlib.import_module(modname)
+    func = getattr(mod, 'get_info_class')
+    instance = func(infodict, *args, **kwargs)
+    return instance
 
 
 class ProductInfo(ValidatableBase):
@@ -123,8 +121,7 @@ class ProductPrototypeBase(PrototypeBase):
         self._core = self._raw_data['derive_sno_from']
         self._calibformat = self._raw_data['calibformat']
         try:
-            self._product_info = \
-                INSTANCE_PRODUCT_CLASSES.get_product_info_class(
+            self._product_info = get_product_info_class(
                     self._raw_data['productinfo']['line'],
                     infodict=self._raw_data['productinfo'], parent=self
                 )
