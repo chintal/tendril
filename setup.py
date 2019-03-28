@@ -14,7 +14,7 @@ def read(fname):
 
 install_requirements = [
     # Extracted Modules
-    'tendril-utils-core>=0.1.7',
+    'tendril-utils-core>=0.1.8',
     'tendril-utils-www>=0.1.2',
     'tendril-utils-types>=0.1.2',
     'tendril-utils-markdown>=0.1.1',
@@ -29,8 +29,8 @@ install_requirements = [
     'tendril-conventions-status>=0.1.1',
     'tendril-conventions-electronics>=0.1.1',
     'tendril-costing>=0.1.2',
-    'tendril-dox-render>=0.1.3',
-    'tendril-dox-labelmaker>=0.1.3',
+    'tendril-dox-render>=0.1.4',
+    'tendril-dox-labelmaker>=0.1.4',
     'tendril-dox-wallet>=0.1.1',
     'tendril-entity-base>=0.1.1',
     'tendril-prototype-base>=0.1.1',
