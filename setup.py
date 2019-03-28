@@ -32,6 +32,7 @@ install_requirements = [
     'tendril-dox-render>=0.1.2',
     'tendril-dox-labelmaker>=0.1.2',
     'tendril-dox-wallet>=0.1.1',
+    'tendril-entity-base>=0.1.1',
     'tendril-prototype-base>=0.1.1.',
     'tendril-validation>=0.1.1',
     'tendril-validation-common>=0.1.1',

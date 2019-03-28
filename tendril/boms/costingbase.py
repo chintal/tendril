@@ -29,64 +29,11 @@ from tendril.inventory.guidelines import electronics_qty
 from tendril.utils.types.currency import CurrencyValue
 from tendril.utils.types.currency import native_currency_defn
 
-from tendril.validation.base import ValidationPolicy
 from tendril.validation.base import ErrorCollector
-from tendril.validation.idents import IdentErrorBase
 
 from tendril.costing.breakup import OBomCostingBreakup
-
-
-class SourcingIdentPolicy(ValidationPolicy):
-    def __init__(self, context):
-        super(SourcingIdentPolicy, self).__init__(context)
-        self.is_error = True
-
-
-class SourcingIdentNotRecognized(IdentErrorBase):
-    msg = "Component Not Sourceable"
-
-    def __init__(self, policy, ident, refdeslist):
-        super(SourcingIdentNotRecognized, self).__init__(policy, ident,
-                                                         refdeslist)
-
-    def __repr__(self):
-        return "<SourcingIdentNotRecognized {0} {1}>" \
-               "".format(self.ident, ', '.join(self.refdeslist))
-
-    def render(self):
-        return {
-            'is_error': self.policy.is_error,
-            'group': self.msg,
-            'headline': "'{0}' is not a recognized component."
-                        "".format(self.ident),
-            'detail': "This component is not recognized by the library and "
-                      "is therefore not sourceable. Component not included "
-                      "in costing analysis. Used by refdes {0}"
-                      "".format(', '.join(self.refdeslist)),
-        }
-
-
-class SourcingIdentNotSourceable(IdentErrorBase):
-    msg = "Component Not Sourceable"
-
-    def __init__(self, policy, ident, refdeslist):
-        super(SourcingIdentNotSourceable, self).__init__(policy, ident,
-                                                         refdeslist)
-
-    def __repr__(self):
-        return "<SourcingIdentNotSourceable {0} {1}>" \
-               "".format(self.ident, ', '.join(self.refdeslist))
-
-    def render(self):
-        return {
-            'is_error': self.policy.is_error,
-            'group': self.msg,
-            'headline': "'{0}'".format(self.ident),
-            'detail': "Viable sources for this component are not known. "
-                      "Component not included in costing analysis. Used by "
-                      "refdes {0}".format(', '.join(self.refdeslist)),
-            'detail_core': ', '.join(self.refdeslist)
-        }
+from tendril.validation.sourcing import SourcingIdentNotRecognized
+from tendril.validation.sourcing import SourcingIdentNotSourceable
 
 
 class NoStructureHereException(Exception):

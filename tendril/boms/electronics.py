@@ -53,9 +53,9 @@ from tendril.gedaif.bomparser import MotifAwareBomParser
 from tendril.gedaif.conffile import ConfigsFile
 from tendril.utils.config import EDA_HARMONIZE_IDENTS
 
-from tendril.entityhub.entitybase import EntityBase
-from tendril.entityhub.entitybase import EntityBomBase
-from tendril.entityhub.entitybase import EntityGroupBase
+from tendril.entities.base import EntityBase
+from tendril.entities.base import EntityBomBase
+from tendril.entities.base import EntityGroupBase
 
 from tendril.validation.base import ValidationContext
 from tendril.validation.base import ValidationError

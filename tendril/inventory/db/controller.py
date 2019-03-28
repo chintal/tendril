@@ -29,7 +29,7 @@ from tendril.utils.db import get_session
 from tendril.entityhub import serialnos
 from tendril.entityhub.db.model import SerialNumber
 from tendril.entityhub.db.controller import SerialNoNotFound
-from tendril.entityhub.entitybase import EntityNotFound
+from tendril.entities.base import EntityNotFound
 from tendril.auth.db.controller import get_user_object
 
 from .model import InventoryIndent

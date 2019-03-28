@@ -35,7 +35,7 @@ from tendril.dox.production import get_production_order_manifest_set
 
 from tendril.entityhub import serialnos
 from tendril.entityhub.db.controller import SerialNoNotFound
-from tendril.entityhub.entitybase import EntityNotFound
+from tendril.entities.base import EntityNotFound
 from tendril.entityhub.snomap import SerialNumberMap
 
 from tendril.inventory.indent import InventoryIndent
