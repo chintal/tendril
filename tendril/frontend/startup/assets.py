@@ -24,7 +24,7 @@ import os
 from flask_assets import Bundle, Environment
 from tendril.frontend.app import app
 
-from tendril.utils.config import INSTANCE_CACHE
+from tendril.config.legacy import INSTANCE_CACHE
 
 
 bundles = {

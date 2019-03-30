@@ -29,8 +29,6 @@ from flask import redirect, url_for
 from flask import jsonify
 from flask_user import login_required
 
-from tendril.entityhub.supersets import _group_by_pcbname
-from tendril.entityhub.supersets import _status_filter
 import tendril.gedaif.gsymlib
 
 from . import gsymlib as blueprint
@@ -38,7 +36,7 @@ from . import gsymlib as blueprint
 from tendril.entityhub import supersets
 from tendril.utils.fsutils import get_path_breadcrumbs
 from tendril.utils.fsutils import Crumb
-from tendril.utils.config import GEDA_SYMLIB_ROOT
+from tendril.config.legacy import GEDA_SYMLIB_ROOT
 from tendril.inventory.electronics import get_inventory_stage
 
 

@@ -48,9 +48,9 @@ from tendril.validation.boms import QuantityTypeError
 from tendril.validation.boms import IdentQtyPolicy
 
 from tendril.utils.connectors import mq
-from tendril.utils.config import WARM_UP_CACHES
-from tendril.utils.config import PROJECTS_ROOT
-from tendril.utils.config import SVN_ROOT
+from tendril.config.legacy import WARM_UP_CACHES
+from tendril.config.legacy import PROJECTS_ROOT
+from tendril.config.legacy import SVN_ROOT
 
 from . import projects
 from . import serialnos

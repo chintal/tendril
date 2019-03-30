@@ -37,8 +37,8 @@ from .vendorbase import VendorPartRetrievalError
 from tendril.utils import fsutils
 from tendril.utils.terminal import TendrilProgressBar
 
-from tendril.utils.config import VENDORS_DATA
-from tendril.utils.config import FIREFOX_PROFILE_PATH
+from tendril.config.legacy import VENDORS_DATA
+from tendril.config.legacy import FIREFOX_PROFILE_PATH
 
 from tendril.gedaif import projfile
 from tendril.entityhub import projects

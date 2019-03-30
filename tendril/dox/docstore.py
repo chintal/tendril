@@ -29,21 +29,19 @@ from fs.rpcfs import RPCFS
 from fs.rpcfs import RemoteConnectionError
 
 from tendril.utils.db import with_db
-
-from tendril.entityhub import serialnos
-from tendril.utils.config import DOCSTORE_ROOT
-from tendril.utils.config import INSTANCE_ROOT
-from tendril.utils.config import REFDOC_ROOT
-
-from tendril.utils.config import DOCUMENT_WALLET_PREFIX
-from tendril.utils.config import REFDOC_PREFIX
-from tendril.utils.config import DOCSTORE_PREFIX
-
-from db import controller
 from tendril.dox.wallet import wallet_fs
+from tendril.entityhub import serialnos
+
+from tendril.config.legacy import DOCSTORE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
+from tendril.config.legacy import REFDOC_ROOT
+from tendril.config.legacy import DOCUMENT_WALLET_PREFIX
+from tendril.config.legacy import REFDOC_PREFIX
+from tendril.config.legacy import DOCSTORE_PREFIX
+
+from .db import controller
 
 from tendril.utils import log
-
 logger = log.get_logger(__name__, log.INFO)
 
 
@@ -60,6 +58,7 @@ def _docstore_init():
         l_docstore_fs = fsopendir(DOCSTORE_ROOT, create_dir=True)
     return l_docstore_fs
 
+
 docstore_fs = _docstore_init()
 
 
@@ -75,6 +74,7 @@ def _refdocs_init():
     else:
         l_refdoc_fs = fsopendir(REFDOC_ROOT, create_dir=True)
     return l_refdoc_fs
+
 
 refdoc_fs = _refdocs_init()
 

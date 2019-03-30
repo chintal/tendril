@@ -25,7 +25,7 @@ import csv
 from tendril.entityhub import projects
 from tendril.gedaif import conffile
 
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 
 
 if __name__ == '__main__':

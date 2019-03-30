@@ -33,9 +33,9 @@ from tendril.conventions.electronics import construct_capacitor
 from tendril.conventions.electronics import construct_resistor
 from tendril.conventions.electronics import ident_transform
 from tendril.utils import log
-from tendril.utils.config import INSTANCE_ROOT
-from tendril.utils.config import PRICELISTVENDORS_FOLDER
-from tendril.utils.config import VENDOR_DEFAULT_MAXAGE
+from tendril.config.legacy import INSTANCE_ROOT
+from tendril.config.legacy import PRICELISTVENDORS_FOLDER
+from tendril.config.legacy import VENDOR_DEFAULT_MAXAGE
 from tendril.utils.files import yml as yaml
 from tendril.utils.fsutils import get_file_mtime
 from tendril.utils.types import currency

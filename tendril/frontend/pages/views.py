@@ -23,7 +23,7 @@ from flask import send_from_directory
 from flask_user import login_required
 
 from tendril.frontend.app import app
-from tendril.utils.config import COMPANY_BLACK_LOGO_PATH
+from tendril.config.legacy import COMPANY_BLACK_LOGO_PATH
 
 from tendril.utils.fsutils import Crumb
 

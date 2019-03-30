@@ -25,9 +25,7 @@ import os
 from crochet import setup
 setup()
 
-from twisted.internet.protocol import connectionDone  # noqa
-
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 from tendril.utils.fsutils import import_
 
 

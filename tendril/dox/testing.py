@@ -49,7 +49,7 @@ from tendril.entityhub.db import controller as sno_controller
 from tendril.dox.render import render_pdf
 from tendril.dox import docstore
 
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 from tendril.utils import log
 
 logger = log.get_logger(__name__, log.DEFAULT)

@@ -19,7 +19,10 @@ This file is part of tendril
 See the COPYING, README, and INSTALL files for more information
 """
 
-from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy import Column
+from sqlalchemy import String
+from sqlalchemy import Integer
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
 from tendril.utils.db import DeclBase

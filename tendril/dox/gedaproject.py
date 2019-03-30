@@ -42,7 +42,7 @@ names. Each function specifies the paths it operates on.
 
 .. hint:: The underlying functions generate the docs in the folder specified
           by the ``REFDOC_ROOT`` configuration option from
-          :mod:`tendril.utils.config`. This folder may be configured by your
+          :mod:`tendril.config.legacy`. This folder may be configured by your
           instance's ``instance_config.py`` file to point to a remote
           filesystem.
 
@@ -108,7 +108,7 @@ from tendril.gedaif import pcb
 from tendril.gedaif import projfile
 from tendril.utils import fsutils
 from tendril.utils import log
-from tendril.utils.config import PROJECTS_ROOT
+from tendril.config.legacy import PROJECTS_ROOT
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.files import pdf
 from tendril.utils.files import yml as yaml

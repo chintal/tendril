@@ -177,7 +177,7 @@ from tendril.conventions.electronics import parse_ident
 from tendril.utils import www
 from tendril.utils import log
 
-from tendril.utils.config import MOUSER_API_KEY
+from tendril.config.legacy import MOUSER_API_KEY
 
 from .vendorbase import VendorBase
 from .vendorbase import VendorElnPartBase

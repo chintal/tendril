@@ -66,7 +66,7 @@ from tendril.dox import docstore
 from tendril.dox import render
 from tendril.dox import wallet
 from tendril.entityhub import serialnos
-from tendril.utils.config import COMPANY_GOVT_POINT
+from tendril.config.legacy import COMPANY_GOVT_POINT
 from tendril.utils.db import with_db
 from tendril.utils.files import pdf
 from tendril.utils.files import yml as yaml
@@ -104,7 +104,7 @@ def gen_declaration(invoice, target_folder, copyt, serialno):
             :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
-            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+            :data:`tendril.config.legacy.COMPANY_GOVT_POINT`.
         * - ``inv_no``
           - The vendor's invoice number.
         * - ``inv_date``
@@ -194,7 +194,7 @@ def gen_valuation(invoice, target_folder, serialno):
             :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
-            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+            :data:`tendril.config.legacy.COMPANY_GOVT_POINT`.
         * - ``inv_no``
           - The vendor's invoice number.
         * - ``inv_date``
@@ -323,7 +323,7 @@ def gen_rsp_declaration(invoice, target_folder, serialno):
             from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
-            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+            :data:`tendril.config.legacy.COMPANY_GOVT_POINT`.
         * - ``inv_no``
           - The vendor's invoice number.
         * - ``inv_date``
@@ -392,7 +392,7 @@ customs/authorization.dhl.tex>`)
             from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
-            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+            :data:`tendril.config.legacy.COMPANY_GOVT_POINT`.
         * - ``inv_no``
           - The vendor's invoice number.
         * - ``inv_date``
@@ -452,7 +452,7 @@ def gen_tech_writeup(invoice, target_folder, serialno):
             from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
-            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+            :data:`tendril.config.legacy.COMPANY_GOVT_POINT`.
         * - ``inv_no``
           - The vendor's invoice number.
         * - ``inv_date``
@@ -620,7 +620,7 @@ def gen_verification_sections(invoice, target_folder, serialno):
             from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
-            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+            :data:`tendril.config.legacy.COMPANY_GOVT_POINT`.
         * - ``inv_no``
           - The vendor's invoice number.
         * - ``inv_date``
@@ -680,7 +680,7 @@ def gen_verification_checklist(invoice, target_folder, serialno):
             from :func:`datetime.date.today`.
         * - ``signatory``
           - The name of the person who 'signs' the document, from
-            :data:`tendril.utils.config.COMPANY_GOVT_POINT`.
+            :data:`tendril.config.legacy.COMPANY_GOVT_POINT`.
         * - ``inv_no``
           - The vendor's invoice number.
         * - ``inv_date``

@@ -21,20 +21,12 @@ import os
 APP_NAME = "Tendril"
 
 # Flask settings
-from tendril.utils.config import SECRET_KEY  # noqa
 
 # SQLAlchemy settings
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(INSTANCE_ROOT, 'db', 'auth.db')  # noqa
 
 # Flask-Mail settings
-from tendril.utils.config import MAIL_DEFAULT_SENDER  # noqa
-from tendril.utils.config import MAIL_PASSWORD  # noqa
-from tendril.utils.config import MAIL_PORT  # noqa
-from tendril.utils.config import MAIL_SERVER  # noqa
-from tendril.utils.config import MAIL_USE_SSL  # noqa
-from tendril.utils.config import MAIL_USE_TLS  # noqa
-from tendril.utils.config import MAIL_USERNAME  # noqa
 
 # Disable E-mail
 USER_ENABLE_EMAIL = True
@@ -47,7 +39,7 @@ USER_ENABLE_FORGOT_PASSWORD = True
 USER_ENABLE_MULTIPLE_EMAILS = False
 USER_REQUIRE_INVITATION = False
 
-from tendril.utils.config import ADMIN_EMAIL
+from tendril.config.legacy import ADMIN_EMAIL
 ADMINS = [ADMIN_EMAIL]
 
 # Application settings

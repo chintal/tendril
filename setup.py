@@ -55,6 +55,8 @@ install_requirements = [
     'cachetools',   # sourcing.vendors.VendorBase._partcache
     'jsonpickle',   # tendril-server-prefab interfaces
     'pika',
+    'SQLAlchemy',
+    'sqlalchemy_utils',
 
     # Flask Dependencies (to be pruned?)
     'jsmin',

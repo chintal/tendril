@@ -28,7 +28,7 @@ Arrow Vendor Module (:mod:`tendril.sourcing.arrow`)
 This module can be imported by itself to provide limited but potentially
 useful functionality.
 
->>> from sourcing.vendors import arrow
+>>> from tendril.sourcing.vendors import arrow
 
 .. rubric:: Search
 
@@ -175,8 +175,8 @@ from tendril.conventions.electronics import parse_ident
 from tendril.utils import www
 from tendril.utils.db import get_session
 
-from tendril.utils.config import ARROW_API_KEY
-from tendril.utils.config import ARROW_API_LOGIN
+from tendril.config.legacy import ARROW_API_KEY
+from tendril.config.legacy import ARROW_API_LOGIN
 
 from .vendorbase import VendorBase
 from .vendorbase import VendorElnPartBase

@@ -45,8 +45,8 @@ import datetime
 from tendril.dox import render
 from tendril.entityhub import serialnos
 
-from tendril.utils.config import COMPANY_PO_LCO_PATH
-from tendril.utils.config import COMPANY_PO_POINT
+from tendril.config.legacy import COMPANY_PO_LCO_PATH
+from tendril.config.legacy import COMPANY_PO_POINT
 
 
 def render_po(stage, templateid, outpath):
@@ -81,13 +81,13 @@ def render_po(stage, templateid, outpath):
             parameter or created.
         * - ``point``
           - The name of the contact person, defined by
-            :data:`tendril.utils.config.COMPANY_PO_POINT`.
+            :data:`tendril.config.legacy.COMPANY_PO_POINT`.
         * - ``date``
           - The purchase order date, either from the ``stage`` parameter or
             today's date.
         * - ``lcofile``
           - The latex lcofile to use, defined by
-            :data:`tendril.utils.config.COMPANY_PO_LCO_PATH`
+            :data:`tendril.config.legacy.COMPANY_PO_LCO_PATH`
 
     """
     template = 'po_' + templateid + '_template.tex'

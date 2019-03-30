@@ -22,13 +22,14 @@ Electronics Inventory module documentation (:mod:`inventory.electronics`)
 import os
 import csv
 
-from tendril.utils.config import ELECTRONICS_INVENTORY_DATA
+from tendril.config.legacy import ELECTRONICS_INVENTORY_DATA
 from tendril.utils.types.lengths import Length
 from tendril.conventions.electronics import fpiswire_ident
 from tendril.entityhub.transforms import ContextualReprNotRecognized
 
-import acquire
-from db.controller import get_inventorylocationcode
+from .acquire import get_reader
+from .acquire import gen_canonical_transform
+from .db.controller import get_inventorylocationcode
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
@@ -230,7 +231,7 @@ def init_inventory_locations(regen=True):
         retries = 1
         while retries:
             try:
-                reader = acquire.get_reader(idx)
+                reader = get_reader(idx)
                 inventory_locations.append(
                     InventoryLocation(item['sname'], item['location'], reader)
                 )
@@ -247,7 +248,7 @@ def init_inventory_locations(regen=True):
                     "All inventory functions will be unreliable "
                     "until the transform is manually verified."
                 )
-                acquire.gen_canonical_transform(idx)
+                gen_canonical_transform(idx)
 
 
 def get_total_availability(ident):
@@ -328,6 +329,7 @@ def export_reservations(folderpath):
         logger.info("Exported " + location._dname +
                     " Reservations to File : " + dump_path)
 
+
 init_inventory_locations()
 
 
@@ -346,6 +348,7 @@ def get_recognized_repr(regen=False):
             rval.extend(list(loc.tf.names))
         recognized_representations = rval
     return set(recognized_representations)
+
 
 recognized_representations = None
 get_recognized_repr()

@@ -28,16 +28,16 @@ from tendril.conventions.electronics import parse_ident
 from tendril.utils import vcs
 from tendril.utils.files import pdf
 from tendril.utils.files import gschem as gschf
-from tendril.utils.config import GEDA_SCHEME_DIR
-from tendril.utils.config import USE_SYSTEM_GAF_BIN
-from tendril.utils.config import GEDA_HAS_GAF
-from tendril.utils.config import GAF_BIN_ROOT
-from tendril.utils.config import PROJECTS_ROOT
-from tendril.utils.config import COMPANY_SQUARE_LOGO_PATH
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import GEDA_SCHEME_DIR
+from tendril.config.legacy import USE_SYSTEM_GAF_BIN
+from tendril.config.legacy import GEDA_HAS_GAF
+from tendril.config.legacy import GAF_BIN_ROOT
+from tendril.config.legacy import PROJECTS_ROOT
+from tendril.config.legacy import COMPANY_SQUARE_LOGO_PATH
+from tendril.config.legacy import INSTANCE_ROOT
 
-import tendril.utils.log
-logger = tendril.utils.log.get_logger(__name__, tendril.utils.log.INFO)
+from tendril.utils import log
+logger = log.get_logger(__name__, log.INFO)
 
 rex_titleblocks = re.compile(r"^S-TITLE-A\d.sym$")
 

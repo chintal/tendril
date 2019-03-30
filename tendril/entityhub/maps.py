@@ -22,7 +22,7 @@ EntityHub Maps Module documentation (:mod:`entityhub.maps`)
 import os
 import csv
 
-from tendril.utils.config import VENDOR_MAP_FOLDER
+from tendril.config.legacy import VENDOR_MAP_FOLDER
 from tendril.utils.fsutils import VersionedOutputFile
 from tendril.utils.fsutils import get_file_mtime
 

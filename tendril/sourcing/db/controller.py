@@ -26,14 +26,14 @@ from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import exists
 
-from model import SourcingVendor
-from model import VendorElnPartDetail
-from model import VendorPartDetail
-from model import VendorPartMap
-from model import VendorPartNumber
-from model import VendorPrice
+from .model import SourcingVendor
+from .model import VendorElnPartDetail
+from .model import VendorPartDetail
+from .model import VendorPartMap
+from .model import VendorPartNumber
+from .model import VendorPrice
 from tendril.utils import log
-from tendril.utils.config import VENDORS_DATA
+from tendril.config.legacy import VENDORS_DATA
 from tendril.utils.db import get_session
 from tendril.utils.db import with_db
 

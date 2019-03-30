@@ -29,8 +29,8 @@ import jsonpickle
 import requests
 import requests.exceptions
 
-from tendril.utils.config import PREFAB_SERVER
-from tendril.utils.config import USE_PREFAB_SERVER
+from tendril.config.legacy import PREFAB_SERVER
+from tendril.config.legacy import USE_PREFAB_SERVER
 
 
 class PrefabServerUnavailable(Exception):

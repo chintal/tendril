@@ -27,8 +27,7 @@ from future.utils import viewitems
 from tendril.boms.outputbase import CompositeOutputBom
 from tendril.entityhub.modules import get_prototype_lib
 from tendril.utils.connectors import prefab
-from tendril.utils.config import WARM_UP_CACHES
-from tendril.utils.config import USE_PREFAB_SERVER
+from tendril.config.legacy import WARM_UP_CACHES
 from tendril.utils import log
 
 logger = log.get_logger(__name__, log.DEFAULT)

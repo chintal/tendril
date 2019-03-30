@@ -21,8 +21,8 @@ See the COPYING, README, and INSTALL files for more information
 
 import os
 
-from tendril.utils.config import TENDRIL_ROOT
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import TENDRIL_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 from tendril.utils.fsutils import import_
 
 INSTANCE_MOTIFS_ROOT = os.path.join(INSTANCE_ROOT, 'motifs')

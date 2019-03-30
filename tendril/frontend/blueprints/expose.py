@@ -30,12 +30,12 @@ from flask import Blueprint
 from flask import send_file
 from flask_user import login_required
 
-from tendril.utils.config import DOCSTORE_ROOT
-from tendril.utils.config import DOCSTORE_PREFIX
-from tendril.utils.config import DOCUMENT_WALLET_ROOT
-from tendril.utils.config import DOCUMENT_WALLET_PREFIX
-from tendril.utils.config import REFDOC_ROOT
-from tendril.utils.config import REFDOC_PREFIX
+from tendril.config.legacy import DOCSTORE_ROOT
+from tendril.config.legacy import DOCSTORE_PREFIX
+from tendril.config.legacy import DOCUMENT_WALLET_ROOT
+from tendril.config.legacy import DOCUMENT_WALLET_PREFIX
+from tendril.config.legacy import REFDOC_ROOT
+from tendril.config.legacy import REFDOC_PREFIX
 
 from tendril.utils.fsutils import temp_fs
 from tendril.dox.docstore import refdoc_fs

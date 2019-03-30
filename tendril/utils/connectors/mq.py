@@ -27,9 +27,9 @@ import atexit
 import threading
 from contextlib import contextmanager
 
-from tendril.utils.config import MQ_SERVER
-from tendril.utils.config import MQ_SERVER_PORT
-from tendril.utils.config import ENABLE_THREADED_CONNECTORS
+from tendril.config.legacy import MQ_SERVER
+from tendril.config.legacy import MQ_SERVER_PORT
+from tendril.config.legacy import ENABLE_THREADED_CONNECTORS
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEBUG)

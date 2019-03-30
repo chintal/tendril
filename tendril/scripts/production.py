@@ -76,7 +76,7 @@ import os
 import argparse
 
 from tendril.dox.labelmaker import get_manager
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 
 from tendril.production.order import ProductionOrder
 from .helpers import add_base_options

@@ -25,7 +25,7 @@ from tendril.sourcing.vendors.vendorbase import VendorInvoice
 from tendril.sourcing.vendors.vendorbase import VendorInvoiceLine
 from tendril.gedaif import gsymlib
 from tendril.utils import log
-from tendril.utils.config import CUSTOMSDEFAULTS_FOLDER
+from tendril.config.legacy import CUSTOMSDEFAULTS_FOLDER
 from tendril.utils.files import yml as yaml
 from tendril.utils.types import currency
 

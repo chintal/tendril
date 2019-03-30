@@ -193,7 +193,7 @@ from tendril.conventions.electronics import parse_ident
 from tendril.conventions.electronics import parse_resistor
 from tendril.utils import log
 from tendril.utils import www
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 
 from tendril.utils.types import currency
 from tendril.utils.types import ParseException

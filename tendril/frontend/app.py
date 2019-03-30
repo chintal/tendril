@@ -50,10 +50,10 @@ app = Flask(__name__)
 
 # Piwik Analytics
 try:
-    from tendril.utils.config import ENABLE_PIWIK
+    from tendril.config.legacy import ENABLE_PIWIK
     if ENABLE_PIWIK is True:
-        from tendril.utils.config import PIWIK_SITE_ID
-        from tendril.utils.config import PIWIK_BASE_URL
+        from tendril.config.legacy import PIWIK_SITE_ID
+        from tendril.config.legacy import PIWIK_BASE_URL
         from flask_analytics import Analytics
         Analytics(app)
         app.config['ANALYTICS']['PIWIK']['SITE_ID'] = PIWIK_SITE_ID
@@ -70,9 +70,9 @@ except ImportError:
 
 # Appenlight Monitoring
 try:
-    from tendril.utils.config import ENABLE_APPENLIGHT
+    from tendril.config.legacy import ENABLE_APPENLIGHT
     if ENABLE_APPENLIGHT is True:
-        from tendril.utils.config import APPENLIGHT_PRIVATE_API_KEY
+        from tendril.config.legacy import APPENLIGHT_PRIVATE_API_KEY
         import appenlight_client.ext.flask as appenlight
         app = appenlight.add_appenlight(
             app, {'appenlight.api_key': APPENLIGHT_PRIVATE_API_KEY}

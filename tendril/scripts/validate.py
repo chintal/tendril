@@ -39,7 +39,7 @@ import argparse
 from tendril.gedaif import conffile
 from tendril.entityhub import projects
 from tendril.entityhub import modules
-from tendril.utils.config import PROJECTS_ROOT
+from tendril.config.legacy import PROJECTS_ROOT
 from tendril.utils.fsutils import in_directory
 
 from .helpers import add_module_selector_options

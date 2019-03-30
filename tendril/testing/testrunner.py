@@ -34,8 +34,8 @@ from tendril.gedaif.conffile import NoGedaProjectError
 from tendril.boms.electronics import import_pcb
 
 from tendril.utils.fsutils import import_
-from tendril.utils.config import INSTANCE_ROOT
-from tendril.utils.config import PRINTER_NAME
+from tendril.config.legacy import INSTANCE_ROOT
+from tendril.config.legacy import PRINTER_NAME
 from tendril.dox.docstore import register_document
 
 from testbase import TestSuiteBase

@@ -51,7 +51,7 @@ from tendril.conventions.electronics import ident_transform
 from tendril.gedaif.gsymlib import jb_harmonize
 from tendril.gedaif.bomparser import MotifAwareBomParser
 from tendril.gedaif.conffile import ConfigsFile
-from tendril.utils.config import EDA_HARMONIZE_IDENTS
+from tendril.config.legacy import EDA_HARMONIZE_IDENTS
 
 from tendril.entities.base import EntityBase
 from tendril.entities.base import EntityBomBase

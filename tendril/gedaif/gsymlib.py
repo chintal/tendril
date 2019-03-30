@@ -30,11 +30,11 @@ import jinja2
 
 import iec60063
 
-from tendril.utils.config import GEDA_SYMLIB_ROOT
-from tendril.utils.config import GEDA_SUBCIRCUITS_ROOT
-from tendril.utils.config import AUDIT_PATH
-from tendril.utils.config import INSTANCE_CACHE
-from tendril.utils.config import MAKE_GSYMLIB_IMG_CACHE
+from tendril.config.legacy import GEDA_SYMLIB_ROOT
+from tendril.config.legacy import GEDA_SUBCIRCUITS_ROOT
+from tendril.config.legacy import AUDIT_PATH
+from tendril.config.legacy import INSTANCE_CACHE
+from tendril.config.legacy import MAKE_GSYMLIB_IMG_CACHE
 
 from tendril.utils.fsutils import get_file_mtime
 from tendril.utils.fsutils import VersionedOutputFile
@@ -62,7 +62,7 @@ from tendril.utils.types.lengths import Length
 from tendril.utils.types.electromagnetic import Resistance
 from tendril.utils.types.electromagnetic import Capacitance
 
-from gschem import conv_gsch2png
+from .gschem import conv_gsch2png
 
 from tendril.utils.files import yml as yaml
 from tendril.utils import log

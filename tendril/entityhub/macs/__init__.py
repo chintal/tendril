@@ -32,7 +32,7 @@ from tendril.entityhub import projects
 
 from tendril.utils.db import with_db
 
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 from tendril.utils.fsutils import import_
 
 from tendril.utils import log

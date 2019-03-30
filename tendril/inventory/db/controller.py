@@ -35,7 +35,7 @@ from tendril.auth.db.controller import get_user_object
 from .model import InventoryIndent
 from .model import InventoryLocationCode
 
-from tendril.utils.config import INVENTORY_LOCATIONS
+from tendril.config.legacy import INVENTORY_LOCATIONS
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)

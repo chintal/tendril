@@ -113,7 +113,7 @@ class VendorEPass(VendorBase):
 
 
 def __get_api_key():
-    from tendril.utils.config import VENDORS_DATA
+    from tendril.config.legacy import VENDORS_DATA
     vopts = None
     for v in VENDORS_DATA:
         if v['name'] == 'e14':

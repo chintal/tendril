@@ -42,7 +42,6 @@ def init_app(app):
         app.config['WTF_CSRF_ENABLED'] = False
 
     # Initialize Assets
-    from tendril.frontend.startup import assets  # noqa
 
     # Create Filters
     def unicode_filter(s):
@@ -105,11 +104,9 @@ def init_app(app):
                                )
 
     # Load all views.py files to register @app.routes() with Flask
-    from tendril.frontend.pages import views  # noqa
-    from tendril.frontend.users import views  # noqa
 
     # Configure send_file
-    from tendril.utils.config import USE_X_SENDFILE
+    from tendril.config.legacy import USE_X_SENDFILE
     app.use_x_sendfile = USE_X_SENDFILE
 
     # Register blueprints
@@ -150,7 +147,6 @@ def init_app(app):
     app.register_blueprint(invtransforms, url_prefix='/inventory/transform')
 
     # Configure context processors
-    from tendril.frontend.startup import helpers
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):

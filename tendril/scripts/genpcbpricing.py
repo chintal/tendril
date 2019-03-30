@@ -54,7 +54,7 @@ from tendril.entityhub import projects
 from tendril.gedaif import conffile
 from tendril.gedaif.conffile import NoGedaProjectError
 from tendril.utils import log
-from tendril.utils.config import PROJECTS_ROOT
+from tendril.config.legacy import PROJECTS_ROOT
 from tendril.utils.fsutils import in_directory
 from .helpers import add_base_options
 from .helpers import add_project_selector_options

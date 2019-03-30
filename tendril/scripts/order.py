@@ -36,7 +36,7 @@ from tendril.gedaif import projfile
 from tendril.utils.terminal import TendrilProgressBar
 import tendril.inventory.guidelines
 
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 from tendril.utils.files import yml as yaml
 
 from tendril.utils import log

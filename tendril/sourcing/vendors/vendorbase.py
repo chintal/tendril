@@ -33,7 +33,7 @@ from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
 from tendril.utils import config
 from tendril.utils.db import get_session
-from tendril.utils.config import VENDOR_DEFAULT_MAXAGE
+from tendril.config.legacy import VENDOR_DEFAULT_MAXAGE
 
 from tendril.sourcing.db import controller
 from tendril.sourcing import maintenance

@@ -9,7 +9,7 @@ config = context.config
 
 # Get the DB connection string from the tendril
 # config file instead.
-from tendril.utils.config import DB_URI
+from tendril.config.legacy import DB_URI
 config.set_main_option('sqlalchemy.url', DB_URI)
 
 # Interpret the config file for Python logging.

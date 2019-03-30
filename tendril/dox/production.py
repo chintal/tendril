@@ -263,7 +263,7 @@ def gen_delta_pcb_am(orig_cardname, target_cardname, outfolder=None, sno=None,
     """
 
     if outfolder is None:
-        from tendril.utils.config import INSTANCE_ROOT
+        from tendril.config.legacy import INSTANCE_ROOT
         outfolder = os.path.join(INSTANCE_ROOT, 'scratch', 'production')
 
     if sno is None:

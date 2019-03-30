@@ -27,7 +27,7 @@ projects based on the criteria specified by the command parameters.
 .. rubric:: Output Folders
 
 The underlying functions generate the docs in the folder specified by the
-``REFDOC_ROOT`` configuration option from :mod:`tendril.utils.config`. This
+``REFDOC_ROOT`` configuration option from :mod:`tendril.config.legacy`. This
 folder may be configured by your instance's ``instance_config.py`` file to
 point to a remote filesystem.
 
@@ -59,7 +59,7 @@ from tendril.gedaif.conffile import NoGedaProjectError
 from tendril.gedaif import conffile
 from tendril.entityhub import projects
 from tendril.dox import gedaproject
-from tendril.utils.config import PROJECTS_ROOT
+from tendril.config.legacy import PROJECTS_ROOT
 from tendril.utils.fsutils import in_directory
 
 from .helpers import add_project_selector_options

@@ -23,7 +23,7 @@ import idstring
 
 from tendril.utils.db import with_db
 
-from db import controller
+from .db import controller
 from sqlalchemy.orm.exc import NoResultFound
 
 from tendril.utils import log

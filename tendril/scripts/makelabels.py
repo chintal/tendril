@@ -6,7 +6,7 @@ from tendril.libraries import products as product_library
 from tendril.entities.products import prototype
 from tendril.entityhub.db import controller
 from tendril.entityhub import serialnos
-from tendril.utils.config import INSTANCE_ROOT
+from tendril.config.legacy import INSTANCE_ROOT
 from tendril.dox.labelmaker import manager
 
 

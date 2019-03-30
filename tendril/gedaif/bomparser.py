@@ -36,8 +36,8 @@ from tendril.validation.columns import ColumnsRequiredPolicy
 
 import projfile
 
-from tendril.utils.config import INSTANCE_CACHE
-from tendril.utils.config import PROJECTS_ROOT
+from tendril.config.legacy import INSTANCE_CACHE
+from tendril.config.legacy import PROJECTS_ROOT
 from tendril.utils import fsutils
 from tendril.utils import log
 logger = log.get_logger(__name__, level=log.WARNING)

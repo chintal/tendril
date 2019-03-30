@@ -21,7 +21,7 @@ See the COPYING, README, and INSTALL files for more information
 
 import os
 from flask import Blueprint
-from tendril.utils.config import INSTANCE_CACHE
+from tendril.config.legacy import INSTANCE_CACHE
 
 
 gsymlib = Blueprint('gsymlib', __name__,

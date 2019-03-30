@@ -63,7 +63,6 @@ Tendril application code.
     tendril.utils.files
     tendril.utils.parsers
     tendril.utils.colors
-    tendril.utils.config
     tendril.utils.db
     tendril.utils.fsutils
     tendril.utils.log

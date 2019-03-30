@@ -25,7 +25,7 @@ import re
 from tendril.gedaif import gsymlib
 from tendril.gedaif import conffile
 from tendril.utils import log
-from tendril.utils.config import PROJECTS_ROOT
+from tendril.config.legacy import PROJECTS_ROOT
 from tendril.utils.vcs import get_path_revision
 
 logger = log.get_logger(__name__, log.DEFAULT)

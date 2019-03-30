@@ -24,7 +24,7 @@ import os
 from flask import Blueprint
 from flask_user import login_required
 
-from tendril.utils.config import TENDRIL_ROOT
+from tendril.config.legacy import TENDRIL_ROOT
 
 
 doc = Blueprint('doc', __name__,
