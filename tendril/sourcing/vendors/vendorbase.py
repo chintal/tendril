@@ -31,9 +31,10 @@ from cachetools import LFUCache
 
 from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
-from tendril.utils import config
 from tendril.utils.db import get_session
 from tendril.config.legacy import VENDOR_DEFAULT_MAXAGE
+from tendril.config.legacy import BASE_CURRENCY
+from tendril.config.legacy import BASE_CURRENCY_SYMBOL
 
 from tendril.sourcing.db import controller
 from tendril.sourcing import maintenance
@@ -589,8 +590,8 @@ class VendorBase(object):
     _ident_blacklist = []
 
     def __init__(self, name, dname, pclass, mappath=None,
-                 currency_code=config.BASE_CURRENCY,
-                 currency_symbol=config.BASE_CURRENCY_SYMBOL,
+                 currency_code=BASE_CURRENCY,
+                 currency_symbol=BASE_CURRENCY_SYMBOL,
                  vendorlogo=None, sname=None, is_manufacturer=None,
                  vtype=None):
         self._name = name

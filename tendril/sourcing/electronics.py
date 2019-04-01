@@ -22,14 +22,14 @@ Electronics Sourcing module documentation (:mod:`sourcing.electronics`)
 import copy
 import importlib
 
-from tendril.utils import config
+from tendril.config.legacy import VENDORS_DATA
 from tendril.utils import log
 logger = log.get_logger(__name__, log.DEFAULT)
 
 
 def init_vendors():
     vlist = []
-    vdatalist = copy.copy(config.VENDORS_DATA)
+    vdatalist = copy.copy(VENDORS_DATA)
     for vendor in vdatalist:
         vtype = vendor.get('vtype', None)
         if not vtype:

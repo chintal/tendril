@@ -25,15 +25,16 @@ Docstring for test_utils_types_currency
 import pytest
 from numbers import Number
 from tendril.utils.types import currency
-from tendril.utils import config
+from tendril.config.legacy import BASE_CURRENCY
+from tendril.config.legacy import BASE_CURRENCY_SYMBOL
 
 
 def test_currency_definitions():
     # Test native currency and basic functions
     assert isinstance(currency.native_currency_defn, currency.CurrencyDefinition)
     assert currency.native_currency_defn.exchval == 1
-    assert currency.native_currency_defn.code == config.BASE_CURRENCY
-    assert currency.native_currency_defn.symbol == config.BASE_CURRENCY_SYMBOL
+    assert currency.native_currency_defn.code == BASE_CURRENCY
+    assert currency.native_currency_defn.symbol == BASE_CURRENCY_SYMBOL
 
     # Test currency creation
     if currency.BASE_CURRENCY != 'USD':
@@ -49,12 +50,12 @@ def test_currency_definitions():
         currency.CurrencyDefinition('NOCURRENCYHERE')
 
     # Test Equality
-    lcd = currency.CurrencyDefinition(config.BASE_CURRENCY, config.BASE_CURRENCY_SYMBOL)
+    lcd = currency.CurrencyDefinition(BASE_CURRENCY, BASE_CURRENCY_SYMBOL)
     assert lcd == currency.native_currency_defn
     assert fcd != currency.native_currency_defn
-    slcd = currency.CurrencyDefinition(config.BASE_CURRENCY, config.BASE_CURRENCY_SYMBOL, 3)
+    slcd = currency.CurrencyDefinition(BASE_CURRENCY, BASE_CURRENCY_SYMBOL, 3)
     assert lcd != slcd
-    tlcd = currency.CurrencyDefinition(config.BASE_CURRENCY, "Some other Symbol", 3)
+    tlcd = currency.CurrencyDefinition(BASE_CURRENCY, "Some other Symbol", 3)
     assert tlcd != slcd
 
 
@@ -63,7 +64,7 @@ def test_currency_values():
     cv1 = currency.CurrencyValue(1, ncd)
 
     assert float(cv1) == 1.0
-    assert repr(cv1) == config.BASE_CURRENCY_SYMBOL + '1.00'
+    assert repr(cv1) == BASE_CURRENCY_SYMBOL + '1.00'
 
     if currency.BASE_CURRENCY != 'USD':
         fcur = 'USD'
@@ -75,7 +76,7 @@ def test_currency_values():
     assert fcv1.source_value == 1
     assert fcv1.native_value == 10
     assert fcv1.source_string == fcur + '1.00'
-    assert fcv1.native_string == config.BASE_CURRENCY_SYMBOL + '10.00'
+    assert fcv1.native_string == BASE_CURRENCY_SYMBOL + '10.00'
 
     fcv2 = currency.CurrencyValue(1, fcur)
     assert fcv2._currency_def._code == fcur

@@ -32,7 +32,7 @@ from tendril.sourcing.vendors.vendorbase import VendorElnPartBase
 from tendril.sourcing.vendors.vendorbase import VendorPartRetrievalError
 from tendril.entityhub import projects
 from tendril.gedaif import gsymlib
-from tendril.utils import config
+from tendril.config.legacy import VENDOR_MAP_AUDIT_FOLDER
 from tendril.utils import fsutils
 from tendril.utils import log
 from tendril.utils.db import get_session
@@ -108,7 +108,7 @@ def export_vendor_map_audit(vendor_obj, max_age=-1):
     if isinstance(vendor_obj, int):
         vendor_obj = vendor_list[vendor_obj]
     mapobj = vendor_obj.map
-    outp = os.path.join(config.VENDOR_MAP_AUDIT_FOLDER,
+    outp = os.path.join(VENDOR_MAP_AUDIT_FOLDER,
                         vendor_obj.name + '-electronics-audit.csv')
     outf = fsutils.VersionedOutputFile(outp)
     outw = csv.writer(outf)

@@ -31,7 +31,6 @@ from decimal import DecimalException
 
 from tendril.entityhub import transforms
 from tendril.gedaif import gsymlib
-from tendril.utils import config
 from tendril.utils import fsutils
 from tendril.utils import log
 from tendril.utils.files import libreoffice
@@ -39,6 +38,9 @@ from tendril.utils.connectors.tally.stock import TallyUnit
 from tendril.utils.connectors.tally.stock import get_master
 from tendril.utils.connectors.tally.stock import get_position
 from tendril.utils.connectors.tally import TallyNotAvailable
+
+from tendril.config.legacy import SVN_ROOT
+from tendril.config.legacy import ELECTRONICS_INVENTORY_DATA
 
 try:
     from tendril.utils.types.lengths import Length
@@ -281,12 +283,12 @@ class StockXlsReader(InventoryReaderBase):
 
 
 def get_reader(elec_inven_data_idx):
-    sdict = copy(config.ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx])
+    sdict = copy(ELECTRONICS_INVENTORY_DATA[elec_inven_data_idx])
     reader = None
     invtype = sdict.pop('type')
     if invtype == 'QuazarStockXLS':
         if not os.path.isabs(sdict['fpath']):
-            sdict['fpath'] = config.get_svn_path(sdict['fpath'])
+            sdict['fpath'] = os.path.join(SVN_ROOT, sdict['fpath'])
         sdict['xlf'] = libreoffice.get_xlf(sdict.pop('fpath'))
         reader = StockXlsReader(**sdict)
     elif invtype == 'TallyStock':
