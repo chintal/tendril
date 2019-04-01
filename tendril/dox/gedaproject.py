@@ -108,7 +108,7 @@ from tendril.gedaif import pcb
 from tendril.gedaif import projfile
 from tendril.utils import fsutils
 from tendril.utils import log
-from tendril.config.legacy import PROJECTS_ROOT
+from tendril.config import PROJECTS_ROOT
 from tendril.utils.fsutils import temp_fs
 from tendril.utils.files import pdf
 from tendril.utils.files import yml as yaml

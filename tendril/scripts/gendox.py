@@ -59,7 +59,7 @@ from tendril.gedaif.conffile import NoGedaProjectError
 from tendril.gedaif import conffile
 from tendril.entityhub import projects
 from tendril.dox import gedaproject
-from tendril.config.legacy import PROJECTS_ROOT
+from tendril.config import PROJECTS_ROOT
 from tendril.utils.fsutils import in_directory
 
 from .helpers import add_project_selector_options

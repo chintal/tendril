@@ -39,7 +39,7 @@ from tendril.utils.connectors.tally.stock import get_master
 from tendril.utils.connectors.tally.stock import get_position
 from tendril.utils.connectors.tally import TallyNotAvailable
 
-from tendril.config.legacy import SVN_ROOT
+from tendril.config import SVN_ROOT
 from tendril.config.legacy import ELECTRONICS_INVENTORY_DATA
 
 try:

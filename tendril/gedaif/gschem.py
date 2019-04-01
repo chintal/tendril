@@ -32,9 +32,9 @@ from tendril.config.legacy import GEDA_SCHEME_DIR
 from tendril.config.legacy import USE_SYSTEM_GAF_BIN
 from tendril.config.legacy import GEDA_HAS_GAF
 from tendril.config.legacy import GAF_BIN_ROOT
-from tendril.config.legacy import PROJECTS_ROOT
+from tendril.config import PROJECTS_ROOT
 from tendril.config.legacy import COMPANY_SQUARE_LOGO_PATH
-from tendril.config.legacy import INSTANCE_ROOT
+from tendril.config import INSTANCE_ROOT
 
 from tendril.utils import log
 logger = log.get_logger(__name__, log.INFO)
