@@ -32,7 +32,7 @@ from flask_user import login_required
 
 from tendril.config.legacy import DOCSTORE_ROOT
 from tendril.config.legacy import DOCSTORE_PREFIX
-from tendril.config.legacy import DOCUMENT_WALLET_ROOT
+from tendril.config import DOCUMENT_WALLET_ROOT
 from tendril.config.legacy import DOCUMENT_WALLET_PREFIX
 from tendril.config.legacy import REFDOC_ROOT
 from tendril.config.legacy import REFDOC_PREFIX
