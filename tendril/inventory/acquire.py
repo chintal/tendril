@@ -34,8 +34,8 @@ from tendril.gedaif import gsymlib
 from tendril.utils import fsutils
 from tendril.utils import log
 from tendril.utils.files import libreoffice
-from tendril.utils.connectors.tally.stock import TallyUnit
-from tendril.utils.connectors.tally.stock import get_master
+from tendril.utils.connectors.tally.general import TallyUnit
+from tendril.utils.connectors.tally.masters import get_master
 from tendril.utils.connectors.tally.stock import get_position
 from tendril.utils.connectors.tally import TallyNotAvailable
 
