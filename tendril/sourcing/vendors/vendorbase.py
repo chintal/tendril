@@ -33,8 +33,8 @@ from tendril.entityhub.maps import MapFileBase
 from tendril.utils.types import currency
 from tendril.utils.db import get_session
 from tendril.config.legacy import VENDOR_DEFAULT_MAXAGE
-from tendril.config.legacy import BASE_CURRENCY
-from tendril.config.legacy import BASE_CURRENCY_SYMBOL
+from tendril.config import BASE_CURRENCY
+from tendril.config import BASE_CURRENCY_SYMBOL
 
 from tendril.sourcing.db import controller
 from tendril.sourcing import maintenance
