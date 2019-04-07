@@ -57,9 +57,9 @@ import warnings
 from decimal import Decimal
 
 from tendril.validation.base import ValidationContext
-from tendril.validation.base import ValidationError
-from tendril.validation.base import ValidationPolicy
 from tendril.validation.base import ErrorCollector
+from tendril.validation.schema import SchemaNotSupportedError
+from tendril.validation.schema import SchemaPolicy
 from tendril.validation.configs import ConfigOptionPolicy
 from tendril.validation.configs import get_dict_val
 
@@ -70,30 +70,6 @@ logger = log.get_logger(__name__, log.DEFAULT)
 
 class NoProjectError(Exception):
     pass
-
-
-class SchemaPolicy(ValidationPolicy):
-    def __init__(self, context, name, vmax, vmin):
-        super(SchemaPolicy, self).__init__(context)
-        self.name = name
-        self.vmax = vmax
-        self.vmin = vmin
-
-    def validate(self, name, version):
-        if name == self.name and self.vmin <= version <= self.vmax:
-            return True
-        else:
-            return False
-
-
-class SchemaNotSupportedError(ValidationError):
-    def __init__(self, policy, value):
-        super(SchemaNotSupportedError, self).__init__(policy)
-        self._value = value
-
-    def __repr__(self):
-        return "<SchemaNotSupportedError {0}{1}>" \
-               "".format(self._policy.context, self._value)
 
 
 class ConfigBase(object):
