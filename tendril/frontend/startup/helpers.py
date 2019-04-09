@@ -32,12 +32,12 @@ def inject_version():
 
 @app.context_processor
 def inject_instance_owner():
-    from tendril.config.legacy import COMPANY_NAME
+    from tendril.identity import primary_persona
     from tendril.config.legacy import INSTANCE_SOURCES
     from tendril.config.legacy import INSTANCE_FOLDER_SOURCES
     from tendril.config.legacy import INSTANCE_DOCUMENTATION_PATH
     from datetime import date
-    return {'instance_owner': COMPANY_NAME,
+    return {'instance_owner': primary_persona.name,
             'copyright_year': date.today().year,
             'instance_sources': INSTANCE_SOURCES,
             'instance_folder_sources': INSTANCE_FOLDER_SOURCES,

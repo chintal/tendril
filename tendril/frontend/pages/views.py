@@ -23,7 +23,7 @@ from flask import send_from_directory
 from flask_user import login_required
 
 from tendril.frontend.app import app
-from tendril.config.legacy import COMPANY_BLACK_LOGO_PATH
+from tendril.identity import primary_persona
 
 from tendril.utils.fsutils import Crumb
 
@@ -56,7 +56,7 @@ def landing_inventory():
 
 @app.route('/instanceassets/logo.png')
 def get_instance_logo():
-    return send_file(COMPANY_BLACK_LOGO_PATH)
+    return send_file(primary_persona.black_logo)
 
 
 @app.route('/favicon.ico')
