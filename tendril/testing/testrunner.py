@@ -343,10 +343,8 @@ def commit_test_results(suite):
 
 def write_to_device(serialno, devicetype, suites=None):
     try:
-        modname = get_product_calibformat(devicetype)
-        mod = import_(os.path.join(INSTANCE_ROOT, 'products',
-                                   'calibformats', modname))
-        func = getattr(mod, 'write_to_device')
+        calibformat = get_product_calibformat(devicetype)
+        func = getattr(calibformat, 'write_to_device')
         func(serialno, devicetype, suites)
     except ImportError:
         logger.error("Write to device not implemented for devicetype : " +
