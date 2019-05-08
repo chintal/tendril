@@ -47,7 +47,7 @@ from tendril.validation.idents import IdentPolicy
 from tendril.validation.boms import QuantityTypeError
 from tendril.validation.boms import IdentQtyPolicy
 
-from tendril.utils.connectors import mq
+from tendril.connectors import mq
 from tendril.config.legacy import WARM_UP_CACHES
 from tendril.config import PROJECTS_ROOT
 from tendril.config import SVN_ROOT

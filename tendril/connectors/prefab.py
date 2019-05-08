@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-The Prefab Server Connector Module (:mod:`tendril.utils.connectors.prefab`)
-===========================================================================
+The Prefab Server Connector Module (:mod:`tendril.connectors.prefab`)
+=====================================================================
 
 """
 

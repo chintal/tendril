@@ -26,7 +26,7 @@ from collections import namedtuple
 from future.utils import viewitems
 from tendril.boms.outputbase import CompositeOutputBom
 from tendril.entityhub.modules import get_prototype_lib
-from tendril.utils.connectors import prefab
+from tendril.connectors import prefab
 from tendril.config.legacy import WARM_UP_CACHES
 from tendril.utils import log
 

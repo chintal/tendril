@@ -24,9 +24,9 @@ Docstring for maintenance
 
 
 import json
-from tendril.utils.connectors.mq import mq_publish
-from tendril.utils.connectors.mq import mq_connection
-from tendril.utils.connectors.mq import MQServerUnavailable
+from tendril.connectors.mq import mq_publish
+from tendril.connectors.mq import mq_connection
+from tendril.connectors.mq import MQServerUnavailable
 
 
 def update_vpinfo(vendor, ident, vpno):

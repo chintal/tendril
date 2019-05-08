@@ -34,10 +34,10 @@ from tendril.gedaif import gsymlib
 from tendril.utils import fsutils
 from tendril.utils import log
 from tendril.utils.files import libreoffice
-from tendril.utils.connectors.tally.general import TallyUnit
-from tendril.utils.connectors.tally.masters import get_master
-from tendril.utils.connectors.tally.stock import get_position
-from tendril.utils.connectors.tally import TallyNotAvailable
+from tendril.connectors.tally.general import TallyUnit
+from tendril.connectors.tally.masters import get_master
+from tendril.connectors.tally.stock import get_position
+from tendril.connectors.tally import TallyNotAvailable
 
 from tendril.config import SVN_ROOT
 from tendril.config.legacy import ELECTRONICS_INVENTORY_DATA
