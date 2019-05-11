@@ -28,12 +28,11 @@ from tendril.conventions.electronics import parse_ident
 from tendril.utils import vcs
 from tendril.utils.files import pdf
 from tendril.utils.files import gschem as gschf
-from tendril.config.legacy import GEDA_SCHEME_DIR
-from tendril.config.legacy import USE_SYSTEM_GAF_BIN
-from tendril.config.legacy import GEDA_HAS_GAF
-from tendril.config.legacy import GAF_BIN_ROOT
+from tendril.config import GEDA_SCHEME_DIR
+from tendril.config import USE_SYSTEM_GAF_BIN
+from tendril.config import GEDA_HAS_GAF
+from tendril.config import GAF_BIN_ROOT
 from tendril.config import PROJECTS_ROOT
-from tendril.config import INSTANCE_ROOT
 from tendril.identity import primary_persona
 
 from tendril.utils import log

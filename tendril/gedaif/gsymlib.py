@@ -30,11 +30,11 @@ import jinja2
 
 import iec60063
 
-from tendril.config.legacy import GEDA_SYMLIB_ROOT
-from tendril.config.legacy import GEDA_SUBCIRCUITS_ROOT
+from tendril.config import GEDA_SYMLIB_ROOT
+from tendril.config import GEDA_SUBCIRCUITS_ROOT
 from tendril.config import AUDIT_PATH
 from tendril.config import INSTANCE_CACHE
-from tendril.config.legacy import MAKE_GSYMLIB_IMG_CACHE
+from tendril.config import MAKE_GSYMLIB_IMG_CACHE
 
 from tendril.utils.fsutils import get_file_mtime
 from tendril.utils.fsutils import VersionedOutputFile

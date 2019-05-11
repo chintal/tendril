@@ -51,7 +51,3 @@ class GedaProjectFile(object):
     def schpaths(self):
         return [os.path.join(self.configsfile.schfolder, schfile)
                 for schfile in self.schfiles]
-
-
-if __name__ == "__main__":
-    pass
