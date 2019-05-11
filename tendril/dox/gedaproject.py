@@ -103,8 +103,8 @@ from tendril.boms import electronics as boms_electronics
 from tendril.boms import outputbase as boms_outputbase
 from tendril.gedaif import conffile
 from tendril.utils.files import gerberfiles
-from tendril.gedaif import gschem
-from tendril.gedaif import pcb
+from tendril.connectors.geda import gschem
+from tendril.connectors.geda import pcb
 from tendril.gedaif import projfile
 from tendril.utils import fsutils
 from tendril.utils import log
@@ -318,7 +318,7 @@ def gen_schpdf(projfolder, namebase, configname=None, force=False):
     """
     Generates a PDF file of all the project schematics listed in the
     gEDA project file. This function does not use jinja2 and latex. It
-    relies on :func:`tendril.gedaif.gschem.conv_gsch2pdf` instead.
+    relies on :func:`tendril.connector.geda.gschem.conv_gsch2pdf` instead.
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
@@ -597,7 +597,7 @@ def gen_pcb_pdf(projfolder, force=False):
     :mod:`tendril.gedaif.conffile.ConfigsFile`.
 
     This function does not use jinja2 and latex. It relies on
-    :func:`tendril.gedaif.pcb.conv_pcb2pdf` instead.
+    :func:`tendril.connectors.geda.pcb.conv_pcb2pdf` instead.
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
@@ -656,7 +656,7 @@ def gen_pcb_gbr(projfolder, force=False):
     :mod:`tendril.gedaif.conffile.ConfigsFile`.
 
     This function does not use jinja2 and latex. It relies on
-    :func:`tendril.gedaif.pcb.conv_pcb2gbr` instead.
+    :func:`tendril.connectors.geda.pcb.conv_pcb2gbr` instead.
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str
@@ -752,7 +752,7 @@ def gen_pcb_dxf(projfolder, force=False):
     :mod:`tendril.gedaif.conffile.ConfigsFile`.
 
     This function does not use jinja2 and latex. It relies on
-    :func:`tendril.gedaif.pcb.conv_pcb2dxf` instead.
+    :func:`tendril.connectors.geda.pcb.conv_pcb2dxf` instead.
 
     :param projfolder: The gEDA project folder.
     :type projfolder: str

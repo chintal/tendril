@@ -297,7 +297,7 @@ class PCBPrototype(EDAProjectPrototype):
     @property
     def info(self):
         if not self._pcb_info:
-            from tendril.gedaif.pcb import get_pcbinfo
+            from tendril.connectors.geda.pcb import get_pcbinfo
             from tendril.gedaif.projfile import GedaProjectFile
             pf = GedaProjectFile(self.projfolder)
             pcbf = os.path.join(self.projfolder, 'pcb', pf.pcbfile + '.pcb')
