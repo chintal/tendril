@@ -21,7 +21,7 @@ install_requirements = [
     'tendril-utils-pdf>=0.1.1',
     'tendril-utils-yaml>=0.1.1',
     'tendril-utils-libreoffice>=0.1.1',
-    'tendril-utils-gschem-files>=0.1.1',
+    'tendril-utils-gschem-files>=0.1.2',
     'tendril-utils-db>=0.1.3',
     'tendril-utils-terminal>=0.1.1',
     'tendril-utils-changelog>=0.1.2',
@@ -51,7 +51,6 @@ install_requirements = [
     'paramiko',
     'future',
     'appenlight-client',
-    'pcb-tools',
     'pyhull',
     'cachetools',   # sourcing.vendors.VendorBase._partcache
     'jsonpickle',   # tendril-server-prefab interfaces

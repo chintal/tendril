@@ -102,7 +102,7 @@ from tendril.dox.docstore import refdoc_fs
 from tendril.boms import electronics as boms_electronics
 from tendril.boms import outputbase as boms_outputbase
 from tendril.gedaif import conffile
-from tendril.gedaif import gerberfiles
+from tendril.utils.files import gerberfiles
 from tendril.gedaif import gschem
 from tendril.gedaif import pcb
 from tendril.gedaif import projfile
@@ -710,12 +710,13 @@ def gen_pcb_gbr(projfolder, force=False):
         workspace_folder
     )
 
+    # Generate PCB images
     workspace_fs.makedir(imgfolder,
                          recursive=True, allow_recreate=True)
-
     img_workspace_folder = workspace_fs.getsyspath(imgfolder)
-    gen_pcb_img(gbrfolder, outfolder=img_workspace_folder,
-                outfname=gpf.pcbfile, force=False)
+    gerberfiles.render_gerber_images(gbrfolder,
+                                     outfolder=img_workspace_folder,
+                                     outfname=gpf.pcbfile)
 
     for f in os.listdir(img_workspace_folder):
         fpath = os.path.relpath(
@@ -723,6 +724,7 @@ def gen_pcb_gbr(projfolder, force=False):
         )
         copyfile(workspace_fs, fpath, refdoc_fs, fpath, overwrite=True)
 
+    # Generate gerber zip file
     zfile = os.path.join(
         workspace_folder, os.pardir, gpf.pcbfile + '-gerber.zip'
     )
@@ -739,15 +741,6 @@ def gen_pcb_gbr(projfolder, force=False):
     copyfile(workspace_fs, zfpath, refdoc_fs, zfpath, overwrite=True)
 
     return gbrfolder
-
-
-def gen_pcb_img(gbrfolder, outfolder, outfname, force=False):
-    gfiles = [os.path.join(gbrfolder, x) for x in os.listdir(gbrfolder)]
-    from gerber.layers import available_dialects
-    pcbctx = gerberfiles.TendrilPCBCairoContext(
-        gfiles, available_dialects['geda'], verbose=False
-    )
-    pcbctx.render(output_filename=os.path.join(outfolder, outfname))
 
 
 def gen_pcb_dxf(projfolder, force=False):
