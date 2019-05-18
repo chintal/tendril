@@ -22,15 +22,15 @@
 Docstring for directory
 """
 
-from tendril.gedaif import gsymlib
+from tendril.libraries import edasymbols
 
 
-def in_gsymlib(ident):
-    return gsymlib.is_recognized(ident)
+def in_esymlib(ident):
+    return edasymbols.is_recognized(ident)
 
 
-def gsymlib_idents():
-    return gsymlib.gsymlib_idents
+def esymlib_idents():
+    return edasymbols.idents
 
 
 def in_pcblib(ident):
@@ -46,7 +46,7 @@ def is_project_folder(projfolder):
 
 
 def is_recognized(ident):
-    if in_gsymlib(ident):
+    if in_esymlib(ident):
         return True
     if in_prototypelib(ident):
         return True

@@ -23,7 +23,7 @@ Docstring for costingbase
 """
 
 from tendril.gedaif.gsymlib import get_symbol
-from tendril.gedaif.gsymlib import NoGedaSymbolException
+from tendril.libraries.edasymbols import nosymbolexception
 from tendril.inventory.guidelines import electronics_qty
 
 from tendril.utils.types.currency import CurrencyValue
@@ -94,7 +94,7 @@ class SourceableBomLineMixin(object):
         else:
             try:
                 symbol = get_symbol(self.ident)
-            except NoGedaSymbolException:
+            except nosymbolexception:
                 self._isinfo = None
                 self._sourcing_exception = SourcingIdentNotRecognized(
                     self.parent.sourcing_policy, self.ident, self.refdeslist

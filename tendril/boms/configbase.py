@@ -51,6 +51,7 @@ Specialized Structures:
 """
 
 import os
+import re
 import copy
 import itertools
 import warnings
@@ -246,6 +247,9 @@ class ConfigBase(object):
                             '<{0}:{1}>'.format(dimname, 'npart'),
                             component['npart']
                     )
+
+                    # Collapse repeated separators
+                    nconfig['configname'] = '-'.join(re.split('-+', nconfig['configname']))
 
                     # Update desc
                     nconfig['desc'] = nconfig['desc'].replace(

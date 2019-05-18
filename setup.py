@@ -29,6 +29,7 @@ install_requirements = [
     'tendril-connector-tally>=0.1.4',
     'tendril-connector-geda>=0.1.1',
     'tendril-config>=0.1.6',
+    'tendril-conventions-series>=0.1.1',
     'tendril-conventions-status>=0.1.2',
     'tendril-conventions-electronics>=0.1.1',
     'tendril-costing>=0.1.2',

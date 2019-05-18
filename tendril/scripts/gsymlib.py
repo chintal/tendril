@@ -21,7 +21,7 @@ gEDA Symbol Library Search Script  (``tendril-gsymlib``)
 Simple search tools for searching the gEDA symbol library.
 
 .. seealso::
-    :mod:`tendril.gedaif.gsymlib`
+    :mod:`tendril.connectors.geda.gsymlib`
 
 .. rubric:: Script Usage
 
@@ -37,7 +37,7 @@ import re
 import csv
 import argparse
 
-from tendril.gedaif import gsymlib
+from tendril.connectors.geda import gsymlib
 from tendril.entityhub import supersets
 from tendril.conventions.status import print_status
 from tendril.conventions.electronics import parse_ident
@@ -257,7 +257,7 @@ def get_and_postfilter_symbols(idents, args):
     for i in idents:
         try:
             s = gsymlib.get_symbol(i)
-        except gsymlib.NoGedaSymbolException:
+        except gsymlib.GEDASymbolNotFound:
             continue
         if mcmp:
             if not s.manufacturer or not mcmp(s.manufacturer):
